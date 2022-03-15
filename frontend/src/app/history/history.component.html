@@ -1,0 +1,24 @@
+<div class="container mt-3">
+
+  <br>
+  <div class="row p-2">
+    <div class="col-9">
+      <h3>Assessed Chat Rooms of the Current Session</h3>
+    </div>
+    <div class="col-3">
+      <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
+    </div>
+  </div>
+
+  <div *ngFor="let paneLog of paneLogs, let i = index">
+    <div class="row p-2">
+      <div class="col-8">
+        <app-rating-pane [showHistory]="true" [paneLog]="paneLogs[i]"></app-rating-pane>
+      </div>
+
+      <div class="col-4">
+        <app-chat-pane [paneLog]="paneLogs[i]"></app-chat-pane>
+      </div>
+    </div>
+  </div>
+</div>

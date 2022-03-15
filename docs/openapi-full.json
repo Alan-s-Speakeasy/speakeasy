@@ -1,0 +1,1124 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Alan's Speakeasy",
+    "description" : "API for Alan's Speakeasy, Version 0.1",
+    "version" : "0.1"
+  },
+  "paths" : {
+    "/api/login" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Sets roles for session based on user account and returns a session cookie.",
+        "operationId" : "postApiLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserSessionDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logout" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Clears all user roles of the current session.",
+        "operationId" : "getApiLogout",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/current" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Returns details for the current session.",
+        "operationId" : "getApiUserCurrent",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserSessionDetails"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/list" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all available users.",
+        "operationId" : "getApiUserList",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/sessions" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all current user sessions.",
+        "operationId" : "getApiUserSessions",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserSessionDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/password" : {
+      "patch" : {
+        "tags" : [ "User" ],
+        "summary" : "Changes the password for a given user.",
+        "operationId" : "patchApiUserPassword",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Lists all Chatrooms for current user",
+        "operationId" : "getApiRooms",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/assessed" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Lists all assessed chatrooms for current user",
+        "operationId" : "getApiAssessedRooms",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/all" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all Chatrooms",
+        "operationId" : "getApiRoomsAll",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/active" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all active Chatrooms",
+        "operationId" : "getApiRoomsActive",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/request" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Creates a Chatroom with another user.",
+        "operationId" : "postApiRoomsRequest",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/room/{roomId}/{since}" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Get state and all messages for a chat room since a specified time",
+        "operationId" : "getApiRoomWithRoomidWithSince",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "since",
+          "in" : "path",
+          "description" : "Timestamp for new messages",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomState"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/room/{roomId}" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Post a message to a Chatroom.",
+        "operationId" : "postApiRoomWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/room/{roomId}/reaction" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Post a chat message reaction to a Chatroom.",
+        "operationId" : "postApiRoomWithRoomidReaction",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChatMessageReaction"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback/{roomId}" : {
+      "get" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Gets the list of feedback requests for a Chatroom.",
+        "operationId" : "getApiFeedbackWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackRequestList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Returns Feedback for a Chatroom.",
+        "operationId" : "postApiFeedbackWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FeedbackResponseList"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbackhistory/{roomId}" : {
+      "get" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Gets the list of feedback responses for a Chatroom.",
+        "operationId" : "getApiFeedbackhistoryWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackResponseList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alias/{roomId}" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Get alias of the other user in the chatroom",
+        "operationId" : "getApiAliasWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Aliases"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "LoginRequest" : {
+        "required" : [ "password", "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UserDetails" : {
+        "required" : [ "id", "role", "username" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "username" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "HUMAN", "BOT", "ADMIN" ]
+          }
+        }
+      },
+      "UserSessionDetails" : {
+        "required" : [ "sessionId", "sessionToken", "startTime", "userDetails", "userSessionAlias" ],
+        "type" : "object",
+        "properties" : {
+          "userDetails" : {
+            "$ref" : "#/components/schemas/UserDetails"
+          },
+          "sessionToken" : {
+            "type" : "string"
+          },
+          "sessionId" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "userSessionAlias" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ErrorStatus" : {
+        "required" : [ "description" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SuccessStatus" : {
+        "required" : [ "description" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PasswordChangeRequest" : {
+        "required" : [ "currentPassword", "newPassword" ],
+        "type" : "object",
+        "properties" : {
+          "currentPassword" : {
+            "type" : "string"
+          },
+          "newPassword" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatRoomInfo" : {
+        "required" : [ "prompt", "remainingTime", "sessions", "uid" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remainingTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sessions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatRoomList" : {
+        "required" : [ "rooms" ],
+        "type" : "object",
+        "properties" : {
+          "rooms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChatRoomInfo"
+            }
+          }
+        }
+      },
+      "ChatRequest" : {
+        "required" : [ "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatMessageReaction" : {
+        "required" : [ "messageOrdinal", "type" ],
+        "type" : "object",
+        "properties" : {
+          "messageOrdinal" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "THUMBS_UP", "THUMBS_DOWN", "STAR" ]
+          }
+        }
+      },
+      "ChatRoomState" : {
+        "required" : [ "info", "messages", "reactions" ],
+        "type" : "object",
+        "properties" : {
+          "info" : {
+            "$ref" : "#/components/schemas/ChatRoomInfo"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RestChatMessage"
+            }
+          },
+          "reactions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChatMessageReaction"
+            }
+          }
+        }
+      },
+      "RestChatMessage" : {
+        "required" : [ "message", "ordinal", "session", "timeStamp" ],
+        "type" : "object",
+        "properties" : {
+          "timeStamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "session" : {
+            "type" : "string"
+          },
+          "ordinal" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FeedbackAnswerOption" : {
+        "required" : [ "name", "value" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "FeedbackRequest" : {
+        "required" : [ "id", "name", "options", "type" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackAnswerOption"
+            }
+          }
+        }
+      },
+      "FeedbackRequestList" : {
+        "required" : [ "requests" ],
+        "type" : "object",
+        "properties" : {
+          "requests" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackRequest"
+            }
+          }
+        }
+      },
+      "FeedbackResponse" : {
+        "required" : [ "id", "value" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FeedbackResponseList" : {
+        "required" : [ "responses" ],
+        "type" : "object",
+        "properties" : {
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
+      "AliasPair" : {
+        "required" : [ "alias", "session" ],
+        "type" : "object",
+        "properties" : {
+          "session" : {
+            "type" : "string"
+          },
+          "alias" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Aliases" : {
+        "required" : [ "list" ],
+        "type" : "object",
+        "properties" : {
+          "list" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AliasPair"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+<div class="container mt-3">
+
+  <br>
+
+  <div class="row p-2" *ngIf="role == 'HUMAN'">
+    <div class="col-9">
+      <h3>Hi, {{userName}}, welcome! Start with selecting an option below.</h3>
+    </div>
+    <div class="col-3">
+      <button type="button" class="btn btn-secondary float-end" (click)="userLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="row p-2" *ngIf="role == 'ADMIN'">
+    <div class="col-9">
+      <h3>Hey, {{userName}}, welcome! This is the <span style="color: orangered">admin</span> panel.</h3>
+    </div>
+    <div class="col-3">
+      <button type="button" class="btn btn-secondary float-end" (click)="userLogout()">Logout</button>
+    </div>
+  </div>
+
+
+  <div class="row p-2" *ngIf="role == 'HUMAN'">
+    <div class="col-3 m-1 p-2">
+      <div class="card h-100" style="background-color: lightgrey;">
+        <img src="../../assets/assessor.png" alt="Assessor image" style="width: 100%">
+        <div class="card-body d-flex flex-column">
+          <p class="card-text">Chat with agents and give ratings.</p>
+          <button (click)="chat()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Start Conversation</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-3 m-1 p-2">
+      <div class="card h-100" style="background-color: lightgrey;">
+        <img src="../../assets/history.png" alt="History image" style="width: 100%">
+        <div class="card-body d-flex flex-column">
+          <p class="card-text">Your conversation history and ratings.</p>
+          <button (click)="checkHistory()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check History</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-3 m-1 p-2">
+      <div class="card h-100" style="background-color: lightgrey">
+        <img src="../../assets/password.png" alt="Password image" style="width: 100%">
+        <div class="card-body d-flex flex-column">
+          <p class="card-text">Please change your default password.</p>
+          <button (click)="changePassword()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Reset Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row p-2" *ngIf="role == 'ADMIN'">
+    <div class="col-3 m-1 p-2">
+      <div class="card h-100" style="background-color: lightgrey">
+        <img src="../../assets/agent.png" alt="Admin Chat Image" style="width: 100%">
+        <div class="card-body d-flex flex-column">
+          <p class="card-text">Chat with students/agents.</p>
+          <button (click)="chat()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Start Conversation</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-3 m-1 p-2">
+      <div class="card h-100" style="background-color: lightgrey;">
+        <img src="../../assets/assessor.png" alt="Status Image" style="width: 100%">
+        <div class="card-body d-flex flex-column">
+          <p class="card-text">Show all students and agents.</p>
+          <button (click)="userStatus()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check Users</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-3 m-1 p-2">
+      <div class="card h-100" style="background-color: lightgrey">
+        <img src="../../assets/history.png" alt="Chatroom Image" style="width: 100%">
+        <div class="card-body d-flex flex-column">
+          <p class="card-text">Show all chatrooms.</p>
+          <button (click)="chatroomStatus()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check Chatrooms</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+

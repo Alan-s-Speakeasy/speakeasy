@@ -1,0 +1,65 @@
+<div class="card chat-app">
+  <div class="chat">
+
+    <div class="row p-2">
+      <div class="chat-header text-center">
+        <div *ngIf="!showHistory">
+          <h5>Ratings - {{paneLog.otherAlias}}</h5>
+        </div>
+        <div *ngIf="showHistory">
+          <h5>Ratings - {{paneLog.otherAlias}}</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-history text-wrap" style="overflow: scroll; height: 500px; overflow-x:hidden;">
+
+      <div *ngFor="let request of ratingForm">
+        <form>
+          <div class="text-center">
+            <h6>{{request.id}}. {{request.name}}</h6>
+
+            <div *ngIf="!showHistory">
+              <div *ngIf="request.options.length > 0">
+                <div class="form-check form-check-inline" *ngFor="let option of request.options">
+                  <input class="form-check-input" type="radio" name="inlineRadioOptions" value="{{option.value.toString()}}" [(ngModel)]="paneLog.ratings[request.id]">
+                  <label class="form-check-label">{{option.name}}</label>
+                </div>
+              </div>
+
+              <div *ngIf="request.options.length === 0">
+                <input type="text" class="form-control" placeholder="..." name="item.name" [(ngModel)]="paneLog.ratings[request.id]">
+              </div>
+            </div>
+
+            <div *ngIf="showHistory">
+              <div *ngIf="request.options.length > 0">
+                <div *ngFor="let option of request.options">
+                  <div *ngIf="option.value.toString() == paneLog.ratings[request.id]">
+                    {{option.name}}
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="request.options.length === 0">
+                <p>{{paneLog.ratings[request.id]}}</p>
+              </div>
+            </div>
+
+          </div>
+        </form>
+        <hr>
+      </div>
+    </div>
+
+    <div *ngIf="!showHistory">
+      <div class="chat-message clearfix">
+          <div class="input-group-append text-center">
+            <button (click)="submit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
+          </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+

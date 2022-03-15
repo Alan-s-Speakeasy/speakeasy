@@ -1,0 +1,32 @@
+
+<div class="container mt-3">
+  <br>
+
+  <div class="row">
+    <div class="col-6 offset-3">
+
+      <h3 class="text-center">ATAI HS2021</h3>
+      <form class="container text-center" [formGroup]="loginForm">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Username" id="username" name="username" formControlName="username">
+        </div>
+
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" placeholder="Password" id="password" name="password" formControlName="password">
+        </div>
+
+        <button (click)="userLogin()" type="submit" class="btn btn-primary" style="width:50%;">Submit</button>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="text-center fixed-bottom">
+  <p >University of Zurich<br>
+    Department of Informatics<br>
+    Advanced Topics in Artificial Intelligence (ATAI)</p>
+</div>
+
+

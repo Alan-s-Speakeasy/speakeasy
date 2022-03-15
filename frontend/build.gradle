@@ -1,0 +1,53 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+plugins {
+    /// Plugin to handle NodeJS
+    id 'base'
+    id 'com.github.node-gradle.node' version '3.0.1'
+}
+
+configurations {
+    frontendFiles {
+        canBeConsumed = true
+        canBeResolved = false
+    }
+}
+
+node {
+    version = '16.5.0'
+    download = true
+    workDir = file("${project.projectDir}/.gradle/nodejs")
+    npmWorkDir = file("${project.projectDir}/.gradle/npm")
+    nodeProjectDir = file("${project.projectDir}")
+}
+
+task buildFrontend(type: NpmTask) {
+    outputs.upToDateWhen {
+        return file("$buildDir/dist").isDirectory()
+    }
+    args = ['run', 'pbuild']
+    dependsOn npmInstall
+}
+
+task packageFrontend(type: Zip) {
+    outputs.upToDateWhen {
+        return file("$buildDir/lib/frontend.jar").exists()
+    }
+    dependsOn buildFrontend
+    baseName 'frontend'
+    extension 'jar'
+    destinationDir file("$buildDir/lib")
+    from("$buildDir/dist") {
+        into 'html'
+    }
+}
+
+artifacts {
+    frontendFiles(packageFrontend.archiveFile) {
+        builtBy packageFrontend
+        type "jar"
+    }
+}

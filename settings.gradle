@@ -1,0 +1,3 @@
+rootProject.name = 'speakeasy'
+include 'backend'
+include 'frontend'

@@ -1,0 +1,81 @@
+buildscript {
+    ext.kotlinVersion = '1.5.10'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion"
+    }
+}
+
+
+apply plugin: 'application'
+apply plugin: 'kotlin'
+apply plugin: 'idea'
+
+group 'ch.ddis.speakeasy'
+version '0.1'
+
+mainClassName = 'ch.ddis.speakeasy.Main'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    frontendClasspath {
+        canBeConsumed = false
+        canBeResolved = true
+    }
+}
+
+
+dependencies {
+
+    def jettyVersion = '9.4.25.v20191220'
+    def alpnApiVersion = '1.1.3.v20160715'
+    def alpnBootVersion = '8.1.12.v20180117'
+
+    implementation frontendClasspath(project(path: ":frontend", configuration: 'frontendFiles'))
+
+    ////// Javalin
+    implementation ('io.javalin:javalin-bundle:3.13.0'){
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+    }
+    implementation group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.1.5'
+    implementation group: 'org.webjars', name: 'swagger-ui', version: '3.24.3'
+    implementation group: 'org.webjars.npm', name: 'js-tokens', version: '3.0.2'
+    implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.12.+'
+    implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.34'
+    implementation group: 'org.eclipse.jetty.http2', name: 'http2-server', version: jettyVersion
+    implementation group: 'org.eclipse.jetty', name: 'jetty-alpn-conscrypt-server', version: jettyVersion
+    implementation group: 'org.eclipse.jetty.alpn', name: 'alpn-api', version: alpnApiVersion
+    runtimeOnly group: 'org.mortbay.jetty.alpn', name: 'alpn-boot', version: alpnBootVersion
+
+    ////// bcrypt
+    implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
+
+    ////// CSV
+    implementation group: 'com.github.doyaaaaaken', name: 'kotlin-csv-jvm', version: '0.7.3'
+
+    ////// Log4J
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.16.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.16.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.16.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-jul', version: '2.16.0'
+
+    ////// JLine 3 & Clikt for CLI
+    implementation group: 'com.github.ajalt', name: 'clikt', version: '2.8.0'
+    implementation group: 'org.jline', name: 'jline-terminal', version: '3.20.0'
+    implementation group: 'org.jline', name: 'jline-terminal-jna', version: '3.20.0'
+    implementation group: 'org.jline', name: 'jline-reader', version: '3.20.0'
+    implementation group: 'org.jline', name: 'jline-builtins', version: '3.20.0'
+    implementation group: 'com.jakewharton.picnic', name: 'picnic', version: '0.5.0'
+
+    ///// Kotlin
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlinVersion
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
+
+}

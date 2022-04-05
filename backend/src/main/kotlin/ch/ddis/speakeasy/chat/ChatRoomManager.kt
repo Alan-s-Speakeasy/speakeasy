@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
 import java.io.File
@@ -19,11 +20,11 @@ object ChatRoomManager {
     fun getByUser(id: UserId): List<ChatRoom> =
         this.chatrooms.values.filter { it.sessions.any { s -> s.user.id == id } }
 
-    fun getByUserSession(sessionToken: String): List<ChatRoom> =
-        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == sessionToken } && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) && !it.assessed }
+    fun getByUserSession(sessionId: SessionId): List<ChatRoom> =
+        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionId == sessionId } && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) && !it.assessed }
 
-    fun getAssessedRoomsByUserSession(sessionToken: String): List<ChatRoom> =
-        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == sessionToken } && it.assessed }
+    fun getAssessedRoomsByUserSession(sessionId: SessionId): List<ChatRoom> =
+        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionId == sessionId } && it.assessed }
 
 
     fun create(sessions: List<UserSession>, log: Boolean = true, prompt: String): ChatRoom {

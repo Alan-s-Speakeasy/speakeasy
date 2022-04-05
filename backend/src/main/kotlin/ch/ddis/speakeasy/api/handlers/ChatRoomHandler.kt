@@ -53,7 +53,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUserSession(session.sessionToken).map { ChatRoomInfo(it) }
+            ChatRoomManager.getByUserSession(session.sessionId).map { ChatRoomInfo(it) }
         )
     }
 }
@@ -83,7 +83,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserSession(session.sessionToken).map { ChatRoomInfo(it) }
+            ChatRoomManager.getAssessedRoomsByUserSession(session.sessionId).map { ChatRoomInfo(it) }
         )
     }
 }
@@ -177,7 +177,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (room.sessions.none { it.sessionToken == session.sessionToken }) {
+        if (room.sessions.none { it.sessionId == session.sessionId }) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 

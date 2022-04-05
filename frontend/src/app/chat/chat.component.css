@@ -1,6 +1,6 @@
 .row-fluid{
   white-space: nowrap;
 }
-.row-fluid .col-4 {
+.row-fluid .col-xl-4 {
   display: inline-block;
 }

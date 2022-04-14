@@ -141,13 +141,13 @@ data class ChatRoomState(
 }
 
 class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandler {
-    override val permittedRoles = setOf(RestApiRole.USER)
+    override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.ADMIN)
     override val route = "room/:roomId/:since"
 
     @OpenApi(
         summary = "Get state and all messages for a chat room since a specified time",
         path = "/api/room/:roomId/:since",
-        tags = ["Chat"],
+        tags = ["Chat", "Admin"],
         pathParams = [
             OpenApiParam("roomId", String::class, "Id of the Chatroom"),
             OpenApiParam("since", Long::class, "Timestamp for new messages"),
@@ -177,8 +177,10 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (room.sessions.none { it.sessionId == session.sessionId }) {
-            throw ErrorStatusException(401, "Unauthorized", ctx)
+        if (session.user.role != UserRole.ADMIN) {
+            if (room.sessions.none { it.sessionId == session.sessionId }) {
+                throw ErrorStatusException(401, "Unauthorized", ctx)
+            }
         }
 
         return ChatRoomState(room, since)

@@ -88,6 +88,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       myAlias: "",
       otherAlias: "",
       prompt: "",
+      spectate: false
     }
 
     // get the aliases of the current user and the other user in the chat room

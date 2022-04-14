@@ -21,6 +21,7 @@
         <th scope="col">StartTime</th>
         <th scope="col">RemainingTime</th>
         <th scope="col">Members</th>
+        <th scope="col">Watch</th>
       </tr>
       </thead>
       <tbody>
@@ -32,6 +33,7 @@
         <td>
           <span *ngFor="let user of chatroomDetail.users">{{user}}; </span>
         </td>
+        <td><button type="button" class="btn btn-secondary float-end" (click)="watch(chatroomDetail)">Watch</button></td>
       </tr>
       </tbody>
     </table>
@@ -49,6 +51,7 @@
         <th scope="col">StartTime</th>
         <th scope="col">Status</th>
         <th scope="col">Members</th>
+        <th scope="col">Watch</th>
       </tr>
       </thead>
       <tbody>
@@ -61,6 +64,7 @@
         <td>
           <span *ngFor="let user of chatroomDetail.users">{{user}}; </span>
         </td>
+        <td><button type="button" class="btn btn-secondary float-end" (click)="watch(chatroomDetail)">Watch</button></td>
       </tr>
       </tbody>
     </table>

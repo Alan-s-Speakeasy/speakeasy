@@ -5,6 +5,7 @@ import {FrontendChatroomDetail, FrontendUserDetail} from "../new_data";
 import {CommonService} from "../common.service";
 import {AdminService, ChatRoomInfo, UserSessionDetails} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
+import {state} from "@angular/animations";
 
 @Component({
   selector: 'app-chatroom-status',
@@ -100,6 +101,10 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
+  }
+
+  watch(chatroomDetail: FrontendChatroomDetail): void {
+    this.router.navigateByUrl('/spectate', { state: { roomID: chatroomDetail.roomID, backUrl: "chatroomStatus" } } ).then()
   }
 
   ngOnDestroy() {

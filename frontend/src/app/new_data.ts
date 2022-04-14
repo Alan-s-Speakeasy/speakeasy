@@ -22,6 +22,7 @@ export interface PaneLog {
   prompt: string,
   myAlias: string,
   otherAlias: string,
+  spectate: boolean
 }
 
 export interface Ratings {

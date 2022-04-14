@@ -21,7 +21,7 @@
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>
           <div class="message other-message" style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-            <div *ngIf="paneLog.messageLog[ordinal].type === ''">
+            <div *ngIf="!paneLog.spectate && paneLog.messageLog[ordinal].type === ''">
               <span (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-up"></i></span>
               <span (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-down"></i></span>
               <span (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-star"></i></span>
@@ -53,7 +53,7 @@
       </ul>
     </div>
 
-    <div *ngIf="!paneLog.ratingOpen">
+    <div *ngIf="!paneLog.spectate && !paneLog.ratingOpen">
       <div class="chat-message clearfix">
         <div class="input-group">
           <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." [formControl]="query">

@@ -78,6 +78,7 @@ export class HistoryComponent implements OnInit {
       myAlias: "",
       otherAlias: "",
       prompt: "",
+      spectate: false
     }
 
     // get the aliases of the current user and the other user in the chat room

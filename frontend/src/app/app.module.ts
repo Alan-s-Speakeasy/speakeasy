@@ -20,6 +20,7 @@ import {ApiModule, Configuration} from "../../openapi";
 import {AppConfig} from "./app.config";
 import {ChatCommandsPipe} from "./chatcommands.pipe";
 import {AlertModule} from './_alert';
+import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -39,6 +40,7 @@ export function initializeApiConfig() {
     UserStatusComponent,
     ChatroomStatusComponent,
     ChatCommandsPipe,
+    ChatSpectateComponent
   ],
   imports: [
     BrowserModule,

@@ -1,9 +1,9 @@
 import {Component, Inject, OnDestroy, OnInit} from '@angular/core';
-import {FrontendUserDetail, FrontendUser} from "../new_data";
+import {FrontendUserDetail, FrontendUser, FrontendChatroomDetail} from "../new_data";
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
-import {AdminService, UserDetails, UserSessionDetails} from "../../../openapi";
+import {AdminService, ChatRoomInfo, UserDetails, UserSessionDetails} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
 
@@ -29,10 +29,30 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   adminList: FrontendUser[] = []
   botList: FrontendUser[] = []
 
+  toggleElement: number = -1
+  toggleList: string = ""
+
+  allChatroomDetails: FrontendChatroomDetail[] = []
+
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
     this.userListSubscription = interval(1000).subscribe(response=> {
+
+      this.adminService.getApiRoomsAll().subscribe((allchatrooms)=>{
+        allchatrooms.rooms.forEach(room => {
+          let update = true
+          this.allChatroomDetails.forEach(currentRoom => {
+            if (currentRoom.roomID == room.uid) {
+              update = false
+              currentRoom.remainingTime = room.remainingTime
+            }
+          })
+          if (update) {
+            this.pushChatRoomDetails(this.allChatroomDetails, room)
+          }
+        })
+      });
 
       this.adminService.getApiUserSessions().subscribe((usersessions) => {
         while (this.humanDetails.length > 0) {
@@ -82,6 +102,44 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     })
   }
 
+  pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
+    let users :string[] = []
+    chatRoom.sessions.forEach(sessionId => {
+      let found = false
+      this.humanDetails.forEach(user => {
+        if (user.sessionId == sessionId) {
+          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+          found = true
+        }
+      })
+      this.adminDetails.forEach(user => {
+        if (user.sessionId == sessionId) {
+          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+          found = true
+        }
+      })
+      this.botDetails.forEach(user => {
+        if (user.sessionId == sessionId) {
+          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+          found = true
+        }
+      })
+      if (!found) {
+        users.push(sessionId + " (user offline)")
+      }
+    })
+    chatRoomDetails.push(
+      {
+        prompt: chatRoom.prompt,
+        roomID: chatRoom.uid,
+        startTime: chatRoom.startTime!,
+        remainingTime: chatRoom.remainingTime,
+        users: users,
+        sessions: chatRoom.sessions,
+      }
+    )
+  }
+
   pushDetail(details: FrontendUserDetail[], usersession: UserSessionDetails): void {
     details.push(
       {
@@ -120,6 +178,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
+  }
+
+  watch(chatroomDetail: FrontendChatroomDetail): void {
+    this.router.navigateByUrl('/spectate', { state: { roomID: chatroomDetail.roomID, backUrl: "userStatus" } } ).then()
   }
 
   ngOnDestroy() {

@@ -12,7 +12,7 @@
   </div>
 
   <div class="row p-2" *ngFor="let element of allUserDetails">
-    <h4 class="text-center">Online {{element.name}}</h4>
+    <h4 class="text-center">Online {{element.name}} ({{element.details.length}})</h4>
     <table class="table table-striped table-bordered">
       <thead>
       <tr class="table-{{element.table}}">
@@ -23,23 +23,44 @@
         <th scope="col">SessionId</th>
       </tr>
       </thead>
-      <tbody>
-      <tr *ngFor="let frontendUserDetail of element.details">
+      <tbody *ngFor="let frontendUserDetail of element.details; let i = index">
+      <tr (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = element.name">
         <td>{{frontendUserDetail.username}}</td>
         <td>{{frontendUserDetail.userSessionAlias}}</td>
         <td>{{frontendUserDetail.startTime  | date:'HH:mm:ss dd-MM-yyyy'}}</td>
         <td>{{frontendUserDetail.userID}}</td>
         <td>{{frontendUserDetail.sessionId}}</td>
       </tr>
+      <tr [hidden]="toggleList != element.name || toggleElement != i ? true : null">
+        <td colspan="5">
+          <table class="table">
+            <thead>
+            <tr class="table-info">
+              <th scope="col">RoomID</th>
+              <th scope="col">Partner</th>
+              <th scope="col">Watch</th>
+            </tr>
+            </thead>
+            <tbody *ngFor="let chatroomDetail of allChatroomDetails">
+            <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId)">
+              <td>{{chatroomDetail.roomID}}</td>
+              <td><span *ngFor="let user of chatroomDetail.sessions">{{user}}; </span></td>
+              <td><button type="button" class="btn btn-secondary float-end" (click)="watch(chatroomDetail)">Watch</button></td>
+            </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
       </tbody>
     </table>
   </div>
+
 
   <br>
 
   <div class="row p-2">
     <div class="col-4 p-2" *ngFor="let element of allUserLists">
-      <h4 class="text-center">All {{element.name}}</h4>
+      <h4 class="text-center">All {{element.name}} ({{element.list.length}})</h4>
       <table class="table table-striped table-bordered">
         <thead>
         <tr class="table-{{element.table}}">

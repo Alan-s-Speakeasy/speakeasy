@@ -27,14 +27,14 @@ export class ChatSpectateComponent implements OnInit {
     this.roomID = history.state.roomID;
     this.paneLog = {
       roomID: history.state.roomID,
-      session: "",
+      session: history.state.userSession,
       ordinals: [],
       messageLog: {},
       ratingOpen: false,
       ratings: {},
-      myAlias: "",
-      otherAlias: "",
-      prompt: "",
+      myAlias: history.state.userUsername,
+      otherAlias: history.state.partnerUsername,
+      prompt: "spectating " + history.state.userUsername,
       spectate: true
     }
   }

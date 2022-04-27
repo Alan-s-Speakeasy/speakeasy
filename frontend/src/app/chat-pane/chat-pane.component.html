@@ -8,6 +8,7 @@
         </div>
         <div *ngIf="paneLog.ratingOpen">
           <h5>Chat with {{paneLog.otherAlias}}</h5>
+          <p *ngIf="paneLog.spectate"><span style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
         </div>
       </div>
     </div>

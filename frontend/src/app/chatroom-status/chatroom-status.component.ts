@@ -104,7 +104,19 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {
-    this.router.navigateByUrl('/spectate', { state: { roomID: chatroomDetail.roomID, backUrl: "chatroomStatus" } } ).then()
+    let user = this.allUserDetails.find(user => user.sessionId == chatroomDetail.sessions[0])
+    let partner = this.allUserDetails.find(user => user.sessionId == chatroomDetail.sessions[1])
+    let userUsername = user ? user.username : ""
+    let partnerUsername = partner ? partner.username : ""
+
+    this.router.navigateByUrl('/spectate', { state: {
+      roomID: chatroomDetail.roomID,
+      userUsername: userUsername,
+      partnerUsername: partnerUsername,
+      userSession: chatroomDetail.sessions[0],
+      users: chatroomDetail.users,
+      backUrl: "chatroomStatus"
+    } } ).then()
   }
 
   ngOnDestroy() {

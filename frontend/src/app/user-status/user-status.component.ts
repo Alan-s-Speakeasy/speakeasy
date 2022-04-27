@@ -180,8 +180,29 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/panel').then()
   }
 
-  watch(chatroomDetail: FrontendChatroomDetail): void {
-    this.router.navigateByUrl('/spectate', { state: { roomID: chatroomDetail.roomID, backUrl: "userStatus" } } ).then()
+  watch(frontendUserDetail: FrontendUserDetail, chatroomDetail: FrontendChatroomDetail): void {
+    let partnerID = chatroomDetail.sessions.filter(ID => ID != frontendUserDetail.sessionId)[0]
+    let partner = this.humanDetails.find(human => human.sessionId == partnerID) ||
+      this.botDetails.find(bot => bot.sessionId == partnerID) ||
+      this.adminDetails.find(admin => admin.sessionId == partnerID);
+    let partnerUsername = partner ? partner.username : "";
+
+
+    this.router.navigateByUrl('/spectate', { state: {
+      roomID: chatroomDetail.roomID,
+      userUsername: frontendUserDetail.username,
+      partnerUsername: partnerUsername,
+      userSession: frontendUserDetail.sessionId,
+      users: chatroomDetail.users,
+      backUrl: "userStatus"
+    } } ).then()
+  }
+
+  readableTime(remainingTime: number): string {
+    const s = Math.floor(remainingTime / 1000);
+    const minutes = Math.floor(s / 60);
+    const seconds = s % 60;
+    return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   }
 
   ngOnDestroy() {

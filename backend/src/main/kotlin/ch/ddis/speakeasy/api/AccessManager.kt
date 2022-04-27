@@ -11,8 +11,10 @@ import io.javalin.http.Handler
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.StampedLock
+import kotlin.concurrent.timerTask
 
 object AccessManager {
 
@@ -34,6 +36,11 @@ object AccessManager {
             sessionFile.writeText("timestamp,sessionid,sessiontoken,userid,username,sessionalias\n", Charsets.UTF_8)
         }
 
+        val expiredSessionCleanupTimer = 10
+        Timer().scheduleAtFixedRate(timerTask {
+            clearExpiredSessions()
+        }, expiredSessionCleanupTimer * 1000L, expiredSessionCleanupTimer * 1000L)
+
         sessionWriter = PrintWriter(
             FileWriter(
                 sessionFile,
@@ -52,8 +59,9 @@ object AccessManager {
     }
 
     private val sessionTokenUserSessionMap = ConcurrentHashMap<String, UserSession>(1000)
-    private val userIdUserSessionMap = ConcurrentHashMap<UserId, UserSession>(1000)
+    private val userIdUserSessionMap = ConcurrentHashMap<UserId, ArrayList<UserSession>>(1000)
     private val sessionIdUserSessionMap = ConcurrentHashMap<SessionId, UserSession>(1000)
+    private val sessionTokenLastAccessMap = ConcurrentHashMap<String, Long>(1000)
 
     private fun userRoleToApiRole(userRole: UserRole): Set<RestApiRole> = when (userRole) {
         UserRole.HUMAN -> setOf(RestApiRole.ANYONE, RestApiRole.USER, RestApiRole.HUMAN)
@@ -71,14 +79,18 @@ object AccessManager {
         val alias: String
 
         if (userIdUserSessionMap.containsKey(user.id)) {
-
-            val sess = userIdUserSessionMap[user.id]!!
-            sessionId = sess.sessionId
-            alias = sess.userSessionAlias
+            val sessions = userIdUserSessionMap[user.id]!!.filter { it.sessionToken == sessionToken }
+            if (sessions.size == 1) {
+                sessionId = sessions[0].sessionId
+                alias = sessions[0].userSessionAlias
+            }
+            else {
+                sessionId = UID()
+                alias = SessionAliasGenerator.getRandomName()
+            }
 
             if (user.role == UserRole.BOT) { //in case of login, invalidate all other session of the same bot
-                val oldTokens = sessionTokenUserSessionMap.filter { it.value.user == user }.map { it.key }
-                oldTokens.forEach { clearUserSession(it) }
+                userIdUserSessionMap[user.id]!!.clear()
             }
 
         } else {
@@ -88,24 +100,42 @@ object AccessManager {
 
         val session = UserSession(user, sessionToken, sessionId, userSessionAlias = alias)
         sessionTokenUserSessionMap[sessionToken] = session
-        userIdUserSessionMap[user.id] = session
         sessionIdUserSessionMap[session.sessionId] = session
+
+        if (!userIdUserSessionMap.containsKey(user.id)) {
+            userIdUserSessionMap.put(user.id, ArrayList())
+        }
+        userIdUserSessionMap.get(user.id)?.add(session)
+
         logSession(session)
 
         return session
     }
 
-    fun getUserSessionForSessionToken(sessionToken: String): UserSession? = sessionTokenUserSessionMap[sessionToken]
+    fun getUserSessionForSessionToken(sessionToken: String): UserSession? {
+        sessionTokenLastAccessMap.put(sessionToken, System.currentTimeMillis())
+        return sessionTokenUserSessionMap[sessionToken]
+    }
 
     fun getUserSessionForSessionId(sessionId: SessionId): UserSession? = sessionIdUserSessionMap[sessionId]
 
     fun clearUserSession(sessionToken: String) {
-        val session = sessionTokenUserSessionMap.remove(sessionToken)
-        if (session != null) {
-            userIdUserSessionMap.remove(session.user.id)
-            sessionIdUserSessionMap.remove(session.sessionId)
-        }
+        sessionTokenUserSessionMap.remove(sessionToken)
+    }
 
+    private fun clearExpiredSessions() {
+        val sessionExpiryDate = 10
+        for (sessionToken in sessionTokenLastAccessMap.keys()) {
+            val lastAccess = sessionTokenLastAccessMap.get(sessionToken)!!
+            if (System.currentTimeMillis() - lastAccess > sessionExpiryDate * 1000) {
+                val session = sessionTokenUserSessionMap.remove(sessionToken)
+                if (session != null) {
+                    sessionTokenLastAccessMap.remove(sessionToken)
+                    userIdUserSessionMap.remove(session.user.id)
+                    sessionIdUserSessionMap.remove(session.sessionId)
+                }
+            }
+        }
     }
 
 

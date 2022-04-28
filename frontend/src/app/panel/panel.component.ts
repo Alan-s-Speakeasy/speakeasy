@@ -21,6 +21,7 @@ export class PanelComponent implements OnInit {
   };
   private chatRoomsSubscription!: Subscription;
   private chatRoomListSubscription!: Subscription;
+  private userDetailsSubscription!: Subscription;
   constructor(private router: Router, private frontendDataService: FrontendDataService,
               private titleService: Title,
               @Inject(UserService) private userService: UserService,
@@ -36,7 +37,7 @@ export class PanelComponent implements OnInit {
   ngOnInit(): void {
     this.titleService.setTitle("Panel Page")
 
-    this.authService.userSessionDetails.subscribe((response)=>{
+    this.userDetailsSubscription = this.authService.userSessionDetails.subscribe((response)=>{
 
         if(response != null){
           this.userName = response.userDetails.username
@@ -99,6 +100,7 @@ export class PanelComponent implements OnInit {
           if (response) {
             this.chatRoomsSubscription.unsubscribe();
             this.chatRoomListSubscription.unsubscribe();
+            this.userDetailsSubscription.unsubscribe();
             localStorage.clear()
             confirm("You are logged out. Please close all the Speakeasy tabs.")
             this.router.navigateByUrl('/login').then();
@@ -133,5 +135,4 @@ export class PanelComponent implements OnInit {
   chatroomStatus() {
     this.router.navigateByUrl('/chatroomStatus').then()
   }
-
 }

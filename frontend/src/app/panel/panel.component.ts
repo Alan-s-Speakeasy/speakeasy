@@ -98,9 +98,6 @@ export class PanelComponent implements OnInit {
       this.authService.userLogout().subscribe(
         (response)=> {
           if (response) {
-            this.chatRoomsSubscription.unsubscribe();
-            this.chatRoomListSubscription.unsubscribe();
-            this.userDetailsSubscription.unsubscribe();
             localStorage.clear()
             confirm("You are logged out. Please close all the Speakeasy tabs.")
             this.router.navigateByUrl('/login').then();
@@ -134,5 +131,11 @@ export class PanelComponent implements OnInit {
 
   chatroomStatus() {
     this.router.navigateByUrl('/chatroomStatus').then()
+  }
+
+  ngOnDestroy() {
+    this.userDetailsSubscription.unsubscribe();
+    this.chatRoomsSubscription.unsubscribe();
+    this.chatRoomListSubscription.unsubscribe();
   }
 }

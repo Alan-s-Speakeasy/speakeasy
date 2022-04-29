@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.user
 
+import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
@@ -54,6 +55,39 @@ object UserManager {
             }
         }
         updateFileLock()
+    }
+
+
+    fun addUser(username: String, role: UserRole): String {
+        val alphabet: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+        val password = List(15) { alphabet.random() }.joinToString("")
+
+        addUser(username, role, PlainPassword(password))
+        return password
+    }
+
+    fun addUser(username: String, role: UserRole, password: Password) {
+        this.lock.write {
+            val uid = UID()
+            users.add(User(uid, username, role, password))
+        }
+        store()
+    }
+
+    fun removeUser(username: String): Boolean {
+        this.lock.write {
+            for (user in users) {
+                if (username == user.name) {
+                    if (AccessManager.hasUserIdActiveSessions(user.id)) {
+                        return false
+                    }
+                    users.remove(user)
+                    return true
+                }
+            }
+        }
+        store()
+        return true
     }
 
     fun store() = this.lock.read {

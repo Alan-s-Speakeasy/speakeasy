@@ -14,6 +14,7 @@ import java.io.PrintWriter
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.StampedLock
+import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
 
 object AccessManager {
@@ -118,6 +119,10 @@ object AccessManager {
     }
 
     fun getUserSessionForSessionId(sessionId: SessionId): UserSession? = sessionIdUserSessionMap[sessionId]
+
+    fun hasUserIdActiveSessions(userId: UserId): Boolean {
+        return userIdUserSessionMap.containsKey(userId) && userIdUserSessionMap[userId]!!.size > 0
+    }
 
     fun clearUserSession(sessionToken: String) {
         sessionTokenUserSessionMap.remove(sessionToken)

@@ -6,8 +6,8 @@ import {Title} from "@angular/platform-browser";
 import {ChatService, UserService, UserSessionDetails} from "../../../openapi";
 import {FrontendDataService} from "../frontend-data.service";
 import {CommonService} from "../common.service";
-import {takeUntil,take} from "rxjs/operators";
-import { AlertService } from '../_alert';
+import {AlertService} from '../_alert';
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: 'app-panel',
@@ -29,7 +29,9 @@ export class PanelComponent implements OnInit {
               @Inject(AuthService) private authService: AuthService,
               @Inject(CommonService) private commonService: CommonService,
               @Inject(ChatService) private chatService: ChatService,
-              public alertService: AlertService) { }
+              public alertService: AlertService,
+              private modalService: NgbModal) {
+  }
 
   userName!: string
   role!: string
@@ -66,24 +68,24 @@ export class PanelComponent implements OnInit {
 
   }
 
+  openModal(content: any) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'})
+  }
+
   userLogout(): void {
-    if(confirm("Are you sure you want to log out from your current session?")) {
-      this.authService.userLogout().subscribe(
-        (response)=> {
-          if (response) {
-            localStorage.clear()
-            confirm("You are logged out. Please close all the Speakeasy tabs.")
-            this.router.navigateByUrl('/login').then();
-          }
-          else {
-            this.alertService.error("Logout failed. Please try again.")
-          }
-        },
-        error => {
+    this.authService.userLogout().subscribe(
+      (response) => {
+        if (response) {
+          localStorage.clear()
+          this.router.navigateByUrl('/login').then();
+        } else {
           this.alertService.error("Logout failed. Please try again.")
         }
-      );
-    }
+      },
+      error => {
+        this.alertService.error("Logout failed. Please try again.")
+      }
+    );
   }
 
   chat(): void {

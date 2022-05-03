@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="col-2">
-      <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
+      <button type="button" class="btn btn-secondary float-end" (click)="openModal(modalData)">Home</button>
     </div>
   </div>
 
@@ -52,3 +52,18 @@
     </div>
   </div>
 </div>
+
+<ng-template #modalData let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Unassessed Chatrooms</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p>You will not be able to see any unassessed chatrooms in the history. Do you want to continue?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-danger" (click)="modal.close(); home()">Confirm</button>
+  </div>
+</ng-template>

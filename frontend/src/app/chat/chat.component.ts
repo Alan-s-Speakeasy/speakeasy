@@ -10,6 +10,7 @@ import {Component, Inject, OnDestroy, OnInit, QueryList, ViewChildren} from '@an
 import {AuthService} from "../authentication.service";
 import {interval, Subscription} from "rxjs";
 import {AlertService} from "../_alert";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({selector: 'app-chat', templateUrl: './chat.component.html', styleUrls: ['./chat.component.css'],})
 
@@ -25,7 +26,8 @@ export class ChatComponent implements OnInit, OnDestroy {
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(ChatService) private chatService: ChatService,
               @Inject(DOCUMENT) private document: Document,
-              public alertService: AlertService) { }
+              public alertService: AlertService,
+              private modalService: NgbModal) { }
 
   private chatroomSubscription!: Subscription;
   sessionId!: string
@@ -174,11 +176,18 @@ export class ChatComponent implements OnInit, OnDestroy {
     })
   }
 
+  openModal(content: any) {
+    if (this.paneLogs.length > 0) {
+      this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'})
+    }
+    else {
+      this.home()
+    }
+  }
+
   // exit chat/rating and redirect to the panel page
   home(): void {
-    if(confirm("You will not be able to see any unassessed chatrooms in the history. Do you want to continue?")){
-      this.router.navigateByUrl('/panel').then()
-    }
+    this.router.navigateByUrl('/panel').then()
   }
 
   ngOnDestroy(): void {

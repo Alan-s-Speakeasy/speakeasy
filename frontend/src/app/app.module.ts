@@ -21,6 +21,7 @@ import {AppConfig} from "./app.config";
 import {ChatCommandsPipe} from "./chatcommands.pipe";
 import {AlertModule} from './_alert';
 import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
+import {NgbModule} from "@ng-bootstrap/ng-bootstrap";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -49,7 +50,8 @@ export function initializeApiConfig() {
     FormsModule,
     HttpClientModule,
     ApiModule,
-    AlertModule
+    AlertModule,
+    NgbModule
   ],
   providers: [
     FrontendDataService,

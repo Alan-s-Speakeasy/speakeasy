@@ -5,6 +5,7 @@ import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {PasswordChangeRequest, UserService, UserSessionDetails} from "../../../openapi";
 import {AlertService} from "../_alert";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'app-password',
@@ -13,6 +14,7 @@ import {AlertService} from "../_alert";
 })
 export class PasswordComponent implements OnInit {
 
+  private chatRoomsSubscription!: Subscription;
   constructor(private router: Router, private commonService: CommonService,
               private titleService: Title,
               @Inject(UserService) private userService: UserService,
@@ -27,6 +29,7 @@ export class PasswordComponent implements OnInit {
 
   ngOnInit(): void {
     this.titleService.setTitle("Password Reset")
+    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
   }
 
   changePassword(): void {
@@ -71,5 +74,9 @@ export class PasswordComponent implements OnInit {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
+  }
+
+  ngOnDestroy() {
+    this.chatRoomsSubscription.unsubscribe()
   }
 }

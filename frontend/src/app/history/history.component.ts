@@ -7,6 +7,8 @@ import {PaneLog} from "../new_data";
 import {UserService, FeedbackService, ChatService, ChatRoomList, ChatRoomInfo} from "../../../openapi";
 import {AuthService} from "../authentication.service";
 import {AlertService} from "../_alert";
+import {Subscription} from "rxjs";
+import {CommonService} from "../common.service";
 
 @Component({
   selector: 'app-history',
@@ -15,10 +17,12 @@ import {AlertService} from "../_alert";
 })
 export class HistoryComponent implements OnInit {
 
+  private chatRoomsSubscription!: Subscription;
   constructor(private router: Router,
               private frontendDataService: FrontendDataService,
               private titleService: Title,
               private authService: AuthService,
+              @Inject(CommonService) private commonService: CommonService,
               @Inject(UserService) private userService: UserService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(ChatService) private chatService: ChatService,
@@ -40,6 +44,8 @@ export class HistoryComponent implements OnInit {
       this.alertService.error("You are not logged in!")
       this.router.navigateByUrl('/panel').then()
     }
+
+    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
 
     this.paneLogsInit()
   }
@@ -100,6 +106,10 @@ export class HistoryComponent implements OnInit {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
+  }
+
+  ngOnDestroy() {
+    this.chatRoomsSubscription.unsubscribe()
   }
 
 }

@@ -1,9 +1,9 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {Router} from "@angular/router";
-import {Subscription, interval} from "rxjs";
+import {Subscription} from "rxjs";
 import {AuthService} from "../authentication.service";
 import {Title} from "@angular/platform-browser";
-import {UserService, ChatService, ChatRoomList, UserSessionDetails} from "../../../openapi";
+import {ChatService, UserService, UserSessionDetails} from "../../../openapi";
 import {FrontendDataService} from "../frontend-data.service";
 import {CommonService} from "../common.service";
 import {takeUntil,take} from "rxjs/operators";
@@ -22,6 +22,7 @@ export class PanelComponent implements OnInit {
   private chatRoomsSubscription!: Subscription;
   private chatRoomListSubscription!: Subscription;
   private userDetailsSubscription!: Subscription;
+
   constructor(private router: Router, private frontendDataService: FrontendDataService,
               private titleService: Title,
               @Inject(UserService) private userService: UserService,
@@ -37,59 +38,31 @@ export class PanelComponent implements OnInit {
   ngOnInit(): void {
     this.titleService.setTitle("Panel Page")
 
-    this.userDetailsSubscription = this.authService.userSessionDetails.subscribe((response)=>{
+    this.userDetailsSubscription = this.authService.userSessionDetails.subscribe((response) => {
 
-        if(response != null){
+        if (response != null) {
           this.userName = response.userDetails.username
           this.role = response.userDetails.role
           this.session = response
-          this.startChatSubscriptions();
         }
       },
-      error => {},
-      ()=>{
+      error => {
+      },
+      () => {
         if (!this.role || !this.userName) {
           this.alertService.success("You are not logged in!", this.options)
           this.router.navigateByUrl('/login').then()
         }
       });
 
+    this.startChatSubscriptions();
   }
 
   startChatSubscriptions(): void {
-      this.chatRoomsSubscription = interval(2000).subscribe((number) => {
-        let newRooms!: ChatRoomList;
-        let oldRooms: String[];
-        let currentRooms: String[];
-        let addedRooms: String[];
-        this.commonService.Rooms.pipe(take(1)).subscribe(
-          (value) => {
-            if (value) {
-              oldRooms = value?.rooms.map(({uid}) => uid);
-            }
-          });
-        this.commonService.getChatRooms().pipe(take(1)).subscribe((value) => {
-            newRooms = value;
-            if (value.rooms) {
-              currentRooms = value.rooms.map(({uid}) => uid);
-            }
-          },
-          error => {
-          },
-          () => {
-            addedRooms = currentRooms.filter(item => oldRooms.indexOf(item) == -1);
-            if (addedRooms.length > 0) {
-              if (addedRooms.length == 1) {
-                this.alertService.success("A new chat room has become available!", this.options)
-              } else {
-                this.alertService.success(addedRooms.length + " new chat rooms has become available!", this.options)
-              }
-            }
-          });
-      })
+    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
 
-      this.chatRoomListSubscription = this.commonService.Rooms.subscribe((roomList) => {
-      })
+    this.chatRoomListSubscription = this.commonService.Rooms.subscribe((roomList) => {
+    })
 
   }
 

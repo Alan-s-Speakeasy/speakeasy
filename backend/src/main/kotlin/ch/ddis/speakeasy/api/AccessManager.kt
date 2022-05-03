@@ -121,7 +121,7 @@ object AccessManager {
     fun getUserSessionForSessionId(sessionId: SessionId): UserSession? = sessionIdUserSessionMap[sessionId]
 
     fun hasUserIdActiveSessions(userId: UserId): Boolean {
-        return userIdUserSessionMap.containsKey(userId) && userIdUserSessionMap[userId]!!.size > 0
+        return userIdUserSessionMap[userId]?.isNotEmpty() == true
     }
 
     fun clearUserSession(sessionToken: String) {
@@ -136,7 +136,7 @@ object AccessManager {
                 val session = sessionTokenUserSessionMap.remove(sessionToken)
                 if (session != null) {
                     sessionTokenLastAccessMap.remove(sessionToken)
-                    userIdUserSessionMap.remove(session.user.id)
+                    userIdUserSessionMap[session.user.id]!!.remove(session)
                     sessionIdUserSessionMap.remove(session.sessionId)
                 }
             }

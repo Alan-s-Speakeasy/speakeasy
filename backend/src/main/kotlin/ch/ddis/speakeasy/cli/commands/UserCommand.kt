@@ -9,6 +9,7 @@ import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.types.enum
 import com.jakewharton.picnic.table
 
 class UserCommand : NoOpCliktCommand(name = "user") {
@@ -74,11 +75,11 @@ class UserCommand : NoOpCliktCommand(name = "user") {
     inner class AddNewUserCommand :
         CliktCommand(name = "add", help = "Add a new user") {
 
-        private val role: String by option(
+        private val role: UserRole by option(
             "-r",
             "--role",
             help = "Role of the user to add"
-        ).required()
+        ).enum<UserRole>().required()
 
         private val username: String by option(
             "-u",
@@ -99,21 +100,16 @@ class UserCommand : NoOpCliktCommand(name = "user") {
                 return
             }
 
-            if(!arrayOf("HUMAN", "BOT", "ADMIN").contains(role)) {
-               println("role is not one of HUMAN, ADMIN or BOT")
-               return
-            }
-
             val setPassword: String
             if (password != null) {
-                UserManager.addUser(username, UserRole.valueOf(role), PlainPassword(password!!))
+                UserManager.addUser(username, role, PlainPassword(password!!))
                 setPassword = password!!
             }
             else {
-                setPassword = UserManager.addUser(username, UserRole.valueOf(role))
+                setPassword = UserManager.addUser(username, role)
             }
 
-            println("added %s %s with password %s".format(role, username, setPassword))
+            println("added $role $username with password $setPassword")
         }
     }
 
@@ -134,10 +130,10 @@ class UserCommand : NoOpCliktCommand(name = "user") {
             }
 
             if (UserManager.removeUser(username)) {
-                println("user %s removed".format(username))
+                println("user $username removed")
             }
             else {
-                println("could not remove user %s: active sessions found".format(username))
+                println("could not remove user $username: active sessions found")
             }
             return
         }

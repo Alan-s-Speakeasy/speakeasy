@@ -51,16 +51,12 @@ export class ChatPaneComponent implements OnInit {
         this.paneLog.messageLog = {}
 
         response.messages.forEach(api_message => {
-          let myMessage = false
-          if (api_message.session == this.paneLog.session) {
-            myMessage = true
-            if (this.num_to_ask > 0) {
-              this.num_to_ask --
-            }
+          if (api_message.myMessage && this.num_to_ask > 0) {
+            this.num_to_ask --
           }
           let message: Message;
           message = {
-            myMessage: myMessage,
+            myMessage: this.paneLog.spectate ? api_message.session == this.paneLog.session : api_message.myMessage,
             ordinal: api_message.ordinal,
             message: api_message.message,
             time: api_message.timeStamp,

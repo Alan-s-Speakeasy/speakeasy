@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
@@ -135,9 +136,9 @@ data class ChatRoomState(
     val messages: List<RestChatMessage>,
     val reactions: List<ChatMessageReaction>
 ) {
-    constructor(room: ChatRoom, since: Long) : this(
+    constructor(room: ChatRoom, since: Long, sessionId: SessionId) : this(
         ChatRoomInfo(room),
-        ChatMessage.toRestMessages(room.getMessagesSince(since), room.sessions),
+        ChatMessage.toRestMessages(room.getMessagesSince(since), room.sessions, sessionId),
         room.getAllReactions()
     )
 }
@@ -185,7 +186,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
             }
         }
 
-        return ChatRoomState(room, since)
+        return ChatRoomState(room, since, session.sessionId)
 
     }
 }
@@ -335,20 +336,23 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val request = ctx.body<ChatRequest>()
 
-        val requestedSession =
-            AccessManager.listSessions().find { it.user.name == request.username } ?: throw ErrorStatusException(
+        val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
+
+        if (requestedSessions.size == 0) {
+            throw ErrorStatusException(
                 404,
                 "No session found for user ${request.username}",
                 ctx
             )
+        }
 
-        if (session.user.role != UserRole.ADMIN && requestedSession.user.role != UserRole.BOT) {
+        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {
             throw ErrorStatusException(403, "Cannot establish a chat with that user", ctx)
         }
 
-        val relevantSessions = listOf(session, requestedSession)
+        val relevantSessions = listOf(listOf(session), requestedSessions)
 
-        ChatRoomManager.create(relevantSessions, true, "Chatroom requested by ${session.userSessionAlias}")
+        ChatRoomManager.create(relevantSessions.flatten(), true, "Chatroom requested by ${session.userSessionAlias}")
             .also { it.setEndTime(System.currentTimeMillis() + 10 * 1000 * 60) }
 
         return SuccessStatus("Chatroom created")

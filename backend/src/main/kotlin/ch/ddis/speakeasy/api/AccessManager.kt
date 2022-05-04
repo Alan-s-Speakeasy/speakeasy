@@ -79,15 +79,16 @@ object AccessManager {
         val sessionId: SessionId
         val alias: String
 
-        if (userIdUserSessionMap.containsKey(user.id)) {
-            val sessions = userIdUserSessionMap[user.id]!!.filter { it.sessionToken == sessionToken }
+        if (userIdUserSessionMap.containsKey(user.id) && userIdUserSessionMap[user.id]!!.size > 0) {
+            val userSessions = userIdUserSessionMap[user.id]!!
+            val sessions = userSessions.filter { it.sessionToken == sessionToken }
             if (sessions.size == 1) {
                 sessionId = sessions[0].sessionId
                 alias = sessions[0].userSessionAlias
             }
             else {
                 sessionId = UID()
-                alias = SessionAliasGenerator.getRandomName()
+                alias = userSessions[0].userSessionAlias
             }
 
             if (user.role == UserRole.BOT) { //in case of login, invalidate all other session of the same bot
@@ -126,6 +127,12 @@ object AccessManager {
 
     fun hasUserIdActiveSessions(userId: UserId): Boolean {
         return userIdUserSessionMap[userId]?.isNotEmpty() == true
+    }
+
+    fun doSessionsBelongToSameUser(sessionId1: SessionId, sessionId2: SessionId): Boolean {
+        val session1 = getUserSessionForSessionId(sessionId1)
+        val session2 = getUserSessionForSessionId(sessionId2)
+        return session1 != null && session2 != null && session1.user.id == session2.user.id
     }
 
     fun clearUserSession(sessionToken: String) {

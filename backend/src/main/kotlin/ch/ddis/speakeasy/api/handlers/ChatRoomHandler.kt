@@ -102,6 +102,7 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestH
         ]
     )
     override fun doGet(ctx: Context): ChatRoomList {
+        AccessManager.updateLastAccess(ctx.req.session.id)
         return ChatRoomList(
             ChatRoomManager.listAll().map { ChatRoomInfo(it) }
         )
@@ -122,6 +123,7 @@ class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManage
         ]
     )
     override fun doGet(ctx: Context): ChatRoomList {
+        AccessManager.updateLastAccess(ctx.req.session.id)
         return ChatRoomList(
             ChatRoomManager.listActive().map { ChatRoomInfo(it) }
         )

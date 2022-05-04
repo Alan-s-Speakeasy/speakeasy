@@ -113,8 +113,12 @@ object AccessManager {
         return session
     }
 
+    fun updateLastAccess(sessionToken: String) {
+        sessionTokenLastAccessMap[sessionToken] = System.currentTimeMillis()
+    }
+
     fun getUserSessionForSessionToken(sessionToken: String): UserSession? {
-        sessionTokenLastAccessMap.put(sessionToken, System.currentTimeMillis())
+        updateLastAccess(sessionToken);
         return sessionTokenUserSessionMap[sessionToken]
     }
 

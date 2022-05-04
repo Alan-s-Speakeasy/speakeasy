@@ -64,7 +64,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     chatRoom.sessions.forEach(sessionId => {
       let found = false
       this.allUserDetails.forEach(user => {
-        if (user.sessionId == sessionId) {
+        if (user.sessionId[0] == sessionId) {
           users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
           found = true
         }
@@ -86,17 +86,26 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   pushDetail(details: FrontendUserDetail[], usersession: UserSessionDetails): void {
-    details.push(
-      {
-        userID: usersession.userDetails.id,
-        username: usersession.userDetails.username,
-        role: usersession.userDetails.role,
-        startTime: usersession.startTime,
-        userSessionAlias: usersession.userSessionAlias,
-        sessionId: usersession.sessionId,
-        sessionToken: usersession.sessionToken,
-      }
-    )
+    let userExists = details.find(u => u.userID == usersession.userDetails.id)
+
+    if (userExists) {
+      userExists.sessionId.push(usersession.sessionId);
+      userExists.startTime.push(usersession.startTime);
+      userExists.sessionToken.push(usersession.sessionToken);
+    }
+    else {
+      details.push(
+        {
+          userID: usersession.userDetails.id,
+          username: usersession.userDetails.username,
+          role: usersession.userDetails.role,
+          startTime: [usersession.startTime],
+          userSessionAlias: usersession.userSessionAlias,
+          sessionId: [usersession.sessionId],
+          sessionToken: [usersession.sessionToken],
+        }
+      )
+    }
   }
 
   home(): void {
@@ -104,8 +113,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {
-    let user = this.allUserDetails.find(user => user.sessionId == chatroomDetail.sessions[0])
-    let partner = this.allUserDetails.find(user => user.sessionId == chatroomDetail.sessions[1])
+    let user = this.allUserDetails.find(user => user.sessionId[0] == chatroomDetail.sessions[0])
+    let partner = this.allUserDetails.find(user => user.sessionId[0] == chatroomDetail.sessions[1])
     let userUsername = user ? user.username : ""
     let partnerUsername = partner ? partner.username : ""
 

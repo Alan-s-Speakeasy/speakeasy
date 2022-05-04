@@ -77,6 +77,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         })
       });
 
+
       this.adminService.getApiUserList().subscribe((userlist) => {
         while (this.humanList.length > 0) {
           this.humanList.pop()
@@ -107,19 +108,19 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     chatRoom.sessions.forEach(sessionId => {
       let found = false
       this.humanDetails.forEach(user => {
-        if (user.sessionId == sessionId) {
+        if (user.sessionId[0] == sessionId) {
           users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
           found = true
         }
       })
       this.adminDetails.forEach(user => {
-        if (user.sessionId == sessionId) {
+        if (user.sessionId[0] == sessionId) {
           users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
           found = true
         }
       })
       this.botDetails.forEach(user => {
-        if (user.sessionId == sessionId) {
+        if (user.sessionId[0] == sessionId) {
           users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
           found = true
         }
@@ -141,17 +142,26 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushDetail(details: FrontendUserDetail[], usersession: UserSessionDetails): void {
-    details.push(
-      {
-        userID: usersession.userDetails.id,
-        username: usersession.userDetails.username,
-        role: usersession.userDetails.role,
-        startTime: usersession.startTime,
-        userSessionAlias: usersession.userSessionAlias,
-        sessionId: usersession.sessionId,
-        sessionToken: usersession.sessionToken,
-      }
-    )
+    let userExists = details.find(u => u.userID == usersession.userDetails.id)
+
+    if (userExists) {
+      userExists.sessionId.push(usersession.sessionId);
+      userExists.startTime.push(usersession.startTime);
+      userExists.sessionToken.push(usersession.sessionToken);
+    }
+    else {
+      details.push(
+        {
+          userID: usersession.userDetails.id,
+          username: usersession.userDetails.username,
+          role: usersession.userDetails.role,
+          startTime: [usersession.startTime],
+          userSessionAlias: usersession.userSessionAlias,
+          sessionId: [usersession.sessionId],
+          sessionToken: [usersession.sessionToken],
+        }
+      )
+    }
   }
 
   pushItem(list: FrontendUser[], userDetail: UserDetails): void {
@@ -181,12 +191,11 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   watch(frontendUserDetail: FrontendUserDetail, chatroomDetail: FrontendChatroomDetail): void {
-    let partnerID = chatroomDetail.sessions.filter(ID => ID != frontendUserDetail.sessionId)[0]
-    let partner = this.humanDetails.find(human => human.sessionId == partnerID) ||
-      this.botDetails.find(bot => bot.sessionId == partnerID) ||
-      this.adminDetails.find(admin => admin.sessionId == partnerID);
+    let partnerID = chatroomDetail.sessions.filter(ID => !frontendUserDetail.sessionId.includes(ID))[0]
+    let partner = this.humanDetails.find(human => human.sessionId.includes(partnerID)) ||
+      this.botDetails.find(bot => bot.sessionId.includes(partnerID)) ||
+      this.adminDetails.find(admin => admin.sessionId.includes(partnerID));
     let partnerUsername = partner ? partner.username : "";
-
 
     this.router.navigateByUrl('/spectate', { state: {
       roomID: chatroomDetail.roomID,

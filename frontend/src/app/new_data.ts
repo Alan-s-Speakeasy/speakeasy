@@ -39,10 +39,10 @@ export interface FrontendUserDetail {
   userID: string,
   role: string,
   username: string,
-  startTime: number,
+  startTime: number[],
   userSessionAlias: string,
-  sessionId: string,
-  sessionToken: string,
+  sessionId: string[],
+  sessionToken: string[],
 }
 
 export interface FrontendChatroomDetail {

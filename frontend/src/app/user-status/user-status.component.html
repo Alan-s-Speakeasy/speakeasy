@@ -18,18 +18,22 @@
       <tr class="table-{{element.table}}">
         <th scope="col">UserName</th>
         <th scope="col">Alias</th>
-        <th scope="col">StartTime</th>
         <th scope="col">UserID</th>
-        <th scope="col">SessionId</th>
+        <th scope="col">SessionId (StartTime)</th>
       </tr>
       </thead>
       <tbody *ngFor="let frontendUserDetail of element.details; let i = index">
       <tr (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = element.name">
         <td>{{frontendUserDetail.username}}</td>
         <td>{{frontendUserDetail.userSessionAlias}}</td>
-        <td>{{frontendUserDetail.startTime  | date:'HH:mm:ss dd-MM-yyyy'}}</td>
         <td>{{frontendUserDetail.userID}}</td>
-        <td>{{frontendUserDetail.sessionId}}</td>
+        <td>
+          <ul>
+            <li *ngFor="let session of frontendUserDetail.sessionId; let j = index">
+              {{session}} ({{frontendUserDetail.startTime[j] | date:'HH:mm:ss dd-MM-yyyy'}})
+            </li>
+          </ul>
+        </td>
       </tr>
       <tr [hidden]="toggleList != element.name || toggleElement != i ? true : null">
         <td colspan="5">
@@ -43,7 +47,7 @@
             </tr>
             </thead>
             <tbody *ngFor="let chatroomDetail of allChatroomDetails">
-            <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId)">
+            <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId[0])">
               <td>{{chatroomDetail.roomID}}</td>
               <td><span *ngFor="let user of chatroomDetail.sessions">{{user}}<br> </span></td>
               <td>{{readableTime(chatroomDetail.remainingTime)}}</td>

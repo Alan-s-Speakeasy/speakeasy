@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.api
 
+import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
@@ -14,7 +15,6 @@ import java.io.PrintWriter
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.StampedLock
-import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
 
 object AccessManager {
@@ -108,6 +108,7 @@ object AccessManager {
             userIdUserSessionMap.put(user.id, ArrayList())
         }
         userIdUserSessionMap.get(user.id)?.add(session)
+        ChatRoomManager.join(session)
 
         logSession(session)
 
@@ -141,6 +142,7 @@ object AccessManager {
 
     fun forceClearUserId(userId: UserId) {
         userIdUserSessionMap.remove(userId)?.forEach {
+            ChatRoomManager.leave(it)
             sessionTokenLastAccessMap.remove(it.sessionToken)
             sessionIdUserSessionMap.remove(it.sessionId)
             sessionTokenUserSessionMap.remove(it.sessionToken)
@@ -154,6 +156,7 @@ object AccessManager {
             if (System.currentTimeMillis() - lastAccess > sessionExpiryDate * 1000) {
                 val session = sessionTokenUserSessionMap.remove(sessionToken)
                 if (session != null) {
+                    ChatRoomManager.leave(session)
                     sessionTokenLastAccessMap.remove(sessionToken)
                     userIdUserSessionMap[session.user.id]!!.remove(session)
                     sessionIdUserSessionMap.remove(session.sessionId)

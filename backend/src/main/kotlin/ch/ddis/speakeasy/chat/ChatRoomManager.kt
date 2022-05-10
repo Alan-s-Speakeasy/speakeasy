@@ -25,12 +25,15 @@ object ChatRoomManager {
     fun getAssessedRoomsByUserSession(sessionToken: String): List<ChatRoom> =
         this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == sessionToken } && it.assessed }
 
+    fun join(session: UserSession) = getByUser(session.user.id).forEach { it.sessions.add(session) }
+
+    fun leave(session: UserSession) = getByUser(session.user.id).forEach { it.sessions.remove(session) }
 
     fun create(sessions: List<UserSession>, log: Boolean = true, prompt: String): ChatRoom {
         val chatRoom = if (log) {
-            LoggingChatRoom(sessions = sessions, basePath = basePath)
+            LoggingChatRoom(sessions = sessions.toSet() as MutableSet<UserSession>, basePath = basePath)
         } else {
-            ChatRoom(sessions = sessions)
+            ChatRoom(sessions = sessions.toSet() as MutableSet<UserSession>)
         }
         chatRoom.prompt = prompt
         chatrooms[chatRoom.uid] = chatRoom

@@ -9,7 +9,7 @@ import java.util.concurrent.locks.StampedLock
 
 class LoggingChatRoom(
     uid: UID = UID(),
-    sessions: List<UserSession>,
+    sessions: MutableSet<UserSession>,
     startTime: Long = System.currentTimeMillis(),
     basePath: File,
     endTime: Long? = null

@@ -11,7 +11,7 @@ typealias ChatRoomId = UID
 
 open class ChatRoom(
     val uid: ChatRoomId = UID(),
-    val sessions: List<UserSession>,
+    val sessions: MutableSet<UserSession>,
     val startTime: Long = System.currentTimeMillis()
 ) {
     var prompt: String = ""
@@ -26,8 +26,6 @@ open class ChatRoom(
         get() = max((endTime ?: Long.MAX_VALUE) - System.currentTimeMillis(), 0)
 
     private val lock: StampedLock = StampedLock()
-
-    private val sessionIds = this.sessions.map { it.sessionId }.toSet()
 
     private val messages = mutableListOf<ChatMessage>()
 
@@ -56,7 +54,7 @@ open class ChatRoom(
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
-        require(message.sessionId in this.sessionIds) { "User session '${message.sessionId.string}' does not belong to Chatroom ${this.uid.string}" }
+        require(message.sessionId in this.sessions.map { it.sessionId }) { "User session '${message.sessionId.string}' does not belong to Chatroom ${this.uid.string}" }
         this.messages.add(message)
         return@write //actively return nothing
     }

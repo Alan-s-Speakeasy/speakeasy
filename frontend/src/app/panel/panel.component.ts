@@ -69,7 +69,7 @@ export class PanelComponent implements OnInit {
   }
 
   openModal(content: any) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'})
+    this.modalService.open(content, { centered: true })
   }
 
   userLogout(): void {

@@ -51,7 +51,11 @@
               <td>{{chatroomDetail.roomID}}</td>
               <td><span *ngFor="let user of chatroomDetail.sessions">{{user}}<br> </span></td>
               <td>{{readableTime(chatroomDetail.remainingTime)}}</td>
-              <td><button type="button" class="btn btn-secondary float-end" (click)="watch(frontendUserDetail, chatroomDetail)">Watch</button></td>
+              <td>
+                <button type="button" class="btn btn-secondary float-end"
+                        (click)="watch(frontendUserDetail, chatroomDetail)">Watch
+                </button>
+              </td>
             </tr>
             </tbody>
           </table>
@@ -66,22 +70,58 @@
 
   <div class="row p-2">
     <div class="col-4 p-2" *ngFor="let element of allUserLists">
-      <h4 class="text-center">All {{element.name}} ({{element.list.length}})</h4>
+      <div class="row">
+        <h4 class="text-center col-10">All {{element.name}} ({{element.list.length}})</h4>
+        <i class="fa fa-plus btn col-2" (click)="openUserAddModal(addUserModalData, element.name)"></i>
+      </div>
       <table class="table table-striped table-bordered">
         <thead>
         <tr class="table-{{element.table}}">
           <th scope="col">UserName</th>
-          <th scope="col">UserID</th>
+          <th scope="col" colspan="2">UserID</th>
         </tr>
         </thead>
         <tbody>
         <tr *ngFor="let frontendUser of element.list">
           <td>{{frontendUser.username}}</td>
           <td>{{frontendUser.userID}}</td>
+          <td><i class="fa fa-trash btn col-1" (click)="openRemoveUserModal(removeUserModalData, frontendUser.username)"></i></td>
         </tr>
         </tbody>
       </table>
     </div>
   </div>
-
 </div>
+
+<ng-template #addUserModalData let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Add {{roleToAdd}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form>
+      <input type="text" class="form-control" placeholder="Username" [formControl]="usernameToAdd"> <br>
+      <input type="password" class="form-control" placeholder="Password" [formControl]="passwordToAdd">
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" ngbAutofocus class="btn btn-danger" (click)="modal.close(); addUser()">Add</button>
+  </div>
+</ng-template>
+
+<ng-template #removeUserModalData let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Remove {{usernameToRemove}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p>Are you sure that you want to remove user <b>{{usernameToRemove}}?</b></p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" ngbAutofocus class="btn btn-danger" (click)="modal.close(); removeUser()">Confirm</button>
+  </div>
+</ng-template>

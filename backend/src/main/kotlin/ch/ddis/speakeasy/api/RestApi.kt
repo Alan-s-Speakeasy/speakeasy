@@ -36,6 +36,8 @@ object RestApi {
             GetCurrentUserHandler(),
             ListUsersHandler(),
             ListUserSessionsHandler(),
+            AddUserHandler(),
+            RemoveUserHandler(),
             ChangePasswordHandler(),
 
             ListChatRoomsHandler(),
@@ -88,6 +90,8 @@ object RestApi {
                         listOf(
                             "/api/user/list",
                             "/api/user/sessions",
+                            "/api/user/add",
+                            "/api/user/remove",
                             "/api/user/password",
                             "/api/rooms/all",
                             "/api/rooms/active",

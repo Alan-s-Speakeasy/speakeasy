@@ -178,7 +178,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   openModal(content: any) {
     if (this.paneLogs.length > 0) {
-      this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'})
+      this.modalService.open(content, { centered: true })
     }
     else {
       this.home()

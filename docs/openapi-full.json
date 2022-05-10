@@ -172,6 +172,92 @@
         }
       }
     },
+    "/api/user/add" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Adds a new user.",
+        "operationId" : "addApiUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddUserRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/remove" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Removes an existing user.",
+        "operationId" : "removeApiUser",
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/user/password" : {
       "patch" : {
         "tags" : [ "User" ],
@@ -868,6 +954,22 @@
           "role" : {
             "type" : "string",
             "enum" : [ "HUMAN", "BOT", "ADMIN" ]
+          }
+        }
+      },
+      "AddUserRequest" : {
+        "required" : [ "role", "username", "password" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "HUMAN", "BOT", "ADMIN" ]
+          },
+          "password" : {
+            "type" : "string"
           }
         }
       },

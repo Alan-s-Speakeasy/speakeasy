@@ -43,6 +43,71 @@ class ListUserSessionsHandler : GetRestHandler<List<UserSessionDetails>>, Access
     override val route = "user/sessions"
 }
 
+class AddUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    data class AddUserRequest(var username: String, var role: UserRole, var password: String)
+
+    @OpenApi(
+        summary = "Adds a new user.",
+        path = "/api/user/add",
+        method = HttpMethod.POST,
+        requestBody = OpenApiRequestBody([OpenApiContent(AddUserRequest::class)]),
+        tags = ["Admin"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        ]
+    )
+    override fun doPost(ctx: Context): SuccessStatus {
+        val addUserRequest = try {
+            ctx.bodyAsClass(AddUserRequest::class.java)
+        } catch (e: BadRequestResponse) {
+            throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+        }
+
+        UserManager.addUser(addUserRequest.username, addUserRequest.role, PlainPassword(addUserRequest.password))
+
+        return SuccessStatus("User added")
+    }
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "user/add"
+}
+
+class RemoveUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    @OpenApi(
+        summary = "Removes an existing user.",
+        path = "/api/user/remove",
+        method = HttpMethod.POST,
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
+        tags = ["Admin"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPost(ctx: Context): SuccessStatus {
+        val username = ctx.body()
+
+        if (username.isBlank()) {
+            throw ErrorStatusException(400, "username cannot be empty", ctx)
+        }
+
+        if (!UserManager.removeUser(username)) {
+            throw ErrorStatusException(403, "user has active sessions", ctx)
+        }
+
+        return SuccessStatus("User removed")
+    }
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "user/remove"
+}
+
 data class PasswordChangeRequest(val currentPassword: String, val newPassword: String)
 
 class ChangePasswordHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHandler {

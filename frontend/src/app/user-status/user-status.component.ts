@@ -3,9 +3,12 @@ import {FrontendUserDetail, FrontendUser, FrontendChatroomDetail} from "../new_d
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
-import {AdminService, ChatRoomInfo, UserDetails, UserSessionDetails} from "../../../openapi";
+import {AddUserRequest, AdminService, ChatRoomInfo, UserDetails, UserSessionDetails} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
+import {FormControl} from "@angular/forms";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {AlertService} from "../_alert";
 
 
 @Component({
@@ -18,7 +21,9 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   constructor(private router: Router, private titleService: Title,
               private httpClient: HttpClient,
               private commonService: CommonService,
-              @Inject(AdminService) private adminService: AdminService) { }
+              @Inject(AdminService) private adminService: AdminService,
+              public alertService: AlertService,
+              private modalService: NgbModal) { }
 
   private userListSubscription!: Subscription;
   humanDetails: FrontendUserDetail[] = []
@@ -31,6 +36,11 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   toggleElement: number = -1
   toggleList: string = ""
+
+  usernameToAdd = new FormControl("")
+  passwordToAdd = new FormControl("")
+  roleToAdd: string = ""
+  usernameToRemove: string = ""
 
   allChatroomDetails: FrontendChatroomDetail[] = []
 
@@ -205,6 +215,44 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       users: chatroomDetail.users,
       backUrl: "userStatus"
     } } ).then()
+  }
+
+  openUserAddModal(content: any, role: string) {
+    this.roleToAdd = role == "Humans" ? "HUMAN" : role == "Bots" ? "BOT" : role == "Admins" ? "ADMIN" : ""
+    console.log(content)
+    this.modalService.open(content, { centered: true })
+  }
+
+  openRemoveUserModal(content: any, username: string) {
+    this.usernameToRemove = username
+    this.modalService.open(content, { centered: true })
+  }
+
+  addUser(): void {
+    // username, password, role
+    console.log(this.usernameToAdd.value, this.passwordToAdd.value, this.roleToAdd)
+    this.adminService.addApiUser({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
+      (response) => {
+        this.alertService.success("User successfully created.")
+      },
+      (error) => {
+        this.alertService.error("User could not be created.")
+      }
+    )
+
+    this.usernameToAdd.reset("")
+    this.passwordToAdd.reset("")
+  }
+
+  removeUser(): void {
+    this.adminService.removeApiUser(this.usernameToRemove).subscribe(
+      (response) => {
+        this.alertService.success("User successfully removed.")
+      },
+      (error) => {
+        this.alertService.error("User could not be removed.")
+      }
+    )
   }
 
   readableTime(remainingTime: number): string {

@@ -96,7 +96,7 @@ class RemoveUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandl
             throw ErrorStatusException(400, "username cannot be empty", ctx)
         }
 
-        if (!UserManager.removeUser(username)) {
+        if (!UserManager.removeUser(username, false)) {
             throw ErrorStatusException(403, "user has active sessions", ctx)
         }
 

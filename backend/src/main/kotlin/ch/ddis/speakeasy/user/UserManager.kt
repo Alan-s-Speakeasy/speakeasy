@@ -74,12 +74,15 @@ object UserManager {
         store()
     }
 
-    fun removeUser(username: String): Boolean {
+    fun removeUser(username: String, force: Boolean): Boolean {
         this.lock.write {
             for (user in users) {
                 if (username == user.name) {
-                    if (AccessManager.hasUserIdActiveSessions(user.id)) {
+                    if (!force && AccessManager.hasUserIdActiveSessions(user.id)) {
                         return false
+                    }
+                    if (force) {
+                        AccessManager.forceClearUserId(user.id)
                     }
                     users.remove(user)
                     return true

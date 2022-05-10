@@ -139,6 +139,14 @@ object AccessManager {
         sessionTokenUserSessionMap.remove(sessionToken)
     }
 
+    fun forceClearUserId(userId: UserId) {
+        userIdUserSessionMap.remove(userId)?.forEach {
+            sessionTokenLastAccessMap.remove(it.sessionToken)
+            sessionIdUserSessionMap.remove(it.sessionId)
+            sessionTokenUserSessionMap.remove(it.sessionToken)
+        }
+    }
+
     private fun clearExpiredSessions() {
         val sessionExpiryDate = 10
         for (sessionToken in sessionTokenLastAccessMap.keys()) {

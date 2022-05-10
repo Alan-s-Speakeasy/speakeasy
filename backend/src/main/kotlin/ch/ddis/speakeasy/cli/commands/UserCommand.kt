@@ -7,6 +7,7 @@ import ch.ddis.speakeasy.user.UserRole
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.enum
@@ -122,6 +123,12 @@ class UserCommand : NoOpCliktCommand(name = "user") {
             help = "Name of the user to remove"
         ).required()
 
+        private val force: Boolean by option(
+            "-f",
+            "--force",
+            help = "Remove user even if sessions are active"
+        ).flag(default = false)
+
         override fun run() {
 
             if (UserManager.list().none { it.name == username }) {
@@ -129,7 +136,7 @@ class UserCommand : NoOpCliktCommand(name = "user") {
                 return
             }
 
-            if (UserManager.removeUser(username)) {
+            if (UserManager.removeUser(username, force)) {
                 println("user $username removed")
             }
             else {

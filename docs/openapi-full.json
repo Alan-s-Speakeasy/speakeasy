@@ -1108,7 +1108,7 @@
         }
       },
       "RestChatMessage" : {
-        "required" : [ "message", "ordinal", "session", "myMessage", "timeStamp" ],
+        "required" : [ "message", "ordinal", "session", "timeStamp" ],
         "type" : "object",
         "properties" : {
           "timeStamp" : {
@@ -1124,9 +1124,6 @@
           },
           "message" : {
             "type" : "string"
-          },
-          "myMessage": {
-            "type": "boolean"
           }
         }
       },

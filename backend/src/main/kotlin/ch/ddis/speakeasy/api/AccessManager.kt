@@ -124,16 +124,8 @@ object AccessManager {
         return sessionTokenUserSessionMap[sessionToken]
     }
 
-    fun getUserSessionForSessionId(sessionId: SessionId): UserSession? = sessionIdUserSessionMap[sessionId]
-
     fun hasUserIdActiveSessions(userId: UserId): Boolean {
         return userIdUserSessionMap[userId]?.isNotEmpty() == true
-    }
-
-    fun doSessionsBelongToSameUser(sessionId1: SessionId, sessionId2: SessionId): Boolean {
-        val session1 = getUserSessionForSessionId(sessionId1)
-        val session2 = getUserSessionForSessionId(sessionId2)
-        return session1 != null && session2 != null && session1.user.id == session2.user.id
     }
 
     fun clearUserSession(sessionToken: String) {

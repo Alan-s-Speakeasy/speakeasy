@@ -136,9 +136,9 @@ data class ChatRoomState(
     val messages: List<RestChatMessage>,
     val reactions: List<ChatMessageReaction>
 ) {
-    constructor(room: ChatRoom, since: Long, sessionId: SessionId) : this(
+    constructor(room: ChatRoom, since: Long) : this(
         ChatRoomInfo(room),
-        ChatMessage.toRestMessages(room.getMessagesSince(since), room.sessions, sessionId),
+        ChatMessage.toRestMessages(room.getMessagesSince(since), room.sessions),
         room.getAllReactions()
     )
 }
@@ -186,7 +186,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
             }
         }
 
-        return ChatRoomState(room, since, session.sessionId)
+        return ChatRoomState(room, since)
 
     }
 }

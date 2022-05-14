@@ -52,6 +52,8 @@ open class ChatRoom(
         this.messages.filter { it.time >= since }
     }
 
+    open fun join_or_leave() {}
+
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         require(message.sessionId in this.sessions.map { it.sessionId }) { "User session '${message.sessionId.string}' does not belong to Chatroom ${this.uid.string}" }

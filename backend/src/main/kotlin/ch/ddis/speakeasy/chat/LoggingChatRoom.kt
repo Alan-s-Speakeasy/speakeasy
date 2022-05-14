@@ -35,6 +35,21 @@ class LoggingChatRoom(
         writer.flush()
     }
 
+    override fun join_or_leave() {
+        val exception = this.writerLock.write {
+            try {
+                writer.println(objectMapper.writeValueAsString(this.sessions))
+                writer.flush()
+                null
+            } catch (e: IllegalArgumentException) {
+                e
+            }
+        }
+        if (exception != null) {
+            throw exception
+        }
+    }
+
     override fun addMessage(message: ChatMessage) {
         val exception =
             this.writerLock.write {

@@ -114,30 +114,32 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
-    let users :string[] = []
-    chatRoom.sessions.forEach(sessionId => {
-      let found = false
-      this.humanDetails.forEach(user => {
-        if (user.sessionId[0] == sessionId) {
-          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-          found = true
+    let users: string[] = []
+    chatRoom.users.forEach(user => {
+      user.sessions.forEach(sessionId => {
+        let found = false
+        this.humanDetails.forEach(user => {
+          if (user.sessionId[0] == sessionId) {
+            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+            found = true
+          }
+        })
+        this.adminDetails.forEach(user => {
+          if (user.sessionId[0] == sessionId) {
+            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+            found = true
+          }
+        })
+        this.botDetails.forEach(user => {
+          if (user.sessionId[0] == sessionId) {
+            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+            found = true
+          }
+        })
+        if (!found) {
+          users.push(sessionId + " (user offline)")
         }
       })
-      this.adminDetails.forEach(user => {
-        if (user.sessionId[0] == sessionId) {
-          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-          found = true
-        }
-      })
-      this.botDetails.forEach(user => {
-        if (user.sessionId[0] == sessionId) {
-          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-          found = true
-        }
-      })
-      if (!found) {
-        users.push(sessionId + " (user offline)")
-      }
     })
     chatRoomDetails.push(
       {

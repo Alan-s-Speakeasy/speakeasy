@@ -3,7 +3,6 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
@@ -11,18 +10,35 @@ import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
+data class ChatRoomUserInfo(
+    val alias: String,
+    val sessions: List<String>
+)
+
+private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
+    val userMap = mutableMapOf<String, MutableList<String>>()
+    room.sessions.forEach {
+        if (userMap.containsKey(it.userSessionAlias)) {
+            userMap[it.userSessionAlias]!!.add(it.sessionId.string)
+        } else {
+            userMap[it.userSessionAlias] = mutableListOf(it.sessionId.string)
+        }
+    }
+    return userMap.map { ChatRoomUserInfo(it.key, it.value) }
+}
+
 data class ChatRoomInfo(
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
-    val sessions: List<String>,
+    val users: List<ChatRoomUserInfo>,
     val prompt: String
 ) {
     constructor(room: ChatRoom) : this(
         room.uid.string,
         room.startTime,
         room.remainingTime,
-        room.sessions.map { it.sessionId.string },
+        mapChatRoomToSessions(room),
         room.prompt
     )
 }

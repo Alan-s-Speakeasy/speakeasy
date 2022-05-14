@@ -56,10 +56,12 @@ export class HistoryComponent implements OnInit {
         for (let room of response.rooms) {
 
           let addRoom = false
-          room.sessions.forEach(session => {
-            if (session == this.sessionId) {
-              addRoom = true
-            }
+          room.users.forEach(user => {
+            user.sessions.forEach(session => {
+              if (session == this.sessionId) {
+                addRoom = true
+              }
+            })
           })
 
           if (addRoom) {

@@ -31,6 +31,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   private chatroomSubscription!: Subscription;
   sessionId!: string
+  userSessionAlias!: string
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
   numQueries = 5  // the number of queries recommended to ask
@@ -40,6 +41,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.authService.userSessionDetails.subscribe((response)=>{
       if(response != null){
         this.sessionId = response.sessionId
+        this.userSessionAlias = response.userSessionAlias
       }
     });
 
@@ -55,8 +57,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             for (let room of response.rooms) {
               let addRoom = false
 
-              room.sessions.forEach(session => {
-                if (session == this.sessionId) {
+              room.users.forEach(user => {
+                if (user.alias == this.userSessionAlias) {
                   addRoom = true
                 }
               })
@@ -87,25 +89,17 @@ export class ChatComponent implements OnInit, OnDestroy {
       messageLog: {},
       ratingOpen: false,
       ratings: {},
-      myAlias: "",
+      myAlias: this.userSessionAlias,
       otherAlias: "",
       prompt: "",
       spectate: false
     }
 
-    // get the aliases of the current user and the other user in the chat room
-    this.chatService.getApiAliasWithRoomid(paneLog.roomID).subscribe(
-      (response)=>{
-        response.list.forEach((alias) => {
-          if (alias.session != paneLog.session) {
-            paneLog.otherAlias = alias.alias
-          } else {
-            paneLog.myAlias = alias.alias
-          }
-        })
-      },
-      (error) => {console.log("Aliases are not retrieved properly for the chat room.", error);}
-    )
+    room.users.forEach(user => {
+      if (user.alias != this.userSessionAlias) {
+        paneLog.otherAlias = this.userSessionAlias
+      }
+    })
 
     // fetch prompt and determine whether the ratings pane should be shown
     this.chatService.getApiRoomWithRoomidWithSince(paneLog.roomID, 0, undefined).subscribe(

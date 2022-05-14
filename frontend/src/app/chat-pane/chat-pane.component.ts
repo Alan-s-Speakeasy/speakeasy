@@ -52,16 +52,22 @@ export class ChatPaneComponent implements OnInit {
         }
         this.num_to_ask = this.numQueries
         this.num_messages = this.paneLog.ordinals.length
-        this.paneLog.ordinals = []
-        this.paneLog.messageLog = {}
+
+        let sessionMap = new Map<string, string>()
+        response.info.users.forEach(u => {u.sessions.forEach(s => sessionMap.set(s, u.alias))})
 
         response.messages.forEach(api_message => {
-          if (api_message.myMessage && this.num_to_ask > 0) {
-            this.num_to_ask --
+          console.log(api_message, sessionMap)
+          let myMessage = false
+          if (sessionMap.get(api_message.session) == this.paneLog.myAlias) {
+            myMessage = true
+            if (this.num_to_ask > 0) {
+              this.num_to_ask--
+            }
           }
           let message: Message;
           message = {
-            myMessage: this.paneLog.spectate ? api_message.session == this.paneLog.session : api_message.myMessage,
+            myMessage: myMessage,
             ordinal: api_message.ordinal,
             message: api_message.message,
             time: api_message.timeStamp,

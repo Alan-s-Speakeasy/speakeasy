@@ -61,17 +61,19 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
     let users :string[] = []
-    chatRoom.sessions.forEach(sessionId => {
-      let found = false
-      this.allUserDetails.forEach(user => {
-        if (user.sessionId[0] == sessionId) {
-          users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-          found = true
+    chatRoom.users.forEach(user => {
+      user.sessions.forEach(sessionId => {
+        let found = false
+        this.allUserDetails.forEach(user => {
+          if (user.sessionId[0] == sessionId) {
+            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+            found = true
+          }
+        })
+        if (!found) {
+          users.push(sessionId + " (user offline)")
         }
       })
-      if (!found) {
-        users.push(sessionId + " (user offline)")
-      }
     })
     chatRoomDetails.push(
       {

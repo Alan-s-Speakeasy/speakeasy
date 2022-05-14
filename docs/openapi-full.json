@@ -1026,7 +1026,7 @@
         }
       },
       "ChatRoomInfo" : {
-        "required" : [ "prompt", "remainingTime", "sessions", "uid" ],
+        "required" : [ "prompt", "remainingTime", "users", "uid" ],
         "type" : "object",
         "properties" : {
           "uid" : {
@@ -1040,10 +1040,22 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "sessions" : {
+          "users" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "required": [ "alias", "sessions" ],
+              "type" : "object",
+              "properties" : {
+                "alias" : {
+                  "type": "string"
+                },
+                "sessions" : {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
             }
           },
           "prompt" : {

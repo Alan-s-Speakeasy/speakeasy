@@ -23,6 +23,7 @@ export class ChatPaneComponent implements OnInit {
   paneLogScroll: boolean = false
   remainingTime: string = ''
   num_to_ask!: number
+  lastGetTime: number = 0
 
   constructor(
     @Inject(ChatService) private chatService: ChatService,
@@ -43,8 +44,12 @@ export class ChatPaneComponent implements OnInit {
   }
 
   updatePaneLog(): void {
-    this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, 0, undefined).subscribe(
+    this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, this.lastGetTime, undefined).subscribe(
       (response) => {
+        if (response.messages.length > 0) {
+          // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
+          this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
+        }
         this.num_to_ask = this.numQueries
         this.num_messages = this.paneLog.ordinals.length
         this.paneLog.ordinals = []

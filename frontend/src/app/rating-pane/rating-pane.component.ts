@@ -72,6 +72,11 @@ export class RatingPaneComponent implements OnInit {
         },
         (error) => {
           console.log("Feedback is not successfully submitted for the room: ", this.paneLog.roomID);
+          if (error.status == 409) {
+            this.alertService.error("Ratings for Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") already submitted fron this user!", this.options)
+            this.showHistory = true
+            this.removeRoom.emit()
+          }
         }
       );
     } else {

@@ -19,11 +19,12 @@ object ChatRoomManager {
     fun getByUser(id: UserId): List<ChatRoom> =
         this.chatrooms.values.filter { it.sessions.any { s -> s.user.id == id } }
 
-    fun getByUserSession(sessionToken: String): List<ChatRoom> =
-        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == sessionToken } && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) && !it.assessed }
+    fun getByUserSession(session: UserSession): List<ChatRoom> =
+        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == session.sessionToken }
+            && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) && !it.assessedBy.contains(session.user.id) }
 
-    fun getAssessedRoomsByUserSession(sessionToken: String): List<ChatRoom> =
-        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == sessionToken } && it.assessed }
+    fun getAssessedRoomsByUserSession(session: UserSession): List<ChatRoom> =
+        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == session.sessionToken } && it.assessedBy.contains(session.user.id) }
 
     fun join(session: UserSession) {
         getByUser(session.user.id).forEach {
@@ -50,8 +51,12 @@ object ChatRoomManager {
         return chatRoom
     }
 
-    fun markAsAssessed(id: ChatRoomId) {
-        this.chatrooms[id]?.assessed = true
+    fun markAsAssessed(session: UserSession, id: ChatRoomId) {
+        this.chatrooms[id]?.assessedBy?.add(session.user.id)
+    }
+
+    fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
+        return this.chatrooms[id]!!.assessedBy.contains(session.user.id);
     }
 
 }

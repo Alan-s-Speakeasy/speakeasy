@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
@@ -17,7 +18,7 @@ open class ChatRoom(
     var prompt: String = ""
     internal var endTime: Long? = null
 
-    var assessed: Boolean = false
+    var assessedBy = mutableListOf<UserId>()
 
     val active: Boolean
         get() = startTime <= System.currentTimeMillis() && remainingTime > 0

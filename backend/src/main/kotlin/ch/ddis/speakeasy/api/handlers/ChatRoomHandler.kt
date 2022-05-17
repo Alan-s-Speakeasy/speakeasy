@@ -70,7 +70,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUserSession(session.sessionToken).map { ChatRoomInfo(it) }
+            ChatRoomManager.getByUserSession(session).map { ChatRoomInfo(it) }
         )
     }
 }
@@ -100,7 +100,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserSession(session.sessionToken).map { ChatRoomInfo(it) }
+            ChatRoomManager.getAssessedRoomsByUserSession(session).map { ChatRoomInfo(it) }
         )
     }
 }

@@ -81,7 +81,8 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("409", [OpenApiContent(ErrorStatus::class)])
         ]
     )
     override fun doPost(ctx: Context): SuccessStatus {
@@ -102,9 +103,12 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
             throw ErrorStatusException(400, "Invalid feedback.", ctx)
         }
 
+        if (ChatRoomManager.isAssessedBy(session, roomId)) {
+            throw ErrorStatusException(409, "Chatroom already assessed.", ctx)
+        }
 
         FeedbackManager.logFeedback(session, roomId, feedback)
-        ChatRoomManager.markAsAssessed(roomId)
+        ChatRoomManager.markAsAssessed(session, roomId)
         return SuccessStatus("Feedback received")
     }
 

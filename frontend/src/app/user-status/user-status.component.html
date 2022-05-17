@@ -19,20 +19,23 @@
         <th scope="col">UserName</th>
         <th scope="col">Alias</th>
         <th scope="col">UserID</th>
-        <th scope="col">SessionId (StartTime)</th>
+        <th scope="col">Sessions (ID / StartTime)</th>
       </tr>
       </thead>
       <tbody *ngFor="let frontendUserDetail of element.details; let i = index">
-      <tr (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = element.name">
+      <tr class="align-middle" (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = element.name">
         <td>{{frontendUserDetail.username}}</td>
         <td>{{frontendUserDetail.userSessionAlias}}</td>
         <td>{{frontendUserDetail.userID}}</td>
         <td>
-          <ul>
-            <li *ngFor="let session of frontendUserDetail.sessionId; let j = index">
-              {{session}} ({{frontendUserDetail.startTime[j] | date:'HH:mm:ss dd-MM-yyyy'}})
-            </li>
-          </ul>
+          <table class="table table-bordered m-0">
+            <tbody *ngFor="let session of frontendUserDetail.sessionId; let j = index">
+              <tr>
+                <td>{{session}}</td>
+                <td>{{frontendUserDetail.startTime[j] | date:'HH:mm:ss dd-MM-yyyy'}}</td>
+              </tr>
+            </tbody>
+          </table>
         </td>
       </tr>
       <tr [hidden]="toggleList != element.name || toggleElement != i ? true : null">
@@ -41,15 +44,15 @@
             <thead>
             <tr class="table-info">
               <th scope="col">RoomID</th>
-              <th scope="col">Participants</th>
+              <th scope="col">Chat with</th>
               <th scope="col">Time left</th>
               <th scope="col">Watch</th>
             </tr>
             </thead>
-            <tbody *ngFor="let chatroomDetail of allChatroomDetails">
+            <tbody *ngFor="let chatroomDetail of sortByTime(allChatroomDetails)">
             <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId[0])">
               <td>{{chatroomDetail.roomID}}</td>
-              <td><span *ngFor="let user of chatroomDetail.sessions">{{user}}<br> </span></td>
+              <td><span *ngFor="let user of getPartners(chatroomDetail.sessions, frontendUserDetail.sessionId)">{{user}}<br> </span></td>
               <td>{{readableTime(chatroomDetail.remainingTime)}}</td>
               <td>
                 <button type="button" class="btn btn-secondary float-end"

@@ -17,7 +17,10 @@ import {AlertService} from "../_alert";
   styleUrls: ['./user-status.component.css']
 })
 export class UserStatusComponent implements OnInit, OnDestroy {
-
+  options = {
+    autoClose: true,
+    keepAfterRouteChange: true
+  };
   constructor(private router: Router, private titleService: Title,
               private httpClient: HttpClient,
               private commonService: CommonService,
@@ -29,6 +32,8 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   humanDetails: FrontendUserDetail[] = []
   adminDetails: FrontendUserDetail[] = []
   botDetails: FrontendUserDetail[] = []
+
+  sessionToUserMap = new Map<string, FrontendUserDetail>()
 
   humanList: FrontendUser[] = []
   adminList: FrontendUser[] = []
@@ -115,32 +120,37 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
     let users: string[] = []
-    chatRoom.users.forEach(user => {
-      user.sessions.forEach(sessionId => {
-        let found = false
-        this.humanDetails.forEach(user => {
-          if (user.sessionId[0] == sessionId) {
-            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-            found = true
-          }
-        })
-        this.adminDetails.forEach(user => {
-          if (user.sessionId[0] == sessionId) {
-            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-            found = true
-          }
-        })
-        this.botDetails.forEach(user => {
-          if (user.sessionId[0] == sessionId) {
-            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-            found = true
-          }
-        })
-        if (!found) {
-          users.push(sessionId + " (user offline)")
-        }
-      })
-    })
+    // chatRoom.users.forEach(user => {
+    //   user.sessions.forEach(sessionId => {
+    //     let found = false
+    //     this.humanDetails.forEach(user => {
+    //       if (user.sessionId[0] == sessionId) {
+    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+    //         found = true
+    //       }
+    //     })
+    //     this.adminDetails.forEach(user => {
+    //       if (user.sessionId[0] == sessionId) {
+    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+    //         found = true
+    //       }
+    //     })
+    //     this.botDetails.forEach(user => {
+    //       if (user.sessionId[0] == sessionId) {
+    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+    //         found = true
+    //       }
+    //     })
+    //     if (!found) {
+    //       users.push(sessionId + " (user offline)")
+    //     }
+    //   })
+    // })
+    chatRoom.users.forEach(u => users.push(u.alias))
+
+    let sessions: string[] = []
+    chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
+
     chatRoomDetails.push(
       {
         prompt: chatRoom.prompt,
@@ -148,7 +158,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
         users: users,
-        sessions: chatRoom.sessions,
+        sessions: sessions
       }
     )
   }
@@ -160,19 +170,20 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       userExists.sessionId.push(usersession.sessionId);
       userExists.startTime.push(usersession.startTime);
       userExists.sessionToken.push(usersession.sessionToken);
+      this.sessionToUserMap.set(usersession.sessionId, userExists)
     }
     else {
-      details.push(
-        {
-          userID: usersession.userDetails.id,
-          username: usersession.userDetails.username,
-          role: usersession.userDetails.role,
-          startTime: [usersession.startTime],
-          userSessionAlias: usersession.userSessionAlias,
-          sessionId: [usersession.sessionId],
-          sessionToken: [usersession.sessionToken],
-        }
-      )
+      let detail = {
+        userID: usersession.userDetails.id,
+        username: usersession.userDetails.username,
+        role: usersession.userDetails.role,
+        startTime: [usersession.startTime],
+        userSessionAlias: usersession.userSessionAlias,
+        sessionId: [usersession.sessionId],
+        sessionToken: [usersession.sessionToken],
+      }
+      details.push(detail)
+      this.sessionToUserMap.set(usersession.sessionId, detail)
     }
   }
 
@@ -198,23 +209,37 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     {name: "Admins", table: "info", list: this.adminList},
   ]
 
+  getPartners(sessions: string[], exclude: string[]): string[] {
+    let res = new Set<string>()
+    sessions.forEach(s => {
+      if (!exclude.includes(s)) {
+        let userDetails = this.sessionToUserMap.get(s)
+        if (userDetails) {
+          res.add(userDetails.username + " (" + userDetails.userSessionAlias + ", " + userDetails.role + ")")
+        }
+      }
+    })
+    return Array.from(res)
+  }
+
+  sortByTime(chatrooms: FrontendChatroomDetail[]): FrontendChatroomDetail[] {
+    return chatrooms.sort((c1, c2) => c2.remainingTime - c1.remainingTime)
+  }
+
   home(): void {
     this.router.navigateByUrl('/panel').then()
   }
 
   watch(frontendUserDetail: FrontendUserDetail, chatroomDetail: FrontendChatroomDetail): void {
-    let partnerID = chatroomDetail.sessions.filter(ID => !frontendUserDetail.sessionId.includes(ID))[0]
-    let partner = this.humanDetails.find(human => human.sessionId.includes(partnerID)) ||
-      this.botDetails.find(bot => bot.sessionId.includes(partnerID)) ||
-      this.adminDetails.find(admin => admin.sessionId.includes(partnerID));
-    let partnerUsername = partner ? partner.username : "";
+
+    let partnerAlias = chatroomDetail.users.find(alias => alias != frontendUserDetail.userSessionAlias)
 
     this.router.navigateByUrl('/spectate', { state: {
       roomID: chatroomDetail.roomID,
-      userUsername: frontendUserDetail.username,
-      partnerUsername: partnerUsername,
+      username: frontendUserDetail.username,
+      userAlias: frontendUserDetail.userSessionAlias,
+      partnerAlias: partnerAlias,
       userSession: frontendUserDetail.sessionId,
-      users: chatroomDetail.users,
       backUrl: "userStatus"
     } } ).then()
   }
@@ -235,10 +260,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     console.log(this.usernameToAdd.value, this.passwordToAdd.value, this.roleToAdd)
     this.adminService.addApiUser({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
       (response) => {
-        this.alertService.success("User successfully created.")
+        this.alertService.success("User successfully created.", this.options)
       },
       (error) => {
-        this.alertService.error("User could not be created.")
+        this.alertService.error("User could not be created.", this.options)
       }
     )
 
@@ -249,10 +274,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   removeUser(): void {
     this.adminService.removeApiUser(this.usernameToRemove).subscribe(
       (response) => {
-        this.alertService.success("User successfully removed.")
+        this.alertService.success("User successfully removed.", this.options)
       },
       (error) => {
-        this.alertService.error("User could not be removed.")
+        this.alertService.error("User could not be removed.", this.options)
       }
     )
   }

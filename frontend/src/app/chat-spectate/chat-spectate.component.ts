@@ -32,9 +32,9 @@ export class ChatSpectateComponent implements OnInit {
       messageLog: {},
       ratingOpen: false,
       ratings: {},
-      myAlias: history.state.userUsername,
-      otherAlias: history.state.partnerUsername,
-      prompt: "spectating " + history.state.userUsername,
+      myAlias: history.state.userAlias,
+      otherAlias: history.state.partnerAlias,
+      prompt: "spectating " + history.state.username,
       spectate: true
     }
   }

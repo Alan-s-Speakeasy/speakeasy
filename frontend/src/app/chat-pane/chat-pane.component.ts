@@ -57,7 +57,6 @@ export class ChatPaneComponent implements OnInit {
         response.info.users.forEach(u => {u.sessions.forEach(s => sessionMap.set(s, u.alias))})
 
         response.messages.forEach(api_message => {
-          console.log(api_message, sessionMap)
           let myMessage = false
           if (sessionMap.get(api_message.session) == this.paneLog.myAlias) {
             myMessage = true

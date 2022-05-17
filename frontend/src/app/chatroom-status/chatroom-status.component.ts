@@ -21,6 +21,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   private allChatRoomsSubscription!: Subscription;
   allUserDetails: FrontendUserDetail[] = []
 
+  sessionToUserMap = new Map<string, FrontendUserDetail>()
+
   activateChatroomDetails: FrontendChatroomDetail[] = []
   allChatroomDetails: FrontendChatroomDetail[] = []
 
@@ -61,20 +63,25 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
     let users :string[] = []
-    chatRoom.users.forEach(user => {
-      user.sessions.forEach(sessionId => {
-        let found = false
-        this.allUserDetails.forEach(user => {
-          if (user.sessionId[0] == sessionId) {
-            users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-            found = true
-          }
-        })
-        if (!found) {
-          users.push(sessionId + " (user offline)")
-        }
-      })
-    })
+    // chatRoom.users.forEach(user => {
+    //   user.sessions.forEach(sessionId => {
+    //     let found = false
+    //     this.allUserDetails.forEach(user => {
+    //       if (user.sessionId[0] == sessionId) {
+    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
+    //         found = true
+    //       }
+    //     })
+    //     if (!found) {
+    //       users.push(sessionId + " (user offline)")
+    //     }
+    //   })
+    // })
+    chatRoom.users.forEach(u => users.push(u.alias))
+
+    let sessions: string[] = []
+    chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
+
     chatRoomDetails.push(
       {
         prompt: chatRoom.prompt,
@@ -82,7 +89,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
         users: users,
-        sessions: chatRoom.sessions,
+        sessions: sessions,
       }
     )
   }
@@ -94,10 +101,10 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
       userExists.sessionId.push(usersession.sessionId);
       userExists.startTime.push(usersession.startTime);
       userExists.sessionToken.push(usersession.sessionToken);
+      this.sessionToUserMap.set(usersession.sessionId, userExists)
     }
     else {
-      details.push(
-        {
+      let detail = {
           userID: usersession.userDetails.id,
           username: usersession.userDetails.username,
           role: usersession.userDetails.role,
@@ -106,8 +113,20 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
           sessionId: [usersession.sessionId],
           sessionToken: [usersession.sessionToken],
         }
-      )
+      details.push(detail)
+      this.sessionToUserMap.set(usersession.sessionId, detail)
     }
+  }
+
+  getUsers(sessions: string[]): string[] {
+    let res = new Set<string>()
+    sessions.forEach(s => {
+      let userDetails = this.sessionToUserMap.get(s)
+      if (userDetails) {
+        res.add(userDetails.username + " (" + userDetails.userSessionAlias + ", " + userDetails.role + ")")
+      }
+    })
+    return Array.from(res)
   }
 
   home(): void {
@@ -115,15 +134,11 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {
-    let user = this.allUserDetails.find(user => user.sessionId[0] == chatroomDetail.sessions[0])
-    let partner = this.allUserDetails.find(user => user.sessionId[0] == chatroomDetail.sessions[1])
-    let userUsername = user ? user.username : ""
-    let partnerUsername = partner ? partner.username : ""
-
     this.router.navigateByUrl('/spectate', { state: {
       roomID: chatroomDetail.roomID,
-      userUsername: userUsername,
-      partnerUsername: partnerUsername,
+      username: chatroomDetail.users[0],
+      userAlias: chatroomDetail.users[0],
+      partnerAlias: chatroomDetail.users[1],
       userSession: chatroomDetail.sessions[0],
       users: chatroomDetail.users,
       backUrl: "chatroomStatus"

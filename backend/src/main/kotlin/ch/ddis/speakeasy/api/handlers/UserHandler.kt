@@ -79,10 +79,13 @@ class RemoveUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandl
 
     @OpenApi(
         summary = "Removes an existing user.",
-        path = "/api/user/remove",
+        path = "/api/user/remove?force",
         method = HttpMethod.POST,
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Admin"],
+        queryParams = [
+            OpenApiParam("force", Boolean::class, "Ignore active user sessions.")
+        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
@@ -92,11 +95,13 @@ class RemoveUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandl
     override fun doPost(ctx: Context): SuccessStatus {
         val username = ctx.body()
 
+        val force = ctx.queryParam("force")?.toBooleanStrictOrNull() ?: false
+
         if (username.isBlank()) {
             throw ErrorStatusException(400, "username cannot be empty", ctx)
         }
 
-        if (!UserManager.removeUser(username, false)) {
+        if (!UserManager.removeUser(username, force)) {
             throw ErrorStatusException(403, "user has active sessions", ctx)
         }
 

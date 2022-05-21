@@ -110,7 +110,7 @@
     </form>
   </div>
   <div class="modal-footer">
-    <button type="button" ngbAutofocus class="btn btn-danger" (click)="modal.close(); addUser()">Add</button>
+    <button type="button" ngbAutofocus class="btn btn-danger" [disabled]="usernameToAdd.value == '' || passwordToAdd.value == '' " (click)="modal.close(); addUser()">Add</button>
   </div>
 </ng-template>
 
@@ -123,6 +123,10 @@
   </div>
   <div class="modal-body">
     <p>Are you sure that you want to remove user <b>{{usernameToRemove}}?</b></p>
+    <label class="form-check-label">
+      <input class="form-check-input" type="checkbox" [checked]="forceRemove" (change)="forceRemove = !forceRemove">
+      Ignore active sessions
+    </label>
   </div>
   <div class="modal-footer">
     <button type="button" ngbAutofocus class="btn btn-danger" (click)="modal.close(); removeUser()">Confirm</button>

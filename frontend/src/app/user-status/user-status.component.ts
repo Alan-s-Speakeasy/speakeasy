@@ -46,6 +46,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   passwordToAdd = new FormControl("")
   roleToAdd: string = ""
   usernameToRemove: string = ""
+  forceRemove: boolean = false
 
   allChatroomDetails: FrontendChatroomDetail[] = []
 
@@ -257,7 +258,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   addUser(): void {
     // username, password, role
-    console.log(this.usernameToAdd.value, this.passwordToAdd.value, this.roleToAdd)
     this.adminService.addApiUser({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
       (response) => {
         this.alertService.success("User successfully created.", this.options)
@@ -272,7 +272,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   removeUser(): void {
-    this.adminService.removeApiUser(this.usernameToRemove).subscribe(
+    this.adminService.removeApiUser(this.forceRemove, this.usernameToRemove).subscribe(
       (response) => {
         this.alertService.success("User successfully removed.", this.options)
       },
@@ -280,6 +280,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         this.alertService.error("User could not be removed.", this.options)
       }
     )
+    this.forceRemove = false
   }
 
   readableTime(remainingTime: number): string {

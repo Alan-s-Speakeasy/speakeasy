@@ -215,6 +215,15 @@
         "tags" : [ "Admin" ],
         "summary" : "Removes an existing user.",
         "operationId" : "removeApiUser",
+        "parameters" : [ {
+          "name" : "force",
+          "in" : "query",
+          "description" : "Ignore active user sessions.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "text/plain" : {

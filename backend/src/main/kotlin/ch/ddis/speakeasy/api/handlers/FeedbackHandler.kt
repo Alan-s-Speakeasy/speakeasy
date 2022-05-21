@@ -149,7 +149,7 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        return FeedbackManager.readFeedbackHistory(session, roomId)
+        return FeedbackManager.readFeedbackHistoryPerRoom(session.user.id, roomId)
     }
 
 }

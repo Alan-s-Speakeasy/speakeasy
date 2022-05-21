@@ -72,7 +72,7 @@ object FeedbackManager {
             sessionWriter.flush()
         }
 
-    fun readFeedbackHistory(userSession: UserSession, roomId: UID): FeedbackResponseList = this.lock.read {
+    fun readFeedbackHistoryPerRoom(userId: UserId, roomId: UID): FeedbackResponseList = this.lock.read {
 
         var response: FeedbackResponse
         val responses: MutableList<FeedbackResponse> = mutableListOf()
@@ -82,13 +82,13 @@ object FeedbackManager {
         try {
             csvReader().open(this.feedbackFile) {
                 readAllWithHeader().forEach { row ->
-                    //in file CSV file: timestamp,sessionid,room,responseid,responsevalue
-                    val session = row["session"]
+                    //in file CSV file: timestamp,userid,sessionid,room,responseid,responsevalue
+                    val user = row["user"]
                     val room = row["room"]
                     val responseId = row["responseid"]
                     val responseValue = row["responsevalue"]
 
-                    if ((session == userSession.sessionId.string) && (room == roomId.string) && (responseId != null) && (responseValue != null)) {
+                    if ((user == userId.string) && (room == roomId.string) && (responseId != null) && (responseValue != null)) {
                         response = FeedbackResponse(responseId, responseValue)
                         responses.add(response)
 

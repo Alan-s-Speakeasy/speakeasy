@@ -29,6 +29,7 @@ export class HistoryComponent implements OnInit {
               public alertService: AlertService) { }
 
   sessionId!: string
+  userSessionAlias!: string
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
 
@@ -37,6 +38,7 @@ export class HistoryComponent implements OnInit {
     this.authService.userSessionDetails.subscribe((response)=>{
       if(response != null){
         this.sessionId = response.sessionId
+        this.userSessionAlias = response.userSessionAlias
       }
     });
 
@@ -83,25 +85,17 @@ export class HistoryComponent implements OnInit {
       messageLog: {},
       ratingOpen: true,
       ratings: {},
-      myAlias: "",
+      myAlias: this.userSessionAlias,
       otherAlias: "",
       prompt: "",
       spectate: false
     }
 
-    // get the aliases of the current user and the other user in the chat room
-    this.chatService.getApiAliasWithRoomid(paneLog.roomID).subscribe(
-      (response)=>{
-        response.list.forEach((alias) => {
-          if (alias.session != paneLog.session) {
-            paneLog.otherAlias = alias.alias
-          } else {
-            paneLog.myAlias = alias.alias
-          }
-        })
-      },
-      (error) => {console.log("Aliases are not retrieved properly for the chat room.", error);}
-    )
+    room.users.forEach(user => {
+      if (user.alias != this.userSessionAlias) {
+        paneLog.otherAlias = user.alias
+      }
+    })
 
     this.paneLogs.push(paneLog)
   }

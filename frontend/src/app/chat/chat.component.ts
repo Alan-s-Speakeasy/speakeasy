@@ -97,7 +97,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     room.users.forEach(user => {
       if (user.alias != this.userSessionAlias) {
-        paneLog.otherAlias = this.userSessionAlias
+        paneLog.otherAlias = user.alias
       }
     })
 

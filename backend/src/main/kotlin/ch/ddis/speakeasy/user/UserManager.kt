@@ -109,6 +109,10 @@ object UserManager {
         return if (user.password.check(password)) user else null
     }
 
+    fun getUsernameFromId(userId: UserId): String? = this.lock.read {
+        return users.find { it.id == userId }?.name
+    }
+
     fun updatePassword(userId: UserId, newPassword: Password) {
         this.lock.write {
             val oldUser =

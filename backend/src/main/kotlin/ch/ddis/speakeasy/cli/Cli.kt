@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.cli
 import ch.ddis.speakeasy.assignment.ChatAssignmentGenerator
 import ch.ddis.speakeasy.cli.commands.AssignmentCommand
 import ch.ddis.speakeasy.cli.commands.ChatCommand
+import ch.ddis.speakeasy.cli.commands.EvaluationCommand
 import ch.ddis.speakeasy.cli.commands.UserCommand
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -35,7 +36,8 @@ object Cli {
         clikt = BaseCommand().subcommands(
             AssignmentCommand(),
             UserCommand(),
-            ChatCommand()
+            ChatCommand(),
+            EvaluationCommand()
         )
 
         val terminal = try {

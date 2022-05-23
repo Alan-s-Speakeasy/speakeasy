@@ -2,6 +2,7 @@ package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
+import ch.ddis.speakeasy.util.UID
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -25,6 +26,10 @@ object ChatRoomManager {
 
     fun getAssessedRoomsByUserSession(session: UserSession): List<ChatRoom> =
         this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == session.sessionToken } && it.assessedBy.contains(session.user.id) }
+
+    fun getChatPartner(id: UID, session: UserSession): UserId? {
+        return this.chatrooms[id]?.sessions?.find { it.user.id != session.user.id }?.user?.id
+    }
 
     fun join(session: UserSession) {
         getByUser(session.user.id).forEach {

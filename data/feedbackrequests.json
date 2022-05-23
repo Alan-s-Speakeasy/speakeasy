@@ -4,7 +4,8 @@
       "id": "1",
       "type": "general",
       "name": "On average, the questions I asked in this conversation were answered accurately.",
-      "options":[
+      "shortname": "Accurate answers",
+      "options": [
         {
           "name": "Strongly Disagree",
           "value": 5
@@ -20,18 +21,19 @@
         {
           "name": "Slightly Agree",
           "value": 2
-        },{
+        },
+        {
           "name": "Strongly Agree",
           "value": 1
         }
       ]
-
     },
     {
       "id": "2",
       "type": "general",
       "name": "On average, the answers I received in this conversation were complete.",
-      "options":[
+      "shortname": "Complete answers",
+      "options": [
         {
           "name": "Strongly Disagree",
           "value": 5
@@ -47,18 +49,19 @@
         {
           "name": "Slightly Agree",
           "value": 2
-        },{
+        },
+        {
           "name": "Strongly Agree",
           "value": 1
         }
       ]
-
     },
     {
       "id": "3",
       "type": "general",
       "name": "On average, the answers I received in this conversation were provided in a timely fashion.",
-      "options":[
+      "shortname": "Timely answers",
+      "options": [
         {
           "name": "Strongly Disagree",
           "value": 5
@@ -74,18 +77,19 @@
         {
           "name": "Slightly Agree",
           "value": 2
-        },{
+        },
+        {
           "name": "Strongly Agree",
           "value": 1
         }
       ]
-
     },
     {
       "id": "4",
       "type": "general",
       "name": "Based on the answers I received and the overall behaviour, I think on the other side there was a human responding to my questions.",
-      "options":[
+      "shortname": "Human responder",
+      "options": [
         {
           "name": "Strongly Disagree",
           "value": 5
@@ -101,18 +105,19 @@
         {
           "name": "Slightly Agree",
           "value": 2
-        },{
+        },
+        {
           "name": "Strongly Agree",
           "value": 1
         }
       ]
-
     },
-        {
+    {
       "id": "5",
       "type": "capability",
       "name": "On average, the Factual Question-Answering capability in this conversation was:",
-      "options":[
+      "shortname": "Factual Question-Answering",
+      "options": [
         {
           "name": "Very Poor",
           "value": 5
@@ -128,21 +133,23 @@
         {
           "name": "Good",
           "value": 2
-        },{
+        },
+        {
           "name": "Very Good",
           "value": 1
-        },{
+        },
+        {
           "name": "Not Applicable / I don't know",
           "value": 0
         }
       ]
-
     },
     {
       "id": "6",
       "type": "capability",
       "name": "On average, the Embeddings capability in this conversation was:",
-      "options":[
+      "shortname": "Embeddings",
+      "options": [
         {
           "name": "Very Poor",
           "value": 5
@@ -158,21 +165,23 @@
         {
           "name": "Good",
           "value": 2
-        },{
+        },
+        {
           "name": "Very Good",
           "value": 1
-        },{
+        },
+        {
           "name": "Not Applicable / I don't know",
           "value": 0
         }
       ]
-
     },
     {
       "id": "7",
       "type": "capability",
       "name": "On average, the Recommendation capability in this conversation was:",
-      "options":[
+      "shortname": "Recommendation",
+      "options": [
         {
           "name": "Very Poor",
           "value": 5
@@ -188,21 +197,23 @@
         {
           "name": "Good",
           "value": 2
-        },{
+        },
+        {
           "name": "Very Good",
           "value": 1
-        },{
+        },
+        {
           "name": "Not Applicable / I don't know",
           "value": 0
         }
       ]
-
     },
     {
       "id": "8",
       "type": "capability",
       "name": "On average, the Multi-Modal Question-Answering capability in this conversation was:",
-      "options":[
+      "shortname": "Multi-Modal Question-Answering",
+      "options": [
         {
           "name": "Very Poor",
           "value": 5
@@ -218,21 +229,23 @@
         {
           "name": "Good",
           "value": 2
-        },{
+        },
+        {
           "name": "Very Good",
           "value": 1
-        },{
+        },
+        {
           "name": "Not Applicable / I don't know",
           "value": 0
         }
       ]
-
     },
     {
       "id": "9",
       "type": "capability",
       "name": "On average, the Crowdsourced Data Management capability in this conversation was:",
-      "options":[
+      "shortname": "Crowdsourced Data Management",
+      "options": [
         {
           "name": "Very Poor",
           "value": 5
@@ -248,22 +261,23 @@
         {
           "name": "Good",
           "value": 2
-        },{
+        },
+        {
           "name": "Very Good",
           "value": 1
-        },{
+        },
+        {
           "name": "Not Applicable / I don't know",
           "value": 0
         }
       ]
-
     },
     {
       "id": "10",
       "type": "capability-input",
       "name": "Please describe your overall impression in a few words.",
-      "options":[]
+      "shortname": "Impression",
+      "options": []
     }
   ]
-
 }

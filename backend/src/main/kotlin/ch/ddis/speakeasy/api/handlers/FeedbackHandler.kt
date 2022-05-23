@@ -10,7 +10,7 @@ import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
 data class FeedbackAnswerOption(val name: String, val value: Int)
-data class FeedbackRequest(val id: String, val type: String, val name: String, val options: List<FeedbackAnswerOption>)
+data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>)
 data class FeedbackRequestList(val requests: List<FeedbackRequest>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: List<FeedbackResponse>)

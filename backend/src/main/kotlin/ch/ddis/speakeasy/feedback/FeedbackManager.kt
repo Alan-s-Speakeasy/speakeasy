@@ -3,6 +3,9 @@ package ch.ddis.speakeasy.feedback
 import ch.ddis.speakeasy.api.handlers.FeedbackRequestList
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseList
+import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
@@ -45,7 +48,7 @@ object FeedbackManager {
         this.feedbackFile = File(File(config.dataPath), "sessionfeedback.csv")
 
         if (!this.feedbackFile.exists() || this.feedbackFile.length() == 0L) {
-            this.feedbackFile.writeText("timestamp,session,room,responseid,responsevalue\n", Charsets.UTF_8)
+            this.feedbackFile.writeText("timestamp,user,session,room,partner,responseid,responsevalue\n", Charsets.UTF_8)
         }
 
         this.sessionWriter = PrintWriter(
@@ -66,8 +69,10 @@ object FeedbackManager {
 
     fun logFeedback(userSession: UserSession, roomId: UID, feedbackResponseList: FeedbackResponseList) =
         writerLock.write {
+            val partnerId = ChatRoomManager.getChatPartner(roomId, userSession) ?: UserId("undefined")
             for (response in feedbackResponseList.responses) {
-                sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},\"${roomId.string}\",${response.id},\"${response.value}\"")
+                val value = response.value.replace("\"", "\"\"")
+                sessionWriter.println("${System.currentTimeMillis()},${userSession.user.id.string},${userSession.sessionId.string},\"${roomId.string}\",${partnerId.string},${response.id},\"${value}\"")
             }
             sessionWriter.flush()
         }
@@ -77,12 +82,12 @@ object FeedbackManager {
         var response: FeedbackResponse
         val responses: MutableList<FeedbackResponse> = mutableListOf()
 
-        //read all CSV lines with the given usersession and roomid
+        //read all CSV lines with the given userid and roomid
 
         try {
             csvReader().open(this.feedbackFile) {
                 readAllWithHeader().forEach { row ->
-                    //in file CSV file: timestamp,userid,sessionid,room,responseid,responsevalue
+                    //in file CSV file: timestamp,userid,sessionid,room,partnerid,responseid,responsevalue
                     val user = row["user"]
                     val room = row["room"]
                     val responseId = row["responseid"]
@@ -91,9 +96,7 @@ object FeedbackManager {
                     if ((user == userId.string) && (room == roomId.string) && (responseId != null) && (responseValue != null)) {
                         response = FeedbackResponse(responseId, responseValue)
                         responses.add(response)
-
                     }
-
                 }
             }
         } catch (e: MalformedCSVException) {
@@ -103,5 +106,48 @@ object FeedbackManager {
         return FeedbackResponseList(responses)
     }
 
+    fun readFeedbackHistoryPerUser(userId: UserId, author: Boolean): HashMap<Pair<String, String>, MutableList<FeedbackResponse>> = this.lock.read {
+
+        var response: FeedbackResponse
+        val responseMap: HashMap<Pair<String, String>, MutableList<FeedbackResponse>> = hashMapOf()
+
+        //read all CSV lines with the given userid
+
+        try {
+            csvReader().open(this.feedbackFile) {
+                readAllWithHeader().forEach { row ->
+                    //in file CSV file: timestamp,userid,sessionid,room,partnerid,responseid,responsevalue
+                    val user = row["user"]
+                    val room = row["room"]
+                    val partner = row["partner"]
+                    val responseId = row["responseid"]
+                    val responseValue = row["responsevalue"]
+
+                    if ((room != null) && (user != null) && (partner != null) && (responseId != null) && (responseValue != null)) {
+                        response = FeedbackResponse(responseId, responseValue)
+                        // evaluations from a certain user
+                        if (author && user == userId.string) {
+                            val partnerUsername = UserManager.getUsernameFromId(UserId(partner)) ?: ""
+                            if (!responseMap.containsKey(Pair(partnerUsername, room))) {
+                                responseMap[Pair(partnerUsername, room)] = mutableListOf()
+                            }
+                            responseMap[Pair(partnerUsername, room)]?.add(response)
+                        // evaluations for a certain user
+                        } else if (!author && partner == userId.string) {
+                            val authorUsername = UserManager.getUsernameFromId(UserId(user)) ?: ""
+                            if (!responseMap.containsKey(Pair(authorUsername, room))) {
+                                responseMap[Pair(authorUsername, room)] = mutableListOf()
+                            }
+                            responseMap[Pair(authorUsername, room)]?.add(response)
+                        }
+                    }
+                }
+            }
+        } catch (e: MalformedCSVException) {
+            with(e) { printStackTrace() }
+        }
+
+        return responseMap
+    }
 
 }

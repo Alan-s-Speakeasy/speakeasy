@@ -8,6 +8,8 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.jakewharton.picnic.BorderStyle
+import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
 
 class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
@@ -60,12 +62,20 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     ) {
         println(
             table {
+                style {
+                    borderStyle = BorderStyle.Hidden
+                }
                 cellStyle {
-                    border = true
                     paddingLeft = 1
                     paddingRight = 1
+                    borderLeft = true
+                    borderRight = true
                 }
                 header {
+                    cellStyle {
+                        border = true
+                        alignment = TextAlignment.MiddleLeft
+                    }
                     row {
                         cell(if (author) "Recipient" else "Author")
                         header.requests.forEach {
@@ -81,6 +91,11 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                                 cell(getFeedbackNameForValue(header, it.id, it.value))
                             }
                         }
+                    }
+                }
+                footer {
+                    cellStyle {
+                        border = true
                     }
                     row {
                         cell("AVERAGE")
@@ -99,12 +114,20 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     ) {
         println(
             table {
+                style {
+                    borderStyle = BorderStyle.Hidden
+                }
                 cellStyle {
-                    border = true
                     paddingLeft = 1
                     paddingRight = 1
+                    borderLeft = true
+                    borderRight = true
                 }
                 header {
+                    cellStyle {
+                        border = true
+                        alignment = TextAlignment.MiddleLeft
+                    }
                     row {
                         cell("Author")
                         header.requests.forEach {

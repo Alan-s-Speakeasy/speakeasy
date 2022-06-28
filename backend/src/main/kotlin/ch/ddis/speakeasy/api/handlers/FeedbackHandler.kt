@@ -13,22 +13,24 @@ data class FeedbackAnswerOption(val name: String, val value: Int)
 data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>)
 data class FeedbackRequestList(val requests: List<FeedbackRequest>)
 data class FeedbackResponse(val id: String, val value: String)
-data class FeedbackResponseList(val responses: List<FeedbackResponse>)
+data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
+data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
+data class FeedbackResponseMapList(val responses: MutableList<FeedbackResponseItem>)
+data class FeedbackResponseAverageItem(val username: String, val responses: List<FeedbackResponse>)
+data class FeedbackResponseAverageMapList(val responses: List<FeedbackResponseAverageItem>)
 
 class GetFeedbackRequestListHandler : GetRestHandler<FeedbackRequestList>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.USER)
 
-    override val route: String = "feedback/:roomId"
+    override val route: String = "feedback"
 
     @OpenApi(
         summary = "Gets the list of feedback requests for a Chatroom.",
-        path = "/api/feedback/:roomId",
+        path = "/api/feedback",
         method = HttpMethod.GET,
         tags = ["Feedback"],
-        pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
-        ],
+
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
         ],
@@ -40,24 +42,15 @@ class GetFeedbackRequestListHandler : GetRestHandler<FeedbackRequestList>, Acces
     )
     override fun doGet(ctx: Context): FeedbackRequestList {
 
-
         val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
             401,
             "Unauthorized",
             ctx
         )
-        val roomId = (ctx.pathParamMap().getOrElse("roomId") {
-            throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
-        }).UID()
 
-
-        val feedbackRequestList = FeedbackManager.readFeedbackRequests()
-
-        return feedbackRequestList
+        return FeedbackManager.readFeedbackRequests()
     }
-
 }
-
 
 class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -139,7 +132,6 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
     )
     override fun doGet(ctx: Context): FeedbackResponseList {
 
-
         val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
             401,
             "Unauthorized",
@@ -151,5 +143,76 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
 
         return FeedbackManager.readFeedbackHistoryPerRoom(session.user.id, roomId)
     }
+}
 
+class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, AccessManagedRestHandler {
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route: String = "feedbackhistory/:username"
+
+    @OpenApi(
+        summary = "Gets the list of feedback responses",
+        path = "/api/feedbackhistory/:username",
+        method = HttpMethod.GET,
+        tags = ["Admin"],
+        pathParams = [
+            OpenApiParam("username", String::class, "Name of the User"),
+        ],
+        queryParams = [
+            OpenApiParam("author", String::class, "author or recipient")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(FeedbackResponseMapList::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doGet(ctx: Context): FeedbackResponseMapList {
+
+        val username = (ctx.pathParamMap().getOrElse("username") {
+            throw ErrorStatusException(400, "Parameter 'username' is missing!'", ctx)
+        })
+        val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
+        val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
+        if (author) {
+            allFeedbackResponses.retainAll { it.author == username }
+        }
+        else {
+            allFeedbackResponses.retainAll { it.recipient == username }
+        }
+
+        AccessManager.updateLastAccess(ctx.req.session.id)
+        return FeedbackResponseMapList(allFeedbackResponses)
+    }
+}
+
+class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMapList>, AccessManagedRestHandler {
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route: String = "feedbackaverage"
+
+    @OpenApi(
+        summary = "Gets the list of feedback averages per user",
+        path = "/api/feedbackaverage",
+        method = HttpMethod.GET,
+        tags = ["Admin"],
+        queryParams = [
+            OpenApiParam("author", String::class, "author or recipient")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(FeedbackResponseAverageMapList::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doGet(ctx: Context): FeedbackResponseAverageMapList {
+
+        val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
+
+        AccessManager.updateLastAccess(ctx.req.session.id)
+        val feedbackResponsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author)
+        val averageMapList = feedbackResponsesPerUser.map { FeedbackResponseAverageItem(it.key, FeedbackManager.computeFeedbackAverage(it.value)) }
+
+        return FeedbackResponseAverageMapList(averageMapList)
+    }
 }

@@ -705,20 +705,12 @@
         }
       }
     },
-    "/api/feedback/{roomId}" : {
+    "/api/feedback" : {
       "get" : {
         "tags" : [ "Feedback" ],
         "summary" : "Gets the list of feedback requests for a Chatroom.",
-        "operationId" : "getApiFeedbackWithRoomid",
+        "operationId" : "getApiFeedback",
         "parameters" : [ {
-          "name" : "roomId",
-          "in" : "path",
-          "description" : "Id of the Chatroom",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
           "name" : "session",
           "in" : "query",
           "description" : "Session Token",
@@ -853,6 +845,101 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/FeedbackResponseList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbackhistory/{username}" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Gets the list of feedback responses for a User.",
+        "operationId" : "getApiFeedbackhistoryWithUsername",
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "path",
+          "description" : "Name of the User",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        },
+        {
+          "name" : "author",
+          "in" : "query",
+          "description" : "Author or recipient",
+          "required" : true,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackResponseMapList"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbackaverage" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Gets the list of feedback averages per user",
+        "operationId" : "getApiFeedbackAverage",
+        "parameters" : [ {
+          "name" : "author",
+          "in" : "query",
+          "description" : "Author or recipient",
+          "required" : true,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackResponseAverageMapList"
                 }
               }
             }
@@ -1206,6 +1293,27 @@
           }
         }
       },
+      "FeedbackResponseItem" : {
+        "required" : [ "author", "recipient", "room", "responses" ],
+        "type" : "object",
+        "properties" : {
+          "author" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "room" : {
+            "type" : "string"
+          },
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
       "FeedbackResponseList" : {
         "required" : [ "responses" ],
         "type" : "object",
@@ -1214,6 +1322,45 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
+      "FeedbackResponseMapList" : {
+        "required" : [ "responses" ],
+        "type" : "object",
+        "properties" : {
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseItem"
+            }
+          }
+        }
+      },
+      "FeedbackResponseAverageItem" : {
+        "required" : [ "username", "responses" ],
+        "type" : "object",
+        "properties" : {
+          "username": {
+            "type": "string"
+          },
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
+      "FeedbackResponseAverageMapList" : {
+        "required" : [ "responses" ],
+        "type" : "object",
+        "properties": {
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
             }
           }
         }

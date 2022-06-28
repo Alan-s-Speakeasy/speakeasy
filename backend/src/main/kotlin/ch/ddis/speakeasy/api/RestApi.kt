@@ -54,6 +54,9 @@ object RestApi {
             PostFeedbackHandler(),
             GetFeedbackHistoryHandler(),
 
+            GetAdminFeedbackHistoryHandler(),
+            GetAdminFeedbackAverageHandler(),
+
             GetAliasRoomHandler()
 
 

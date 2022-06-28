@@ -32,7 +32,7 @@ export class RatingPaneComponent implements OnInit {
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedbackWithRoomid(this.paneLog.roomID, undefined).subscribe(
+    this.feedbackService.getApiFeedback(undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },

@@ -1,0 +1,57 @@
+<div class="container mt-3">
+
+  <br>
+
+  <div class="row p-2">
+    <div class="col-9">
+      <h3>Evaluation Feedback</h3>
+    </div>
+    <div class="col-3">
+      <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
+    </div>
+  </div>
+
+  <div class="row p-2">
+    <table class="table table-striped table-bordered">
+      <thead>
+      <tr>
+        <th scope="col">Username</th>
+        <th scope="col" *ngFor="let question of this.ratingForm">{{question.shortname}}</th>
+      </tr>
+      </thead>
+      <tbody *ngFor="let entry of averageFeedback; let i = index">
+      <tr class="align-middle" (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = entry.username">
+        <td>{{entry.username}}</td>
+        <td *ngFor="let response of entry.responses">{{response.value}}</td>
+      </tr>
+<!--      <tr [hidden]="toggleList != entry.username || toggleElement != i ? true : null">-->
+<!--        <td colspan="5">-->
+<!--          <table class="table">-->
+<!--            <thead>-->
+<!--            <tr class="table-info">-->
+<!--              <th scope="col">RoomID</th>-->
+<!--              <th scope="col">Chat with</th>-->
+<!--              <th scope="col">Time left</th>-->
+<!--              <th scope="col">Watch</th>-->
+<!--            </tr>-->
+<!--            </thead>-->
+<!--            <tbody *ngFor="let chatroomDetail of sortByTime(allChatroomDetails)">-->
+<!--            <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId[0])">-->
+<!--              <td>{{chatroomDetail.roomID}}</td>-->
+<!--              <td><span *ngFor="let user of getPartners(chatroomDetail.sessions, frontendUserDetail.sessionId)">{{user}}<br> </span></td>-->
+<!--              <td>{{readableTime(chatroomDetail.remainingTime)}}</td>-->
+<!--              <td>-->
+<!--                <button type="button" class="btn btn-secondary float-end"-->
+<!--                        (click)="watch(frontendUserDetail, chatroomDetail)">Watch-->
+<!--                </button>-->
+<!--              </td>-->
+<!--            </tr>-->
+<!--            </tbody>-->
+<!--          </table>-->
+<!--        </td>-->
+<!--      </tr>-->
+      </tbody>
+    </table>
+  </div>
+</div>
+

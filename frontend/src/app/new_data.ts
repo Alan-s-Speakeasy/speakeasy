@@ -1,4 +1,5 @@
 /** Frontend variables and mock data */
+import {FeedbackResponse} from "../../openapi";
 
 export interface Message {
   myMessage: boolean,  // true: the message will be shown as my message (green bubble, on the right side);
@@ -54,6 +55,7 @@ export interface FrontendChatroomDetail {
   sessions: string[],
 }
 
-export interface MyMessages {
-  messages: string[]
+export interface FrontendAverageFeedback {
+  username: string,
+  responses: FeedbackResponse[]
 }

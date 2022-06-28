@@ -2,6 +2,7 @@ package ch.ddis.speakeasy.feedback
 
 import ch.ddis.speakeasy.api.handlers.FeedbackRequestList
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
+import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseList
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.UserId
@@ -106,10 +107,11 @@ object FeedbackManager {
         return FeedbackResponseList(responses)
     }
 
-    fun readFeedbackHistoryPerUser(userId: UserId, author: Boolean): HashMap<Pair<String, String>, MutableList<FeedbackResponse>> = this.lock.read {
+    fun readFeedbackHistory(): MutableList<FeedbackResponseItem> = this.lock.read {
 
         var response: FeedbackResponse
-        val responseMap: HashMap<Pair<String, String>, MutableList<FeedbackResponse>> = hashMapOf()
+        val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
+        val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
 
         //read all CSV lines with the given userid
 
@@ -125,21 +127,12 @@ object FeedbackManager {
 
                     if ((room != null) && (user != null) && (partner != null) && (responseId != null) && (responseValue != null)) {
                         response = FeedbackResponse(responseId, responseValue)
-                        // evaluations from a certain user
-                        if (author && user == userId.string) {
-                            val partnerUsername = UserManager.getUsernameFromId(UserId(partner)) ?: ""
-                            if (!responseMap.containsKey(Pair(partnerUsername, room))) {
-                                responseMap[Pair(partnerUsername, room)] = mutableListOf()
-                            }
-                            responseMap[Pair(partnerUsername, room)]?.add(response)
-                        // evaluations for a certain user
-                        } else if (!author && partner == userId.string) {
-                            val authorUsername = UserManager.getUsernameFromId(UserId(user)) ?: ""
-                            if (!responseMap.containsKey(Pair(authorUsername, room))) {
-                                responseMap[Pair(authorUsername, room)] = mutableListOf()
-                            }
-                            responseMap[Pair(authorUsername, room)]?.add(response)
+                        val authorUsername = UserManager.getUsernameFromId(UserId(user)) ?: ""
+                        val recipientUsername = UserManager.getUsernameFromId(UserId(partner)) ?: ""
+                        if (!responseMap.containsKey(Triple(authorUsername, recipientUsername, room))) {
+                            responseMap[Triple(authorUsername, recipientUsername, room)] = mutableListOf()
                         }
+                        responseMap[Triple(authorUsername, recipientUsername, room)]?.add(response)
                     }
                 }
             }
@@ -147,7 +140,50 @@ object FeedbackManager {
             with(e) { printStackTrace() }
         }
 
-        return responseMap
+        responseMap.forEach { triple, responses ->
+            responseList.add(FeedbackResponseItem(triple.first, triple.second, triple.third, responses))
+        }
+
+        return responseList
     }
 
+    fun readFeedbackHistoryPerUser(author: Boolean): HashMap<String, MutableList<FeedbackResponse>> {
+        val allFeedbackResponses = readFeedbackHistory()
+        val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
+        allFeedbackResponses.forEach {
+            if (author) {
+                if (!responsesPerUser.containsKey(it.author)) {
+                    responsesPerUser.put(it.author, mutableListOf())
+                }
+                it.responses.forEach { fr -> responsesPerUser.get(it.author)?.add(fr) }
+            }
+            else {
+                if (!responsesPerUser.containsKey(it.recipient)) {
+                    responsesPerUser[it.recipient] = mutableListOf()
+                }
+                it.responses.forEach { fr -> responsesPerUser.get(it.recipient)?.add(fr) }
+            }
+        }
+        return responsesPerUser
+    }
+
+    fun computeFeedbackAverage(responses: List<FeedbackResponse>): List<FeedbackResponse> {
+        val averages = requests.requests.map { it.id to 0 }.toMap(mutableMapOf())
+        val count = requests.requests.map { it.id to 0 }.toMap(mutableMapOf())
+
+        responses.forEach { fr ->
+            val value = fr.value.toIntOrNull() ?: 0
+            averages[fr.id] = value + averages[fr.id]!!
+            if (value != 0) {
+                count[fr.id] = count[fr.id]!! + 1
+            }
+        }
+
+        averages.forEach {
+            if (count[it.key]!! > 0) {
+                averages[it.key] = it.value / count[it.key]!!
+            }
+        }
+        return averages.map { FeedbackResponse(it.key, it.value.toString()) }
+    }
 }

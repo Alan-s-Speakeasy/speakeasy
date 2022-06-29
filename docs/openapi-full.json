@@ -711,13 +711,14 @@
         "summary" : "Gets the list of feedback requests for a Chatroom.",
         "operationId" : "getApiFeedback",
         "parameters" : [ {
-          "name" : "session",
-          "in" : "query",
-          "description" : "Session Token",
-          "schema" : {
-            "type" : "string"
+            "name" : "session",
+            "in" : "query",
+            "description" : "Session Token",
+            "schema" : {
+              "type" : "string"
+            }
           }
-        } ],
+        ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -750,7 +751,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/feedback/{roomId}" : {
       "post" : {
         "tags" : [ "Feedback" ],
         "summary" : "Returns Feedback for a Chatroom.",
@@ -872,21 +875,12 @@
         }
       }
     },
-    "/api/feedbackhistory/{username}" : {
+    "/api/feedbackhistory" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Gets the list of feedback responses for a User.",
-        "operationId" : "getApiFeedbackhistoryWithUsername",
+        "summary" : "Gets the list of feedback responses.",
+        "operationId" : "getApiFeedbackHistory",
         "parameters" : [ {
-          "name" : "username",
-          "in" : "path",
-          "description" : "Name of the User",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        },
-        {
           "name" : "author",
           "in" : "query",
           "description" : "Author or recipient",
@@ -1249,7 +1243,7 @@
         }
       },
       "FeedbackRequest" : {
-        "required" : [ "id", "name", "options", "type" ],
+        "required" : [ "id", "name", "shortname", "options", "type" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1259,6 +1253,9 @@
             "type" : "string"
           },
           "name" : {
+            "type" : "string"
+          },
+          "shortname" : {
             "type" : "string"
           },
           "options" : {

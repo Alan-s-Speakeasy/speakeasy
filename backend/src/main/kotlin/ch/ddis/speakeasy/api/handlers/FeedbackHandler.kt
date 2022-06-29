@@ -149,16 +149,13 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
 
     override val permittedRoles = setOf(RestApiRole.ADMIN)
 
-    override val route: String = "feedbackhistory/:username"
+    override val route: String = "feedbackhistory"
 
     @OpenApi(
         summary = "Gets the list of feedback responses",
-        path = "/api/feedbackhistory/:username",
+        path = "/api/feedbackhistory",
         method = HttpMethod.GET,
         tags = ["Admin"],
-        pathParams = [
-            OpenApiParam("username", String::class, "Name of the User"),
-        ],
         queryParams = [
             OpenApiParam("author", String::class, "author or recipient")
         ],
@@ -169,17 +166,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     )
     override fun doGet(ctx: Context): FeedbackResponseMapList {
 
-        val username = (ctx.pathParamMap().getOrElse("username") {
-            throw ErrorStatusException(400, "Parameter 'username' is missing!'", ctx)
-        })
-        val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
         val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
-        if (author) {
-            allFeedbackResponses.retainAll { it.author == username }
-        }
-        else {
-            allFeedbackResponses.retainAll { it.recipient == username }
-        }
 
         AccessManager.updateLastAccess(ctx.req.session.id)
         return FeedbackResponseMapList(allFeedbackResponses)

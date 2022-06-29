@@ -55,6 +55,13 @@ export interface FrontendChatroomDetail {
   sessions: string[],
 }
 
+export interface FrontendUserFeedback {
+  author: string,
+  recipient: string,
+  roomId: string,
+  responses: FeedbackResponse[]
+}
+
 export interface FrontendAverageFeedback {
   username: string,
   responses: FeedbackResponse[]

@@ -11,47 +11,43 @@
     </div>
   </div>
 
+  <mat-button-toggle-group (change)="toggleDirection($event.value)">
+    <mat-button-toggle checked value="author">Author</mat-button-toggle>
+    <mat-button-toggle value="recipient">Recipient</mat-button-toggle>
+  </mat-button-toggle-group>
+
   <div class="row p-2">
-    <table class="table table-striped table-bordered">
+    <table class="table table-primary table-bordered">
       <thead>
-      <tr>
-        <th scope="col">Username</th>
-        <th scope="col" *ngFor="let question of this.ratingForm">{{question.shortname}}</th>
+      <tr class="table-secondary">
+        <th scope="col">{{authorPerspective ? "Author" : "Recipient"}}</th>
+        <th scope="col" *ngFor="let question of this.ratingForm.slice(0, -1)">{{question.shortname}}</th>
       </tr>
       </thead>
       <tbody *ngFor="let entry of averageFeedback; let i = index">
       <tr class="align-middle" (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = entry.username">
         <td>{{entry.username}}</td>
-        <td *ngFor="let response of entry.responses">{{response.value}}</td>
+        <td *ngFor="let response of entry.responses.slice(0, -1)">{{idToText(response)}}</td>
       </tr>
-<!--      <tr [hidden]="toggleList != entry.username || toggleElement != i ? true : null">-->
-<!--        <td colspan="5">-->
-<!--          <table class="table">-->
-<!--            <thead>-->
-<!--            <tr class="table-info">-->
-<!--              <th scope="col">RoomID</th>-->
-<!--              <th scope="col">Chat with</th>-->
-<!--              <th scope="col">Time left</th>-->
-<!--              <th scope="col">Watch</th>-->
-<!--            </tr>-->
-<!--            </thead>-->
-<!--            <tbody *ngFor="let chatroomDetail of sortByTime(allChatroomDetails)">-->
-<!--            <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId[0])">-->
-<!--              <td>{{chatroomDetail.roomID}}</td>-->
-<!--              <td><span *ngFor="let user of getPartners(chatroomDetail.sessions, frontendUserDetail.sessionId)">{{user}}<br> </span></td>-->
-<!--              <td>{{readableTime(chatroomDetail.remainingTime)}}</td>-->
-<!--              <td>-->
-<!--                <button type="button" class="btn btn-secondary float-end"-->
-<!--                        (click)="watch(frontendUserDetail, chatroomDetail)">Watch-->
-<!--                </button>-->
-<!--              </td>-->
-<!--            </tr>-->
-<!--            </tbody>-->
-<!--          </table>-->
-<!--        </td>-->
-<!--      </tr>-->
+      <tr [hidden]="toggleList != entry.username || toggleElement != i ? true : null">
+        <td colspan="10" class="table-light">
+          <table class="table">
+            <thead>
+            <tr>
+              <th scope="col">{{authorPerspective ? "Recipient" : "Author"}}</th>
+              <th scope="col" *ngFor="let question of this.ratingForm">{{question.shortname}}</th>
+            </tr>
+            </thead>
+            <tbody *ngFor="let userFeedback of getFeedbacks(entry.username)">
+                <td>{{userFeedback.recipient}}</td>
+                <td *ngFor="let response of userFeedback.responses">{{idToText(response)}}</td>
+            </tbody>
+          </table>
+        </td>
+      </tr>
       </tbody>
     </table>
+
   </div>
 </div>
 

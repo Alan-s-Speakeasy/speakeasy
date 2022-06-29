@@ -23,6 +23,7 @@ import {AlertModule} from './_alert';
 import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
 import {NgbModule} from "@ng-bootstrap/ng-bootstrap";
 import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -53,7 +54,8 @@ export function initializeApiConfig() {
     HttpClientModule,
     ApiModule,
     AlertModule,
-    NgbModule
+    NgbModule,
+    MatButtonToggleModule
   ],
   providers: [
     FrontendDataService,

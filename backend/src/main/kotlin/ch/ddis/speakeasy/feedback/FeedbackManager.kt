@@ -140,7 +140,7 @@ object FeedbackManager {
             with(e) { printStackTrace() }
         }
 
-        responseMap.forEach { triple, responses ->
+        responseMap.forEach { (triple, responses) ->
             responseList.add(FeedbackResponseItem(triple.first, triple.second, triple.third, responses))
         }
 
@@ -153,15 +153,15 @@ object FeedbackManager {
         allFeedbackResponses.forEach {
             if (author) {
                 if (!responsesPerUser.containsKey(it.author)) {
-                    responsesPerUser.put(it.author, mutableListOf())
+                    responsesPerUser[it.author] = mutableListOf()
                 }
-                it.responses.forEach { fr -> responsesPerUser.get(it.author)?.add(fr) }
+                it.responses.forEach { fr -> responsesPerUser[it.author]?.add(fr) }
             }
             else {
                 if (!responsesPerUser.containsKey(it.recipient)) {
                     responsesPerUser[it.recipient] = mutableListOf()
                 }
-                it.responses.forEach { fr -> responsesPerUser.get(it.recipient)?.add(fr) }
+                it.responses.forEach { fr -> responsesPerUser[it.recipient]?.add(fr) }
             }
         }
         return responsesPerUser

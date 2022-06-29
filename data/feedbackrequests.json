@@ -4,7 +4,7 @@
       "id": "1",
       "type": "general",
       "name": "On average, the questions I asked in this conversation were answered accurately.",
-      "shortname": "Accurate answers",
+      "shortname": "Accurate Answers",
       "options": [
         {
           "name": "Strongly Disagree",
@@ -32,7 +32,7 @@
       "id": "2",
       "type": "general",
       "name": "On average, the answers I received in this conversation were complete.",
-      "shortname": "Complete answers",
+      "shortname": "Complete Answers",
       "options": [
         {
           "name": "Strongly Disagree",
@@ -60,7 +60,7 @@
       "id": "3",
       "type": "general",
       "name": "On average, the answers I received in this conversation were provided in a timely fashion.",
-      "shortname": "Timely answers",
+      "shortname": "Timely Answers",
       "options": [
         {
           "name": "Strongly Disagree",
@@ -88,7 +88,7 @@
       "id": "4",
       "type": "general",
       "name": "Based on the answers I received and the overall behaviour, I think on the other side there was a human responding to my questions.",
-      "shortname": "Human responder",
+      "shortname": "Human Responder",
       "options": [
         {
           "name": "Strongly Disagree",
@@ -116,7 +116,7 @@
       "id": "5",
       "type": "capability",
       "name": "On average, the Factual Question-Answering capability in this conversation was:",
-      "shortname": "Factual Question-Answering",
+      "shortname": "Factual Answers",
       "options": [
         {
           "name": "Very Poor",
@@ -212,7 +212,7 @@
       "id": "8",
       "type": "capability",
       "name": "On average, the Multi-Modal Question-Answering capability in this conversation was:",
-      "shortname": "Multi-Modal Question-Answering",
+      "shortname": "Multi-Modal",
       "options": [
         {
           "name": "Very Poor",
@@ -244,7 +244,7 @@
       "id": "9",
       "type": "capability",
       "name": "On average, the Crowdsourced Data Management capability in this conversation was:",
-      "shortname": "Crowdsourced Data Management",
+      "shortname": "Crowdsourcing",
       "options": [
         {
           "name": "Very Poor",

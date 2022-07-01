@@ -11,10 +11,27 @@
     </div>
   </div>
 
-  <mat-button-toggle-group (change)="toggleDirection($event.value)">
-    <mat-button-toggle checked value="author">Author</mat-button-toggle>
-    <mat-button-toggle value="recipient">Recipient</mat-button-toggle>
-  </mat-button-toggle-group>
+  <div class="row mt-5 mb-5">
+    <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
+      <apx-chart
+        [series]="chartOptions.series"
+        [chart]="chartOptions.chart"
+        [dataLabels]="chartOptions.dataLabels"
+        [plotOptions]="chartOptions.plotOptions"
+        [yaxis]="chartOptions.yaxis"
+        [xaxis]="chartOptions.xaxis"
+        [title]="chartOptions.title"
+      ></apx-chart>
+    </div>
+  </div>
+
+  <div class="row">
+    <h4 class="col-10">Average Answers per User</h4>
+    <mat-button-toggle-group class="border-0 col-2 justify-content-end" (change)="toggleDirection($event.value)">
+      <mat-button-toggle checked value="author"><b>Author</b></mat-button-toggle>
+      <mat-button-toggle value="recipient"><b>Recipient</b></mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
 
   <div class="row p-2">
     <table class="table table-primary table-bordered">
@@ -30,7 +47,7 @@
         <td *ngFor="let response of entry.responses.slice(0, -1)">{{idToText(response)}}</td>
       </tr>
       <tr [hidden]="toggleList != entry.username || toggleElement != i ? true : null">
-        <td colspan="10" class="table-light">
+        <td [colSpan]="entry.responses.length" class="table-light">
           <table class="table">
             <thead>
             <tr>
@@ -39,15 +56,28 @@
             </tr>
             </thead>
             <tbody *ngFor="let userFeedback of getFeedbacks(entry.username)">
-                <td>{{userFeedback.recipient}}</td>
-                <td *ngFor="let response of userFeedback.responses">{{idToText(response)}}</td>
+              <td class="p-2">{{this.authorPerspective ? userFeedback.recipient : userFeedback.author}}</td>
+              <td class="p-2" *ngFor="let response of userFeedback.responses.slice(0, -1)">{{idToText(response)}}</td>
+              <td *ngFor="let impression of userFeedback.responses.slice(-1)">
+                <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, impression)"><i>Read</i></p>
+              </td>
             </tbody>
           </table>
         </td>
       </tr>
       </tbody>
     </table>
-
   </div>
 </div>
 
+<ng-template #readImpression let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Impression</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p>{{this.impressionToRead}}</p>
+  </div>
+</ng-template>

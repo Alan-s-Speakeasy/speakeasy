@@ -10,14 +10,33 @@
     </div>
   </div>
 
-  <div *ngFor="let paneLog of paneLogs, let i = index">
-    <div class="row p-2">
-      <div class="col-8">
-        <app-rating-pane [showHistory]="true" [paneLog]="paneLogs[i]"></app-rating-pane>
-      </div>
+  <div class="p-2" *ngIf="averageFeedback">
+  <h4>Average Assessment (of {{averageFeedback.count}} Evaluation{{averageFeedback.count > 1 ? "s" : ""}})</h4>
+  <table class="table">
+    <thead>
+    <tr>
+      <th scope="col" *ngFor="let question of ratingForm.slice(0, -1)">{{question.shortname}}</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="align-middle">
+      <td *ngFor="let response of averageFeedback.responses.slice(0, -1)">{{idToText(response)}}</td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
 
-      <div class="col-4">
-        <app-chat-pane [paneLog]="paneLogs[i]"></app-chat-pane>
+  <div class="p-2">
+    <h4>Detailed Assessments</h4>
+    <div *ngFor="let paneLog of paneLogs">
+      <div class="row p-2">
+        <div class="col-7">
+          <app-rating-pane [showHistory]="true" [paneLog]="paneLog"></app-rating-pane>
+        </div>
+
+        <div class="col-5">
+          <app-chat-pane [paneLog]="paneLog"></app-chat-pane>
+        </div>
       </div>
     </div>
   </div>

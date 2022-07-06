@@ -3,23 +3,17 @@
 
     <div class="row p-2">
       <div class="chat-header text-center">
-        <div *ngIf="!showHistory">
-          <h5>Ratings - {{paneLog.otherAlias}}</h5>
-        </div>
-        <div *ngIf="showHistory">
-          <h5>Ratings - {{paneLog.otherAlias}}</h5>
-        </div>
+        <h5>Ratings for {{paneLog.otherAlias}}</h5>
       </div>
     </div>
 
-    <div class="chat-history text-wrap" style="overflow: scroll; height: 500px; overflow-x:hidden;">
+    <div *ngIf="!showHistory">
+      <div class="chat-history text-wrap" style="overflow: scroll; height: 500px; overflow-x:hidden;">
+        <div *ngFor="let request of ratingForm">
+          <form>
+            <div class="text-center">
+              <h6>{{request.id}}. {{request.name}}</h6>
 
-      <div *ngFor="let request of ratingForm">
-        <form>
-          <div class="text-center">
-            <h6>{{request.id}}. {{request.name}}</h6>
-
-            <div *ngIf="!showHistory">
               <div *ngIf="request.options.length > 0">
                 <div class="form-check form-check-inline" *ngFor="let option of request.options">
 
@@ -34,35 +28,44 @@
                 <input type="text" class="form-control" placeholder="..." name="item.name" [(ngModel)]="paneLog.ratings[request.id]">
               </div>
             </div>
+          </form>
+          <hr>
+        </div>
+      </div>
+      <div class="chat-message clearfix">
+        <div class="input-group-append text-center">
+          <button (click)="submit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
+        </div>
+      </div>
+    </div>
 
-            <div *ngIf="showHistory">
-              <div *ngIf="request.options.length > 0">
-                <div *ngFor="let option of request.options">
-                  <div *ngIf="option.value.toString() == paneLog.ratings[request.id]">
-                    {{option.name}}
-                  </div>
+    <div *ngIf="showHistory">
+      <div class="chat-history text-wrap" style="overflow: scroll; height: 500px; overflow-x:hidden;">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Statement</th>
+            <th>Your Answer</th>
+          </tr>
+          </thead>
+          <tbody *ngFor="let request of ratingForm">
+          <tr *ngIf="request.options.length > 0">
+            <td><b>{{request.shortname}}</b></td>
+            <td>
+              <div *ngFor="let option of request.options">
+                <div *ngIf="option.value.toString() == paneLog.ratings[request.id]">
+                  {{option.name}}
                 </div>
               </div>
-
-              <div *ngIf="request.options.length === 0">
-                <p>{{paneLog.ratings[request.id]}}</p>
-              </div>
-            </div>
-
-          </div>
-        </form>
-        <hr>
+            </td>
+          </tr>
+          <tr *ngIf="request.options.length == 0">
+            <td colspan="2"><b>Impression: </b>{{paneLog.ratings[request.id]}}</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-
-    <div *ngIf="!showHistory">
-      <div class="chat-message clearfix">
-          <div class="input-group-append text-center">
-            <button (click)="submit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
-          </div>
-      </div>
-    </div>
-
   </div>
 </div>
 

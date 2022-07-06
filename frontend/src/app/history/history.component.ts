@@ -4,7 +4,13 @@ import {FrontendDataService} from "../frontend-data.service";
 import {Title} from "@angular/platform-browser";
 import {PaneLog} from "../new_data";
 
-import {UserService, FeedbackService, ChatService, ChatRoomList, ChatRoomInfo} from "../../../openapi";
+import {
+  UserService,
+  FeedbackService,
+  ChatService,
+  ChatRoomInfo,
+  FeedbackResponse, FeedbackResponseAverageItem, FeedbackRequest
+} from "../../../openapi";
 import {AuthService} from "../authentication.service";
 import {AlertService} from "../_alert";
 import {Subscription} from "rxjs";
@@ -31,6 +37,9 @@ export class HistoryComponent implements OnInit {
   sessionId!: string
   userSessionAlias!: string
 
+  ratingForm!: Array<FeedbackRequest>;
+  averageFeedback!: FeedbackResponseAverageItem;
+
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
 
   ngOnInit(): void {
@@ -48,6 +57,19 @@ export class HistoryComponent implements OnInit {
     }
 
     this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
+
+    this.feedbackService.getApiFeedback(undefined).subscribe((feedbackForm) => {
+        this.ratingForm = feedbackForm.requests;
+      },
+      (error) => {
+        console.log("Ratings form for this chat room is not retrieved properly.", error);
+      }
+    )
+    this.feedbackService.getApiFeedbackAverage(true).subscribe((response) => {
+      if (response) {
+        this.averageFeedback = response.responses[0]
+      }
+    })
 
     this.paneLogsInit()
   }
@@ -98,6 +120,20 @@ export class HistoryComponent implements OnInit {
     })
 
     this.paneLogs.push(paneLog)
+  }
+
+  idToText(response: FeedbackResponse): string {
+    let text = response.value
+    this.ratingForm.forEach(r => {
+      if (r.id == response.id) {
+        r.options.forEach(o => {
+          if (o.value.toString() == response.value) {
+            text = o.name
+          }
+        })
+      }
+    })
+    return text
   }
 
   home(): void {

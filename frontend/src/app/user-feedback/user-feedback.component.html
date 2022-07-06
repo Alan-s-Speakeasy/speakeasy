@@ -4,7 +4,7 @@
 
   <div class="row p-2">
     <div class="col-9">
-      <h3>Evaluation Feedback</h3>
+      <h3>Evaluation Feedback Overview</h3>
     </div>
     <div class="col-3">
       <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
@@ -26,41 +26,45 @@
   </div>
 
   <div class="row">
-    <h4 class="col-10">Average Answers per User</h4>
+    <h3 class="col-10">Detailed Evaluation Feedback</h3>
     <mat-button-toggle-group class="border-0 col-2 justify-content-end" (change)="toggleDirection($event.value)">
       <mat-button-toggle checked value="author"><b>Author</b></mat-button-toggle>
       <mat-button-toggle value="recipient"><b>Recipient</b></mat-button-toggle>
     </mat-button-toggle-group>
   </div>
 
+  <span>Average Evaluation per User. Click to expand</span>
+
   <div class="row p-2">
-    <table class="table table-primary table-bordered">
+    <table class="table">
       <thead>
-      <tr class="table-secondary">
-        <th scope="col">{{authorPerspective ? "Author" : "Recipient"}}</th>
-        <th scope="col" *ngFor="let question of this.ratingForm.slice(0, -1)">{{question.shortname}}</th>
+      <tr *ngIf="this.ratingForm">
+        <th class="px-0">{{authorPerspective ? "Author" : "Recipient"}}</th>
+        <th class="px-0" *ngFor="let question of this.ratingForm.slice(0, -1)">{{question.shortname}}</th>
       </tr>
       </thead>
       <tbody *ngFor="let entry of averageFeedback; let i = index">
-      <tr class="align-middle" (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = entry.username">
-        <td>{{entry.username}}</td>
-        <td *ngFor="let response of entry.responses.slice(0, -1)">{{idToText(response)}}</td>
+      <tr class="align-middle" role="button" (click)="toggleElement = toggleElement == i ? -1 : i">
+        <td class="px-0">{{entry.username}}</td>
+        <td class="px-0" *ngFor="let response of entry.responses.slice(0, -1)">{{idToText(response)}}</td>
       </tr>
-      <tr [hidden]="toggleList != entry.username || toggleElement != i ? true : null">
-        <td [colSpan]="entry.responses.length" class="table-light">
-          <table class="table">
+      <tr @inOutAnimation *ngIf="toggleElement == i">
+        <td [colSpan]="entry.responses.length">
+          <table class="table table-sm small">
             <thead>
-            <tr>
-              <th scope="col">{{authorPerspective ? "Recipient" : "Author"}}</th>
-              <th scope="col" *ngFor="let question of this.ratingForm">{{question.shortname}}</th>
+            <tr class="table-secondary">
+              <th>{{authorPerspective ? "Recipient" : "Author"}}</th>
+              <th *ngFor="let question of this.ratingForm">{{question.shortname}}</th>
             </tr>
             </thead>
             <tbody *ngFor="let userFeedback of getFeedbacks(entry.username)">
+            <tr class="table-secondary">
               <td class="p-2">{{this.authorPerspective ? userFeedback.recipient : userFeedback.author}}</td>
               <td class="p-2" *ngFor="let response of userFeedback.responses.slice(0, -1)">{{idToText(response)}}</td>
               <td *ngFor="let impression of userFeedback.responses.slice(-1)">
-                <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, impression)"><i>Read</i></p>
+                <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, impression)"><i>&nbsp;Read</i></p>
               </td>
+            </tr>
             </tbody>
           </table>
         </td>

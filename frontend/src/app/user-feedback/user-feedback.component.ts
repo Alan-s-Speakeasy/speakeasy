@@ -24,6 +24,7 @@ import {
   ApexTitleSubtitle,
   ApexXAxis
 } from "ng-apexcharts";
+import {animate, style, transition, trigger} from "@angular/animations";
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -38,7 +39,18 @@ export type ChartOptions = {
 @Component({
   selector: 'app-user-feedback',
   templateUrl: './user-feedback.component.html',
-  styleUrls: ['./user-feedback.component.css']
+  styleUrls: ['./user-feedback.component.css'],
+  animations: [
+    trigger('inOutAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('200ms', style({ opacity: 1 })),
+      ]),
+      transition(':leave', [
+        animate('200ms', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class UserFeedbackComponent implements OnInit, OnDestroy {
   options = {
@@ -64,8 +76,6 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   allChartOptions: Partial<ChartOptions>[] | any[] = [];
 
   toggleElement: number = -1
-  toggleList: string = ""
-
   authorPerspective: boolean = true
   impressionToRead: string = ""
 
@@ -101,7 +111,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       })
     })
 
-    this.adminService.getApiFeedbackHistory(this.authorPerspective).subscribe((r) => {
+    this.adminService.getApiFeedbackHistory().subscribe((r) => {
       this.userFeedback = []
       this.generateChartBuckets()
       r.responses.forEach(response => {

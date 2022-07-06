@@ -25,6 +25,7 @@ import {NgbModule} from "@ng-bootstrap/ng-bootstrap";
 import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {NgApexchartsModule} from "ng-apexcharts";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -57,7 +58,8 @@ export function initializeApiConfig() {
     AlertModule,
     NgbModule,
     MatButtonToggleModule,
-    NgApexchartsModule
+    NgApexchartsModule,
+    BrowserAnimationsModule
   ],
   providers: [
     FrontendDataService,

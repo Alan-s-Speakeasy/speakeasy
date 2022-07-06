@@ -1,7 +1,7 @@
 package ch.ddis.speakeasy.cli.commands
 
 import ch.ddis.speakeasy.api.handlers.FeedbackRequestList
-import ch.ddis.speakeasy.api.handlers.FeedbackResponse
+import ch.ddis.speakeasy.api.handlers.FeedbackResponseAverageItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserManager
@@ -129,18 +129,19 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
     fun printAllEvaluations(
         header: FeedbackRequestList,
-        allResponses: HashMap<String, MutableList<FeedbackResponse>>,
+        allResponses: List<FeedbackResponseAverageItem>,
         output: String?,
         author: Boolean
     ) {
         if (output != null) {
             val fileWriter = createOutputFile(output)
-            val firstHeader = if (author) "Recipient" else "Author"
-            fileWriter.println(firstHeader + "," + header.requests.joinToString(",") { it.shortname })
+            val firstHeader = if (author) "Author" else "Recipient"
+            fileWriter.println(firstHeader + ",count," + header.requests.joinToString(",") { it.shortname })
             allResponses.forEach { response ->
                 val parts: MutableList<String> = mutableListOf()
-                parts.add(response.key)
-                FeedbackManager.computeFeedbackAverage(response.value).forEach {
+                parts.add(response.username)
+                parts.add(response.count.toString())
+                FeedbackManager.computeFeedbackAverage(response.responses).forEach {
                     parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
                 }
                 fileWriter.println(parts.joinToString(","))
@@ -164,7 +165,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                             alignment = TextAlignment.MiddleLeft
                         }
                         row {
-                            cell(if (author) "Recipient" else "Author")
+                            cell(if (author) "Author" else "Recipient")
+                            cell("Number of Evaluations")
                             header.requests.forEach {
                                 cell(it.shortname)
                             }
@@ -173,8 +175,9 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                     body {
                         allResponses.forEach { response ->
                             row {
-                                cell(response.key)
-                                FeedbackManager.computeFeedbackAverage(response.value).forEach {
+                                cell(response.username)
+                                cell(response.count)
+                                FeedbackManager.computeFeedbackAverage(response.responses).forEach {
                                     cell(getFeedbackNameForValue(header, it.id, it.value))
                                 }
                             }

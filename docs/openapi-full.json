@@ -880,15 +880,6 @@
         "tags" : [ "Admin" ],
         "summary" : "Gets the list of feedback responses.",
         "operationId" : "getApiFeedbackHistory",
-        "parameters" : [ {
-          "name" : "author",
-          "in" : "query",
-          "description" : "Author or recipient",
-          "required" : true,
-          "schema" : {
-            "type" : "boolean"
-          }
-        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -915,7 +906,7 @@
     },
     "/api/feedbackaverage" : {
       "get" : {
-        "tags" : [ "Admin" ],
+        "tags" : [ "Admin", "Feedback" ],
         "summary" : "Gets the list of feedback averages per user",
         "operationId" : "getApiFeedbackAverage",
         "parameters" : [ {
@@ -1336,11 +1327,14 @@
         }
       },
       "FeedbackResponseAverageItem" : {
-        "required" : [ "username", "responses" ],
+        "required" : [ "username", "responses", "count" ],
         "type" : "object",
         "properties" : {
           "username": {
             "type": "string"
+          },
+          "count": {
+            "type": "number"
           },
           "responses" : {
             "type" : "array",

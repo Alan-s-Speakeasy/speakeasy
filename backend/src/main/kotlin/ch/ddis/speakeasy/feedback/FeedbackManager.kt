@@ -1,9 +1,6 @@
 package ch.ddis.speakeasy.feedback
 
-import ch.ddis.speakeasy.api.handlers.FeedbackRequestList
-import ch.ddis.speakeasy.api.handlers.FeedbackResponse
-import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
-import ch.ddis.speakeasy.api.handlers.FeedbackResponseList
+import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
@@ -147,24 +144,25 @@ object FeedbackManager {
         return responseList
     }
 
-    fun readFeedbackHistoryPerUser(author: Boolean): HashMap<String, MutableList<FeedbackResponse>> {
+    fun readFeedbackHistoryPerUser(author: Boolean): List<FeedbackResponseAverageItem> {
         val allFeedbackResponses = readFeedbackHistory()
         val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
+        val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
+
         allFeedbackResponses.forEach {
-            if (author) {
-                if (!responsesPerUser.containsKey(it.author)) {
-                    responsesPerUser[it.author] = mutableListOf()
-                }
-                it.responses.forEach { fr -> responsesPerUser[it.author]?.add(fr) }
+            val key = if (author) it.author else it.recipient
+            if (!responsesPerUser.containsKey(key)) {
+                responsesPerUser[key] = mutableListOf()
+                feedbackCountPerUser[key] = 1
             }
             else {
-                if (!responsesPerUser.containsKey(it.recipient)) {
-                    responsesPerUser[it.recipient] = mutableListOf()
-                }
-                it.responses.forEach { fr -> responsesPerUser[it.recipient]?.add(fr) }
+                feedbackCountPerUser[key] = feedbackCountPerUser[key]!! + 1
             }
+            it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
-        return responsesPerUser
+        return responsesPerUser.map {
+            FeedbackResponseAverageItem(it.key, feedbackCountPerUser[it.key] ?: 0, computeFeedbackAverage(it.value))
+        }
     }
 
     fun computeFeedbackAverage(responses: List<FeedbackResponse>): List<FeedbackResponse> {

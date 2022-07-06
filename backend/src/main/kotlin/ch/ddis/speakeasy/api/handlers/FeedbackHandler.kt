@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.http.BadRequestResponse
@@ -16,7 +17,7 @@ data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val responses: MutableList<FeedbackResponseItem>)
-data class FeedbackResponseAverageItem(val username: String, val responses: List<FeedbackResponse>)
+data class FeedbackResponseAverageItem(val username: String, val count: Int, val responses: List<FeedbackResponse>)
 data class FeedbackResponseAverageMapList(val responses: List<FeedbackResponseAverageItem>)
 
 class GetFeedbackRequestListHandler : GetRestHandler<FeedbackRequestList>, AccessManagedRestHandler {
@@ -156,9 +157,6 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
         path = "/api/feedbackhistory",
         method = HttpMethod.GET,
         tags = ["Admin"],
-        queryParams = [
-            OpenApiParam("author", String::class, "author or recipient")
-        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(FeedbackResponseMapList::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
@@ -175,7 +173,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
 
 class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMapList>, AccessManagedRestHandler {
 
-    override val permittedRoles = setOf(RestApiRole.ADMIN)
+    override val permittedRoles = setOf(RestApiRole.ADMIN, RestApiRole.USER)
 
     override val route: String = "feedbackaverage"
 
@@ -183,7 +181,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
         summary = "Gets the list of feedback averages per user",
         path = "/api/feedbackaverage",
         method = HttpMethod.GET,
-        tags = ["Admin"],
+        tags = ["Admin", "Feedback"],
         queryParams = [
             OpenApiParam("author", String::class, "author or recipient")
         ],
@@ -194,12 +192,27 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
     )
     override fun doGet(ctx: Context): FeedbackResponseAverageMapList {
 
+        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+            401,
+            "Unauthorized",
+            ctx
+        )
         val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
 
         AccessManager.updateLastAccess(ctx.req.session.id)
         val feedbackResponsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author)
-        val averageMapList = feedbackResponsesPerUser.map { FeedbackResponseAverageItem(it.key, FeedbackManager.computeFeedbackAverage(it.value)) }
 
-        return FeedbackResponseAverageMapList(averageMapList)
+        // Return all averages to admin
+        if (session.user.role == UserRole.ADMIN) {
+            return FeedbackResponseAverageMapList(feedbackResponsesPerUser)
+        }
+        // Return only the user's average to human
+        else {
+            val averageForUser = feedbackResponsesPerUser.find { it.username == session.user.name }
+            if (averageForUser != null) {
+                return FeedbackResponseAverageMapList(listOf(averageForUser))
+            }
+            return FeedbackResponseAverageMapList(listOf())
+        }
     }
 }

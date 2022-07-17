@@ -4,11 +4,12 @@ import ch.ddis.speakeasy.util.UID
 
 typealias UserId = UID
 
-class User(val id: UserId, val name: String, val role: UserRole, pass: Password) {
+class User(val id: UserId, val name: String, val role: UserRole, pass: Password?) {
 
     val password: HashedPassword = when (pass) {
         is HashedPassword -> pass
         is PlainPassword -> pass.hash()
+        else -> UserManager.getPasswordFromId(id)!! as HashedPassword
     }
 
     override fun equals(other: Any?): Boolean {

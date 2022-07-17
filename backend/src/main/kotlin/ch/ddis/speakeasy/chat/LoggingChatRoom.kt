@@ -12,8 +12,10 @@ class LoggingChatRoom(
     sessions: MutableSet<UserSession>,
     startTime: Long = System.currentTimeMillis(),
     basePath: File,
-    endTime: Long? = null
-) : ChatRoom(uid, sessions, startTime) {
+    endTime: Long? = null,
+    messages: MutableList<ChatMessage> = mutableListOf(),
+    reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
+) : ChatRoom(uid, sessions, startTime, messages, reactions) {
 
     init {
         if (!basePath.isDirectory) {
@@ -32,6 +34,9 @@ class LoggingChatRoom(
         writer.println(this.endTime)
         writer.println(objectMapper.writeValueAsString(this.sessions))
         writer.println()
+
+        messages.forEach { message -> writer.println(objectMapper.writeValueAsString(message)) }
+        reactions.forEach { reaction -> writer.println(objectMapper.writeValueAsString(reaction)) }
         writer.flush()
     }
 

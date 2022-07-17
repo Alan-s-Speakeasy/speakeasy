@@ -13,7 +13,9 @@ typealias ChatRoomId = UID
 open class ChatRoom(
     val uid: ChatRoomId = UID(),
     val sessions: MutableSet<UserSession>,
-    val startTime: Long = System.currentTimeMillis()
+    val startTime: Long = System.currentTimeMillis(),
+    val messages: MutableList<ChatMessage> = mutableListOf(),
+    val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
 ) {
     var prompt: String = ""
     internal var endTime: Long? = null
@@ -27,10 +29,6 @@ open class ChatRoom(
         get() = max((endTime ?: Long.MAX_VALUE) - System.currentTimeMillis(), 0)
 
     private val lock: StampedLock = StampedLock()
-
-    private val messages = mutableListOf<ChatMessage>()
-
-    private val reactions = mutableSetOf<ChatMessageReaction>()
 
     val nextMessageOrdinal: Int
         get() = this.lock.read {

@@ -3,6 +3,8 @@ package ch.ddis.speakeasy.chat
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.UID
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -10,6 +12,42 @@ object ChatRoomManager {
 
     private val chatrooms = ConcurrentHashMap<ChatRoomId, ChatRoom>()
     private val basePath: File = File("chatlogs/") //TODO make configurable
+    private val objectMapper = jacksonObjectMapper()
+
+
+    fun init() {
+        this.basePath.walk().filter { it.isFile }.forEach { file ->
+            val lines = file.readLines(Charsets.UTF_8)
+            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[3])
+            val messages: MutableList<ChatMessage> = mutableListOf()
+            val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
+
+            for (i in 5 until lines.size) {
+                try {
+                    val chatMessage: ChatMessage = objectMapper.readValue(lines[i])
+                    messages.add(chatMessage)
+                } catch (_: Exception) {}
+                try {
+                    sessions = objectMapper.readValue(lines[i])
+                } catch (_: Exception) {}
+                try {
+                    val reaction: ChatMessageReaction = objectMapper.readValue(lines[i])
+                    reactions.add(reaction)
+                } catch (_: Exception) {}
+            }
+
+            val chatRoom = LoggingChatRoom(
+                uid = UID(lines[0]),
+                startTime = lines[1].toLong(),
+                endTime = lines[2].toLongOrNull() ?: lines[1].toLong(),
+                basePath = basePath,
+                sessions = sessions,
+                messages = messages,
+                reactions = reactions
+            )
+            chatrooms[chatRoom.uid] = chatRoom
+        }
+    }
 
     fun listActive(): List<ChatRoom> = this.chatrooms.values.filter { it.active }
 

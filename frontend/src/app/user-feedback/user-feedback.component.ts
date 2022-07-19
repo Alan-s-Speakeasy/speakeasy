@@ -29,6 +29,7 @@ import {animate, style, transition, trigger} from "@angular/animations";
 export type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
+  colors: any[];
   dataLabels: ApexDataLabels;
   plotOptions: ApexPlotOptions;
   yaxis: ApexYAxis;
@@ -71,13 +72,18 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   averageFeedback: FrontendAverageFeedback[] = []
   userFeedback: FrontendUserFeedback[] = []
 
-  aggregated: Map<string, number>[] = []
+  chartDataPerUsername: Map<string, Map<string, number>[]> = new Map
   @ViewChild("chart") chart: ChartComponent | undefined;
   allChartOptions: Partial<ChartOptions>[] | any[] = [];
 
   toggleElement: number = -1
   authorPerspective: boolean = true
   impressionToRead: string = ""
+
+  usernames: string[] = []
+  selectedUsername: string | null = null
+  usernameChartData: Map<string, number>[] = []
+  remainderChartData: Map<string, number>[] = []
 
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
@@ -101,6 +107,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   fetchFeedback(): void {
     this.adminService.getApiFeedbackAverage(this.authorPerspective).subscribe((r) => {
       this.averageFeedback = []
+      this.usernames = []
       r.responses.forEach(average => {
         this.averageFeedback.push(
           {
@@ -108,12 +115,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
             responses: average.responses
           }
         )
+        this.usernames.push(average.username)
       })
     })
 
     this.adminService.getApiFeedbackHistory().subscribe((r) => {
       this.userFeedback = []
-      this.generateChartBuckets()
+      this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername()
       r.responses.forEach(response => {
         this.userFeedback.push(
           {
@@ -124,45 +132,98 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
           }
         )
         if (this.ratingForm) {
+          let username = this.authorPerspective ? response.author : response.recipient
           response.responses.slice(0, -1).forEach(r => {
-            let current = this.aggregated[parseInt(r.id) - 1].get(r.value) || 0
-            this.aggregated[parseInt(r.id) - 1].set(r.value, current + 1)
+            let current = this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].get(r.value) || 0
+            this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].set(r.value, current + 1)
           })
         }
         })
-      if (this.allChartOptions.length == 0) {
-        this.generateCharts()
-      } else {
-        this.updateCharts()
-      }
+      this.updateUsernameAndCharts()
     })
   }
 
-  generateChartBuckets(): void {
-    this.aggregated = [];
+  generateEmptyChartBuckets(): Map<string, number>[] {
+    let res: Map<string, number>[] = []
     this.ratingForm.slice(0, -1).forEach(f => {
       let x = new Map()
       f.options.forEach(o => x.set(o.value.toString(), 0))
-      this.aggregated.push(x)
+      res.push(x)
     })
+    return res
+  }
+
+  generateEmptyChartBucketsPerUsername(): Map<string, Map<string, number>[]> {
+    let res: Map<string, Map<string, number>[]> = new Map
+    this.usernames.forEach(u => {
+      res.set(u, [])
+      this.ratingForm.slice(0, -1).forEach(f => {
+        let x = new Map()
+        f.options.forEach(o => x.set(o.value.toString(), 0))
+        res.get(u)!.push(x)
+      })
+    })
+    return res
+  }
+
+  getChartData(username: string | null, id: string) : number[] {
+    if (username != null) {
+      return Array.from(this.usernameChartData[parseInt(id) - 1].values())
+    } else {
+      return Array.from(this.remainderChartData[parseInt(id) - 1].values())
+    }
+  }
+
+  updateUsernameAndCharts() : void {
+    this.usernameChartData = this.generateEmptyChartBuckets()
+    this.remainderChartData = this.generateEmptyChartBuckets()
+    this.chartDataPerUsername.forEach((v, username) => {
+      if (this.selectedUsername == username) {
+        for (let category = 0; category < this.usernameChartData.length; category++) {
+          this.usernameChartData[category].forEach((value, name) => {
+            let newValue = value + v[category]!.get(name)!
+            this.usernameChartData[category].set(name, newValue)
+          })
+        }
+      } else {
+        for (let category = 0; category < this.remainderChartData.length; category++) {
+          this.remainderChartData[category].forEach((value, name) => {
+            let newValue = value + v[category]!.get(name)!
+            this.remainderChartData[category].set(name, newValue)
+          })
+        }
+      }
+    })
+    if (this.allChartOptions.length == 0) {
+      this.generateCharts()
+    } else {
+      this.updateCharts()
+    }
   }
 
   generateCharts(): void {
     this.ratingForm.slice(0, -1).forEach(f => {
+      let series = [{
+        name: "All other users",
+        data: this.getChartData(null, f.id)
+      }]
+      if (this.selectedUsername != null) {
+        series.push({
+          name: this.selectedUsername,
+          data: this.getChartData(this.selectedUsername, f.id)
+        })
+      }
       this.allChartOptions?.push(
         {
-          series: [
-            {
-              name: f.shortname,
-              data: Array.from(this.aggregated[parseInt(f.id) - 1].values())
-            },
-          ],
+          series: series,
+          colors: ['#0066ff', '#ff9933'],
           chart: {
             height: 300,
             type: "bar",
             animations: {
               enabled: false
-            }
+            },
+            stacked: true
           },
           plotOptions: {
             bar: {
@@ -203,9 +264,17 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   updateCharts(): void {
     this.ratingForm.slice(0, -1).forEach(f => {
-      this.allChartOptions[parseInt(f.id) - 1].series = [{
-        data: Array.from(this.aggregated[parseInt(f.id) - 1].values())
+      let series = [{
+        name: "All other users",
+        data: this.getChartData(null, f.id)
       }]
+      if (this.selectedUsername != null) {
+        series.push({
+          name: this.selectedUsername,
+          data: this.getChartData(this.selectedUsername, f.id)
+        })
+      }
+      this.allChartOptions[parseInt(f.id) - 1].series = series
     })
   }
 
@@ -214,6 +283,14 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       return this.userFeedback.filter(f => f.author == username)
     } else {
       return this.userFeedback.filter(f => f.recipient == username)
+    }
+  }
+
+  getAverageFeedback(): FrontendAverageFeedback[] {
+    if (this.selectedUsername != null) {
+      return this.averageFeedback.filter(f => f.username == this.selectedUsername)
+    } else {
+      return this.averageFeedback
     }
   }
 

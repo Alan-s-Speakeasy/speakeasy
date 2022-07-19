@@ -26,6 +26,9 @@ import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {NgApexchartsModule} from "ng-apexcharts";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatSelectModule} from "@angular/material/select";
+import {MatOptionModule} from "@angular/material/core";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -59,7 +62,10 @@ export function initializeApiConfig() {
     NgbModule,
     MatButtonToggleModule,
     NgApexchartsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatOptionModule
   ],
   providers: [
     FrontendDataService,

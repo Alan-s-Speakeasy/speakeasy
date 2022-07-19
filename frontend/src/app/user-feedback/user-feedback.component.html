@@ -11,10 +11,32 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-4">
+      <mat-form-field appearance="fill" class="col-12">
+        <mat-label>Filter User</mat-label>
+        <mat-select [(value)]="selectedUsername" (selectionChange)="updateUsernameAndCharts()">
+          <mat-option [value]="null">None</mat-option>
+          <mat-option *ngFor="let username of usernames" [value]="username">
+            {{username}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="col-2 p-2">
+      <mat-button-toggle-group class="border-0" (change)="toggleDirection($event.value)">
+        <mat-button-toggle checked value="author"><b>Author</b></mat-button-toggle>
+        <mat-button-toggle value="recipient"><b>Recipient</b></mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+
   <div class="row mt-5 mb-5">
     <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
       <apx-chart
         [series]="chartOptions.series"
+        [colors]="chartOptions.colors"
         [chart]="chartOptions.chart"
         [dataLabels]="chartOptions.dataLabels"
         [plotOptions]="chartOptions.plotOptions"
@@ -26,11 +48,7 @@
   </div>
 
   <div class="row">
-    <h3 class="col-10">Detailed Evaluation Feedback</h3>
-    <mat-button-toggle-group class="border-0 col-2 justify-content-end" (change)="toggleDirection($event.value)">
-      <mat-button-toggle checked value="author"><b>Author</b></mat-button-toggle>
-      <mat-button-toggle value="recipient"><b>Recipient</b></mat-button-toggle>
-    </mat-button-toggle-group>
+    <h3>Detailed Evaluation Feedback</h3>
   </div>
 
   <span>Average Evaluation per User. Click to expand</span>
@@ -43,7 +61,7 @@
         <th class="px-0" *ngFor="let question of this.ratingForm.slice(0, -1)">{{question.shortname}}</th>
       </tr>
       </thead>
-      <tbody *ngFor="let entry of averageFeedback; let i = index">
+      <tbody *ngFor="let entry of getAverageFeedback(); let i = index">
       <tr class="align-middle" role="button" (click)="toggleElement = toggleElement == i ? -1 : i">
         <td class="px-0">{{entry.username}}</td>
         <td class="px-0" *ngFor="let response of entry.responses.slice(0, -1)">{{idToText(response)}}</td>

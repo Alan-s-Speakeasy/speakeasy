@@ -18,11 +18,12 @@ object ChatRoomManager {
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
-            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[3])
+            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[4])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
+            val assessedBy: MutableList<UserId> = mutableListOf()
 
-            for (i in 5 until lines.size) {
+            for (i in 6 until lines.size) {
                 try {
                     val chatMessage: ChatMessage = objectMapper.readValue(lines[i])
                     messages.add(chatMessage)
@@ -34,16 +35,22 @@ object ChatRoomManager {
                     val reaction: ChatMessageReaction = objectMapper.readValue(lines[i])
                     reactions.add(reaction)
                 } catch (_: Exception) {}
+                try {
+                    val assessor: UserId = objectMapper.readValue(lines[i])
+                    assessedBy.add(assessor)
+                } catch (_: Exception) {}
             }
 
             val chatRoom = LoggingChatRoom(
                 uid = UID(lines[0]),
                 startTime = lines[1].toLong(),
                 endTime = lines[2].toLongOrNull() ?: lines[1].toLong(),
+                prompt = lines[3],
                 basePath = basePath,
                 sessions = sessions,
                 messages = messages,
-                reactions = reactions
+                reactions = reactions,
+                assessedBy = assessedBy
             )
             chatrooms[chatRoom.uid] = chatRoom
         }
@@ -72,20 +79,20 @@ object ChatRoomManager {
     fun join(session: UserSession) {
         getByUser(session.user.id).forEach {
             it.sessions.add(session)
-            it.join_or_leave()
+            it.joinOrLeave()
         }
     }
 
     fun leave(session: UserSession) {
         getByUser(session.user.id).forEach {
             it.sessions.remove(session)
-            it.join_or_leave()
+            it.joinOrLeave()
         }
     }
 
-    fun create(sessions: List<UserSession>, log: Boolean = true, prompt: String): ChatRoom {
+    fun create(sessions: List<UserSession>, log: Boolean = true, prompt: String, endTime: Long? = null): ChatRoom {
         val chatRoom = if (log) {
-            LoggingChatRoom(sessions = sessions.toMutableSet(), basePath = basePath)
+            LoggingChatRoom(sessions = sessions.toMutableSet(), basePath = basePath, endTime = endTime, prompt = prompt)
         } else {
             ChatRoom(sessions = sessions.toMutableSet())
         }
@@ -95,7 +102,7 @@ object ChatRoomManager {
     }
 
     fun markAsAssessed(session: UserSession, id: ChatRoomId) {
-        this.chatrooms[id]?.assessedBy?.add(session.user.id)
+        this.chatrooms[id]?.addAssessor(session)
     }
 
     fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {

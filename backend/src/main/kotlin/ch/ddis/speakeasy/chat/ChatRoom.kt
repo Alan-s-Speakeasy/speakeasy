@@ -15,12 +15,11 @@ open class ChatRoom(
     val sessions: MutableSet<UserSession>,
     val startTime: Long = System.currentTimeMillis(),
     val messages: MutableList<ChatMessage> = mutableListOf(),
-    val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
+    val reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
+    val assessedBy: MutableList<UserId> = mutableListOf()
 ) {
     var prompt: String = ""
     internal var endTime: Long? = null
-
-    var assessedBy = mutableListOf<UserId>()
 
     val active: Boolean
         get() = startTime <= System.currentTimeMillis() && remainingTime > 0
@@ -51,7 +50,7 @@ open class ChatRoom(
         this.messages.filter { it.time >= since }
     }
 
-    open fun join_or_leave() {}
+    open fun joinOrLeave() {}
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
@@ -64,6 +63,12 @@ open class ChatRoom(
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
         this.reactions.add(reaction)
+        return@write
+    }
+
+    open fun addAssessor(session: UserSession): Unit = this.lock.write {
+        require(this.active) { "Chatroom ${this.uid.string} is not active" }
+        this.assessedBy.add(session.user.id)
         return@write
     }
 

@@ -368,8 +368,8 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val relevantSessions = listOf(listOf(session), requestedSessions)
 
-        ChatRoomManager.create(relevantSessions.flatten(), true, "Chatroom requested by ${session.userSessionAlias}")
-            .also { it.setEndTime(System.currentTimeMillis() + 10 * 1000 * 60) }
+        ChatRoomManager.create(relevantSessions.flatten(), true,
+            "Chatroom requested by ${session.userSessionAlias}", System.currentTimeMillis() + 10 * 1000 * 60)
 
         return SuccessStatus("Chatroom created")
 

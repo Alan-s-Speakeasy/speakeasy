@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy
 
+import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.RestApi
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
@@ -20,6 +21,7 @@ object Main {
         } ?: Config()
 
         UserManager.init(config)
+        AccessManager.init()
         FeedbackManager.init(config)
         ChatRoomManager.init()
 

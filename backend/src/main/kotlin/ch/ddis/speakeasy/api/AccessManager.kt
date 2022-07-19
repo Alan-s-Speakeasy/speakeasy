@@ -6,6 +6,7 @@ import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import ch.ddis.speakeasy.util.write
+import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.http.Handler
@@ -19,6 +20,21 @@ import kotlin.concurrent.timerTask
 
 object AccessManager {
 
+    private val sessionTokenUserSessionMap = ConcurrentHashMap<String, UserSession>(1000)
+    private val userIdUserSessionMap = ConcurrentHashMap<UserId, ArrayList<UserSession>>(1000)
+    private val sessionIdUserSessionMap = ConcurrentHashMap<SessionId, UserSession>(1000)
+    private val sessionTokenLastAccessMap = ConcurrentHashMap<String, Long>(1000)
+
+    private val sessionFile = File("data/sessions.csv")//TODO see where we actually want to store this
+    private val sessionWriter = PrintWriter(
+        FileWriter(
+            sessionFile,
+            Charsets.UTF_8,
+            true
+        ),
+        true
+    )
+
     fun manage(handler: Handler, ctx: Context, permittedRoles: Set<Role>) {
         when {
             permittedRoles.isEmpty() -> handler.handle(ctx) //fallback in case no roles are set, none are required
@@ -28,41 +44,43 @@ object AccessManager {
         }
     }
 
-    private val sessionWriter: PrintWriter
-
-    init {
-        val sessionFile = File("data/sessions.csv")//TODO see where we actually want to store this
+    fun init() {
 
         if (!sessionFile.exists() || sessionFile.length() == 0L) {
             sessionFile.writeText("timestamp,sessionid,sessiontoken,userid,username,sessionalias\n", Charsets.UTF_8)
+        } else {
+            csvReader().open(sessionFile) {
+                readAllWithHeader().forEach { row ->
+                    val timestamp = row["timestamp"]
+                    val sessionId = row["sessionid"]
+                    val sessionToken = row["sessiontoken"]
+                    val userId = row["userid"]
+                    val username = row["username"]
+                    val sessionAlias = row["sessionalias"]
+
+                    if (timestamp != null && sessionId != null && sessionToken != null && userId != null && username != null && sessionAlias != null) {
+                        val user = UserManager.getUserFromId(UserId(userId))
+                        if (user != null) {
+                            val session = UserSession(user, sessionToken, SessionId(sessionId), timestamp.toLong(), sessionAlias)
+                            addSessionToMaps(session, user)
+                        }
+                    }
+                }
+            }
         }
 
         val expiredSessionCleanupTimer = 10
         Timer().scheduleAtFixedRate(timerTask {
             clearExpiredSessions()
         }, expiredSessionCleanupTimer * 1000L, expiredSessionCleanupTimer * 1000L)
-
-        sessionWriter = PrintWriter(
-            FileWriter(
-                sessionFile,
-                Charsets.UTF_8,
-                true
-            ),
-            true
-        )
     }
 
     private val writerLock = StampedLock()
 
     private fun logSession(userSession: UserSession) = writerLock.write {
-        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId},${userSession.sessionToken},${userSession.user.id},${userSession.user.name},${userSession.userSessionAlias}")
+        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken},${userSession.user.id.string},${userSession.user.name},${userSession.userSessionAlias}")
         sessionWriter.flush()
     }
-
-    private val sessionTokenUserSessionMap = ConcurrentHashMap<String, UserSession>(1000)
-    private val userIdUserSessionMap = ConcurrentHashMap<UserId, ArrayList<UserSession>>(1000)
-    private val sessionIdUserSessionMap = ConcurrentHashMap<SessionId, UserSession>(1000)
-    private val sessionTokenLastAccessMap = ConcurrentHashMap<String, Long>(1000)
 
     private fun userRoleToApiRole(userRole: UserRole): Set<RestApiRole> = when (userRole) {
         UserRole.HUMAN -> setOf(RestApiRole.ANYONE, RestApiRole.USER, RestApiRole.HUMAN)
@@ -85,8 +103,7 @@ object AccessManager {
             if (sessions.size == 1) {
                 sessionId = sessions[0].sessionId
                 alias = sessions[0].userSessionAlias
-            }
-            else {
+            } else {
                 sessionId = UID()
                 alias = userSessions[0].userSessionAlias
             }
@@ -101,18 +118,23 @@ object AccessManager {
         }
 
         val session = UserSession(user, sessionToken, sessionId, userSessionAlias = alias)
-        sessionTokenUserSessionMap[sessionToken] = session
-        sessionIdUserSessionMap[session.sessionId] = session
-
-        if (!userIdUserSessionMap.containsKey(user.id)) {
-            userIdUserSessionMap.put(user.id, ArrayList())
-        }
-        userIdUserSessionMap.get(user.id)?.add(session)
+        addSessionToMaps(session, user)
         ChatRoomManager.join(session)
 
         logSession(session)
 
         return session
+    }
+
+    private fun addSessionToMaps(session: UserSession, user: User) {
+        sessionTokenUserSessionMap[session.sessionToken] = session
+        sessionIdUserSessionMap[session.sessionId] = session
+
+        if (!userIdUserSessionMap.containsKey(user.id)) {
+            userIdUserSessionMap[user.id] = ArrayList()
+        }
+        userIdUserSessionMap[user.id]?.add(session)
+        updateLastAccess(session.sessionToken)
     }
 
     fun updateLastAccess(sessionToken: String) {

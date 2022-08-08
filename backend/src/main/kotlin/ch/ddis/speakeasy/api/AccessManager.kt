@@ -146,6 +146,10 @@ object AccessManager {
         return sessionTokenUserSessionMap[sessionToken]
     }
 
+    fun getSessionsForUser(user: User): ArrayList<UserSession> {
+        return userIdUserSessionMap[user.id] ?: arrayListOf()
+    }
+
     fun hasUserIdActiveSessions(userId: UserId): Boolean {
         return userIdUserSessionMap[userId]?.isNotEmpty() == true
     }

@@ -42,7 +42,8 @@ class ListChatAssignmentGenerator(jsonFile: File) : ChatAssignmentGenerator {
                 if (sessions.size != 2) {
                     null
                 } else {
-                    when {
+                    null
+                    /*when {
                         //bot and human
                         sessions[0].user.role == UserRole.BOT && sessions[1].user.role == UserRole.HUMAN ||
                         sessions[0].user.role == UserRole.BOT && sessions[1].user.role == UserRole.ADMIN -> ChatAssignment(sessions[1], sessions[0], it[2])
@@ -53,7 +54,7 @@ class ListChatAssignmentGenerator(jsonFile: File) : ChatAssignmentGenerator {
                         sessions[0].user.role == UserRole.HUMAN && sessions[1].user.role == UserRole.ADMIN -> ChatAssignment(sessions[0], sessions[1], it[2])
                         //not a valid mapping
                         else -> null
-                    }
+                    }*/
                 }
             }
         }

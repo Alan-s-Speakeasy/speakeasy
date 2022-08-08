@@ -8,4 +8,5 @@ enum class UserRole {
 
     fun isHuman() = (this == HUMAN || this == ADMIN)
 
+    fun isBot() = this == BOT
 }

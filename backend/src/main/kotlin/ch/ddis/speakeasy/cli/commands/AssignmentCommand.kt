@@ -5,6 +5,7 @@ import ch.ddis.speakeasy.assignment.ListChatAssignmentGenerator
 import ch.ddis.speakeasy.assignment.ShuffledChatAssignmentGenerator
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.user.UserManager
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -67,7 +68,7 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
                     }
                     val prompts = File(inputFile!!).readLines()
 
-                    Cli.assignmentGenerator = ShuffledChatAssignmentGenerator(AccessManager.listSessions(), prompts, 3)
+                    Cli.assignmentGenerator = ShuffledChatAssignmentGenerator(UserManager.list(), prompts, 3)
 
                 }
                 AssignmentGeneratorType.LIST -> {
@@ -106,7 +107,7 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
 
             next.forEach { assignment ->
                 ChatRoomManager.create(
-                    listOf(assignment.botSession, assignment.humanSession),
+                    AccessManager.getSessionsForUser(assignment.human) + AccessManager.getSessionsForUser(assignment.bot),
                     true, assignment.prompt
                 ).also { it.setEndTime(endTime) }
             }

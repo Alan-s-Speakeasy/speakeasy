@@ -57,9 +57,12 @@ object RestApi {
             GetAdminFeedbackHistoryHandler(),
             GetAdminFeedbackAverageHandler(),
 
-            GetAliasRoomHandler()
+            GetAliasRoomHandler(),
 
-
+            PostAssignmentGeneratorHandler(),
+            GetAssignmentGeneratorHandler(),
+            PatchNextAssignmentHandler(),
+            DeleteAssignmentGeneratorHandler()
         )
 
         javalin = Javalin.create {

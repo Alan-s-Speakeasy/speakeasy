@@ -1006,6 +1006,85 @@
           }
         }
       }
+    },
+    "/api/assignment" : {
+      "post": {
+        "tags": [ "Assignment" ],
+        "summary": "Initialize a new assignment generator",
+        "operationId": "createNewAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [ "Assignment" ],
+        "summary": "Get the status of the current assignment generator",
+        "operationId": "getAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [ "Assignment" ],
+        "summary": "Delete the active assignment generator",
+        "operationId": "deleteAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [ "Assignment" ],
+        "summary": "Start a new round of assignments",
+        "operationId": "startNewAssignmentRound",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewAssignmentObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoundStarted"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components" : {
@@ -1377,6 +1456,69 @@
             "items" : {
               "$ref" : "#/components/schemas/AliasPair"
             }
+          }
+        }
+      },
+      "AssignmentGeneratorObject" : {
+        "required": [ "humans", "bots", "active" ],
+        "type": "object",
+        "properties": {
+          "humans": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "NewAssignmentObject" : {
+        "required": [ "humans", "bots", "prompts", "botsPerHuman", "duration" ],
+        "type": "object",
+        "properties": {
+          "humans": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "botsPerHuman": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer"
+          }
+        }
+      },
+      "RoundStarted" : {
+        "required": [ "remainingTime" ],
+        "type": "object",
+        "properties": {
+          "remainingTime": {
+            "type": "number"
           }
         }
       }

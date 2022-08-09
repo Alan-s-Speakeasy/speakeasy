@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.assignment
 import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.handlers.NewAssignmentObject
 import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.CyclicList
 
@@ -12,15 +13,35 @@ import ch.ddis.speakeasy.util.CyclicList
  */
 object UIChatAssignmentGenerator {
 
-    init {
-//        check(bots.size >= botsPerHuman) {"Number of bots (${bots.size}) is smaller than the number of bots per human ($botsPerHuman)"}
-//        check(prompts.isNotEmpty()) {"List of prompts cannot be empty"}
+    private var humans = emptyList<User>()
+    private var bots = emptyList<User>()
+
+    private var round = 0
+
+    fun init() {
+        humans = UserManager.list().filter { it.role.isHuman() }
+        bots = UserManager.list().filter { it.role.isBot() }
+        round = 1
     }
 
-    fun getHumans(): List<String> = UserManager.list().filter { it.role.isHuman() }.map { it.name }
-    fun getBots(): List<String> = UserManager.list().filter { it.role.isBot() }.map { it.name }
+    fun clear() {
+        humans = emptyList()
+        bots = emptyList()
+        round = 0
+    }
+
+    fun getHumans(): List<String> = humans.map { it.name }
+
+    fun getActiveHumans(): List<String> = humans.filter { AccessManager.hasUserIdActiveSessions(it.id) }.map { it.name }
+
+    fun getBots(): List<String> = bots.map { it.name }
+
+    fun getActiveBots(): List<String> = bots.filter { AccessManager.hasUserIdActiveSessions(it.id) }.map { it.name }
+
+    fun getRound(): Int = round
 
     fun newRound(assignment: NewAssignmentObject): Long {
+        round += 1
 
         val humans = assignment.humans.mapNotNull { UserManager.getUserFromUsername(it) }.shuffled()
         val bots = CyclicList(

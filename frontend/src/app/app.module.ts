@@ -29,6 +29,9 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatSelectModule} from "@angular/material/select";
 import {MatOptionModule} from "@angular/material/core";
+import {AssignmentComponent} from "./assignment/assignment.component";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSliderModule} from "@angular/material/slider";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -49,7 +52,8 @@ export function initializeApiConfig() {
     ChatroomStatusComponent,
     ChatCommandsPipe,
     ChatSpectateComponent,
-    UserFeedbackComponent
+    UserFeedbackComponent,
+    AssignmentComponent
   ],
   imports: [
     BrowserModule,
@@ -65,7 +69,9 @@ export function initializeApiConfig() {
     BrowserAnimationsModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatOptionModule
+    MatOptionModule,
+    MatCheckboxModule,
+    MatSliderModule
   ],
   providers: [
     FrontendDataService,

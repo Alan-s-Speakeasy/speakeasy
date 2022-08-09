@@ -1,0 +1,86 @@
+<div class="container mt-3">
+
+  <br>
+
+  <div class="row p-2">
+    <div class="col-9">
+      <h3>Assignment Generator</h3>
+    </div>
+    <div class="col-3">
+      <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isActive" class="row col-2 m-2">
+    <button (click)="newGenerator()" type="submit" class="btn btn-primary">Create New</button>
+  </div>
+
+  <br>
+
+  <div *ngIf="isActive">
+    <div class="row p-2">
+      <div class="col-2">
+        <h4>Humans</h4>
+        <table>
+          <tbody>
+          <tr *ngFor="let human of humans">
+            <td>
+              <mat-checkbox [checked]="isHumanSelected.get(human) == true" (change)="switchHuman(human)" color="primary">
+                {{human}}
+                <i *ngIf="this.active.includes(human)" style="color: limegreen" class="fa fa-circle"></i>
+                <i *ngIf="!this.active.includes(human)" style="color: red" class="fa fa-circle"></i>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-2">
+        <h4>Bots</h4>
+        <table>
+          <tbody>
+          <tr *ngFor="let bot of bots">
+            <td>
+              <mat-checkbox [checked]="isBotSelected.get(bot) == true" (change)="switchBot(bot)" color="primary">
+                {{bot}}
+                <i *ngIf="this.active.includes(bot)" style="color: limegreen" class="fa fa-circle"></i>
+                <i *ngIf="!this.active.includes(bot)" style="color: red" class="fa fa-circle"></i>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-6">
+        <h4>Prompts</h4>
+        <textarea
+          style="height: 200px"
+          type="text" class="form-control" placeholder="Prompts..."
+          [formControl]="promptForm"></textarea>
+      </div>
+
+      <div class="col-2">
+        <h4>Bots Per User</h4>
+        <mat-slider min="1" max="6" step="1" value="3" (input)="setBotsPerUser($event)"></mat-slider>
+        {{botsPerUser}}
+        <br>
+        <h4>Duration</h4>
+        <mat-slider min="1" max="20" step="1" value="10" (input)="setDuration($event)"></mat-slider>
+        {{duration}}
+      </div>
+    </div>
+
+
+    <div class="row p-2 justify-content-end">
+      <div class="col-3">
+        <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-secondary">Delete Generator</button>
+        <button (click)="next()" [disabled]="timeLeft > 0" type="button" class="btn btn-primary float-end">
+          <div *ngIf="timeLeft == 0">Start Round</div>
+          <div *ngIf="timeLeft > 0">{{timeLeftFormatted}}</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

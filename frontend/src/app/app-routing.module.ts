@@ -9,6 +9,7 @@ import {UserStatusComponent} from "./user-status/user-status.component";
 import {ChatroomStatusComponent} from "./chatroom-status/chatroom-status.component";
 import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
 import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
+import {AssignmentComponent} from "./assignment/assignment.component";
 
 const routes: Routes = [
   {path: '', redirectTo: 'login', pathMatch: 'full'},
@@ -21,6 +22,7 @@ const routes: Routes = [
   {path: 'chatroomStatus', component: ChatroomStatusComponent},
   {path: 'spectate', component: ChatSpectateComponent},
   {path: 'feedback', component: UserFeedbackComponent},
+  {path: 'assignment', component: AssignmentComponent},
 ]
 
 @NgModule({

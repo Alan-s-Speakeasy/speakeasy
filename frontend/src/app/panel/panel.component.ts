@@ -112,6 +112,10 @@ export class PanelComponent implements OnInit {
     this.router.navigateByUrl('/feedback').then()
   }
 
+  assignmentStatus() {
+    this.router.navigateByUrl('/assignment').then()
+  }
+
   ngOnDestroy() {
     this.userDetailsSubscription.unsubscribe();
     this.chatRoomsSubscription.unsubscribe();

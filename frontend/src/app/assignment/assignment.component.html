@@ -76,9 +76,9 @@
     <div class="row p-2 justify-content-end">
       <div class="col-3">
         <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-secondary">Delete Generator</button>
-        <button (click)="next()" [disabled]="timeLeft > 0" type="button" class="btn btn-primary float-end">
-          <div *ngIf="timeLeft == 0">Start Round</div>
-          <div *ngIf="timeLeft > 0">{{timeLeftFormatted}}</div>
+        <button (click)="next()" [disabled]="!canStartRound()" type="button" class="btn btn-primary float-end">
+          <div *ngIf="remainingTime == 0">Start Round</div>
+          <div *ngIf="remainingTime > 0">{{timeLeftFormatted}}</div>
         </button>
       </div>
     </div>

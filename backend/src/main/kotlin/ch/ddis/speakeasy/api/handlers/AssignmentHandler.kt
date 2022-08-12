@@ -6,11 +6,11 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val active: List<String>)
+data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val active: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val remainingTime: Long, val round: Int)
 data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int)
 data class RoundStarted(val remainingTime: Long)
 
-class PostAssignmentGeneratorHandler : PostRestHandler<AssignmentGeneratorObject>, AccessManagedRestHandler {
+class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.ADMIN)
 
@@ -22,20 +22,16 @@ class PostAssignmentGeneratorHandler : PostRestHandler<AssignmentGeneratorObject
         method = HttpMethod.POST,
         tags = ["Assignment"],
         responses = [
-            OpenApiResponse("200", [OpenApiContent(AssignmentGeneratorObject::class)]),
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doPost(ctx: Context): AssignmentGeneratorObject {
+    override fun doPost(ctx: Context): SuccessStatus {
 
         AccessManager.updateLastAccess(ctx.req.session.id)
         UIChatAssignmentGenerator.init()
-        return AssignmentGeneratorObject(
-            UIChatAssignmentGenerator.getHumans(),
-            UIChatAssignmentGenerator.getBots(),
-            UIChatAssignmentGenerator.getActiveHumans() + UIChatAssignmentGenerator.getActiveBots()
-        )
+        return SuccessStatus("Assignment generator created")
     }
 }
 
@@ -59,11 +55,7 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
     override fun doGet(ctx: Context): AssignmentGeneratorObject {
 
         AccessManager.updateLastAccess(ctx.req.session.id)
-        return AssignmentGeneratorObject(
-            UIChatAssignmentGenerator.getHumans(),
-            UIChatAssignmentGenerator.getBots(),
-            UIChatAssignmentGenerator.getActiveHumans() + UIChatAssignmentGenerator.getActiveBots()
-        )
+        return UIChatAssignmentGenerator.getStatus()
     }
 }
 
@@ -91,6 +83,13 @@ class PatchNextAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManaged
             ctx.bodyAsClass(NewAssignmentObject::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+        }
+
+        if (newAssignment.humans.isEmpty() || newAssignment.bots.isEmpty()) {
+            throw ErrorStatusException(404, "A number of humans and bots need to be selected.", ctx)
+        }
+        if (newAssignment.prompts.isEmpty()) {
+            throw ErrorStatusException(404, "A number of prompts need to be provided.", ctx)
         }
 
         val remainingTime = UIChatAssignmentGenerator.newRound(newAssignment)

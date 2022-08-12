@@ -46,33 +46,33 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   botsPerUser = 3
   duration = 10
 
-  timeLeft = 0
+  remainingTime = 0
   timeLeftFormatted = "--:--"
   roundTimer: any
 
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
-    this.fetchGenerator()
+    this.fetchGenerator(true)
     this.generatorSubscription = interval(10000).subscribe((number) => {
-      this.fetchGenerator()
+      this.fetchGenerator(false)
     })
     this.roundTimer = setInterval(() => {this.countdown()}, 1000)
   }
 
-  fetchGenerator() {
+  fetchGenerator(initial: boolean) {
     this.assignmentService.getAssignmentGenerator().subscribe(response => {
-      this.storeGeneratorResponse(response)
+      this.storeGeneratorResponse(response, initial)
     })
   }
 
   newGenerator(): void {
     this.assignmentService.createNewAssignmentGenerator().subscribe(response => {
-      this.storeGeneratorResponse(response)
+      this.fetchGenerator(true)
     })
   }
 
-  storeGeneratorResponse(response: AssignmentGeneratorObject): void {
+  storeGeneratorResponse(response: AssignmentGeneratorObject, initial: boolean): void {
     if (response.humans.length > 0) {
       this.isActive = true
       response.humans.forEach(human => {
@@ -88,6 +88,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.humans = Array.from(this.isHumanSelected.keys())
       this.bots = Array.from(this.isBotSelected.keys())
       this.active = response.active
+      if (initial) {
+        this.promptForm = new FormControl(response.prompts.join("\n"))
+        this.botsPerUser = response.botsPerHuman
+        this.duration = response.duration
+      }
+      this.remainingTime = Math.floor(response.remainingTime / 1000)
     }
   }
 
@@ -115,6 +121,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.duration = event.value
   }
 
+  canStartRound(): boolean {
+    return this.humans.filter(h => this.isHumanSelected.get(h)).length > 0 &&
+      this.bots.filter(b => this.isBotSelected.get(b)).length > 0 &&
+      this.remainingTime == 0 &&
+      this.promptForm.value != ""
+  }
+
   next(): void {
     this.prompts = []
     let fieldContent: string = this.promptForm.value
@@ -125,23 +138,25 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     })
 
     this.assignmentService.startNewAssignmentRound({
-      humans: Object.keys(this.humans).filter(h => this.isHumanSelected.get(h)),
-      bots: Object.keys(this.bots).filter(h => this.isBotSelected.get(h)),
+      humans: this.humans.filter(h => this.isHumanSelected.get(h)),
+      bots: this.bots.filter(b => this.isBotSelected.get(b)),
       prompts: this.prompts,
       botsPerHuman: this.botsPerUser,
       duration: this.duration
     }).subscribe(response => {
-      this.timeLeft = Math.floor(response.remainingTime / 1000)
-      console.log(this.timeLeft)
+      this.remainingTime = Math.floor(response.remainingTime / 1000)
+      this.roundTimer = setInterval(() => {this.countdown()}, 1000)
     })
   }
 
   countdown(): void {
-    if (this.timeLeft > 0) {
-      this.timeLeft -= 1
-      const minutes = Math.floor(this.timeLeft / 60)
-      const seconds = this.timeLeft % 60
+    if (this.remainingTime > 0) {
+      this.remainingTime -= 1
+      const minutes = Math.floor(this.remainingTime / 60)
+      const seconds = this.remainingTime % 60
       this.timeLeftFormatted = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+    } else {
+      clearInterval(this.roundTimer)
     }
   }
 

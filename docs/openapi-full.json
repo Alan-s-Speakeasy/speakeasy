@@ -1018,7 +1018,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AssignmentGeneratorObject"
+                  "$ref": "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -1460,7 +1460,7 @@
         }
       },
       "AssignmentGeneratorObject" : {
-        "required": [ "humans", "bots", "active" ],
+        "required": [ "humans", "bots", "active", "prompts", "botsPerHuman", "duration", "remainingTime", "round" ],
         "type": "object",
         "properties": {
           "humans": {
@@ -1480,6 +1480,24 @@
             "items": {
               "type": "string"
             }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "botsPerHuman": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer"
+          },
+          "remainingTime": {
+            "type": "number"
+          },
+          "round": {
+            "type": "integer"
           }
         }
       },

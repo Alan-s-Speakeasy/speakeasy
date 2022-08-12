@@ -13,6 +13,7 @@ typealias ChatRoomId = UID
 open class ChatRoom(
     val uid: ChatRoomId = UID(),
     val sessions: MutableSet<UserSession>,
+    val userIds: MutableSet<UserId>,
     val startTime: Long = System.currentTimeMillis(),
     val messages: MutableList<ChatMessage> = mutableListOf(),
     val reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),

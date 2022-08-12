@@ -3,7 +3,7 @@
 import {FormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {Message, PaneLog} from "../new_data";
-import {ChatMessageReaction, ChatService} from "../../../openapi";
+import {ChatMessageReaction, ChatRoomInfoUsers, ChatService} from "../../../openapi";
 import {Component, ElementRef, Inject, Input, OnInit, ViewChild} from '@angular/core';
 import {AuthService} from "../authentication.service";
 import {AlertService} from "../_alert";
@@ -53,13 +53,9 @@ export class ChatPaneComponent implements OnInit {
         this.num_to_ask = this.numQueries
         this.num_messages = this.paneLog.ordinals.length
 
-        let sessionMap = new Map<string, string>()
-        response.info.users.forEach(u => {u.sessions.forEach(s => sessionMap.set(s, u.alias))})
-
         response.messages.forEach(api_message => {
-          let myMessage = false
-          if (sessionMap.get(api_message.session) == this.paneLog.myAlias) {
-            myMessage = true
+          let myMessage = this.isMyMessage(response.info.users, api_message.session, this.paneLog.myAlias)
+          if (myMessage) {
             if (this.num_to_ask > 0) {
               this.num_to_ask--
             }
@@ -100,6 +96,15 @@ export class ChatPaneComponent implements OnInit {
       },
       (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
     );
+  }
+
+  isMyMessage(users: ChatRoomInfoUsers[], message_session: string, myAlias: string): boolean {
+    for (let user of users) {
+      if (user.alias == myAlias && user.sessions.includes(message_session)) {
+        return true
+      }
+    }
+    return false
   }
 
   // when the user wants to start rating

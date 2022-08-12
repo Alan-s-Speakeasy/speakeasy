@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
@@ -10,21 +11,21 @@ import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class ChatRoomUserInfo(
-    val alias: String,
-    val sessions: List<String>
-)
+data class ChatRoomUserInfo(val alias: String,val sessions: List<String>)
 
 private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
-    val userMap = mutableMapOf<String, MutableList<String>>()
+    val aliasMap = mutableMapOf<String, UserId>() // Alias --> UserId
+    val sessionMap = mutableMapOf<UserId, MutableList<String>>() // UserId --> Sessions
     room.sessions.forEach {
-        if (userMap.containsKey(it.userSessionAlias)) {
-            userMap[it.userSessionAlias]!!.add(it.sessionId.string)
+        aliasMap[it.userSessionAlias] = it.user.id
+        if (sessionMap.containsKey(it.user.id)) {
+            sessionMap[it.user.id]!!.add(it.sessionId.string)
         } else {
-            userMap[it.userSessionAlias] = mutableListOf(it.sessionId.string)
+            sessionMap[it.user.id] = mutableListOf(it.sessionId.string)
         }
     }
-    return userMap.map { ChatRoomUserInfo(it.key, it.value) }
+
+    return aliasMap.map { ChatRoomUserInfo(it.key, sessionMap[it.value]!!) }
 }
 
 data class ChatRoomInfo(
@@ -100,7 +101,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserSession(session).map { ChatRoomInfo(it) }
+            ChatRoomManager.getAssessedRoomsByUserId(session.user.id).map { ChatRoomInfo(it) }
         )
     }
 }

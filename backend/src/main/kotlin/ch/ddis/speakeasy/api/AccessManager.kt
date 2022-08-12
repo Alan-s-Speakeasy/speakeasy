@@ -6,7 +6,6 @@ import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import ch.ddis.speakeasy.util.write
-import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.http.Handler
@@ -48,25 +47,6 @@ object AccessManager {
 
         if (!sessionFile.exists() || sessionFile.length() == 0L) {
             sessionFile.writeText("timestamp,sessionid,sessiontoken,userid,username,sessionalias\n", Charsets.UTF_8)
-        } else {
-            csvReader().open(sessionFile) {
-                readAllWithHeader().forEach { row ->
-                    val timestamp = row["timestamp"]
-                    val sessionId = row["sessionid"]
-                    val sessionToken = row["sessiontoken"]
-                    val userId = row["userid"]
-                    val username = row["username"]
-                    val sessionAlias = row["sessionalias"]
-
-                    if (timestamp != null && sessionId != null && sessionToken != null && userId != null && username != null && sessionAlias != null) {
-                        val user = UserManager.getUserFromId(UserId(userId))
-                        if (user != null) {
-                            val session = UserSession(user, sessionToken, SessionId(sessionId), timestamp.toLong(), sessionAlias)
-                            addSessionToMaps(session, user)
-                        }
-                    }
-                }
-            }
         }
 
         val expiredSessionCleanupTimer = 10
@@ -183,12 +163,10 @@ object AccessManager {
         }
     }
 
-
     private fun rolesOfSession(sessionToken: String): Set<RestApiRole> =
         sessionTokenUserSessionMap[sessionToken]?.user?.role?.let { userRoleToApiRole(it) } ?: emptySet()
 
     fun listSessions(): List<UserSession> = sessionTokenUserSessionMap.values.toList()
-
 }
 
 enum class RestApiRole : Role { ANYONE, USER, HUMAN, ADMIN }

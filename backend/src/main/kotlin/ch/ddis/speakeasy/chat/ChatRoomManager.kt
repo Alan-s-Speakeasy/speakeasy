@@ -18,7 +18,8 @@ object ChatRoomManager {
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
-            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[4])
+            val userIds: MutableSet<UserId> = objectMapper.readValue(lines[4])
+            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[5])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
             val assessedBy: MutableList<UserId> = mutableListOf()
@@ -48,6 +49,7 @@ object ChatRoomManager {
                 prompt = lines[3],
                 basePath = basePath,
                 sessions = sessions,
+                userIds = userIds,
                 messages = messages,
                 reactions = reactions,
                 assessedBy = assessedBy
@@ -69,8 +71,8 @@ object ChatRoomManager {
         this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == session.sessionToken }
             && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) && !it.assessedBy.contains(session.user.id) }
 
-    fun getAssessedRoomsByUserSession(session: UserSession): List<ChatRoom> =
-        this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == session.sessionToken } && it.assessedBy.contains(session.user.id) }
+    fun getAssessedRoomsByUserId(userId: UserId): List<ChatRoom> =
+        this.chatrooms.values.filter { it.userIds.contains(userId) && it.assessedBy.contains(userId) }
 
     fun getChatPartner(id: UID, session: UserSession): UserId? {
         return this.chatrooms[id]?.sessions?.find { it.user.id != session.user.id }?.user?.id
@@ -92,9 +94,9 @@ object ChatRoomManager {
 
     fun create(sessions: List<UserSession>, log: Boolean = true, prompt: String, endTime: Long? = null): ChatRoom {
         val chatRoom = if (log) {
-            LoggingChatRoom(sessions = sessions.toMutableSet(), basePath = basePath, endTime = endTime, prompt = prompt)
+            LoggingChatRoom(sessions = sessions.toMutableSet(), userIds = sessions.map { it.user.id }.toMutableSet(), basePath = basePath, endTime = endTime, prompt = prompt)
         } else {
-            ChatRoom(sessions = sessions.toMutableSet())
+            ChatRoom(sessions = sessions.toMutableSet(), userIds = sessions.map { it.user.id }.toMutableSet())
         }
         chatRoom.prompt = prompt
         chatrooms[chatRoom.uid] = chatRoom

@@ -19,7 +19,6 @@ object ChatRoomManager {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
             val userIds: MutableSet<UserId> = objectMapper.readValue(lines[4])
-            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[5])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
             val assessedBy: MutableList<UserId> = mutableListOf()
@@ -28,9 +27,6 @@ object ChatRoomManager {
                 try {
                     val chatMessage: ChatMessage = objectMapper.readValue(lines[i])
                     messages.add(chatMessage)
-                } catch (_: Exception) {}
-                try {
-                    sessions = objectMapper.readValue(lines[i])
                 } catch (_: Exception) {}
                 try {
                     val reaction: ChatMessageReaction = objectMapper.readValue(lines[i])
@@ -48,7 +44,6 @@ object ChatRoomManager {
                 endTime = lines[2].toLongOrNull() ?: lines[1].toLong(),
                 prompt = lines[3],
                 basePath = basePath,
-                sessions = sessions,
                 userIds = userIds,
                 messages = messages,
                 reactions = reactions,
@@ -65,7 +60,7 @@ object ChatRoomManager {
     operator fun get(id: ChatRoomId) = this.chatrooms[id]
 
     fun getByUser(id: UserId): List<ChatRoom> =
-        this.chatrooms.values.filter { it.sessions.any { s -> s.user.id == id } }
+        this.chatrooms.values.filter { it.userIds.contains(id) }
 
     fun getByUserSession(session: UserSession): List<ChatRoom> =
         this.chatrooms.values.filter { it.sessions.any { s -> s.sessionToken == session.sessionToken }
@@ -92,11 +87,11 @@ object ChatRoomManager {
         }
     }
 
-    fun create(sessions: List<UserSession>, log: Boolean = true, prompt: String, endTime: Long? = null): ChatRoom {
+    fun create(userIds: MutableSet<UserId>, log: Boolean = true, prompt: String, endTime: Long? = null): ChatRoom {
         val chatRoom = if (log) {
-            LoggingChatRoom(sessions = sessions.toMutableSet(), userIds = sessions.map { it.user.id }.toMutableSet(), basePath = basePath, endTime = endTime, prompt = prompt)
+            LoggingChatRoom(userIds = userIds, basePath = basePath, endTime = endTime, prompt = prompt)
         } else {
-            ChatRoom(sessions = sessions.toMutableSet(), userIds = sessions.map { it.user.id }.toMutableSet())
+            ChatRoom(userIds = userIds)
         }
         chatRoom.prompt = prompt
         chatrooms[chatRoom.uid] = chatRoom

@@ -61,7 +61,8 @@ object RestApi {
 
             PostAssignmentGeneratorHandler(),
             GetAssignmentGeneratorHandler(),
-            PatchNextAssignmentHandler(),
+            PostGenerateAssignmentHandler(),
+            PatchStartAssignmentHandler(),
             DeleteAssignmentGeneratorHandler()
         )
 

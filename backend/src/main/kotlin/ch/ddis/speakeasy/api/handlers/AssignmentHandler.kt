@@ -6,24 +6,24 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val active: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val remainingTime: Long, val round: Int)
-data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int)
+data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val active: List<String>, val selected: List<String>, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val remainingTime: Long, val round: Int)
+data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int)
+data class GeneratedAssignment(val human: String, val bot: String, val prompt: String)
 data class RoundStarted(val remainingTime: Long)
 
 class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.ADMIN)
 
-    override val route: String = "assignment"
+    override val route: String = "assignment/new"
 
     @OpenApi(
         summary = "Initialize a new assignment generator.",
-        path = "/api/assignment",
+        path = "/api/assignment/new",
         method = HttpMethod.POST,
         tags = ["Assignment"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
@@ -42,13 +42,12 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
     override val route: String = "assignment"
 
     @OpenApi(
-        summary = "Get the status of the current assignment generator.",
+        summary = "Get the status of the current assignment generator",
         path = "/api/assignment",
         method = HttpMethod.GET,
         tags = ["Assignment"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(AssignmentGeneratorObject::class)]),
-            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
@@ -59,25 +58,27 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
     }
 }
 
-class PatchNextAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManagedRestHandler {
+class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.ADMIN)
 
-    override val route: String = "assignment"
+    override val route: String = "assignment/round"
 
     @OpenApi(
-        summary = "Start a new round of assignments.",
-        path = "/api/assignment",
-        method = HttpMethod.PATCH,
+        summary = "Generate a new assignment round",
+        path = "/api/assignment/round",
+        method = HttpMethod.POST,
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
         responses = [
-            OpenApiResponse("200", [OpenApiContent(RoundStarted::class)]),
+            OpenApiResponse("200", [OpenApiContent(List::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doPatch(ctx: Context): RoundStarted {
+    override fun doPost(ctx: Context): List<GeneratedAssignment> {
+
+        AccessManager.updateLastAccess(ctx.req.session.id)
 
         val newAssignment = try {
             ctx.bodyAsClass(NewAssignmentObject::class.java)
@@ -92,7 +93,30 @@ class PatchNextAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManaged
             throw ErrorStatusException(404, "A number of prompts need to be provided.", ctx)
         }
 
-        val remainingTime = UIChatAssignmentGenerator.newRound(newAssignment)
+        return UIChatAssignmentGenerator.generateNewRound(newAssignment)
+    }
+}
+
+class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManagedRestHandler {
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route: String = "assignment/round"
+
+    @OpenApi(
+        summary = "Start the generated assignment round",
+        path = "/api/assignment/round",
+        method = HttpMethod.PATCH,
+        tags = ["Assignment"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(RoundStarted::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPatch(ctx: Context): RoundStarted {
+
+        val remainingTime = UIChatAssignmentGenerator.startNewRound()
 
         return RoundStarted(remainingTime)
     }

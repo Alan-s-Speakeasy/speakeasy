@@ -121,6 +121,10 @@ object UserManager {
         return users.find { it.name == username }
     }
 
+    fun getUserIdFromUsername(username: String): UserId? = this.lock.read {
+        return users.find { it.name == username }?.id
+    }
+
     fun getPasswordFromId(userId: UserId): Password? = this.lock.read {
         return users.find { it.id == userId }?.password
     }

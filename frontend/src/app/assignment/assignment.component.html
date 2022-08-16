@@ -20,8 +20,16 @@
   <div *ngIf="isActive">
     <div class="row p-2">
       <div class="col-2">
-        <h4>Humans</h4>
-        <table>
+        <table class="table">
+          <thead>
+          <tr>
+            <td>
+              <mat-checkbox [checked]="areAllSelected(this.isHumanSelected)" (change)="switchAll('human', $event)" color="primary">
+                <b>Humans</b>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </thead>
           <tbody>
           <tr *ngFor="let human of humans">
             <td>
@@ -37,8 +45,16 @@
       </div>
 
       <div class="col-2">
-        <h4>Bots</h4>
-        <table>
+        <table class="table">
+          <thead>
+          <tr>
+            <td>
+              <mat-checkbox [checked]="areAllSelected(this.isBotSelected)" (change)="switchAll('bot', $event)" color="primary">
+                <b>Bots</b>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </thead>
           <tbody>
           <tr *ngFor="let bot of bots">
             <td>
@@ -51,13 +67,36 @@
           </tr>
           </tbody>
         </table>
+        <br>
+        <table class="table">
+          <thead>
+          <tr>
+            <td>
+              <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)" (change)="switchAll('admin', $event)" color="primary">
+                <b>Admins as Bots</b>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let admin of admins">
+            <td>
+              <mat-checkbox [checked]="isAdminSelected.get(admin) == true" (change)="switchAdmin(admin)" color="primary">
+                {{admin}}
+                <i *ngIf="this.active.includes(admin)" style="color: limegreen" class="fa fa-circle"></i>
+                <i *ngIf="!this.active.includes(admin)" style="color: red" class="fa fa-circle"></i>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="col-6">
         <h4>Prompts</h4>
         <textarea
           style="height: 200px"
-          type="text" class="form-control" placeholder="Prompts..."
+          type="text" class="form-control" placeholder="One prompt per line"
           [formControl]="promptForm"></textarea>
       </div>
 
@@ -76,10 +115,39 @@
     <div class="row p-2 justify-content-end">
       <div class="col-3">
         <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-secondary">Delete Generator</button>
-        <button (click)="next()" [disabled]="!canStartRound()" type="button" class="btn btn-primary float-end">
-          <div *ngIf="remainingTime == 0">Start Round</div>
-          <div *ngIf="remainingTime > 0">{{timeLeftFormatted}}</div>
+        <button (click)="generateNextRound()" [disabled]="!canStartRound()" type="button" class="btn btn-primary float-end">
+          <div>Generate Round {{round}}</div>
         </button>
+      </div>
+    </div>
+
+    <br>
+
+    <div *ngIf="nextAssignment.length > 0">
+      <h4>Next Round</h4>
+      <table class="table">
+        <thead>
+        <tr>
+          <td>Human</td>
+          <td>Bot</td>
+          <td>Prompt</td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let assignment of nextAssignment">
+          <td>{{assignment.human}}</td>
+          <td>{{assignment.bot}}</td>
+          <td>{{assignment.prompt}}</td>
+        </tr>
+        </tbody>
+      </table>
+      <div class="row p-2 justify-content-end">
+        <div class="col-3">
+          <button (click)="startNextRound()" [disabled]="remainingTime > 0" type="button" class="btn btn-primary float-end">
+            <div *ngIf="remainingTime == 0">Start Round {{round}}</div>
+            <div *ngIf="remainingTime > 0">{{timeLeftFormatted}}</div>
+          </button>
+        </div>
       </div>
     </div>
   </div>

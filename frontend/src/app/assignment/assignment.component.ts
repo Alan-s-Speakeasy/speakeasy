@@ -3,7 +3,7 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {
-  AdminService, AssignmentGeneratorObject, AssignmentService,
+  AdminService, AssignmentGeneratorObject, AssignmentService, GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
@@ -36,8 +36,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   isHumanSelected: Map<string, boolean> = new Map()
   isBotSelected: Map<string, boolean> = new Map()
+  isAdminSelected: Map<string, boolean> = new Map()
+
   humans: string[] = []
   bots: string[] = []
+  admins: string[] = []
+
   active: string[] = []
 
   promptForm = new FormControl("")
@@ -45,6 +49,9 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   botsPerUser = 3
   duration = 10
+
+  round = 0
+  nextAssignment: GeneratedAssignment[] = []
 
   remainingTime = 0
   timeLeftFormatted = "--:--"
@@ -85,14 +92,32 @@ export class AssignmentComponent implements OnInit, OnDestroy {
           this.isBotSelected.set(bot, false)
         }
       })
+      response.admins.forEach(admin => {
+        if (!this.isAdminSelected.get(admin)) {
+          this.isAdminSelected.set(admin, false)
+        }
+      })
+
       this.humans = Array.from(this.isHumanSelected.keys())
       this.bots = Array.from(this.isBotSelected.keys())
+      this.admins = Array.from(this.isAdminSelected.keys())
       this.active = response.active
       if (initial) {
         this.promptForm = new FormControl(response.prompts.join("\n"))
         this.botsPerUser = response.botsPerHuman
         this.duration = response.duration
+        response.humans.forEach(human => {
+          this.isHumanSelected.set(human, response.selected.includes(human))
+        })
+        response.bots.forEach(bot => {
+          this.isBotSelected.set(bot, response.selected.includes(bot))
+        })
+        response.admins.forEach(admin => {
+          this.isAdminSelected.set(admin, response.selected.includes(admin))
+        })
       }
+      this.nextAssignment = response.assignments
+      this.round = response.round
       this.remainingTime = Math.floor(response.remainingTime / 1000)
     }
   }
@@ -100,7 +125,35 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   removeGenerator(): void {
     this.assignmentService.deleteAssignmentGenerator().subscribe(response => {
       this.isActive = false
+      this.isHumanSelected = new Map()
+      this.isBotSelected = new Map()
+      this.isAdminSelected = new Map()
+      this.active = []
+      this.remainingTime = 0
+      this.nextAssignment = []
     })
+  }
+
+  areAllSelected(map: Map<string, boolean>): boolean {
+    return !Array.from(map.values()).includes(false)
+  }
+
+  switchAll(type: string, event: any): void {
+    if (type == "human") {
+      this.isHumanSelected.forEach((v, k) => {
+        this.isHumanSelected.set(k, event.checked)
+        return
+      })
+    } else if (type == "bot") {
+      this.isBotSelected.forEach((v, k) => {
+        this.isBotSelected.set(k, event.checked)
+        return
+      })
+    } else if (type == "admin") {
+      this.isAdminSelected.forEach((v, k) => {
+        this.isAdminSelected.set(k, event.checked)
+      })
+    }
   }
 
   switchHuman(human: string): void {
@@ -113,6 +166,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.isBotSelected.set(bot, !current)
   }
 
+  switchAdmin(admin: string): void {
+    let current = this.isAdminSelected.get(admin)
+    this.isAdminSelected.set(admin, !current)
+  }
+
   setBotsPerUser(event: any): void {
     this.botsPerUser = event.value
   }
@@ -123,12 +181,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   canStartRound(): boolean {
     return this.humans.filter(h => this.isHumanSelected.get(h)).length > 0 &&
-      this.bots.filter(b => this.isBotSelected.get(b)).length > 0 &&
-      this.remainingTime == 0 &&
+      (this.bots.filter(b => this.isBotSelected.get(b)).length > 0 ||
+        this.admins.filter(a => this.isAdminSelected.get(a)).length > 0) &&
       this.promptForm.value != ""
   }
 
-  next(): void {
+  generateNextRound(): void {
     this.prompts = []
     let fieldContent: string = this.promptForm.value
     fieldContent.split("\n").forEach(prompt => {
@@ -137,13 +195,20 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       }
     })
 
-    this.assignmentService.startNewAssignmentRound({
+    this.assignmentService.generateAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
+      admins: this.admins.filter(b => this.isAdminSelected.get(b)),
       prompts: this.prompts,
       botsPerHuman: this.botsPerUser,
       duration: this.duration
     }).subscribe(response => {
+      this.nextAssignment = response
+    })
+  }
+
+  startNextRound(): void {
+    this.assignmentService.startAssignmentRound().subscribe(response => {
       this.remainingTime = Math.floor(response.remainingTime / 1000)
       this.roundTimer = setInterval(() => {this.countdown()}, 1000)
     })

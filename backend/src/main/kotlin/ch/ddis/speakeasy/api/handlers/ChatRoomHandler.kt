@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
@@ -355,7 +356,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
 
-        if (requestedSessions.size == 0) {
+        if (requestedSessions.isEmpty()) {
             throw ErrorStatusException(
                 404,
                 "No session found for user ${request.username}",
@@ -367,9 +368,8 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(403, "Cannot establish a chat with that user", ctx)
         }
 
-        val relevantSessions = listOf(listOf(session), requestedSessions)
-
-        ChatRoomManager.create(relevantSessions.flatten(), true,
+        ChatRoomManager.create(
+            mutableSetOf(session.user.id, UserManager.getUserIdFromUsername(request.username)!!), true,
             "Chatroom requested by ${session.userSessionAlias}", System.currentTimeMillis() + 10 * 1000 * 60)
 
         return SuccessStatus("Chatroom created")

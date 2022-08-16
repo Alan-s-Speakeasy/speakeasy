@@ -1008,23 +1008,6 @@
       }
     },
     "/api/assignment" : {
-      "post": {
-        "tags": [ "Assignment" ],
-        "summary": "Initialize a new assignment generator",
-        "operationId": "createNewAssignmentGenerator",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessStatus"
-                }
-              }
-            }
-          }
-        }
-      },
       "get": {
         "tags": [ "Assignment" ],
         "summary": "Get the status of the current assignment generator",
@@ -1036,6 +1019,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
                 }
               }
             }
@@ -1056,13 +1049,54 @@
                 }
               }
             }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
           }
         }
-      },
-      "patch": {
+      }
+    },
+    "/api/assignment/new": {
+      "post": {
         "tags": [ "Assignment" ],
-        "summary": "Start a new round of assignments",
-        "operationId": "startNewAssignmentRound",
+        "summary": "Initialize a new assignment generator",
+        "operationId": "createNewAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignment/round": {
+      "post": {
+        "tags": [ "Assignment" ],
+        "summary": "Generate a new assignment round",
+        "operationId": "generateAssignmentRound",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1078,7 +1112,44 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/GeneratedAssignments"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [ "Assignment" ],
+        "summary": "Start the generated assignment round",
+        "operationId": "startAssignmentRound",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
                   "$ref": "#/components/schemas/RoundStarted"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
                 }
               }
             }
@@ -1460,7 +1531,7 @@
         }
       },
       "AssignmentGeneratorObject" : {
-        "required": [ "humans", "bots", "active", "prompts", "botsPerHuman", "duration", "remainingTime", "round" ],
+        "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "remainingTime", "round" ],
         "type": "object",
         "properties": {
           "humans": {
@@ -1475,10 +1546,28 @@
               "type": "string"
             }
           },
+          "admins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "active": {
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "selected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneratedAssignment"
             }
           },
           "prompts": {
@@ -1502,7 +1591,7 @@
         }
       },
       "NewAssignmentObject" : {
-        "required": [ "humans", "bots", "prompts", "botsPerHuman", "duration" ],
+        "required": [ "humans", "bots", "admins", "prompts", "botsPerHuman", "duration" ],
         "type": "object",
         "properties": {
           "humans": {
@@ -1512,6 +1601,12 @@
             }
           },
           "bots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "admins": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1529,6 +1624,27 @@
           "duration": {
             "type": "integer"
           }
+        }
+      },
+      "GeneratedAssignment": {
+        "required": [ "human", "bot", "prompt" ],
+        "type": "object",
+        "properties": {
+          "human": {
+            "type": "string"
+          },
+          "bot": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          }
+        }
+      },
+      "GeneratedAssignments": {
+        "type": "array",
+        "items" : {
+          "$ref" : "#/components/schemas/GeneratedAssignment"
         }
       },
       "RoundStarted" : {

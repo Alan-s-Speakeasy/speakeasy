@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.UID
@@ -12,7 +13,6 @@ typealias ChatRoomId = UID
 
 open class ChatRoom(
     val uid: ChatRoomId = UID(),
-    val sessions: MutableSet<UserSession>,
     val userIds: MutableSet<UserId>,
     val startTime: Long = System.currentTimeMillis(),
     val messages: MutableList<ChatMessage> = mutableListOf(),
@@ -20,6 +20,7 @@ open class ChatRoom(
     val assessedBy: MutableList<UserId> = mutableListOf()
 ) {
     var prompt: String = ""
+    val sessions: MutableSet<UserSession> = userIds.map { AccessManager.getSessionsForUserId(it) }.flatten().toMutableSet()
     internal var endTime: Long? = null
 
     val active: Boolean

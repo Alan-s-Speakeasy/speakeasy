@@ -107,7 +107,7 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
 
             next.forEach { assignment ->
                 ChatRoomManager.create(
-                    AccessManager.getSessionsForUser(assignment.human) + AccessManager.getSessionsForUser(assignment.bot),
+                    mutableSetOf(assignment.human.id, assignment.bot.id),
                     true, assignment.prompt
                 ).also { it.setEndTime(endTime) }
             }

@@ -12,7 +12,6 @@ import java.util.concurrent.locks.StampedLock
 
 class LoggingChatRoom(
     uid: UID = UID(),
-    sessions: MutableSet<UserSession>,
     userIds: MutableSet<UserId>,
     startTime: Long = System.currentTimeMillis(),
     basePath: File,
@@ -21,7 +20,7 @@ class LoggingChatRoom(
     messages: MutableList<ChatMessage> = mutableListOf(),
     reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
     assessedBy: MutableList<UserId> = mutableListOf()
-) : ChatRoom(uid, sessions, userIds, startTime, messages, reactions, assessedBy) {
+) : ChatRoom(uid, userIds, startTime, messages, reactions, assessedBy) {
 
     init {
         if (!basePath.isDirectory) {

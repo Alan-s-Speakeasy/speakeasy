@@ -103,17 +103,17 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.admins = Array.from(this.isAdminSelected.keys())
       this.active = response.active
       if (initial) {
-        this.promptForm = new FormControl(response.prompts.join("\n"))
+        this.prompts = response.prompts
         this.botsPerUser = response.botsPerHuman
         this.duration = response.duration
         response.humans.forEach(human => {
-          this.isHumanSelected.set(human, response.selected.includes(human))
+          this.isHumanSelected.set(human, response.selected.humans.includes(human))
         })
         response.bots.forEach(bot => {
-          this.isBotSelected.set(bot, response.selected.includes(bot))
+          this.isBotSelected.set(bot, response.selected.bots.includes(bot))
         })
         response.admins.forEach(admin => {
-          this.isAdminSelected.set(admin, response.selected.includes(admin))
+          this.isAdminSelected.set(admin, response.selected.admins.includes(admin))
         })
       }
       this.nextAssignment = response.assignments
@@ -179,21 +179,35 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.duration = event.value
   }
 
-  canStartRound(): boolean {
-    return this.humans.filter(h => this.isHumanSelected.get(h)).length > 0 &&
-      (this.bots.filter(b => this.isBotSelected.get(b)).length > 0 ||
-        this.admins.filter(a => this.isAdminSelected.get(a)).length > 0) &&
-      this.promptForm.value != ""
-  }
-
-  generateNextRound(): void {
-    this.prompts = []
+  addPrompts(): void {
     let fieldContent: string = this.promptForm.value
     fieldContent.split("\n").forEach(prompt => {
       if (prompt != "") {
         this.prompts.push(prompt)
       }
     })
+    this.promptForm.setValue("")
+  }
+
+  removePrompt(index: number): void {
+    this.prompts.splice(index, 1)
+  }
+
+  canStartRound(): boolean {
+    return this.humans.filter(h => this.isHumanSelected.get(h)).length > 0 &&
+      (this.bots.filter(b => this.isBotSelected.get(b)).length > 0 ||
+        this.admins.filter(a => this.isAdminSelected.get(a)).length > 0) &&
+      this.prompts.length > 0
+  }
+
+  generateNextRound(): void {
+    // this.prompts = []
+    // let fieldContent: string = this.promptForm.value
+    // fieldContent.split("\n").forEach(prompt => {
+    //   if (prompt != "") {
+    //     this.prompts.push(prompt)
+    //   }
+    // })
 
     this.assignmentService.generateAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),

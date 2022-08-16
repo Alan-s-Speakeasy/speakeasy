@@ -1559,9 +1559,27 @@
             }
           },
           "selected": {
-            "type": "array",
-            "items": {
-              "type": "string"
+            "required": ["humans", "bots", "admins"],
+            "type": "object",
+            "properties": {
+              "humans": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "bots": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "admins": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           },
           "assignments": {

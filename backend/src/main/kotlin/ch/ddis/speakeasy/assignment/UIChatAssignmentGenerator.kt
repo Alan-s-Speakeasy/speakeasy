@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.handlers.AssignmentGeneratorObject
 import ch.ddis.speakeasy.api.handlers.GeneratedAssignment
 import ch.ddis.speakeasy.api.handlers.NewAssignmentObject
+import ch.ddis.speakeasy.api.handlers.SelectedUsers
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
@@ -18,7 +19,7 @@ object UIChatAssignmentGenerator {
     private var humans = emptyList<User>()
     private var bots = emptyList<User>()
     private var admins = emptyList<User>()
-    private var selected = mutableListOf<String>()
+    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
     private var prompts = emptyList<String>()
     private var botsPerHuman = 0
     private var duration = 0
@@ -40,7 +41,7 @@ object UIChatAssignmentGenerator {
         humans = emptyList()
         bots = emptyList()
         admins = emptyList()
-        selected = mutableListOf()
+        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
         prompts = emptyList()
         botsPerHuman = 0
         duration = 0
@@ -76,9 +77,10 @@ object UIChatAssignmentGenerator {
         botsPerHuman = assignment.botsPerHuman
         duration = assignment.duration
 
-        selected.addAll(assignment.humans)
-        selected.addAll(assignment.bots)
-        selected.addAll(assignment.admins)
+        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
+        selected.humans.addAll(assignment.humans)
+        selected.bots.addAll(assignment.bots)
+        selected.admins.addAll(assignment.admins)
 
         val humans = assignment.humans.mapNotNull { UserManager.getUserFromUsername(it) }.shuffled()
         val bots = CyclicList(

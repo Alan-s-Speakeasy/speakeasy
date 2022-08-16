@@ -15,9 +15,11 @@
     <button (click)="newGenerator()" type="submit" class="btn btn-primary">Create New</button>
   </div>
 
-  <br>
-
   <div *ngIf="isActive">
+    <div class="row col-2 m-2">
+      <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-danger">Delete Generator</button>
+    </div>
+    <br>
     <div class="row p-2">
       <div class="col-2">
         <table class="table">
@@ -94,27 +96,37 @@
 
       <div class="col-6">
         <h4>Prompts</h4>
+        <table class="table">
+          <tbody>
+          <tr *ngFor="let prompt of prompts, let i = index" class="d-flex">
+            <td class="col-11">{{prompt}}</td>
+            <td class="col-1"><i class="fa fa-trash" type="submit" (click)="removePrompt(i)"></i></td>
+          </tr>
+          </tbody>
+        </table>
+
         <textarea
-          style="height: 200px"
-          type="text" class="form-control" placeholder="One prompt per line"
-          [formControl]="promptForm"></textarea>
+          style="height: 70px"
+          type="text" class="form-control" placeholder="Add prompt(s)..."
+          [formControl]="promptForm">
+        </textarea>
+        <button (click)="addPrompts()" type="submit" class="btn btn btn-outline-primary">Add</button>
       </div>
 
       <div class="col-2">
         <h4>Bots Per User</h4>
-        <mat-slider min="1" max="6" step="1" value="3" (input)="setBotsPerUser($event)"></mat-slider>
+        <mat-slider min="1" max="6" step="1" [value]="botsPerUser" (input)="setBotsPerUser($event)"></mat-slider>
         {{botsPerUser}}
         <br>
         <h4>Duration</h4>
-        <mat-slider min="1" max="20" step="1" value="10" (input)="setDuration($event)"></mat-slider>
+        <mat-slider min="1" max="20" step="1" [value]="duration" (input)="setDuration($event)"></mat-slider>
         {{duration}}
       </div>
     </div>
 
 
     <div class="row p-2 justify-content-end">
-      <div class="col-3">
-        <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-secondary">Delete Generator</button>
+      <div>
         <button (click)="generateNextRound()" [disabled]="!canStartRound()" type="button" class="btn btn-primary float-end">
           <div>Generate Round {{round}}</div>
         </button>

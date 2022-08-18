@@ -6,7 +6,7 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class SelectedUsers(val humans: MutableList<String>, val bots: MutableList<String>, val admins: MutableList<String>)
+data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>)
 data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val remainingTime: Long, val round: Int)
 data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int)
 data class GeneratedAssignment(val human: String, val bot: String, val prompt: String)
@@ -94,7 +94,15 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
             throw ErrorStatusException(404, "A number of prompts need to be provided.", ctx)
         }
 
-        return UIChatAssignmentGenerator.generateNewRound(newAssignment)
+        var assignment = emptyList<GeneratedAssignment>()
+        (1..3).map {
+            val round = UIChatAssignmentGenerator.generateNewRound(newAssignment)
+            if (round.second) {
+                return round.first
+            }
+            assignment = round.first
+        }
+        return assignment
     }
 }
 

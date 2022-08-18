@@ -27,6 +27,7 @@ object UIChatAssignmentGenerator {
     private var round = 0
 
     private var nextRound: MutableList<GeneratedAssignment> = mutableListOf()
+    private val assignmentHistory = hashMapOf<String, MutableSet<String>>().withDefault { mutableSetOf() }
 
     fun init() {
         humans = UserManager.list().filter { it.role.isHuman() }
@@ -47,6 +48,8 @@ object UIChatAssignmentGenerator {
         duration = 0
         endTime = 0L
         round = 0
+        nextRound.clear()
+        assignmentHistory.clear()
     }
 
     fun getStatus(): AssignmentGeneratorObject {
@@ -70,37 +73,52 @@ object UIChatAssignmentGenerator {
         )
     }
 
-    fun generateNewRound(assignment: NewAssignmentObject): List<GeneratedAssignment> {
+    fun generateNewRound(assignment: NewAssignmentObject): Pair<List<GeneratedAssignment>, Boolean> {
         nextRound = mutableListOf()
 
         prompts = assignment.prompts
         botsPerHuman = assignment.botsPerHuman
         duration = assignment.duration
 
-        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
-        selected.humans.addAll(assignment.humans)
-        selected.bots.addAll(assignment.bots)
-        selected.admins.addAll(assignment.admins)
+        selected.humans = assignment.humans
+        selected.bots = assignment.bots
+        selected.admins = assignment.admins
 
-        val humans = assignment.humans.mapNotNull { UserManager.getUserFromUsername(it) }.shuffled()
-        val bots = CyclicList(
-            assignment.bots.mapNotNull { UserManager.getUserFromUsername(it) }
-                    + assignment.admins.mapNotNull { UserManager.getUserFromUsername(it) }
-        )
+        selected.humans.forEach { human ->
+            assignmentHistory.putIfAbsent(human, mutableSetOf())
+        }
+
         val cyclicPrompts = CyclicList(prompts.shuffled())
 
-        humans.flatMap { human ->
-            (1..botsPerHuman).map {
-                nextRound.add(GeneratedAssignment(human.name, bots.next().name, cyclicPrompts.next()))
+        (1..botsPerHuman).map {
+            val selectedBots = mutableSetOf<String>()
+            assignment.humans.forEach { human ->
+                val bots = (assignment.bots + assignment.admins).shuffled()
+                loop@ for (bot in bots) {
+                    if (selectedBots.size == bots.size) {
+                        selectedBots.clear()
+                    }
+
+                    if (!selectedBots.contains(bot) &&
+                        !assignmentHistory[human]!!.contains(bot) &&
+                        nextRound.none { it.human == human && it.bot == bot })
+                    {
+                        selectedBots.add(bot)
+                        nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
+                        break@loop
+                    }
+                }
             }
         }
-        return nextRound
+
+        return Pair(nextRound, nextRound.size / selected.humans.size == botsPerHuman)
     }
 
     fun startNewRound(): Long {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
+            assignmentHistory[a.human]?.add(a.bot)
             ChatRoomManager.create(
                 mutableSetOf(UserManager.getUserIdFromUsername(a.human)!!, UserManager.getUserIdFromUsername(a.bot)!!),
                 true, a.prompt, endTime

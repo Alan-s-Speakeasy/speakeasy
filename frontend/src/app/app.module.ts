@@ -32,6 +32,7 @@ import {MatOptionModule} from "@angular/material/core";
 import {AssignmentComponent} from "./assignment/assignment.component";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatSliderModule} from "@angular/material/slider";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -71,7 +72,8 @@ export function initializeApiConfig() {
     MatSelectModule,
     MatOptionModule,
     MatCheckboxModule,
-    MatSliderModule
+    MatSliderModule,
+    MatTooltipModule
   ],
   providers: [
     FrontendDataService,

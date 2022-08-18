@@ -50,8 +50,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   botsPerUser = 3
   duration = 10
 
+  changeAfterGenerate = false
+
   round = 0
   nextAssignment: GeneratedAssignment[] = []
+  notOptimalAssignment = false
 
   remainingTime = 0
   timeLeftFormatted = "--:--"
@@ -159,24 +162,29 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   switchHuman(human: string): void {
     let current = this.isHumanSelected.get(human)
     this.isHumanSelected.set(human, !current)
+    this.changeAfterGenerate = true
   }
 
   switchBot(bot: string): void {
     let current = this.isBotSelected.get(bot)
     this.isBotSelected.set(bot, !current)
+    this.changeAfterGenerate = true
   }
 
   switchAdmin(admin: string): void {
     let current = this.isAdminSelected.get(admin)
     this.isAdminSelected.set(admin, !current)
+    this.changeAfterGenerate = true
   }
 
   setBotsPerUser(event: any): void {
     this.botsPerUser = event.value
+    this.changeAfterGenerate = true
   }
 
   setDuration(event: any): void {
     this.duration = event.value
+    this.changeAfterGenerate = true
   }
 
   addPrompts(): void {
@@ -187,10 +195,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       }
     })
     this.promptForm.setValue("")
+    this.changeAfterGenerate = true
   }
 
   removePrompt(index: number): void {
     this.prompts.splice(index, 1)
+    this.changeAfterGenerate = true
   }
 
   canStartRound(): boolean {
@@ -201,14 +211,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   generateNextRound(): void {
-    // this.prompts = []
-    // let fieldContent: string = this.promptForm.value
-    // fieldContent.split("\n").forEach(prompt => {
-    //   if (prompt != "") {
-    //     this.prompts.push(prompt)
-    //   }
-    // })
-
     this.assignmentService.generateAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
@@ -217,8 +219,14 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       botsPerHuman: this.botsPerUser,
       duration: this.duration
     }).subscribe(response => {
+      let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
       this.nextAssignment = response
+      this.notOptimalAssignment = this.nextAssignment.length / selectedHumans.length != this.botsPerUser
+    }, error => {
+      this.alertService.error("Next round could not be created.", this.options)
+      this.nextAssignment = []
     })
+    this.changeAfterGenerate = false
   }
 
   startNextRound(): void {

@@ -136,7 +136,9 @@
     <br>
 
     <div *ngIf="nextAssignment.length > 0">
-      <h4>Next Round</h4>
+      <h4>Next Round
+        <i *ngIf="notOptimalAssignment" class="fa fa-warning" matTooltip="Not optimal. Try again or change settings."></i>
+      </h4>
       <table class="table">
         <thead>
         <tr>
@@ -155,7 +157,7 @@
       </table>
       <div class="row p-2 justify-content-end">
         <div class="col-3">
-          <button (click)="startNextRound()" [disabled]="remainingTime > 0" type="button" class="btn btn-primary float-end">
+          <button (click)="startNextRound()" [disabled]="remainingTime > 0 || changeAfterGenerate" type="button" class="btn btn-primary float-end">
             <div *ngIf="remainingTime == 0">Start Round {{round}}</div>
             <div *ngIf="remainingTime > 0">{{timeLeftFormatted}}</div>
           </button>

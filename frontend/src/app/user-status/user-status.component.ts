@@ -237,7 +237,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   addUser(): void {
     // username, password, role
     this.adminService.addApiUser({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
-      (response) => {
+      () => {
         this.alertService.success("User successfully created.", this.options)
       },
       (error) => {
@@ -250,8 +250,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   removeUser(): void {
-    this.adminService.removeApiUser(this.forceRemove, this.usernameToRemove).subscribe(
-      (response) => {
+    this.adminService.removeApiUser(this.forceRemove, this.usernameToRemove).subscribe(() => {
         this.alertService.success("User successfully removed.", this.options)
       },
       (error) => {

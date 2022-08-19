@@ -5,7 +5,6 @@ import {Subscription, interval} from "rxjs";
 import {Message, PaneLog} from "../new_data";
 import {ChatMessageReaction, ChatRoomInfoUsers, ChatService} from "../../../openapi";
 import {Component, ElementRef, Inject, Input, OnInit, ViewChild} from '@angular/core';
-import {AuthService} from "../authentication.service";
 import {AlertService} from "../_alert";
 
 @Component({
@@ -27,7 +26,6 @@ export class ChatPaneComponent implements OnInit {
 
   constructor(
     @Inject(ChatService) private chatService: ChatService,
-    private authService: AuthService,
     public alertService: AlertService
     ) { }
 

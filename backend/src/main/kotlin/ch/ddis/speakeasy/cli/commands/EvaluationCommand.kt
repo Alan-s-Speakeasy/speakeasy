@@ -283,9 +283,9 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
     inner class AllRatings : CliktCommand(name = "all", help = "Lists rating averages per author or recipient") {
 
-        val author: Boolean by option("-a", "--author").flag()
-        val recipient: Boolean by option("-r", "--recipient").flag()
-        val output: String? by option("-o", "--output")
+        private val author: Boolean by option("-a", "--author").flag()
+        private val recipient: Boolean by option("-r", "--recipient").flag()
+        private val output: String? by option("-o", "--output")
 
         override fun run() {
 
@@ -304,7 +304,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
     inner class Summary : CliktCommand(name = "summary", help = "Lists rating averages over all evaluations") {
 
-        val output: String? by option("-o", "--output")
+        private val output: String? by option("-o", "--output")
 
         override fun run() {
             val header = FeedbackManager.readFeedbackRequests()

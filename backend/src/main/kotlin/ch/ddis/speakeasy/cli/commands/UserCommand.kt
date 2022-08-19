@@ -101,13 +101,11 @@ class UserCommand : NoOpCliktCommand(name = "user") {
                 return
             }
 
-            val setPassword: String
-            if (password != null) {
+            val setPassword: String = if (password != null) {
                 UserManager.addUser(username, role, PlainPassword(password!!))
-                setPassword = password!!
-            }
-            else {
-                setPassword = UserManager.addUser(username, role)
+                password!!
+            } else {
+                UserManager.addUser(username, role)
             }
 
             println("added $role $username with password $setPassword")

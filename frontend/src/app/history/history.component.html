@@ -26,7 +26,7 @@
   </table>
   </div>
 
-  <div class="p-2">
+  <div class="p-2" *ngIf="paneLogs.length > 0">
     <h4>Detailed Assessments</h4>
     <div *ngFor="let paneLog of paneLogs">
       <div class="row p-2">

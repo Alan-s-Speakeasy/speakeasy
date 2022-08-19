@@ -1,13 +1,12 @@
 package ch.ddis.speakeasy.chat
 
-import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserSession
 
 data class ChatMessage(val message: String, val sessionId: SessionId, val ordinal: Int, val time: Long = System.currentTimeMillis()) {
 
     companion object {
-        fun toRestMessage(chatMessage: ChatMessage, sessions: Collection<UserSession>): RestChatMessage? {
+        private fun toRestMessage(chatMessage: ChatMessage, sessions: Collection<UserSession>): RestChatMessage? {
             val session = sessions.find { it.sessionId == chatMessage.sessionId } ?: return null
             return RestChatMessage(chatMessage.time, session.sessionId.string, chatMessage.ordinal, chatMessage.message)
         }

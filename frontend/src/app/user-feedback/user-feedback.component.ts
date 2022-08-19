@@ -7,7 +7,7 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {
-  AdminService, ChatService, FeedbackRequest, FeedbackResponse,
+  AdminService, FeedbackRequest, FeedbackResponse,
   FeedbackService
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
@@ -88,8 +88,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
 
-    this.feedbackService.getApiFeedback(undefined).subscribe(
-      (feedbackForm) => {
+    this.feedbackService.getApiFeedback(undefined).subscribe((feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },
       (error) => {
@@ -99,7 +98,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
     // Fetch initially and then periodically refetch
     this.fetchFeedback()
-    this.feedbackSubscription = interval(10000).subscribe((number) => {
+    this.feedbackSubscription = interval(10000).subscribe(() => {
       this.fetchFeedback()
     })
   }

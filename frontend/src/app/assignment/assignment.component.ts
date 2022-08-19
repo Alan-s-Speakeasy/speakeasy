@@ -8,7 +8,6 @@ import {
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
-import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {AlertService} from "../_alert";
 import {FrontendChatroomDetail} from "../new_data";
 
@@ -28,8 +27,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
               @Inject(AssignmentService) private assignmentService: AssignmentService,
-              public alertService: AlertService,
-              private modalService: NgbModal) { }
+              public alertService: AlertService) { }
 
   private generatorSubscription!: Subscription;
 
@@ -68,7 +66,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.titleService.setTitle("User Details")
 
     this.fetchGenerator(true)
-    this.generatorSubscription = interval(10000).subscribe((number) => {
+    this.generatorSubscription = interval(10000).subscribe(() => {
       this.fetchGenerator(false)
     })
     this.roundTimer = setInterval(() => {this.countdown()}, 1000)
@@ -81,7 +79,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   newGenerator(): void {
-    this.assignmentService.createNewAssignmentGenerator().subscribe(response => {
+    this.assignmentService.createNewAssignmentGenerator().subscribe(() => {
       this.fetchGenerator(true)
     })
   }
@@ -130,7 +128,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   removeGenerator(): void {
-    this.assignmentService.deleteAssignmentGenerator().subscribe(response => {
+    this.assignmentService.deleteAssignmentGenerator().subscribe(() => {
       this.isActive = false
       this.isHumanSelected = new Map()
       this.isBotSelected = new Map()

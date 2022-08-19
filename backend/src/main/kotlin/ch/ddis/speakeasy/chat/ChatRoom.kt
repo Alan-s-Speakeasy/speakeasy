@@ -15,8 +15,8 @@ open class ChatRoom(
     val uid: ChatRoomId = UID(),
     val userIds: MutableSet<UserId>,
     val startTime: Long = System.currentTimeMillis(),
-    val messages: MutableList<ChatMessage> = mutableListOf(),
-    val reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
+    private val messages: MutableList<ChatMessage> = mutableListOf(),
+    private val reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
     val assessedBy: MutableList<UserId> = mutableListOf()
 ) {
     var prompt: String = ""

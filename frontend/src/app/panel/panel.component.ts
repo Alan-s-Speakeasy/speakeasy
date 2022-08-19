@@ -63,7 +63,7 @@ export class PanelComponent implements OnInit {
   startChatSubscriptions(): void {
     this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
 
-    this.chatRoomListSubscription = this.commonService.Rooms.subscribe((roomList) => {
+    this.chatRoomListSubscription = this.commonService.Rooms.subscribe(() => {
     })
 
   }

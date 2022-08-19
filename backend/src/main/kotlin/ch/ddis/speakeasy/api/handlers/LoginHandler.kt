@@ -8,7 +8,7 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-class LoginHandler() : RestHandler, PostRestHandler<UserSessionDetails> {
+class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
 
     data class LoginRequest(var username: String, var password: String)
 

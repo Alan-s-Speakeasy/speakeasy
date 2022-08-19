@@ -113,14 +113,6 @@ object UserManager {
         return users.find { it.id == userId }?.name
     }
 
-    fun getUserFromId(userId: UserId): User? = this.lock.read {
-        return users.find { it.id == userId }
-    }
-
-    fun getUserFromUsername(username: String): User? = this.lock.read {
-        return users.find { it.name == username }
-    }
-
     fun getUserIdFromUsername(username: String): UserId? = this.lock.read {
         return users.find { it.name == username }?.id
     }

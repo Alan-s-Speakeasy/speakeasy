@@ -43,7 +43,7 @@ class GetFeedbackRequestListHandler : GetRestHandler<FeedbackRequestList>, Acces
     )
     override fun doGet(ctx: Context): FeedbackRequestList {
 
-        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+        AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
             401,
             "Unauthorized",
             ctx

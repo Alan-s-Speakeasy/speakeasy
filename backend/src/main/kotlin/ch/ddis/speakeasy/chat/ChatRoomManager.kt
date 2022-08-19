@@ -59,7 +59,7 @@ object ChatRoomManager {
 
     operator fun get(id: ChatRoomId) = this.chatrooms[id]
 
-    fun getByUser(id: UserId): List<ChatRoom> =
+    private fun getByUser(id: UserId): List<ChatRoom> =
         this.chatrooms.values.filter { it.userIds.contains(id) }
 
     fun getByUserSession(session: UserSession): List<ChatRoom> =
@@ -103,7 +103,7 @@ object ChatRoomManager {
     }
 
     fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
-        return this.chatrooms[id]!!.assessedBy.contains(session.user.id);
+        return this.chatrooms[id]!!.assessedBy.contains(session.user.id)
     }
 
 }

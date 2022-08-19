@@ -122,7 +122,7 @@ object AccessManager {
     }
 
     fun getUserSessionForSessionToken(sessionToken: String): UserSession? {
-        updateLastAccess(sessionToken);
+        updateLastAccess(sessionToken)
         return sessionTokenUserSessionMap[sessionToken]
     }
 
@@ -150,7 +150,7 @@ object AccessManager {
     private fun clearExpiredSessions() {
         val sessionExpiryDate = 5 * 60
         for (sessionToken in sessionTokenLastAccessMap.keys()) {
-            val lastAccess = sessionTokenLastAccessMap.get(sessionToken)!!
+            val lastAccess = sessionTokenLastAccessMap[sessionToken]!!
             if (System.currentTimeMillis() - lastAccess > sessionExpiryDate * 1000) {
                 val session = sessionTokenUserSessionMap.remove(sessionToken)
                 if (session != null) {

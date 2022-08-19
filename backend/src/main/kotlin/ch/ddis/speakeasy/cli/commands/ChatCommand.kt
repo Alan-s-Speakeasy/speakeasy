@@ -48,8 +48,8 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                             val sessions = it.sessions.toList()
                             row(
                                 it.uid.string,
-                                sessions[0].user.name ?: " n/a ",
-                                sessions[1].user.name ?: " n/a ",
+                                sessions[0].user.name,
+                                sessions[1].user.name,
                                 it.active,
                                 formatTimeStamp(it.startTime),
                                 if (it.endTime != null) formatTimeStamp(it.endTime!!) else " n/a "

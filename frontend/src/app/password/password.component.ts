@@ -38,8 +38,7 @@ export class PasswordComponent implements OnInit {
           this.userService.patchApiUserPassword(undefined, {
             currentPassword: this.passwordForm.value.currentPassword,
             newPassword: this.passwordForm.value.newPassword
-          } as PasswordChangeRequest).subscribe(
-            (response) => {
+          } as PasswordChangeRequest).subscribe(() => {
               this.userLogout()
             },
             error => {
@@ -57,8 +56,7 @@ export class PasswordComponent implements OnInit {
 
   userLogout(): void {
     this.alertService.success("Password has been successfully changed. Please re-login with your new password!")
-    this.userService.getApiLogout(undefined,'body',true).subscribe(
-      (response)=> {
+    this.userService.getApiLogout(undefined,'body',true).subscribe((response)=> {
         if (response) {
           this.router.navigateByUrl('/login').then();
         }

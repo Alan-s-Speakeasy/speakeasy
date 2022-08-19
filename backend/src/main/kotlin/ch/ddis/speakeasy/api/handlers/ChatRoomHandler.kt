@@ -12,13 +12,15 @@ import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class ChatRoomUserInfo(val alias: String,val sessions: List<String>)
+data class ChatRoomUserInfo(val alias: String, val username: String, val sessions: List<String>)
 
 private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
     val aliasMap = mutableMapOf<String, UserId>() // Alias --> UserId
+    val usernameMap = mutableMapOf<UserId, String>() // UserId --> Username
     val sessionMap = mutableMapOf<UserId, MutableList<String>>() // UserId --> Sessions
     room.sessions.forEach {
         aliasMap[it.userSessionAlias] = it.user.id
+        usernameMap[it.user.id] = it.user.name
         if (sessionMap.containsKey(it.user.id)) {
             sessionMap[it.user.id]!!.add(it.sessionId.string)
         } else {
@@ -26,7 +28,7 @@ private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
         }
     }
 
-    return aliasMap.map { ChatRoomUserInfo(it.key, sessionMap[it.value]!!) }
+    return aliasMap.map { ChatRoomUserInfo(it.key, usernameMap[it.value]!!, sessionMap[it.value]!!) }
 }
 
 data class ChatRoomInfo(

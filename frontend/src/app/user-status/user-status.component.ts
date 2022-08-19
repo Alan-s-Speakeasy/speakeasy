@@ -121,33 +121,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
     let users: string[] = []
-    // chatRoom.users.forEach(user => {
-    //   user.sessions.forEach(sessionId => {
-    //     let found = false
-    //     this.humanDetails.forEach(user => {
-    //       if (user.sessionId[0] == sessionId) {
-    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-    //         found = true
-    //       }
-    //     })
-    //     this.adminDetails.forEach(user => {
-    //       if (user.sessionId[0] == sessionId) {
-    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-    //         found = true
-    //       }
-    //     })
-    //     this.botDetails.forEach(user => {
-    //       if (user.sessionId[0] == sessionId) {
-    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-    //         found = true
-    //       }
-    //     })
-    //     if (!found) {
-    //       users.push(sessionId + " (user offline)")
-    //     }
-    //   })
-    // })
-    chatRoom.users.forEach(u => users.push(u.alias))
+    chatRoom.users.forEach(u => users.push(u.username))
+
+    let aliases :string[] = []
+    chatRoom.users.forEach(u => aliases.push(u.alias))
 
     let sessions: string[] = []
     chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
@@ -159,6 +136,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
         users: users,
+        aliases: aliases,
         sessions: sessions
       }
     )
@@ -233,13 +211,13 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   watch(frontendUserDetail: FrontendUserDetail, chatroomDetail: FrontendChatroomDetail): void {
 
-    let partnerAlias = chatroomDetail.users.find(alias => alias != frontendUserDetail.userSessionAlias)
+    let partnerUsername = chatroomDetail.users.find(username => username != frontendUserDetail.username)
 
     this.router.navigateByUrl('/spectate', { state: {
       roomID: chatroomDetail.roomID,
       username: frontendUserDetail.username,
       userAlias: frontendUserDetail.userSessionAlias,
-      partnerAlias: partnerAlias,
+      partnerAlias: partnerUsername,
       userSession: frontendUserDetail.sessionId,
       backUrl: "userStatus"
     } } ).then()

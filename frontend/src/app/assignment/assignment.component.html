@@ -142,16 +142,16 @@
       <table class="table">
         <thead>
         <tr>
-          <td>Human</td>
-          <td>Bot</td>
-          <td>Prompt</td>
+          <td class="col-3">Human</td>
+          <td class="col-3">Bot</td>
+          <td class="col-6">Prompt</td>
         </tr>
         </thead>
         <tbody>
         <tr *ngFor="let assignment of nextAssignment">
-          <td>{{assignment.human}}</td>
-          <td>{{assignment.bot}}</td>
-          <td>{{assignment.prompt}}</td>
+          <td class="col-3">{{assignment.human}}</td>
+          <td class="col-3">{{assignment.bot}}</td>
+          <td class="col-6">{{assignment.prompt}}</td>
         </tr>
         </tbody>
       </table>
@@ -163,6 +163,30 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <br>
+
+    <div *ngIf="remainingTime > 0">
+      <h4>Active Round</h4>
+      <table class="table">
+        <thead>
+        <tr class="d-flex">
+          <td class="col-3">Human</td>
+          <td class="col-3">Bot</td>
+          <td class="col-5">Prompt</td>
+          <td class="col-1">Watch</td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let room of activeChatroomDetails" class="d-flex">
+          <td class="col-3">{{room.users[0]}}</td>
+          <td class="col-3">{{room.users[1]}}</td>
+          <td class="col-5">{{room.prompt}}</td>
+          <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
+        </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

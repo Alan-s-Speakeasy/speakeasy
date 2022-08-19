@@ -3,13 +3,14 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {
-  AdminService, AssignmentGeneratorObject, AssignmentService, GeneratedAssignment,
+  AdminService, AssignmentGeneratorObject, AssignmentService, ChatRoomInfo, GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {AlertService} from "../_alert";
+import {FrontendChatroomDetail} from "../new_data";
 
 
 @Component({
@@ -59,6 +60,9 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   remainingTime = 0
   timeLeftFormatted = "--:--"
   roundTimer: any
+
+  activeChatroomDetails: FrontendChatroomDetail[] = []
+  activeRound: any
 
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
@@ -236,15 +240,61 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     })
   }
 
+  fetchActiveRound(): void {
+    this.adminService.getApiRoomsActive().subscribe((activechatrooms)=>{
+      this.activeChatroomDetails = []
+      activechatrooms.rooms.forEach(room => {
+        this.pushChatRoomDetails(this.activeChatroomDetails, room)
+      })
+    })
+  }
+
   countdown(): void {
     if (this.remainingTime > 0) {
       this.remainingTime -= 1
       const minutes = Math.floor(this.remainingTime / 60)
       const seconds = this.remainingTime % 60
       this.timeLeftFormatted = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+      this.fetchActiveRound()
     } else {
       clearInterval(this.roundTimer)
+      clearInterval(this.activeRound)
     }
+  }
+
+  pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
+    let users :string[] = []
+    chatRoom.users.forEach(u => users.push(u.username))
+
+    let aliases :string[] = []
+    chatRoom.users.forEach(u => aliases.push(u.alias))
+
+    let sessions: string[] = []
+    chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
+
+    chatRoomDetails.push(
+      {
+        prompt: chatRoom.prompt,
+        roomID: chatRoom.uid,
+        startTime: chatRoom.startTime!,
+        remainingTime: chatRoom.remainingTime,
+        users: users,
+        aliases: aliases,
+        sessions: sessions,
+      }
+    )
+  }
+
+  watch(chatroomDetail: FrontendChatroomDetail): void {
+    this.router.navigateByUrl('/spectate', { state: {
+        roomID: chatroomDetail.roomID,
+        username: chatroomDetail.users[0],
+        userAlias: chatroomDetail.aliases[0],
+        partnerAlias: chatroomDetail.users[1],
+        userSession: chatroomDetail.sessions[0],
+        users: chatroomDetail.users,
+        backUrl: "assignment"
+      } } ).then()
   }
 
   home(): void {
@@ -254,6 +304,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.generatorSubscription.unsubscribe()
     clearInterval(this.roundTimer)
+    clearInterval(this.activeRound)
   }
 
 }

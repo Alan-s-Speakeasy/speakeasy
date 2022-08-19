@@ -52,6 +52,7 @@ export interface FrontendChatroomDetail {
   startTime: number,
   remainingTime: number,
   users: string[],
+  aliases: string[],
   sessions: string[],
 }
 

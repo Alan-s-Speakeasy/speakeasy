@@ -63,21 +63,10 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
     let users :string[] = []
-    // chatRoom.users.forEach(user => {
-    //   user.sessions.forEach(sessionId => {
-    //     let found = false
-    //     this.allUserDetails.forEach(user => {
-    //       if (user.sessionId[0] == sessionId) {
-    //         users.push(user.sessionId + " (" + user.username + ", " + user.role + ")")
-    //         found = true
-    //       }
-    //     })
-    //     if (!found) {
-    //       users.push(sessionId + " (user offline)")
-    //     }
-    //   })
-    // })
-    chatRoom.users.forEach(u => users.push(u.alias))
+    chatRoom.users.forEach(u => users.push(u.username))
+
+    let aliases :string[] = []
+    chatRoom.users.forEach(u => aliases.push(u.alias))
 
     let sessions: string[] = []
     chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
@@ -89,6 +78,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
         users: users,
+        aliases: aliases,
         sessions: sessions,
       }
     )
@@ -137,7 +127,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/spectate', { state: {
       roomID: chatroomDetail.roomID,
       username: chatroomDetail.users[0],
-      userAlias: chatroomDetail.users[0],
+      userAlias: chatroomDetail.aliases[0],
       partnerAlias: chatroomDetail.users[1],
       userSession: chatroomDetail.sessions[0],
       users: chatroomDetail.users,

@@ -7,7 +7,7 @@ import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
 data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>)
-data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val remainingTime: Long, val round: Int)
+data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val round: Int, val remainingTime: Long, val rooms: List<ChatRoomInfo>)
 data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int)
 data class GeneratedAssignment(val human: String, val bot: String, val prompt: String)
 data class RoundStarted(val remainingTime: Long)
@@ -101,6 +101,10 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
                 return round.first
             }
             assignment = round.first
+        }
+
+        if (assignment.isEmpty()) {
+            throw ErrorStatusException(400, "No assignment could be created.", ctx)
         }
         return assignment
     }

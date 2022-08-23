@@ -142,24 +142,23 @@
       <table class="table">
         <thead>
         <tr>
-          <td class="col-3">Human</td>
-          <td class="col-3">Bot</td>
-          <td class="col-6">Prompt</td>
+          <td class="col-2">Human</td>
+          <td class="col-2">Bot</td>
+          <td class="col-8">Prompt</td>
         </tr>
         </thead>
         <tbody>
         <tr *ngFor="let assignment of nextAssignment">
-          <td class="col-3">{{assignment.human}}</td>
-          <td class="col-3">{{assignment.bot}}</td>
-          <td class="col-6">{{assignment.prompt}}</td>
+          <td class="col-2">{{assignment.human}}</td>
+          <td class="col-2">{{assignment.bot}}</td>
+          <td class="col-8">{{assignment.prompt}}</td>
         </tr>
         </tbody>
       </table>
       <div class="row p-2 justify-content-end">
         <div class="col-3">
-          <button (click)="startNextRound()" [disabled]="remainingTime > 0 || changeAfterGenerate" type="button" class="btn btn-primary float-end">
-            <div *ngIf="remainingTime == 0">Start Round {{round}}</div>
-            <div *ngIf="remainingTime > 0">{{timeLeftFormatted}}</div>
+          <button (click)="startNextRound()" [disabled]="remainingTime > 0 || changeAfterGenerate || !generated" type="button" class="btn btn-primary float-end">
+            <div>Start Round {{round}}</div>
           </button>
         </div>
       </div>
@@ -167,24 +166,46 @@
 
     <br>
 
-    <div *ngIf="remainingTime > 0">
+    <div *ngIf="chatroomDetails.size > 0">
       <h4>Active Round</h4>
       <table class="table">
         <thead>
         <tr class="d-flex">
-          <td class="col-3">Human</td>
-          <td class="col-3">Bot</td>
+          <td class="col-2">Human</td>
+          <td class="col-2">Bot</td>
           <td class="col-5">Prompt</td>
-          <td class="col-1">Watch</td>
+          <td class="col-3">Remaining Time</td>
         </tr>
         </thead>
         <tbody>
-        <tr *ngFor="let room of activeChatroomDetails" class="d-flex">
-          <td class="col-3">{{room.users[0]}}</td>
-          <td class="col-3">{{room.users[1]}}</td>
-          <td class="col-5">{{room.prompt}}</td>
-          <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
+          <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
+            <td class="col-2">{{room.users[0]}}</td>
+            <td class="col-2">{{room.users[1]}}</td>
+            <td class="col-5">{{room.prompt}}</td>
+            <td class="col-2">{{remainingTime | date: 'mm:ss'}}</td>
+            <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="chatroomDetails.size > 0">
+      <h4>Past Rounds</h4>
+      <table class="table">
+        <thead>
+        <tr class="d-flex">
+          <td class="col-2">Human</td>
+          <td class="col-2">Bot</td>
+          <td class="col-8">Prompt</td>
         </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
+            <td class="col-2">{{room.users[0]}}</td>
+            <td class="col-2">{{room.users[1]}}</td>
+            <td class="col-7">{{room.prompt}}</td>
+            <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
+          </tr>
         </tbody>
       </table>
     </div>

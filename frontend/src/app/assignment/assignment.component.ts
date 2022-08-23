@@ -3,10 +3,14 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {
-  AdminService, AssignmentGeneratorObject, AssignmentService, ChatRoomInfo, GeneratedAssignment,
+  AdminService,
+  AssignmentGeneratorObject,
+  AssignmentService,
+  ChatRoomInfo,
+  GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
-import { HttpClient } from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {FormControl} from "@angular/forms";
 import {AlertService} from "../_alert";
 import {FrontendChatroomDetail} from "../new_data";
@@ -50,23 +54,22 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   duration = 10
 
   changeAfterGenerate = false
+  generated = false
 
   round = 0
   nextAssignment: GeneratedAssignment[] = []
   notOptimalAssignment = false
 
   remainingTime = 0
-  timeLeftFormatted = "--:--"
   roundTimer: any
 
-  activeChatroomDetails: FrontendChatroomDetail[] = []
-  activeRound: any
+  chatroomDetails: Map<string, FrontendChatroomDetail> = new Map()
 
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
     this.fetchGenerator(true)
-    this.generatorSubscription = interval(10000).subscribe(() => {
+    this.generatorSubscription = interval(5000).subscribe(() => {
       this.fetchGenerator(false)
     })
     this.roundTimer = setInterval(() => {this.countdown()}, 1000)
@@ -123,7 +126,17 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       }
       this.nextAssignment = response.assignments
       this.round = response.round
-      this.remainingTime = Math.floor(response.remainingTime / 1000)
+      response.rooms.forEach(room => {
+        if (!this.chatroomDetails.has(room.uid)) {
+          this.pushChatRoomDetails(room)
+        }
+        let details = this.chatroomDetails.get(room.uid)
+        if (details) {
+          details.remainingTime = room.remainingTime
+          this.chatroomDetails.set(room.uid, details)
+        }
+      })
+      this.remainingTime = response.remainingTime
     }
   }
 
@@ -136,6 +149,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.active = []
       this.remainingTime = 0
       this.nextAssignment = []
+      this.chatroomDetails.clear()
     })
   }
 
@@ -206,10 +220,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   canStartRound(): boolean {
-    return this.humans.filter(h => this.isHumanSelected.get(h)).length > 0 &&
-      (this.bots.filter(b => this.isBotSelected.get(b)).length > 0 ||
-        this.admins.filter(a => this.isAdminSelected.get(a)).length > 0) &&
-      this.prompts.length > 0
+    let humans = this.humans.filter(h => this.isHumanSelected.get(h))
+    let bots = this.bots.filter(b => this.isBotSelected.get(b))
+    let admins = this.admins.filter(a => this.isAdminSelected.get(a))
+    return humans.length > 0 &&
+      bots.length + admins.length > 0 &&
+      this.prompts.length > 0 &&
+      this.botsPerUser <= bots.length + admins.length
   }
 
   generateNextRound(): void {
@@ -224,6 +241,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
       this.nextAssignment = response
       this.notOptimalAssignment = this.nextAssignment.length / selectedHumans.length != this.botsPerUser
+      this.generated = true
     }, error => {
       this.alertService.error("Next round could not be created.", this.options)
       this.nextAssignment = []
@@ -232,35 +250,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.startAssignmentRound().subscribe(response => {
-      this.remainingTime = Math.floor(response.remainingTime / 1000)
-      this.roundTimer = setInterval(() => {this.countdown()}, 1000)
+    this.assignmentService.startAssignmentRound().subscribe(() => {
+      this.generated = false
+      this.fetchGenerator(false)
     })
   }
 
-  fetchActiveRound(): void {
-    this.adminService.getApiRoomsActive().subscribe((activechatrooms)=>{
-      this.activeChatroomDetails = []
-      activechatrooms.rooms.forEach(room => {
-        this.pushChatRoomDetails(this.activeChatroomDetails, room)
-      })
-    })
-  }
-
-  countdown(): void {
-    if (this.remainingTime > 0) {
-      this.remainingTime -= 1
-      const minutes = Math.floor(this.remainingTime / 60)
-      const seconds = this.remainingTime % 60
-      this.timeLeftFormatted = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
-      this.fetchActiveRound()
-    } else {
-      clearInterval(this.roundTimer)
-      clearInterval(this.activeRound)
-    }
-  }
-
-  pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
+  pushChatRoomDetails(chatRoom: ChatRoomInfo) {
     let users :string[] = []
     chatRoom.users.forEach(u => users.push(u.username))
 
@@ -270,8 +266,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     let sessions: string[] = []
     chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
 
-    chatRoomDetails.push(
-      {
+    this.chatroomDetails.set(chatRoom.uid, {
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
@@ -281,6 +276,19 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         sessions: sessions,
       }
     )
+  }
+
+  getChatrooms(active: boolean): FrontendChatroomDetail[] {
+    let arr = Array.from(this.chatroomDetails.values())
+    return arr.filter(c => (c.remainingTime > 0) == active)
+  }
+
+  countdown(): void {
+    if (this.remainingTime > 0) {
+      this.remainingTime -= 1000
+    } else {
+      this.remainingTime = 0
+    }
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {
@@ -302,7 +310,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.generatorSubscription.unsubscribe()
     clearInterval(this.roundTimer)
-    clearInterval(this.activeRound)
   }
 
 }

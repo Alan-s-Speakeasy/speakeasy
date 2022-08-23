@@ -1,10 +1,8 @@
 package ch.ddis.speakeasy.assignment
 
 import ch.ddis.speakeasy.api.AccessManager
-import ch.ddis.speakeasy.api.handlers.AssignmentGeneratorObject
-import ch.ddis.speakeasy.api.handlers.GeneratedAssignment
-import ch.ddis.speakeasy.api.handlers.NewAssignmentObject
-import ch.ddis.speakeasy.api.handlers.SelectedUsers
+import ch.ddis.speakeasy.api.handlers.*
+import ch.ddis.speakeasy.chat.ChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
@@ -25,9 +23,9 @@ object UIChatAssignmentGenerator {
     private var duration = 0
     private var endTime = 0L
     private var round = 0
-
     private var nextRound: MutableList<GeneratedAssignment> = mutableListOf()
-    private val assignmentHistory = hashMapOf<String, MutableSet<String>>().withDefault { mutableSetOf() }
+    private val humanAssignments = hashMapOf<String, MutableList<String>>().withDefault { mutableListOf() }
+    private val chatRooms: MutableList<ChatRoom> = mutableListOf()
 
     fun init() {
         humans = UserManager.list().filter { it.role.isHuman() }
@@ -49,7 +47,8 @@ object UIChatAssignmentGenerator {
         endTime = 0L
         round = 0
         nextRound.clear()
-        assignmentHistory.clear()
+        humanAssignments.clear()
+        chatRooms.clear()
     }
 
     fun getStatus(): AssignmentGeneratorObject {
@@ -68,9 +67,16 @@ object UIChatAssignmentGenerator {
             prompts,
             botsPerHuman,
             duration,
+            round,
             timeLeft,
-            round
+            chatRooms.map { ChatRoomInfo(it) }
         )
+    }
+
+    private fun wasAlreadySelected(human: String, bot: String, slack: Int): Boolean {
+        val previous = humanAssignments[human]!!.count { it == bot }
+        val current = nextRound.count { it.human == human && it.bot == bot }
+        return current == 0 && previous <= slack
     }
 
     fun generateNewRound(assignment: NewAssignmentObject): Pair<List<GeneratedAssignment>, Boolean> {
@@ -85,28 +91,33 @@ object UIChatAssignmentGenerator {
         selected.admins = assignment.admins
 
         selected.humans.forEach { human ->
-            assignmentHistory.putIfAbsent(human, mutableSetOf())
+            humanAssignments.putIfAbsent(human, mutableListOf())
         }
 
         val cyclicPrompts = CyclicList(prompts.shuffled())
+        val bots = (assignment.bots + assignment.admins).shuffled()
+        var botIndex = 0
 
         (1..botsPerHuman).map {
-            val selectedBots = mutableSetOf<String>()
-            assignment.humans.forEach { human ->
-                val bots = (assignment.bots + assignment.admins).shuffled()
-                loop@ for (bot in bots) {
-                    if (selectedBots.size == bots.size) {
-                        selectedBots.clear()
-                    }
-
-                    if (!selectedBots.contains(bot) &&
-                        !assignmentHistory[human]!!.contains(bot) &&
-                        nextRound.none { it.human == human && it.bot == bot })
-                    {
-                        selectedBots.add(bot)
+            selected.humans.forEach { human ->
+                var assigned = false
+                var slack = 0
+                while (!assigned) {
+                    val bot = bots[botIndex]
+                    if (wasAlreadySelected(human, bot, slack)) {
                         nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
-                        break@loop
+                        assigned = true
+                    } else {
+                        botIndex += 1
+                        if (botIndex == bots.size) {
+                            slack += 1
+                            botIndex = 0
+                        }
                     }
+                }
+                botIndex += 1
+                if (botIndex == bots.size) {
+                    botIndex = 0
                 }
             }
         }
@@ -118,11 +129,13 @@ object UIChatAssignmentGenerator {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
-            assignmentHistory[a.human]?.add(a.bot)
-            ChatRoomManager.create(
+            humanAssignments.putIfAbsent(a.human, mutableListOf())
+            humanAssignments[a.human]?.add(a.bot)
+            val chatRoom = ChatRoomManager.create(
                 mutableSetOf(UserManager.getUserIdFromUsername(a.human)!!, UserManager.getUserIdFromUsername(a.bot)!!),
                 true, a.prompt, endTime
             )
+            chatRooms.add(chatRoom)
         }
 
         round += 1

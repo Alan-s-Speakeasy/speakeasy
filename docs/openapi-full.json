@@ -1534,7 +1534,7 @@
         }
       },
       "AssignmentGeneratorObject" : {
-        "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "remainingTime", "round" ],
+        "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ],
         "type": "object",
         "properties": {
           "humans": {
@@ -1603,11 +1603,17 @@
           "duration": {
             "type": "integer"
           },
+          "round": {
+            "type": "integer"
+          },
           "remainingTime": {
             "type": "number"
           },
-          "round": {
-            "type": "integer"
+          "rooms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatRoomInfo"
+            }
           }
         }
       },

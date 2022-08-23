@@ -21,7 +21,6 @@ object AccessManager {
 
     private val sessionTokenUserSessionMap = ConcurrentHashMap<String, UserSession>(1000)
     private val userIdUserSessionMap = ConcurrentHashMap<UserId, ArrayList<UserSession>>(1000)
-    private val sessionIdUserSessionMap = ConcurrentHashMap<SessionId, UserSession>(1000)
     private val sessionTokenLastAccessMap = ConcurrentHashMap<String, Long>(1000)
 
     private val sessionFile = File("data/sessions.csv")//TODO see where we actually want to store this
@@ -108,7 +107,6 @@ object AccessManager {
 
     private fun addSessionToMaps(session: UserSession, user: User) {
         sessionTokenUserSessionMap[session.sessionToken] = session
-        sessionIdUserSessionMap[session.sessionId] = session
 
         if (!userIdUserSessionMap.containsKey(user.id)) {
             userIdUserSessionMap[user.id] = ArrayList()
@@ -135,14 +133,18 @@ object AccessManager {
     }
 
     fun clearUserSession(sessionToken: String) {
-        sessionTokenUserSessionMap.remove(sessionToken)
+        val session = sessionTokenUserSessionMap.remove(sessionToken)
+        if (session != null) {
+            ChatRoomManager.leave(session)
+            sessionTokenLastAccessMap.remove(sessionToken)
+            userIdUserSessionMap[session.user.id]!!.remove(session)
+        }
     }
 
     fun forceClearUserId(userId: UserId) {
         userIdUserSessionMap.remove(userId)?.forEach {
             ChatRoomManager.leave(it)
             sessionTokenLastAccessMap.remove(it.sessionToken)
-            sessionIdUserSessionMap.remove(it.sessionId)
             sessionTokenUserSessionMap.remove(it.sessionToken)
         }
     }
@@ -152,13 +154,7 @@ object AccessManager {
         for (sessionToken in sessionTokenLastAccessMap.keys()) {
             val lastAccess = sessionTokenLastAccessMap[sessionToken]!!
             if (System.currentTimeMillis() - lastAccess > sessionExpiryDate * 1000) {
-                val session = sessionTokenUserSessionMap.remove(sessionToken)
-                if (session != null) {
-                    ChatRoomManager.leave(session)
-                    sessionTokenLastAccessMap.remove(sessionToken)
-                    userIdUserSessionMap[session.user.id]!!.remove(session)
-                    sessionIdUserSessionMap.remove(session.sessionId)
-                }
+                clearUserSession(sessionToken)
             }
         }
     }

@@ -84,7 +84,7 @@ object AccessManager {
                 alias = sessions[0].userSessionAlias
             } else {
                 sessionId = UID()
-                alias = userSessions[0].userSessionAlias
+                alias = SessionAliasGenerator.getRandomName()
             }
 
             if (user.role == UserRole.BOT) { //in case of login, invalidate all other session of the same bot
@@ -135,7 +135,6 @@ object AccessManager {
     fun clearUserSession(sessionToken: String) {
         val session = sessionTokenUserSessionMap.remove(sessionToken)
         if (session != null) {
-            ChatRoomManager.leave(session)
             sessionTokenLastAccessMap.remove(sessionToken)
             userIdUserSessionMap[session.user.id]!!.remove(session)
         }
@@ -143,7 +142,6 @@ object AccessManager {
 
     fun forceClearUserId(userId: UserId) {
         userIdUserSessionMap.remove(userId)?.forEach {
-            ChatRoomManager.leave(it)
             sessionTokenLastAccessMap.remove(it.sessionToken)
             sessionTokenUserSessionMap.remove(it.sessionToken)
         }

@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.UID
@@ -19,6 +20,7 @@ object ChatRoomManager {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
             val userIds: MutableSet<UserId> = objectMapper.readValue(lines[4])
+            var sessions: MutableSet<UserSession> = objectMapper.readValue(lines[5])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
             val assessedBy: MutableList<UserId> = mutableListOf()
@@ -27,6 +29,9 @@ object ChatRoomManager {
                 try {
                     val chatMessage: ChatMessage = objectMapper.readValue(lines[i])
                     messages.add(chatMessage)
+                } catch (_: Exception) {}
+                try {
+                    sessions = objectMapper.readValue(lines[i])
                 } catch (_: Exception) {}
                 try {
                     val reaction: ChatMessageReaction = objectMapper.readValue(lines[i])
@@ -45,6 +50,7 @@ object ChatRoomManager {
                 prompt = lines[3],
                 basePath = basePath,
                 userIds = userIds,
+                sessions = sessions,
                 messages = messages,
                 reactions = reactions,
                 assessedBy = assessedBy
@@ -80,18 +86,12 @@ object ChatRoomManager {
         }
     }
 
-    fun leave(session: UserSession) {
-        getByUser(session.user.id).forEach {
-            it.sessions.remove(session)
-            it.joinOrLeave()
-        }
-    }
-
     fun create(userIds: MutableSet<UserId>, log: Boolean = true, prompt: String, endTime: Long? = null): ChatRoom {
+        val sessions = userIds.map { AccessManager.getSessionsForUserId(it) }.flatten().toMutableSet()
         val chatRoom = if (log) {
-            LoggingChatRoom(userIds = userIds, basePath = basePath, endTime = endTime, prompt = prompt)
+            LoggingChatRoom(userIds = userIds, sessions = sessions, basePath = basePath, endTime = endTime, prompt = prompt)
         } else {
-            ChatRoom(userIds = userIds)
+            ChatRoom(userIds = userIds, sessions = sessions)
         }
         chatRoom.prompt = prompt
         chatrooms[chatRoom.uid] = chatRoom

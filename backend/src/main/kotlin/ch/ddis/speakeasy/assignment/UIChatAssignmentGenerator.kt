@@ -129,13 +129,16 @@ object UIChatAssignmentGenerator {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
-            humanAssignments.putIfAbsent(a.human, mutableListOf())
-            humanAssignments[a.human]?.add(a.bot)
-            val chatRoom = ChatRoomManager.create(
-                mutableSetOf(UserManager.getUserIdFromUsername(a.human)!!, UserManager.getUserIdFromUsername(a.bot)!!),
-                true, a.prompt, endTime
-            )
-            chatRooms.add(chatRoom)
+            val humanId = UserManager.getUserIdFromUsername(a.human)!!
+            val botId = UserManager.getUserIdFromUsername(a.bot)!!
+
+            // Only create the chat room if both users are online
+            if (AccessManager.hasUserIdActiveSessions(humanId) && AccessManager.hasUserIdActiveSessions(botId)) {
+                humanAssignments.putIfAbsent(a.human, mutableListOf())
+                humanAssignments[a.human]?.add(a.bot)
+                val chatRoom = ChatRoomManager.create(mutableSetOf(humanId, botId),true, a.prompt, endTime)
+                chatRooms.add(chatRoom)
+            }
         }
 
         round += 1

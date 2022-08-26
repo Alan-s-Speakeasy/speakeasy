@@ -107,7 +107,8 @@
 
         <textarea
           style="height: 70px"
-          type="text" class="form-control" placeholder="Add prompt(s)..."
+          type="text" class="form-control" placeholder="Add prompt(s):
+One per line..."
           [formControl]="promptForm">
         </textarea>
         <button (click)="addPrompts()" type="submit" class="btn btn btn-outline-primary">Add</button>
@@ -151,7 +152,10 @@
         <tr *ngFor="let assignment of nextAssignment">
           <td class="col-2">{{assignment.human}}</td>
           <td class="col-2">{{assignment.bot}}</td>
-          <td class="col-8">{{assignment.prompt}}</td>
+          <td class="col-7">{{assignment.prompt}}</td>
+          <td class="col-1">
+            <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)" class="col-6 fa fa-warning" matTooltip="At least one user offline. Round cannot be created."></i>
+          </td>
         </tr>
         </tbody>
       </table>

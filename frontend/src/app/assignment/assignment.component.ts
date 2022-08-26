@@ -178,6 +178,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   switchHuman(human: string): void {
     let current = this.isHumanSelected.get(human)
     this.isHumanSelected.set(human, !current)
+
+    // Prevent an admin being selected as both bot and human
+    if (!current && this.admins.includes(human)) {
+      this.isAdminSelected.set(human, false)
+    }
     this.changeAfterGenerate = true
   }
 
@@ -190,6 +195,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   switchAdmin(admin: string): void {
     let current = this.isAdminSelected.get(admin)
     this.isAdminSelected.set(admin, !current)
+
+    // Prevent an admin being selected as both bot and human
+    if (!current) {
+      this.isHumanSelected.set(admin, false)
+    }
     this.changeAfterGenerate = true
   }
 

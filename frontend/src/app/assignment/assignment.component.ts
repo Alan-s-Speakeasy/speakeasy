@@ -6,7 +6,7 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomInfo,
+  ChatRoomAdminInfo,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
@@ -266,7 +266,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     })
   }
 
-  pushChatRoomDetails(chatRoom: ChatRoomInfo) {
+  pushChatRoomDetails(chatRoom: ChatRoomAdminInfo) {
     let users :string[] = []
     chatRoom.users.forEach(u => users.push(u.username))
 

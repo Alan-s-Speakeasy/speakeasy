@@ -408,7 +408,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ChatRoomList"
+                  "$ref" : "#/components/schemas/ChatRoomAdminList"
                 }
               }
             }
@@ -437,7 +437,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ChatRoomList"
+                  "$ref" : "#/components/schemas/ChatRoomAdminList"
                 }
               }
             }
@@ -1274,6 +1274,44 @@
           "users" : {
             "type" : "array",
             "items" : {
+              "required": [ "alias", "sessions" ],
+              "type" : "object",
+              "properties" : {
+                "alias" : {
+                  "type": "string"
+                },
+                "sessions" : {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatRoomAdminInfo" : {
+        "required" : [ "prompt", "remainingTime", "users", "uid" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remainingTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "users" : {
+            "type" : "array",
+            "items" : {
               "required": [ "alias", "username", "sessions" ],
               "type" : "object",
               "properties" : {
@@ -1309,6 +1347,18 @@
           }
         }
       },
+      "ChatRoomAdminList" : {
+        "required" : [ "rooms" ],
+        "type" : "object",
+        "properties" : {
+          "rooms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChatRoomAdminInfo"
+            }
+          }
+        }
+      },
       "ChatRequest" : {
         "required" : [ "username" ],
         "type" : "object",
@@ -1337,7 +1387,7 @@
         "type" : "object",
         "properties" : {
           "info" : {
-            "$ref" : "#/components/schemas/ChatRoomInfo"
+            "$ref" : "#/components/schemas/ChatRoomAdminInfo"
           },
           "messages" : {
             "type" : "array",
@@ -1612,7 +1662,7 @@
           "rooms": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ChatRoomInfo"
+              "$ref": "#/components/schemas/ChatRoomAdminInfo"
             }
           }
         }

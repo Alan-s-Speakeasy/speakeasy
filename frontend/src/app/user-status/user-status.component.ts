@@ -3,7 +3,7 @@ import {FrontendUserDetail, FrontendUser, FrontendChatroomDetail} from "../new_d
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
-import {AddUserRequest, AdminService, ChatRoomInfo, UserDetails, UserSessionDetails} from "../../../openapi";
+import {AddUserRequest, AdminService, ChatRoomAdminInfo, UserDetails, UserSessionDetails} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
@@ -119,7 +119,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     })
   }
 
-  pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomInfo) {
+  pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
     let users: string[] = []
     chatRoom.users.forEach(u => users.push(u.username))
 

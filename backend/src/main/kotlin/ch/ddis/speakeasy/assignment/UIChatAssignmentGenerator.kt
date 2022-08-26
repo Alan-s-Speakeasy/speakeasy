@@ -69,7 +69,7 @@ object UIChatAssignmentGenerator {
             duration,
             round,
             timeLeft,
-            chatRooms.map { ChatRoomInfo(it) }
+            chatRooms.map { ChatRoomAdminInfo(it) }
         )
     }
 

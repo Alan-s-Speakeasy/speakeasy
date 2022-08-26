@@ -12,9 +12,25 @@ import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class ChatRoomUserInfo(val alias: String, val username: String, val sessions: List<String>)
+data class ChatRoomUserInfo(val alias: String, val sessions: List<String>)
+data class ChatRoomUserAdminInfo(val alias: String, val username: String, val sessions: List<String>)
 
 private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
+    val aliasMap = mutableMapOf<String, UserId>() // Alias --> UserId
+    val sessionMap = mutableMapOf<UserId, MutableList<String>>() // UserId --> Sessions
+    room.sessions.forEach {
+        aliasMap[it.userSessionAlias] = it.user.id
+        if (sessionMap.containsKey(it.user.id)) {
+            sessionMap[it.user.id]!!.add(it.sessionId.string)
+        } else {
+            sessionMap[it.user.id] = mutableListOf(it.sessionId.string)
+        }
+    }
+
+    return aliasMap.map { ChatRoomUserInfo(it.key, sessionMap[it.value]!!) }
+}
+
+private fun mapChatRoomToSessionsWithUsername(room: ChatRoom): List<ChatRoomUserAdminInfo> {
     val aliasMap = mutableMapOf<String, UserId>() // Alias --> UserId
     val usernameMap = mutableMapOf<UserId, String>() // UserId --> Username
     val sessionMap = mutableMapOf<UserId, MutableList<String>>() // UserId --> Sessions
@@ -28,7 +44,7 @@ private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
         }
     }
 
-    return aliasMap.map { ChatRoomUserInfo(it.key, usernameMap[it.value]!!, sessionMap[it.value]!!) }
+    return aliasMap.map { ChatRoomUserAdminInfo(it.key, usernameMap[it.value]!!, sessionMap[it.value]!!) }
 }
 
 data class ChatRoomInfo(
@@ -47,7 +63,24 @@ data class ChatRoomInfo(
     )
 }
 
+data class ChatRoomAdminInfo(
+    val uid: String,
+    val startTime: Long?,
+    val remainingTime: Long,
+    val users: List<ChatRoomUserAdminInfo>,
+    val prompt: String
+) {
+    constructor(room: ChatRoom) : this(
+        room.uid.string,
+        room.startTime,
+        room.remainingTime,
+        mapChatRoomToSessionsWithUsername(room),
+        room.prompt
+    )
+}
+
 data class ChatRoomList(val rooms: List<ChatRoomInfo>)
+data class ChatRoomAdminList(val rooms: List<ChatRoomAdminInfo>)
 
 class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
     override val permittedRoles: Set<Role> = setOf(RestApiRole.USER)
@@ -109,7 +142,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
     }
 }
 
-class ListAllChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
+class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManagedRestHandler {
     override val permittedRoles: Set<Role> = setOf(RestApiRole.ADMIN)
     override val route = "rooms/all"
 
@@ -118,19 +151,19 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestH
         path = "/api/rooms/all",
         tags = ["Admin"],
         responses = [
-            OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
+            OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doGet(ctx: Context): ChatRoomList {
+    override fun doGet(ctx: Context): ChatRoomAdminList {
         AccessManager.updateLastAccess(ctx.req.session.id)
-        return ChatRoomList(
-            ChatRoomManager.listAll().map { ChatRoomInfo(it) }
+        return ChatRoomAdminList(
+            ChatRoomManager.listAll().map { ChatRoomAdminInfo(it) }
         )
     }
 }
 
-class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
+class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManagedRestHandler {
     override val permittedRoles: Set<Role> = setOf(RestApiRole.ADMIN)
     override val route = "rooms/active"
 
@@ -139,14 +172,14 @@ class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManage
         path = "/api/rooms/active",
         tags = ["Admin"],
         responses = [
-            OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
+            OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doGet(ctx: Context): ChatRoomList {
+    override fun doGet(ctx: Context): ChatRoomAdminList {
         AccessManager.updateLastAccess(ctx.req.session.id)
-        return ChatRoomList(
-            ChatRoomManager.listActive().map { ChatRoomInfo(it) }
+        return ChatRoomAdminList(
+            ChatRoomManager.listActive().map { ChatRoomAdminInfo(it) }
         )
     }
 }
@@ -158,7 +191,7 @@ data class ChatRoomState(
 ) {
     constructor(room: ChatRoom, since: Long) : this(
         ChatRoomInfo(room),
-        ChatMessage.toRestMessages(room.getMessagesSince(since), room.sessions),
+        ChatMessage.toRestMessages(room.getMessagesSince(since)),
         room.getAllReactions()
     )
 }

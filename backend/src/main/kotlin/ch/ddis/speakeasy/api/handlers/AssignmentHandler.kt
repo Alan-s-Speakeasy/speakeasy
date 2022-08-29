@@ -87,7 +87,7 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
         }
 
-        if (newAssignment.humans.isEmpty() || newAssignment.bots.isEmpty()) {
+        if (newAssignment.humans.isEmpty() || (newAssignment.bots.isEmpty() && newAssignment.admins.isEmpty())) {
             throw ErrorStatusException(404, "A number of humans and bots need to be selected.", ctx)
         }
         if (newAssignment.prompts.isEmpty()) {

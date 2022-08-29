@@ -18,9 +18,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
               @Inject(AdminService) private adminService: AdminService) { }
 
   private allChatRoomsSubscription!: Subscription;
-  allUserDetails: FrontendUserDetail[] = []
-
-  sessionToUserMap = new Map<string, FrontendUserDetail>()
 
   activateChatroomDetails: FrontendChatroomDetail[] = []
   allChatroomDetails: FrontendChatroomDetail[] = []
@@ -29,12 +26,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     this.titleService.setTitle("Chatroom Details")
 
     this.allChatRoomsSubscription = interval(1000).subscribe(() => {
-      this.adminService.getApiUserSessions().subscribe((usersessions) => {
-        this.allUserDetails = []
-        usersessions.forEach(usersession => {
-          this.pushDetail(this.allUserDetails, usersession)
-        })
-      });
 
       this.adminService.getApiRoomsActive().subscribe((activechatrooms)=>{
         this.activateChatroomDetails = []
@@ -62,7 +53,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
     let users :string[] = []
-    chatRoom.users.forEach(u => users.push(u.username))
+    chatRoom.users.forEach(u => !users.includes(u.username) ? users.push(u.username) : null)
 
     let aliases :string[] = []
     chatRoom.users.forEach(u => aliases.push(u.alias))
@@ -81,41 +72,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         sessions: sessions,
       }
     )
-  }
-
-  pushDetail(details: FrontendUserDetail[], usersession: UserSessionDetails): void {
-    let userExists = details.find(u => u.userID == usersession.userDetails.id)
-
-    if (userExists) {
-      userExists.sessionId.push(usersession.sessionId);
-      userExists.startTime.push(usersession.startTime);
-      userExists.sessionToken.push(usersession.sessionToken);
-      this.sessionToUserMap.set(usersession.sessionId, userExists)
-    }
-    else {
-      let detail = {
-          userID: usersession.userDetails.id,
-          username: usersession.userDetails.username,
-          role: usersession.userDetails.role,
-          startTime: [usersession.startTime],
-          userSessionAlias: usersession.userSessionAlias,
-          sessionId: [usersession.sessionId],
-          sessionToken: [usersession.sessionToken],
-        }
-      details.push(detail)
-      this.sessionToUserMap.set(usersession.sessionId, detail)
-    }
-  }
-
-  getUsers(sessions: string[]): string[] {
-    let res = new Set<string>()
-    sessions.forEach(s => {
-      let userDetails = this.sessionToUserMap.get(s)
-      if (userDetails) {
-        res.add(userDetails.username + " (" + userDetails.userSessionAlias + ", " + userDetails.role + ")")
-      }
-    })
-    return Array.from(res)
   }
 
   home(): void {

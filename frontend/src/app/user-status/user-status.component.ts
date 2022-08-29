@@ -33,8 +33,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   adminDetails: FrontendUserDetail[] = []
   botDetails: FrontendUserDetail[] = []
 
-  sessionToUserMap = new Map<string, FrontendUserDetail>()
-
   humanList: FrontendUser[] = []
   adminList: FrontendUser[] = []
   botList: FrontendUser[] = []
@@ -121,7 +119,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
     let users: string[] = []
-    chatRoom.users.forEach(u => users.push(u.username))
+    chatRoom.users.forEach(u => !users.includes(u.username) ? users.push(u.username) : null)
 
     let aliases :string[] = []
     chatRoom.users.forEach(u => aliases.push(u.alias))
@@ -145,13 +143,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   pushDetail(details: FrontendUserDetail[], usersession: UserSessionDetails): void {
     let userExists = details.find(u => u.userID == usersession.userDetails.id)
 
-    if (userExists) {
-      userExists.sessionId.push(usersession.sessionId);
-      userExists.startTime.push(usersession.startTime);
-      userExists.sessionToken.push(usersession.sessionToken);
-      this.sessionToUserMap.set(usersession.sessionId, userExists)
-    }
-    else {
+    if (!userExists) {
       let detail = {
         userID: usersession.userDetails.id,
         username: usersession.userDetails.username,
@@ -162,7 +154,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         sessionToken: [usersession.sessionToken],
       }
       details.push(detail)
-      this.sessionToUserMap.set(usersession.sessionId, detail)
     }
   }
 
@@ -188,14 +179,11 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     {name: "Admins", table: "info", list: this.adminList},
   ]
 
-  getPartners(sessions: string[], exclude: string[]): string[] {
+  getPartners(usernames: string[], exclude: string): string[] {
     let res = new Set<string>()
-    sessions.forEach(s => {
-      if (!exclude.includes(s)) {
-        let userDetails = this.sessionToUserMap.get(s)
-        if (userDetails) {
-          res.add(userDetails.username + " (" + userDetails.userSessionAlias + ", " + userDetails.role + ")")
-        }
+    usernames.forEach(u => {
+      if (!exclude.includes(u)) {
+        res.add(u)
       }
     })
     return Array.from(res)

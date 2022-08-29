@@ -52,10 +52,10 @@
             <tbody *ngFor="let chatroomDetail of sortByTime(allChatroomDetails)">
             <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId[0])">
               <td>{{chatroomDetail.roomID}}</td>
-              <td><span *ngFor="let user of getPartners(chatroomDetail.sessions, frontendUserDetail.sessionId)">{{user}}<br> </span></td>
+              <td><span *ngFor="let user of getPartners(chatroomDetail.users, frontendUserDetail.username)">{{user}}<br> </span></td>
               <td>{{readableTime(chatroomDetail.remainingTime)}}</td>
               <td>
-                <button type="button" class="btn btn-secondary float-end"
+                <button type="button" class="btn btn-secondary"
                         (click)="watch(frontendUserDetail, chatroomDetail)">Watch
                 </button>
               </td>

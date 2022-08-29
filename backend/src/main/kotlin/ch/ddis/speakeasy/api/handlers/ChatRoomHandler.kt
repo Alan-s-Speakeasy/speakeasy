@@ -203,7 +203,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
     @OpenApi(
         summary = "Get state and all messages for a chat room since a specified time",
         path = "/api/room/:roomId/:since",
-        tags = ["Chat", "Admin"],
+        tags = ["Chat"],
         pathParams = [
             OpenApiParam("roomId", String::class, "Id of the Chatroom"),
             OpenApiParam("since", Long::class, "Timestamp for new messages"),

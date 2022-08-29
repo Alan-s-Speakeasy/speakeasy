@@ -104,8 +104,13 @@ object RestApi {
                             "/api/rooms/active",
                             "/api/rooms/assessed",
                             "/api/rooms/request",
+                            "/api/feedback",
                             "/api/feedback/*",
-                            "/api/feedbackhistory/*"
+                            "/api/feedbackaverage",
+                            "/api/feedbackhistory",
+                            "/api/feedbackhistory/*",
+                            "/api/assignment",
+                            "/api/assignment/*",
                         ).forEach {
                             ignorePath(it)
                         }

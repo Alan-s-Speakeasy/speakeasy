@@ -5,10 +5,7 @@ import ch.ddis.speakeasy.cli.commands.AssignmentCommand
 import ch.ddis.speakeasy.cli.commands.ChatCommand
 import ch.ddis.speakeasy.cli.commands.EvaluationCommand
 import ch.ddis.speakeasy.cli.commands.UserCommand
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.NoOpCliktCommand
-import com.github.ajalt.clikt.core.context
-import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.output.CliktHelpFormatter
 import com.github.ajalt.clikt.output.HelpFormatter
 import org.jline.builtins.Completers
@@ -79,7 +76,7 @@ object Cli {
                 val line = lineReader.readLine(PROMPT).trim()
                 val lower = line.lowercase()
                 if (lower == "exit" || lower == "quit") {
-                    break
+                    exitProcess(0)
                 }
                 if (lower == "help") {
                     println(clikt.getFormattedHelp())

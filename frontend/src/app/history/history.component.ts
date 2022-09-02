@@ -103,7 +103,7 @@ export class HistoryComponent implements OnInit {
     let paneLog: PaneLog = {
       roomID: room.uid,
       session: this.sessionId,
-      ordinals: [],
+      ordinals: 0,
       messageLog: {},
       ratingOpen: true,
       ratings: {},

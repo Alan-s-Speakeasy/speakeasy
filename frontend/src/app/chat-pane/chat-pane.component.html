@@ -15,7 +15,7 @@
 
     <div class="chat-history" style="overflow-y: scroll; height: 500px" #scroll>
 
-      <ul class="m-b-0" *ngFor="let ordinal of paneLog.ordinals">
+      <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
 
         <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage">
           <div class="message-data">
@@ -57,7 +57,7 @@
     <div *ngIf="!paneLog.spectate && !paneLog.ratingOpen">
       <div class="chat-message clearfix">
         <div class="input-group">
-          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." [formControl]="query">
+          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." maxlength="1000" [formControl]="query">
           <div class="input-group-append">
             <button (click)="poseQuery()" class="btn btn-outline-primary" type="button">Send</button>
           </div>

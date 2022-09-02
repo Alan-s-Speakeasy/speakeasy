@@ -85,7 +85,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     let paneLog: PaneLog = {
       roomID: room.uid,
       session: this.sessionId,
-      ordinals: [],
+      ordinals: 0,
       messageLog: {},
       ratingOpen: false,
       ratings: {},

@@ -49,7 +49,7 @@ export class ChatPaneComponent implements OnInit {
           this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
         }
         this.num_to_ask = this.numQueries
-        this.num_messages = this.paneLog.ordinals.length
+        this.num_messages = this.paneLog.ordinals
 
         response.messages.forEach(api_message => {
           let myMessage = this.isMyMessage(response.info.users, api_message.session, this.paneLog.myAlias)
@@ -66,7 +66,7 @@ export class ChatPaneComponent implements OnInit {
             time: api_message.timeStamp,
             type: ""
           };
-          this.paneLog.ordinals.push(message.ordinal)
+          this.paneLog.ordinals = message.ordinal + 1
           this.paneLog.messageLog[message.ordinal] = message
         })
 
@@ -74,7 +74,7 @@ export class ChatPaneComponent implements OnInit {
           this.paneLog.messageLog[reaction.messageOrdinal].type = reaction.type
         })
 
-        if (this.num_messages != this.paneLog.ordinals.length) {
+        if (this.num_messages != this.paneLog.ordinals) {
           this.paneLogScroll = true
         }
 
@@ -155,6 +155,10 @@ export class ChatPaneComponent implements OnInit {
         }
       );
     }
+  }
+
+  range(i: number) {
+    return new Array(i);
   }
 
   ngOnDestroy(): void {

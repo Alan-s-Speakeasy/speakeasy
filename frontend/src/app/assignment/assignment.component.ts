@@ -160,17 +160,27 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   switchAll(type: string, event: any): void {
     if (type == "human") {
       this.isHumanSelected.forEach((v, k) => {
+        let current = this.isHumanSelected.get(k)
         this.isHumanSelected.set(k, event.checked)
-        return
+
+        // Prevent an admin being selected as both bot and human
+        if (!current && this.admins.includes(k)) {
+          this.isAdminSelected.set(k, false)
+        }
       })
     } else if (type == "bot") {
       this.isBotSelected.forEach((v, k) => {
         this.isBotSelected.set(k, event.checked)
-        return
       })
     } else if (type == "admin") {
       this.isAdminSelected.forEach((v, k) => {
+        let current = this.isAdminSelected.get(k)
         this.isAdminSelected.set(k, event.checked)
+
+        // Prevent an admin being selected as both bot and human
+        if (!current) {
+          this.isHumanSelected.set(k, false)
+        }
       })
     }
   }
@@ -216,7 +226,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   addPrompts(): void {
     let fieldContent: string = this.promptForm.value
     fieldContent.split("\n").forEach(prompt => {
-      if (prompt != "") {
+      if (prompt.trim()) {
         this.prompts.push(prompt)
       }
     })

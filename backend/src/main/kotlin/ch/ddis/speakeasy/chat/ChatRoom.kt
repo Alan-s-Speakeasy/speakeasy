@@ -69,7 +69,6 @@ open class ChatRoom(
     }
 
     open fun addAssessor(session: UserSession): Unit = this.lock.write {
-        require(this.active) { "Chatroom ${this.uid.string} is not active" }
         this.assessedBy.add(session.user.id)
         return@write
     }

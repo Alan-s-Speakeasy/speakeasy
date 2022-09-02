@@ -25,7 +25,7 @@
               </div>
 
               <div *ngIf="request.options.length === 0">
-                <input type="text" class="form-control" placeholder="..." name="item.name" [(ngModel)]="paneLog.ratings[request.id]">
+                <input type="text" class="form-control" placeholder="..." name="item.name" maxlength="1000" [(ngModel)]="paneLog.ratings[request.id]">
               </div>
             </div>
           </form>
@@ -34,7 +34,7 @@
       </div>
       <div class="chat-message clearfix">
         <div class="input-group-append text-center">
-          <button (click)="submit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
+          <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
         </div>
       </div>
     </div>

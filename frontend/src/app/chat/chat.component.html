@@ -22,10 +22,10 @@
   <div class="row p-2" style="overflow: scroll">
     <div class="row-fluid">
     <div *ngFor="let paneLog of paneLogs, let i = index" style="display: inline">
-      <div class="col-12 col-md-6 col-xl-4 p-2" style="margin-right: 5px">
+      <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" style="margin-right: 5px">
         <app-chat-pane [numQueries]="numQueries" [paneLog]="paneLogs[i]" id="chat{{i}}"></app-chat-pane>
       </div>
-      <div class="col-12 col-md-6 col-xl-4 p-2" *ngIf="paneLogs[i].ratingOpen" style="margin-right: 10px">
+      <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" *ngIf="paneLogs[i].ratingOpen" style="margin-right: 10px">
         <app-rating-pane (removeRoom)="removeRoom(paneLogs[i].roomID)" [showHistory]="false" [paneLog]="paneLogs[i]" id="rating{{i}}"></app-rating-pane>
       </div>
     </div>
@@ -35,7 +35,7 @@
   <div class="row p-2" style="margin-top: 10px">
     <div class="col-12 col-md-7 p-2" *ngIf="paneLogs.length > 0">
       <div class="input-group">
-        <input (keyup.enter)="askALl()" type="text" class="form-control" placeholder="Send questions to all chat rooms..." [formControl]="queryAll">
+        <input (keyup.enter)="askALl()" type="text" class="form-control" placeholder="Send questions to all chat rooms..." maxlength="1000" [formControl]="queryAll">
         <div class="input-group-append">
           <button (click)="askALl()" class="btn btn-outline-primary" type="button">Send</button>
         </div>
@@ -44,7 +44,7 @@
 
     <div class="col-12 col-md-5 p-2">
       <div class="input-group">
-        <input (keyup.enter)="requestChatRoom()" type="text" class="form-control" placeholder="request chat with ..." [formControl]="uname">
+        <input (keyup.enter)="requestChatRoom()" type="text" class="form-control" placeholder="request chat with ..." maxlength="100" [formControl]="uname">
         <div class="input-group-append">
           <button (click)="requestChatRoom()" class="btn btn-outline-success" type="button">Request</button>
         </div>

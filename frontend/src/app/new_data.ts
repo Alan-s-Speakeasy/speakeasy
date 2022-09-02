@@ -16,7 +16,7 @@ export interface MessageLog {
 export interface PaneLog {
   roomID: string,  // id of the chatroom;
   session: string,  // session token of the current user;
-  ordinals: number[],  // ordinal list
+  ordinals: number,  // number of messages
   messageLog: MessageLog,  // all messages of the chatroom;
   ratingOpen: boolean,  // true: open for rating;
   ratings: Ratings, // ratings of this chatroom

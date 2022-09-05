@@ -12,23 +12,21 @@ import java.util.concurrent.locks.StampedLock
 
 class LoggingChatRoom(
     uid: UID = UID(),
-    sessions: MutableSet<UserSession>,
-    userIds: MutableSet<UserId>,
+    users: Map<UserId, String>,
     startTime: Long = System.currentTimeMillis(),
     basePath: File,
     endTime: Long? = null,
-    prompt: String = "",
+    prompt: String,
     messages: MutableList<ChatMessage> = mutableListOf(),
     reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
     assessedBy: MutableList<UserId> = mutableListOf()
-) : ChatRoom(uid, sessions, userIds, startTime, messages, reactions, assessedBy) {
+) : ChatRoom(uid, users, startTime, prompt, messages, reactions, assessedBy) {
 
     init {
         if (!basePath.isDirectory) {
             basePath.mkdirs()
         }
         this.endTime = endTime
-        this.prompt = prompt
     }
 
     private val objectMapper = jacksonObjectMapper()
@@ -48,25 +46,9 @@ class LoggingChatRoom(
             writer.println(this.startTime.toString())
             writer.println(this.endTime.toString())
             writer.println(this.prompt)
-            writer.println(objectMapper.writeValueAsString(this.sessions.map { it.user.id }.toSet()))
-            writer.println(objectMapper.writeValueAsString(this.sessions))
+            writer.println(objectMapper.writeValueAsString(this.users))
             writer.println()
             writer.flush()
-        }
-    }
-
-    override fun joinOrLeave() {
-        val exception = this.writerLock.write {
-            try {
-                writer.println(objectMapper.writeValueAsString(this.sessions))
-                writer.flush()
-                null
-            } catch (e: IllegalArgumentException) {
-                e
-            }
-        }
-        if (exception != null) {
-            throw exception
         }
     }
 

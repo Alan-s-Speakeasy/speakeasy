@@ -1,9 +1,9 @@
 import {Component, Inject, OnDestroy, OnInit} from '@angular/core';
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
-import {FrontendChatroomDetail, FrontendUserDetail} from "../new_data";
+import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
-import {AdminService, ChatRoomAdminInfo, UserSessionDetails} from "../../../openapi";
+import {AdminService, ChatRoomAdminInfo, ChatRoomAdminInfoUsers} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 
 @Component({
@@ -52,24 +52,16 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let users :string[] = []
-    chatRoom.users.forEach(u => !users.includes(u.username) ? users.push(u.username) : null)
-
-    let aliases :string[] = []
-    chatRoom.users.forEach(u => aliases.push(u.alias))
-
-    let sessions: string[] = []
-    chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
+    let userInfo: ChatRoomAdminInfoUsers[] = []
+    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     chatRoomDetails.push(
       {
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
-        startTime: chatRoom.startTime!,
+        startTime: chatRoom.startTime,
         remainingTime: chatRoom.remainingTime,
-        users: users,
-        aliases: aliases,
-        sessions: sessions,
+        userInfo: userInfo
       }
     )
   }
@@ -79,13 +71,13 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {
+    let user1 = chatroomDetail.userInfo[0]
+    let user2 = chatroomDetail.userInfo[1]
     this.router.navigateByUrl('/spectate', { state: {
       roomID: chatroomDetail.roomID,
-      username: chatroomDetail.users[0],
-      userAlias: chatroomDetail.aliases[0],
-      partnerAlias: chatroomDetail.users[1],
-      userSession: chatroomDetail.sessions[0],
-      users: chatroomDetail.users,
+      username: user1.username,
+      userAlias: user1.alias,
+      partnerAlias: user2.username,
       backUrl: "chatroomStatus"
     } } ).then()
   }

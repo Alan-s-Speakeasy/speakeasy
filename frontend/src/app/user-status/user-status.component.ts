@@ -3,7 +3,14 @@ import {FrontendUserDetail, FrontendUser, FrontendChatroomDetail} from "../new_d
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
-import {AddUserRequest, AdminService, ChatRoomAdminInfo, UserDetails, UserSessionDetails} from "../../../openapi";
+import {
+  AddUserRequest,
+  AdminService,
+  ChatRoomAdminInfo,
+  ChatRoomAdminInfoUsers,
+  UserDetails,
+  UserSessionDetails
+} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
@@ -118,14 +125,8 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let users: string[] = []
-    chatRoom.users.forEach(u => !users.includes(u.username) ? users.push(u.username) : null)
-
-    let aliases :string[] = []
-    chatRoom.users.forEach(u => aliases.push(u.alias))
-
-    let sessions: string[] = []
-    chatRoom.users.forEach(u => {u.sessions.forEach(s => sessions.push(s))})
+    let userInfo: ChatRoomAdminInfoUsers[] = []
+    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     chatRoomDetails.push(
       {
@@ -133,9 +134,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        users: users,
-        aliases: aliases,
-        sessions: sessions
+        userInfo: userInfo
       }
     )
   }
@@ -149,7 +148,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         username: usersession.userDetails.username,
         role: usersession.userDetails.role,
         startTime: [usersession.startTime],
-        userSessionAlias: usersession.userSessionAlias,
         sessionId: [usersession.sessionId],
         sessionToken: [usersession.sessionToken],
       }
@@ -179,11 +177,11 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     {name: "Admins", table: "info", list: this.adminList},
   ]
 
-  getPartners(usernames: string[], exclude: string): string[] {
+  getPartners(userInfo: ChatRoomAdminInfoUsers[], exclude: string): string[] {
     let res = new Set<string>()
-    usernames.forEach(u => {
-      if (!exclude.includes(u)) {
-        res.add(u)
+    userInfo.forEach(u => {
+      if (!exclude.includes(u.username)) {
+        res.add(u.username)
       }
     })
     return Array.from(res)
@@ -193,22 +191,30 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     return chatrooms.sort((c1, c2) => c2.remainingTime - c1.remainingTime)
   }
 
+  isRelevantRoom(chatroomDetail: FrontendChatroomDetail, username: string): boolean {
+    return chatroomDetail.userInfo.find(u => u.username == username) != null
+  }
+
   home(): void {
     this.router.navigateByUrl('/panel').then()
   }
 
   watch(frontendUserDetail: FrontendUserDetail, chatroomDetail: FrontendChatroomDetail): void {
 
-    let partnerUsername = chatroomDetail.users.find(username => username != frontendUserDetail.username)
+    let user = chatroomDetail.userInfo.find(u => u.username == frontendUserDetail.username)
+    let partner = chatroomDetail.userInfo.find(u => u.username != frontendUserDetail.username)
 
-    this.router.navigateByUrl('/spectate', { state: {
-      roomID: chatroomDetail.roomID,
-      username: frontendUserDetail.username,
-      userAlias: frontendUserDetail.userSessionAlias,
-      partnerAlias: partnerUsername,
-      userSession: frontendUserDetail.sessionId,
-      backUrl: "userStatus"
-    } } ).then()
+    if (user && partner) {
+      this.router.navigateByUrl('/spectate', {
+        state: {
+          roomID: chatroomDetail.roomID,
+          username: user.username,
+          userAlias: user.alias,
+          partnerAlias: partner.username,
+          backUrl: "userStatus"
+        }
+      }).then()
+    }
   }
 
   openUserAddModal(content: any, role: string) {

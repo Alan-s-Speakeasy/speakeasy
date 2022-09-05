@@ -27,7 +27,6 @@ export class ChatSpectateComponent implements OnInit {
     this.roomID = history.state.roomID;
     this.paneLog = {
       roomID: history.state.roomID,
-      session: history.state.userSession,
       ordinals: 0,
       messageLog: {},
       ratingOpen: false,

@@ -31,7 +31,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   private chatroomSubscription!: Subscription;
   sessionId!: string
-  userSessionAlias!: string
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
   numQueries = 5  // the number of queries recommended to ask
@@ -41,7 +40,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.authService.userSessionDetails.subscribe((response)=>{
       if(response != null){
         this.sessionId = response.sessionId
-        this.userSessionAlias = response.userSessionAlias
       }
     });
 
@@ -55,13 +53,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.chatService.getApiRooms().subscribe(
           (response)=>{
             for (let room of response.rooms) {
-              let addRoom = false
-
-              room.users.forEach(user => {
-                if (user.alias == this.userSessionAlias) {
-                  addRoom = true
-                }
-              })
+              let addRoom = true
 
               this.paneLogs.forEach((paneLog) => {
                 if (paneLog.roomID == room.uid) {
@@ -84,21 +76,23 @@ export class ChatComponent implements OnInit, OnDestroy {
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
       roomID: room.uid,
-      session: this.sessionId,
       ordinals: 0,
       messageLog: {},
       ratingOpen: false,
       ratings: {},
-      myAlias: this.userSessionAlias,
+      myAlias: "",
       otherAlias: "",
       prompt: "",
       spectate: false
     }
 
-    room.users.forEach(user => {
-      if (user.alias != this.userSessionAlias) {
-        paneLog.otherAlias = user.alias
-      }
+    this.chatService.getApiAliasWithRoomid(room.uid).subscribe(response => {
+      paneLog.myAlias = response
+      room.userAliases.forEach(alias => {
+        if (alias != paneLog.myAlias) {
+          paneLog.otherAlias = alias
+        }
+      })
     })
 
     // fetch prompt and determine whether the ratings pane should be shown

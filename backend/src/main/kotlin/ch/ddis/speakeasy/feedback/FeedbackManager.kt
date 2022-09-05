@@ -67,7 +67,7 @@ object FeedbackManager {
 
     fun logFeedback(userSession: UserSession, roomId: UID, feedbackResponseList: FeedbackResponseList) =
         writerLock.write {
-            val partnerId = ChatRoomManager.getChatPartner(roomId, userSession) ?: UserId("undefined")
+            val partnerId = ChatRoomManager.getChatPartner(roomId, userSession.user.id) ?: UserId("undefined")
             for (response in feedbackResponseList.responses) {
                 val value = response.value.replace("\"", "\"\"")
                 sessionWriter.println("${System.currentTimeMillis()},${userSession.user.id.string},${userSession.sessionId.string},\"${roomId.string}\",${partnerId.string},${response.id},\"${value}\"")

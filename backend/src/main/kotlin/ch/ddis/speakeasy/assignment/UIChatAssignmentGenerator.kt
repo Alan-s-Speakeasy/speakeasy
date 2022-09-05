@@ -136,7 +136,7 @@ object UIChatAssignmentGenerator {
             if (AccessManager.hasUserIdActiveSessions(humanId) && AccessManager.hasUserIdActiveSessions(botId)) {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
-                val chatRoom = ChatRoomManager.create(mutableSetOf(humanId, botId),true, a.prompt, endTime)
+                val chatRoom = ChatRoomManager.create(listOf(humanId, botId),true, a.prompt, endTime)
                 chatRooms.add(chatRoom)
             }
         }

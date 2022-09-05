@@ -31,7 +31,7 @@
         <td>{{chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy'}}</td>
         <td>{{chatroomDetail.remainingTime | date: 'mm:ss'}}</td>
         <td>
-          <span *ngFor="let user of chatroomDetail.users">{{user}} <br> </span>
+          <span *ngFor="let user of chatroomDetail.userInfo">{{user.username}} <br> </span>
         </td>
         <td><button type="button" class="btn btn-secondary float-end" (click)="watch(chatroomDetail)">Watch</button></td>
       </tr>
@@ -62,7 +62,7 @@
         <td *ngIf="chatroomDetail.remainingTime > 0">Ongoing</td>
         <td *ngIf="chatroomDetail.remainingTime <= 0">Closed</td>
         <td>
-          <span *ngFor="let user of chatroomDetail.users">{{user}} <br> </span>
+          <span *ngFor="let user of chatroomDetail.userInfo">{{user.username}} <br> </span>
         </td>
         <td><button type="button" class="btn btn-secondary float-end" (click)="watch(chatroomDetail)">Watch</button></td>
       </tr>

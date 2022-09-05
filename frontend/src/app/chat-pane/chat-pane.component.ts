@@ -3,7 +3,7 @@
 import {FormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {Message, PaneLog} from "../new_data";
-import {ChatMessageReaction, ChatRoomInfoUsers, ChatService} from "../../../openapi";
+import {ChatMessageReaction, ChatService} from "../../../openapi";
 import {Component, ElementRef, Inject, Input, OnInit, ViewChild} from '@angular/core';
 import {AlertService} from "../_alert";
 
@@ -52,7 +52,7 @@ export class ChatPaneComponent implements OnInit {
         this.num_messages = this.paneLog.ordinals
 
         response.messages.forEach(api_message => {
-          let myMessage = this.isMyMessage(response.info.users, api_message.session, this.paneLog.myAlias)
+          let myMessage = api_message.authorAlias == this.paneLog.myAlias
           if (myMessage) {
             if (this.num_to_ask > 0) {
               this.num_to_ask--
@@ -95,23 +95,13 @@ export class ChatPaneComponent implements OnInit {
       (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
     );
   }
-
-  isMyMessage(users: ChatRoomInfoUsers[], message_session: string, myAlias: string): boolean {
-    for (let user of users) {
-      if (user.alias == myAlias && user.sessions.includes(message_session)) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // when the user wants to start rating
+// when the user wants to start rating
   rating(): void {
-    //if (this.num_to_ask > 0) {
-    //  this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!")
-    //} else {
-    //  this.paneLog.ratingOpen = true
-    //}
+    if (this.num_to_ask > 0) {
+     this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!")
+    } else {
+     this.paneLog.ratingOpen = true
+    }
     this.paneLog.ratingOpen = true
   }
 

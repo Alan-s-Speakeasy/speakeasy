@@ -183,8 +183,8 @@ One per line..."
         </thead>
         <tbody>
           <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
-            <td class="col-2">{{room.users[0]}}</td>
-            <td class="col-2">{{room.users[1]}}</td>
+            <td class="col-2">{{room.userInfo[0].username}}</td>
+            <td class="col-2">{{room.userInfo[1].username}}</td>
             <td class="col-5">{{room.prompt}}</td>
             <td class="col-2">{{remainingTime | date: 'mm:ss'}}</td>
             <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
@@ -205,8 +205,8 @@ One per line..."
         </thead>
         <tbody>
           <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
-            <td class="col-2">{{room.users[0]}}</td>
-            <td class="col-2">{{room.users[1]}}</td>
+            <td class="col-2">{{room.userInfo[0].username}}</td>
+            <td class="col-2">{{room.userInfo[1].username}}</td>
             <td class="col-7">{{room.prompt}}</td>
             <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
           </tr>

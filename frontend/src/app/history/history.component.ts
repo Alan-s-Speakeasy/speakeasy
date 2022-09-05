@@ -35,7 +35,6 @@ export class HistoryComponent implements OnInit {
               public alertService: AlertService) { }
 
   sessionId!: string
-  userSessionAlias!: string
 
   ratingForm!: Array<FeedbackRequest>;
   averageFeedback!: FeedbackResponseAverageItem;
@@ -47,7 +46,6 @@ export class HistoryComponent implements OnInit {
     this.authService.userSessionDetails.subscribe((response)=>{
       if(response != null){
         this.sessionId = response.sessionId
-        this.userSessionAlias = response.userSessionAlias
       }
     });
 
@@ -79,13 +77,11 @@ export class HistoryComponent implements OnInit {
       (response)=>{
         for (let room of response.rooms) {
 
-          let addRoom = false
-          room.users.forEach(user => {
-            user.sessions.forEach(session => {
-              if (session == this.sessionId) {
-                addRoom = true
-              }
-            })
+          let addRoom = true
+          this.paneLogs.forEach((paneLog) => {
+            if (paneLog.roomID == room.uid) {
+              addRoom = false
+            }
           })
 
           if (addRoom) {
@@ -102,21 +98,23 @@ export class HistoryComponent implements OnInit {
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
       roomID: room.uid,
-      session: this.sessionId,
       ordinals: 0,
       messageLog: {},
       ratingOpen: true,
       ratings: {},
-      myAlias: this.userSessionAlias,
+      myAlias: "",
       otherAlias: "",
       prompt: "",
       spectate: false
     }
 
-    room.users.forEach(user => {
-      if (user.alias != this.userSessionAlias) {
-        paneLog.otherAlias = user.alias
-      }
+    this.chatService.getApiAliasWithRoomid(room.uid).subscribe(response => {
+      paneLog.myAlias = response
+      room.userAliases.forEach(alias => {
+        if (alias != paneLog.myAlias) {
+          paneLog.otherAlias = alias
+        }
+      })
     })
 
     this.paneLogs.push(paneLog)

@@ -9,22 +9,19 @@ data class UserSession(
     val user: User,
     val sessionToken: String,
     val sessionId: SessionId = UID(),
-    val startTime: Long = System.currentTimeMillis(),
-    val userSessionAlias: String = SessionAliasGenerator.getRandomName()
+    val startTime: Long = System.currentTimeMillis()
 )
 
 data class UserSessionDetails(
     val userDetails: UserDetails,
     val sessionToken: String,
     val sessionId: String,
-    val startTime: Long,
-    val userSessionAlias: String
+    val startTime: Long
 ) {
     constructor(session: UserSession) : this(
         UserDetails.of(session.user),
         session.sessionToken,
         session.sessionId.string,
-        session.startTime,
-        session.userSessionAlias
+        session.startTime
     )
 }

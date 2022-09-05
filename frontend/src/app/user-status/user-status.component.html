@@ -17,7 +17,6 @@
       <thead>
       <tr class="table-{{element.table}}">
         <th scope="col">UserName</th>
-        <th scope="col">Alias</th>
         <th scope="col">UserID</th>
         <th scope="col">Sessions (ID / StartTime)</th>
       </tr>
@@ -25,7 +24,6 @@
       <tbody *ngFor="let frontendUserDetail of element.details; let i = index">
       <tr class="align-middle" (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = element.name">
         <td>{{frontendUserDetail.username}}</td>
-        <td>{{frontendUserDetail.userSessionAlias}}</td>
         <td>{{frontendUserDetail.userID}}</td>
         <td>
           <table class="table table-bordered m-0">
@@ -50,9 +48,9 @@
             </tr>
             </thead>
             <tbody *ngFor="let chatroomDetail of sortByTime(allChatroomDetails)">
-            <tr *ngIf="chatroomDetail.sessions.includes(frontendUserDetail.sessionId[0])">
+            <tr *ngIf="isRelevantRoom(chatroomDetail, frontendUserDetail.username)">
               <td>{{chatroomDetail.roomID}}</td>
-              <td><span *ngFor="let user of getPartners(chatroomDetail.users, frontendUserDetail.username)">{{user}}<br> </span></td>
+              <td><span *ngFor="let user of getPartners(chatroomDetail.userInfo, frontendUserDetail.username)">{{user}}<br> </span></td>
               <td>{{readableTime(chatroomDetail.remainingTime)}}</td>
               <td>
                 <button type="button" class="btn btn-secondary"

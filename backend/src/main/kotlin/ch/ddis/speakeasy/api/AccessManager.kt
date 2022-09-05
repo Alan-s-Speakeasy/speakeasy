@@ -57,7 +57,7 @@ object AccessManager {
     private val writerLock = StampedLock()
 
     private fun logSession(userSession: UserSession) = writerLock.write {
-        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken},${userSession.user.id.string},${userSession.user.name},${userSession.userSessionAlias}")
+        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken},${userSession.user.id.string},${userSession.user.name}")
         sessionWriter.flush()
     }
 
@@ -74,17 +74,14 @@ object AccessManager {
         }
 
         val sessionId: SessionId
-        val alias: String
 
         if (userIdUserSessionMap.containsKey(user.id) && userIdUserSessionMap[user.id]!!.size > 0) {
             val userSessions = userIdUserSessionMap[user.id]!!
             val sessions = userSessions.filter { it.sessionToken == sessionToken }
-            if (sessions.size == 1) {
-                sessionId = sessions[0].sessionId
-                alias = sessions[0].userSessionAlias
+            sessionId = if (sessions.size == 1) {
+                sessions[0].sessionId
             } else {
-                sessionId = UID()
-                alias = SessionAliasGenerator.getRandomName()
+                UID()
             }
 
             if (user.role == UserRole.BOT) { //in case of login, invalidate all other session of the same bot
@@ -93,12 +90,10 @@ object AccessManager {
 
         } else {
             sessionId = UID()
-            alias = SessionAliasGenerator.getRandomName()
         }
 
-        val session = UserSession(user, sessionToken, sessionId, userSessionAlias = alias)
+        val session = UserSession(user, sessionToken, sessionId)
         addSessionToMaps(session, user)
-        ChatRoomManager.join(session)
 
         logSession(session)
 

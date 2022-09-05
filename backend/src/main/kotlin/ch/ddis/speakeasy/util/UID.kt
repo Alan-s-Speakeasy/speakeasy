@@ -8,4 +8,8 @@ data class UID(val string: String) {
     constructor() : this(UUID.randomUUID().toString())
 
     constructor(uuid: UUID) : this(uuid.toString())
+
+    override fun toString(): String {
+        return this.string
+    }
 }

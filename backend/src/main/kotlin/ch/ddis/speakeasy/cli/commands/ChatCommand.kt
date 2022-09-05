@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.cli.commands
 
 import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.UID
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -45,11 +46,12 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                     body {
 
                         ChatRoomManager.listAll().forEach {
-                            val sessions = it.sessions.toList()
+                            val usersIds = it.users.keys
+                            val usernames = usersIds.map { id -> UserManager.getUsernameFromId(id) }
                             row(
                                 it.uid.string,
-                                sessions[0].user.name,
-                                sessions[1].user.name,
+                                usernames.getOrNull(0) ?: " n/a ",
+                                usernames.getOrNull(0) ?: " n/a ",
                                 it.active,
                                 formatTimeStamp(it.startTime),
                                 if (it.endTime != null) formatTimeStamp(it.endTime!!) else " n/a "
@@ -77,11 +79,12 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                     body {
 
                         ChatRoomManager.listActive().forEach {
-                            val sessions = it.sessions.toList()
+                            val usersIds = it.users.keys
+                            val usernames = usersIds.map { id -> UserManager.getUsernameFromId(id) }
                             row(
                                 it.uid.string,
-                                sessions.getOrNull(0)?.user?.name ?: " n/a ",
-                                sessions.getOrNull(1)?.user?.name ?: " n/a ",
+                                usernames.getOrNull(0) ?: " n/a ",
+                                usernames.getOrNull(0) ?: " n/a ",
                                 formatTimeStamp(it.startTime)
                             )
                         }
@@ -112,7 +115,8 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
             }
 
             room.getAllMessages().forEach { message ->
-                val username = room.sessions.find { it.sessionId == message.sessionId }?.user?.name ?: "unknown"
+                val userId = room.aliasToUserId[message.authorAlias]
+                val username = UserManager.getUsernameFromId(userId!!) ?: "unknown"
                 val reaction = room.getAllReactions().find { it.messageOrdinal == message.ordinal }
                 println("${username}@${formatTimeStamp(message.time)}: ${message.message}")
                 if (reaction != null) {

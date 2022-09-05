@@ -3,7 +3,6 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
@@ -12,53 +11,20 @@ import io.javalin.core.security.Role
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
-data class ChatRoomUserInfo(val alias: String, val sessions: List<String>)
-data class ChatRoomUserAdminInfo(val alias: String, val username: String, val sessions: List<String>)
-
-private fun mapChatRoomToSessions(room: ChatRoom): List<ChatRoomUserInfo> {
-    val aliasMap = mutableMapOf<String, UserId>() // Alias --> UserId
-    val sessionMap = mutableMapOf<UserId, MutableList<String>>() // UserId --> Sessions
-    room.sessions.forEach {
-        aliasMap[it.userSessionAlias] = it.user.id
-        if (sessionMap.containsKey(it.user.id)) {
-            sessionMap[it.user.id]!!.add(it.sessionId.string)
-        } else {
-            sessionMap[it.user.id] = mutableListOf(it.sessionId.string)
-        }
-    }
-
-    return aliasMap.map { ChatRoomUserInfo(it.key, sessionMap[it.value]!!) }
-}
-
-private fun mapChatRoomToSessionsWithUsername(room: ChatRoom): List<ChatRoomUserAdminInfo> {
-    val aliasMap = mutableMapOf<String, UserId>() // Alias --> UserId
-    val usernameMap = mutableMapOf<UserId, String>() // UserId --> Username
-    val sessionMap = mutableMapOf<UserId, MutableList<String>>() // UserId --> Sessions
-    room.sessions.forEach {
-        aliasMap[it.userSessionAlias] = it.user.id
-        usernameMap[it.user.id] = it.user.name
-        if (sessionMap.containsKey(it.user.id)) {
-            sessionMap[it.user.id]!!.add(it.sessionId.string)
-        } else {
-            sessionMap[it.user.id] = mutableListOf(it.sessionId.string)
-        }
-    }
-
-    return aliasMap.map { ChatRoomUserAdminInfo(it.key, usernameMap[it.value]!!, sessionMap[it.value]!!) }
-}
+data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
 data class ChatRoomInfo(
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
-    val users: List<ChatRoomUserInfo>,
+    val userAliases: List<String>,
     val prompt: String
 ) {
     constructor(room: ChatRoom) : this(
         room.uid.string,
         room.startTime,
         room.remainingTime,
-        mapChatRoomToSessions(room),
+        room.users.values.toList(),
         room.prompt
     )
 }
@@ -74,7 +40,7 @@ data class ChatRoomAdminInfo(
         room.uid.string,
         room.startTime,
         room.remainingTime,
-        mapChatRoomToSessionsWithUsername(room),
+        room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key)!!) },
         room.prompt
     )
 }
@@ -107,7 +73,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUserSession(session).map { ChatRoomInfo(it) }
+            ChatRoomManager.getByUser(session.user.id).map { ChatRoomInfo(it) }
         )
     }
 }
@@ -234,7 +200,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (session.user.role != UserRole.ADMIN) {
-            if (room.sessions.none { it.sessionToken == session.sessionToken }) {
+            if (!room.users.containsKey(session.user.id)) {
                 throw ErrorStatusException(401, "Unauthorized", ctx)
             }
         }
@@ -279,22 +245,18 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (room.sessions.none { it.sessionToken == session.sessionToken }) {
-            throw ErrorStatusException(401, "Unauthorized", ctx)
-        }
+        val userAlias = room.users[session.user.id] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
 
         if (!room.active) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
-
         val message = ctx.body()
-
         if (message.isBlank()) {
-            throw ErrorStatusException(400, "message cannot be empty", ctx)
+            throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
 
-        room.addMessage(ChatMessage(message, session.sessionId, room.nextMessageOrdinal))
+        room.addMessage(ChatMessage(message, userAlias, room.nextMessageOrdinal))
 
         return SuccessStatus("Message received")
 
@@ -336,7 +298,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (room.sessions.none { it.sessionToken == session.sessionToken }) {
+        if (!room.users.containsKey(session.user.id)) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 
@@ -404,24 +366,20 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         }
 
         ChatRoomManager.create(
-            mutableSetOf(session.user.id, UserManager.getUserIdFromUsername(request.username)!!), true,
-            "Chatroom requested by ${session.userSessionAlias}", System.currentTimeMillis() + 10 * 1000 * 60)
+            listOf(session.user.id, UserManager.getUserIdFromUsername(request.username)!!), true,
+            null, System.currentTimeMillis() + 10 * 1000 * 60)
 
         return SuccessStatus("Chatroom created")
 
     }
 
 }
-
-data class AliasPair(val session: String, val alias: String)
-data class Aliases(val list: List<AliasPair>)
-
-class GetAliasRoomHandler : GetRestHandler<Aliases>, AccessManagedRestHandler {
+class GetAliasRoomHandler : GetRestHandler<String>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
     override val route = "alias/:roomId"
 
     @OpenApi(
-        summary = "Get alias of the other user in the chatroom",
+        summary = "Get alias of a user in a chat room",
         path = "/api/alias/:roomId",
         method = HttpMethod.GET,
         tags = ["Chat"],
@@ -432,12 +390,12 @@ class GetAliasRoomHandler : GetRestHandler<Aliases>, AccessManagedRestHandler {
             OpenApiParam("session", String::class, "Session Token")
         ],
         responses = [
-            OpenApiResponse("200", [OpenApiContent(Aliases::class)]),
+            OpenApiResponse("200", [OpenApiContent(String::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doGet(ctx: Context): Aliases {
+    override fun doGet(ctx: Context): String {
 
         val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
             401,
@@ -451,13 +409,6 @@ class GetAliasRoomHandler : GetRestHandler<Aliases>, AccessManagedRestHandler {
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (room.sessions.none { it.sessionToken == session.sessionToken }) {
-            throw ErrorStatusException(401, "Unauthorized", ctx)
-        }
-
-        return Aliases(
-            room.sessions.map { AliasPair(it.sessionId.string, it.userSessionAlias) }
-        )
-
+        return room.users[session.user.id] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
     }
 }

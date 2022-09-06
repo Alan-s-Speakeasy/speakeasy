@@ -32,6 +32,7 @@ object AccessManager {
         ),
         true
     )
+    private val cleanupTimer = Timer()
 
     fun manage(handler: Handler, ctx: Context, permittedRoles: Set<Role>) {
         when {
@@ -49,9 +50,13 @@ object AccessManager {
         }
 
         val expiredSessionCleanupTimer = 10
-        Timer().scheduleAtFixedRate(timerTask {
+        cleanupTimer.scheduleAtFixedRate(timerTask {
             clearExpiredSessions()
         }, expiredSessionCleanupTimer * 1000L, expiredSessionCleanupTimer * 1000L)
+    }
+
+    fun stop() {
+        cleanupTimer.cancel()
     }
 
     private val writerLock = StampedLock()

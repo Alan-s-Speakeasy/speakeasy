@@ -30,6 +30,7 @@ object Main {
 
         Cli.loop()
 
+        AccessManager.stop()
         RestApi.stop()
         UserManager.store()
     }

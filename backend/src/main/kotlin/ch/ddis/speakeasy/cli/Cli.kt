@@ -76,7 +76,7 @@ object Cli {
                 val line = lineReader.readLine(PROMPT).trim()
                 val lower = line.lowercase()
                 if (lower == "exit" || lower == "quit") {
-                    exitProcess(0)
+                    break
                 }
                 if (lower == "help") {
                     println(clikt.getFormattedHelp())

@@ -27,7 +27,8 @@ import {AlertService} from "./_alert";
 export class CommonService {
   options = {
     autoClose: true,
-    keepAfterRouteChange: true
+    keepAfterRouteChange: true,
+    timeout: 30000
   };
   //userSession!: UserSessionDetails;
   chatRooms!: ChatRoomList;

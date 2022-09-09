@@ -7,10 +7,10 @@
     </div>
     <div class="col-10 col-lg-7">
       <div class="btn-group" role="group">
-        <span *ngFor="let paneLog of paneLogs, let i = index">
-          <button (click)="scrollTo('chat' + i)" type="button" class="btn btn-outline-primary" style="margin-right: 5px">Chat-{{i + 1}}</button>
-          <button (click)="scrollTo('rating' + i)" type="button" class="btn btn-outline-success" style="margin-right: 10px" *ngIf="paneLogs[i].ratingOpen">
-            Rating-{{i + 1}}</button>
+        <span *ngFor="let paneLog of paneLogs, let i = index, let n = count">
+          <button (click)="scrollTo('chat' + (n - i - 1))" type="button" class="btn btn-outline-primary" style="margin-right: 5px">Chat-{{n - i}}</button>
+          <button (click)="scrollTo('rating' + (n - i - 1))" type="button" class="btn btn-outline-success" style="margin-right: 10px" *ngIf="paneLogs[n - i - 1].ratingOpen">
+            Rating-{{n - i}}</button>
         </span>
       </div>
     </div>
@@ -21,12 +21,12 @@
 
   <div class="row p-2" style="overflow: scroll">
     <div class="row-fluid">
-    <div *ngFor="let paneLog of paneLogs, let i = index" style="display: inline">
+    <div *ngFor="let paneLog of paneLogs, let i = index, let n = count" style="display: inline">
       <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" style="margin-right: 5px">
-        <app-chat-pane [numQueries]="numQueries" [paneLog]="paneLogs[i]" id="chat{{i}}"></app-chat-pane>
+        <app-chat-pane [numQueries]="numQueries" [paneLog]="paneLogs[n - i - 1]" id="chat{{n - i - 1}}"></app-chat-pane>
       </div>
-      <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" *ngIf="paneLogs[i].ratingOpen" style="margin-right: 10px">
-        <app-rating-pane (removeRoom)="removeRoom(paneLogs[i].roomID)" [showHistory]="false" [paneLog]="paneLogs[i]" id="rating{{i}}"></app-rating-pane>
+      <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" *ngIf="paneLogs[n - i - 1].ratingOpen" style="margin-right: 10px">
+        <app-rating-pane (removeRoom)="removeRoom(paneLogs[n - i - 1].roomID)" [showHistory]="false" [paneLog]="paneLogs[n - i - 1]" id="rating{{n - i - 1}}"></app-rating-pane>
       </div>
     </div>
     </div>

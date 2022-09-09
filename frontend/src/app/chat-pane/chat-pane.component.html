@@ -2,14 +2,8 @@
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center">
-        <div *ngIf="!paneLog.ratingOpen">
-          <h5>Chat with {{paneLog.otherAlias}} (<span style="color: darkred">{{remainingTime}}</span>)</h5>
-          <p><span style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
-        </div>
-        <div *ngIf="paneLog.ratingOpen">
-          <h5>Chat with {{paneLog.otherAlias}}</h5>
-          <p *ngIf="paneLog.spectate"><span style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
-        </div>
+        <h5>Chat with {{paneLog.otherAlias}} <span *ngIf="paneLog.active" style="color: darkred">({{remainingTime}})</span></h5>
+        <p><span style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
       </div>
     </div>
 
@@ -22,26 +16,31 @@
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>
           <div class="message other-message" style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-            <div *ngIf="!paneLog.spectate && paneLog.messageLog[ordinal].type === ''">
-              <span (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-up"></i></span>
-              <span (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-down"></i></span>
-              <span (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-star"></i></span>
+
+            <div *ngIf="!paneLog.spectate">
+              <span
+                (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)"
+                class="label label-default" style="padding-left: 10px"
+                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'THUMBS_UP' ? '#3597E6' : 'gray'}"
+              >
+                <i class="fa fa-thumbs-up"></i>
+              </span>
+              <span
+                (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)"
+                class="label label-default" style="padding-left: 10px"
+                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN' ? '#E64D3D' : 'gray'}"
+              >
+                <i class="fa fa-thumbs-down"></i>
+              </span>
+              <span
+                (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)"
+                class="label label-default" style="padding-left: 10px"
+                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'STAR' ? 'gold' : 'gray'}"
+              >
+                <i class="fa fa-star"></i>
+              </span>
             </div>
-            <div *ngIf="paneLog.messageLog[ordinal].type === 'THUMBS_UP'">
-              <span (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: #3597E6; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-up"></i></span>
-              <span (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-down"></i></span>
-              <span (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-star"></i></span>
-            </div>
-            <div *ngIf="paneLog.messageLog[ordinal].type === 'THUMBS_DOWN'">
-              <span (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-up"></i></span>
-              <span (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: #E64D3D; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-down"></i></span>
-              <span (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-star"></i></span>
-            </div>
-            <div *ngIf="paneLog.messageLog[ordinal].type === 'STAR'">
-              <span (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-up"></i></span>
-              <span (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gray; cursor: pointer; padding-left: 10px"><i class="fa fa-thumbs-down"></i></span>
-              <span (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)" class="label label-default" style="color: gold; cursor: pointer; padding-left: 10px"><i class="fa fa-star"></i></span>
-            </div>
+
           </div>
         </li>
 
@@ -54,15 +53,15 @@
       </ul>
     </div>
 
-    <div *ngIf="!paneLog.spectate && !paneLog.ratingOpen">
+    <div *ngIf="!paneLog.spectate && !paneLog.history">
       <div class="chat-message clearfix">
         <div class="input-group">
-          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." maxlength="1000" [formControl]="query">
+          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." maxlength="1000" [readonly]="!paneLog.active" [formControl]="query">
           <div class="input-group-append">
-            <button (click)="poseQuery()" class="btn btn-outline-primary" type="button">Send</button>
+            <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
           </div>
           <div class="input-group-append">
-            <button (click)="rating()" class="btn btn-outline-success" type="button" style="margin-left: 10px">Assess</button>
+            <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">Assess</button>
           </div>
         </div>
       </div>

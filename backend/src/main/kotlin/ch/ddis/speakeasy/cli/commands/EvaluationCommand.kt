@@ -283,14 +283,14 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
     inner class AllRatings : CliktCommand(name = "all", help = "Lists rating averages per author or recipient") {
 
-        private val author: Boolean by option("-a", "--author").flag()
-        private val recipient: Boolean by option("-r", "--recipient").flag()
+        private val author: Boolean by option("-a", "--author", help = "Flag to list averages for all authors").flag()
+        private val recipient: Boolean by option("-r", "--recipient", help = "Flag to list averages for all recipients").flag()
         private val output: String? by option("-o", "--output")
 
         override fun run() {
 
             if ((author && recipient) || (!author && !recipient)) {
-                println("please specify either author or recipient")
+                println("Author or recipient flag required")
                 println(getFormattedHelp())
                 return
             }

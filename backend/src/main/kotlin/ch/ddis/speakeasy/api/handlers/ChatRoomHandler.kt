@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
@@ -18,13 +19,15 @@ data class ChatRoomInfo(
     val startTime: Long?,
     val remainingTime: Long,
     val userAliases: List<String>,
+    val alias: String?,
     val prompt: String
 ) {
-    constructor(room: ChatRoom) : this(
+    constructor(room: ChatRoom, userId: UserId) : this(
         room.uid.string,
         room.startTime,
         room.remainingTime,
         room.users.values.toList(),
+        room.users[userId],
         room.prompt
     )
 }
@@ -73,7 +76,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUser(session.user.id).map { ChatRoomInfo(it) }
+            ChatRoomManager.getByUser(session.user.id, session.user.role == UserRole.BOT).map { ChatRoomInfo(it, session.user.id) }
         )
     }
 }
@@ -103,7 +106,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserId(session.user.id).map { ChatRoomInfo(it) }
+            ChatRoomManager.getAssessedRoomsByUserId(session.user.id).map { ChatRoomInfo(it, session.user.id) }
         )
     }
 }
@@ -155,8 +158,8 @@ data class ChatRoomState(
     val messages: List<RestChatMessage>,
     val reactions: List<ChatMessageReaction>
 ) {
-    constructor(room: ChatRoom, since: Long) : this(
-        ChatRoomInfo(room),
+    constructor(room: ChatRoom, since: Long, userId: UserId) : this(
+        ChatRoomInfo(room, userId),
         ChatMessage.toRestMessages(room.getMessagesSince(since)),
         room.getAllReactions()
     )
@@ -205,7 +208,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
             }
         }
 
-        return ChatRoomState(room, since)
+        return ChatRoomState(room, since, session.user.id)
 
     }
 }
@@ -256,7 +259,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
 
-        room.addMessage(ChatMessage(message, userAlias, room.nextMessageOrdinal))
+        room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal))
 
         return SuccessStatus("Message received")
 

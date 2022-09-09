@@ -1,6 +1,14 @@
 package ch.ddis.speakeasy.chat
 
-data class ChatMessage(val message: String, val authorAlias: String, val ordinal: Int, val time: Long = System.currentTimeMillis()) {
+import ch.ddis.speakeasy.user.SessionId
+
+data class ChatMessage(
+    val message: String,
+    val authorAlias: String,
+    val authorSessionId: SessionId,
+    val ordinal: Int,
+    val time: Long = System.currentTimeMillis()
+) : ChatItemContainer() {
 
     companion object {
         fun toRestMessages(chatMessages: List<ChatMessage>):

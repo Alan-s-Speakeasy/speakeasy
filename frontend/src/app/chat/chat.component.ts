@@ -79,26 +79,17 @@ export class ChatComponent implements OnInit, OnDestroy {
       ordinals: 0,
       messageLog: {},
       ratingOpen: false,
+      active: true,
       ratings: {},
-      myAlias: "",
-      otherAlias: "",
+      myAlias: room.alias,
+      otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false
     }
 
-    this.chatService.getApiAliasWithRoomid(room.uid).subscribe(response => {
-      paneLog.myAlias = response
-      room.userAliases.forEach(alias => {
-        if (alias != paneLog.myAlias) {
-          paneLog.otherAlias = alias
-        }
-      })
-    })
-
     // fetch prompt and determine whether the ratings pane should be shown
     this.chatService.getApiRoomWithRoomidWithSince(paneLog.roomID, 0, undefined).subscribe(
       (response) => {
-        paneLog.prompt = response.info.prompt
         // if the chat has been finished, directly show the ratings pane
         if (response.info.remainingTime <= 0) {
           paneLog.ratingOpen = true

@@ -3,12 +3,15 @@
 
     <div class="row p-2">
       <div class="chat-header text-center">
-        <h5>Ratings for {{paneLog.otherAlias}}</h5>
+        <h5>
+          Ratings for {{paneLog.otherAlias}}
+          <span *ngIf="!paneLog.history" (click)="close()" class="label label-default" style="color: black; cursor: pointer; float: right"><i class="fa fa-close"></i></span>
+        </h5>
       </div>
     </div>
 
     <div *ngIf="!showHistory">
-      <div class="chat-history text-wrap" style="overflow: scroll; height: 500px; overflow-x:hidden;">
+      <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
         <div *ngFor="let request of ratingForm">
           <form>
             <div class="text-center">
@@ -40,7 +43,7 @@
     </div>
 
     <div *ngIf="showHistory">
-      <div class="chat-history text-wrap" style="overflow: scroll; height: 500px; overflow-x:hidden;">
+      <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
         <table class="table">
           <thead>
           <tr>

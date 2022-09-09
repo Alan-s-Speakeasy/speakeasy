@@ -952,61 +952,6 @@
         }
       }
     },
-    "/api/alias/{roomId}" : {
-      "get" : {
-        "tags" : [ "Chat" ],
-        "summary" : "Get alias of a user in a chat room",
-        "operationId" : "getApiAliasWithRoomid",
-        "parameters" : [ {
-          "name" : "roomId",
-          "in" : "path",
-          "description" : "Id of the Chatroom",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "session",
-          "in" : "query",
-          "description" : "Session Token",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/assignment" : {
       "get": {
         "tags": [ "Assignment" ],
@@ -1254,7 +1199,7 @@
         }
       },
       "ChatRoomInfo" : {
-        "required" : [ "prompt", "startTime", "remainingTime", "uid", "userAliases" ],
+        "required" : [ "prompt", "startTime", "remainingTime", "uid", "userAliases", "alias" ],
         "type" : "object",
         "properties" : {
           "uid" : {
@@ -1273,6 +1218,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "alias" : {
+            "type" : "string"
           },
           "prompt" : {
             "type" : "string"

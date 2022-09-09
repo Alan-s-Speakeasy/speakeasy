@@ -44,6 +44,7 @@ export class ChatPaneComponent implements OnInit {
   updatePaneLog(): void {
     this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, this.lastGetTime, undefined).subscribe(
       (response) => {
+        this.paneLog.prompt = response.info.prompt
         if (response.messages.length > 0) {
           // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
           this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
@@ -52,15 +53,9 @@ export class ChatPaneComponent implements OnInit {
         this.num_messages = this.paneLog.ordinals
 
         response.messages.forEach(api_message => {
-          let myMessage = api_message.authorAlias == this.paneLog.myAlias
-          if (myMessage) {
-            if (this.num_to_ask > 0) {
-              this.num_to_ask--
-            }
-          }
           let message: Message;
           message = {
-            myMessage: myMessage,
+            myMessage: api_message.authorAlias == this.paneLog.myAlias,
             ordinal: api_message.ordinal,
             message: api_message.message,
             time: api_message.timeStamp,
@@ -90,6 +85,7 @@ export class ChatPaneComponent implements OnInit {
         if (response.info.remainingTime <= 0) { //chat session complete
           this.chatMessagesSubscription.unsubscribe();
           this.paneLog.ratingOpen = true
+          this.paneLog.active = false
         }
       },
       (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
@@ -97,12 +93,18 @@ export class ChatPaneComponent implements OnInit {
   }
 // when the user wants to start rating
   rating(): void {
-    if (this.num_to_ask > 0) {
-     this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!")
-    } else {
-     this.paneLog.ratingOpen = true
+    let questionsAsked = 0
+    for (let i = 0; i < this.paneLog.ordinals; i++) {
+      if (this.paneLog.messageLog[i].myMessage) {
+        questionsAsked++
+      }
     }
-    this.paneLog.ratingOpen = true
+
+    if (questionsAsked < this.num_to_ask) {
+     this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
+    } else {
+     this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+    }
   }
 
   @ViewChild('scroll') scroll!: ElementRef;

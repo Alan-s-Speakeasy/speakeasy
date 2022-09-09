@@ -1,8 +1,6 @@
 package ch.ddis.speakeasy.chat
 
-import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.user.UserId
-import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
@@ -17,8 +15,8 @@ open class ChatRoom(
     val startTime: Long = System.currentTimeMillis(),
     var prompt: String = "",
     private val messages: MutableList<ChatMessage> = mutableListOf(),
-    private val reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
-    val assessedBy: MutableList<UserId> = mutableListOf()
+    private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
+    val assessedBy: MutableList<Assessor> = mutableListOf()
 ) {
     internal var endTime: Long? = null
     val aliasToUserId = users.entries.associateBy({ it.value }) { it.key }
@@ -42,7 +40,7 @@ open class ChatRoom(
     }
 
     fun getAllReactions(): List<ChatMessageReaction> = this.lock.read {
-        this.reactions.toList()
+        this.reactions.values.toList()
     }
 
     /**
@@ -61,12 +59,12 @@ open class ChatRoom(
     open fun addReaction(reaction: ChatMessageReaction): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
-        this.reactions.add(reaction)
+        this.reactions[reaction.messageOrdinal] = reaction
         return@write
     }
 
-    open fun addAssessor(session: UserSession): Unit = this.lock.write {
-        this.assessedBy.add(session.user.id)
+    open fun addAssessor(assessor: Assessor): Unit = this.lock.write {
+        this.assessedBy.add(assessor)
         return@write
     }
 

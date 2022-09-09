@@ -101,21 +101,14 @@ export class HistoryComponent implements OnInit {
       ordinals: 0,
       messageLog: {},
       ratingOpen: true,
+      active: false,
       ratings: {},
-      myAlias: "",
-      otherAlias: "",
+      myAlias: room.alias,
+      otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
-      spectate: false
+      spectate: false,
+      history: true
     }
-
-    this.chatService.getApiAliasWithRoomid(room.uid).subscribe(response => {
-      paneLog.myAlias = response
-      room.userAliases.forEach(alias => {
-        if (alias != paneLog.myAlias) {
-          paneLog.otherAlias = alias
-        }
-      })
-    })
 
     this.paneLogs.push(paneLog)
   }

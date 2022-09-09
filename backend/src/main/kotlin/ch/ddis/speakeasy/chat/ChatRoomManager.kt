@@ -21,22 +21,15 @@ object ChatRoomManager {
             val lines = file.readLines(Charsets.UTF_8)
             val users: Map<UserId, String> = objectMapper.readValue(lines[4])
             val messages: MutableList<ChatMessage> = mutableListOf()
-            val reactions: MutableSet<ChatMessageReaction> = mutableSetOf()
-            val assessedBy: MutableList<UserId> = mutableListOf()
+            val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf()
+            val assessedBy: MutableList<Assessor> = mutableListOf()
 
             for (i in 6 until lines.size) {
-                try {
-                    val chatMessage: ChatMessage = objectMapper.readValue(lines[i])
-                    messages.add(chatMessage)
-                } catch (_: Exception) {}
-                try {
-                    val reaction: ChatMessageReaction = objectMapper.readValue(lines[i])
-                    reactions.add(reaction)
-                } catch (_: Exception) {}
-                try {
-                    val assessor: UserId = objectMapper.readValue(lines[i])
-                    assessedBy.add(assessor)
-                } catch (_: Exception) {}
+                when (val chatItem: ChatItemContainer = objectMapper.readValue(lines[i])) {
+                    is ChatMessage -> messages.add(chatItem)
+                    is ChatMessageReaction -> reactions[chatItem.messageOrdinal] = chatItem
+                    is Assessor -> assessedBy.add(chatItem)
+                }
             }
 
             val chatRoom = LoggingChatRoom(
@@ -60,11 +53,16 @@ object ChatRoomManager {
 
     operator fun get(id: ChatRoomId) = this.chatrooms[id]
 
-    fun getByUser(userId: UserId): List<ChatRoom> =
-        this.chatrooms.values.filter { it.users.contains(userId) && !it.assessedBy.contains(userId) }
+    fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> =
+        when (bot) {
+            true -> this.chatrooms.values.filter { it.users.contains(userId)
+                    && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
+            false -> this.chatrooms.values.filter { it.users.contains(userId) && !it.assessedBy.contains(Assessor(userId))
+                    && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
+        }
 
     fun getAssessedRoomsByUserId(userId: UserId): List<ChatRoom> =
-        this.chatrooms.values.filter { it.users.contains(userId) && it.assessedBy.contains(userId) }
+        this.chatrooms.values.filter { it.users.contains(userId) && it.assessedBy.contains(Assessor(userId)) }.sortedBy { it.startTime }
 
     fun getChatPartner(roomId: UID, userId: UserId): UserId? {
         val userIds = this.chatrooms[roomId]?.users?.keys
@@ -86,11 +84,11 @@ object ChatRoomManager {
     }
 
     fun markAsAssessed(session: UserSession, id: ChatRoomId) {
-        this.chatrooms[id]?.addAssessor(session)
+        this.chatrooms[id]?.addAssessor(Assessor(session.user.id))
     }
 
     fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
-        return this.chatrooms[id]!!.assessedBy.contains(session.user.id)
+        return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id))
     }
 
 }

@@ -61,9 +61,12 @@ export class RatingPaneComponent implements OnInit {
   }
 
   canSubmit(): boolean {
-    return Object.keys(this.paneLog.ratings).length == this.ratingForm.length
+    return this.ratingForm && Object.keys(this.paneLog.ratings).length == this.ratingForm.length
   }
 
+  close(): void {
+    this.paneLog.ratingOpen = false
+  }
 
   // submit ratings
   submit(): void {

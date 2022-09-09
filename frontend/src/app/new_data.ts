@@ -17,12 +17,14 @@ export interface PaneLog {
   roomID: string,  // id of the chatroom;
   ordinals: number,  // number of messages
   messageLog: MessageLog,  // all messages of the chatroom;
+  active: boolean,
   ratingOpen: boolean,  // true: open for rating;
   ratings: Ratings, // ratings of this chatroom
   prompt: string,
   myAlias: string,
   otherAlias: string,
-  spectate: boolean
+  spectate: boolean,
+  history?: boolean
 }
 
 export interface Ratings {

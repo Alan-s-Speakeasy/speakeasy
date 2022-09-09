@@ -5,6 +5,7 @@ export class Alert {
   autoClose!: boolean;
   keepAfterRouteChange?: boolean;
   fade!: boolean;
+  timeout?: number;
 
   constructor(init?:Partial<Alert>) {
     Object.assign(this, init);

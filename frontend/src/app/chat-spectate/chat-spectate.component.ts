@@ -30,6 +30,7 @@ export class ChatSpectateComponent implements OnInit {
       ordinals: 0,
       messageLog: {},
       ratingOpen: false,
+      active: false,
       ratings: {},
       myAlias: history.state.userAlias,
       otherAlias: history.state.partnerAlias,

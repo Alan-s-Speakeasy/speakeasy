@@ -1,4 +1,5 @@
 <div *ngFor="let alert of alerts" class="{{cssClass(alert)}}">
-  <a class="close" (click)="removeAlert(alert)">&times;</a>
+  <a class="close" (click)="removeAlert(alert)"><i class="fa fa-close" style="color: black; cursor: pointer;"></i></a>
+  &nbsp;
   <span [innerHTML]="alert.message"></span>
 </div>

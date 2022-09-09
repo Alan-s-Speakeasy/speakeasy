@@ -1,7 +1,6 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
-import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.write
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -18,8 +17,8 @@ class LoggingChatRoom(
     endTime: Long? = null,
     prompt: String,
     messages: MutableList<ChatMessage> = mutableListOf(),
-    reactions: MutableSet<ChatMessageReaction> = mutableSetOf(),
-    assessedBy: MutableList<UserId> = mutableListOf()
+    reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
+    assessedBy: MutableList<Assessor> = mutableListOf()
 ) : ChatRoom(uid, users, startTime, prompt, messages, reactions, assessedBy) {
 
     init {
@@ -86,12 +85,12 @@ class LoggingChatRoom(
         }
     }
 
-    override fun addAssessor(session: UserSession) {
+    override fun addAssessor(assessor: Assessor) {
         val exception =
             this.writerLock.write {
                 try {
-                    super.addAssessor(session)
-                    writer.println(objectMapper.writeValueAsString(session.user.id))
+                    super.addAssessor(assessor)
+                    writer.println(objectMapper.writeValueAsString(assessor))
                     writer.flush()
                     null
                 } catch (e: IllegalArgumentException) {

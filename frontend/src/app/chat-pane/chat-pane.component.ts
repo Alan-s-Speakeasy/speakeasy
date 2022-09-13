@@ -100,7 +100,7 @@ export class ChatPaneComponent implements OnInit {
       }
     }
 
-    if (questionsAsked < this.num_to_ask) {
+    if (this.paneLog.active && questionsAsked < this.num_to_ask) {
      this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
     } else {
      this.paneLog.ratingOpen = !this.paneLog.ratingOpen

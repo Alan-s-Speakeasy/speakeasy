@@ -49,7 +49,6 @@ export class RatingPaneComponent implements OnInit {
           for (let each of feedback.responses) {
             this.paneLog.ratings[each.id] = each.value;
           }
-          this.showHistory = true
         } else {
           console.log("failed to find submitted feedback")
         }

@@ -140,9 +140,9 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushDetail(details: FrontendUserDetail[], usersession: UserSessionDetails): void {
-    let userExists = details.find(u => u.userID == usersession.userDetails.id)
+    let userExistsIndex = details.findIndex(u => u.userID == usersession.userDetails.id)
 
-    if (!userExists) {
+    if (userExistsIndex < 0) {
       let detail = {
         userID: usersession.userDetails.id,
         username: usersession.userDetails.username,
@@ -152,6 +152,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         sessionToken: [usersession.sessionToken],
       }
       details.push(detail)
+    } else {
+      details[userExistsIndex].sessionId.push(usersession.sessionId)
+      details[userExistsIndex].sessionToken.push(usersession.sessionToken)
+      details[userExistsIndex].startTime.push(usersession.startTime)
     }
   }
 

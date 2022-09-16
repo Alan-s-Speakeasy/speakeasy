@@ -26,7 +26,7 @@
         <app-chat-pane [numQueries]="numQueries" [paneLog]="paneLogs[n - i - 1]" id="chat{{n - i - 1}}"></app-chat-pane>
       </div>
       <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" *ngIf="paneLogs[n - i - 1].ratingOpen" style="margin-right: 10px">
-        <app-rating-pane (removeRoom)="removeRoom(paneLogs[n - i - 1].roomID)" [showHistory]="false" [paneLog]="paneLogs[n - i - 1]" id="rating{{n - i - 1}}"></app-rating-pane>
+        <app-rating-pane (removeRoom)="removeRoom(paneLogs[n - i - 1].roomID)" [paneLog]="paneLogs[n - i - 1]" id="rating{{n - i - 1}}"></app-rating-pane>
       </div>
     </div>
     </div>

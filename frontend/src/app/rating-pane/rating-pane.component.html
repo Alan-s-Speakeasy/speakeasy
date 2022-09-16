@@ -5,68 +5,38 @@
       <div class="chat-header text-center">
         <h5>
           Ratings for {{paneLog.otherAlias}}
-          <span *ngIf="!paneLog.history" (click)="close()" class="label label-default" style="color: black; cursor: pointer; float: right"><i class="fa fa-close"></i></span>
+          <span (click)="close()" class="label label-default" style="color: black; cursor: pointer; float: right"><i class="fa fa-close"></i></span>
         </h5>
       </div>
     </div>
 
-    <div *ngIf="!showHistory">
-      <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
-        <div *ngFor="let request of ratingForm">
-          <form>
-            <div class="text-center">
-              <h6>{{request.id}}. {{request.name}}</h6>
+    <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
+      <div *ngFor="let request of ratingForm">
+        <form>
+          <div class="text-center">
+            <h6>{{request.id}}. {{request.name}}</h6>
 
-              <div *ngIf="request.options.length > 0">
-                <div class="form-check form-check-inline" *ngFor="let option of request.options">
+            <div *ngIf="request.options.length > 0">
+              <div class="form-check form-check-inline" *ngFor="let option of request.options">
 
-                  <label class="form-check-label">
-                    <input class="form-check-input" type="radio" name="inlineRadioOptions" value="{{option.value.toString()}}" [(ngModel)]="paneLog.ratings[request.id]">
-                    {{option.name}}
-                  </label>
-                </div>
-              </div>
-
-              <div *ngIf="request.options.length === 0">
-                <input type="text" class="form-control" placeholder="..." name="item.name" maxlength="1000" [(ngModel)]="paneLog.ratings[request.id]">
+                <label class="form-check-label">
+                  <input class="form-check-input" type="radio" name="inlineRadioOptions" value="{{option.value.toString()}}" [(ngModel)]="paneLog.ratings[request.id]">
+                  {{option.name}}
+                </label>
               </div>
             </div>
-          </form>
-          <hr>
-        </div>
-      </div>
-      <div class="chat-message clearfix">
-        <div class="input-group-append text-center">
-          <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
-        </div>
+
+            <div *ngIf="request.options.length === 0">
+              <input type="text" class="form-control" placeholder="..." name="item.name" maxlength="1000" [(ngModel)]="paneLog.ratings[request.id]">
+            </div>
+          </div>
+        </form>
+        <hr>
       </div>
     </div>
-
-    <div *ngIf="showHistory">
-      <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Statement</th>
-            <th>Your Answer</th>
-          </tr>
-          </thead>
-          <tbody *ngFor="let request of ratingForm">
-          <tr *ngIf="request.options.length > 0">
-            <td><b>{{request.shortname}}</b></td>
-            <td>
-              <div *ngFor="let option of request.options">
-                <div *ngIf="option.value.toString() == paneLog.ratings[request.id]">
-                  {{option.name}}
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="request.options.length == 0">
-            <td colspan="2"><b>Impression: </b>{{paneLog.ratings[request.id]}}</td>
-          </tr>
-          </tbody>
-        </table>
+    <div class="chat-message clearfix">
+      <div class="input-group-append text-center">
+        <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
       </div>
     </div>
   </div>

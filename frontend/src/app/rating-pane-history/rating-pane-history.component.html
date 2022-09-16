@@ -1,0 +1,39 @@
+<div class="card chat-app">
+  <div class="chat">
+
+    <div class="row p-2">
+      <div class="chat-header text-center">
+        <h5>
+          Ratings for {{paneLog.otherAlias}}
+        </h5>
+      </div>
+    </div>
+
+    <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Statement</th>
+          <th>Your Answer</th>
+        </tr>
+        </thead>
+        <tbody *ngFor="let request of ratingForm">
+        <tr *ngIf="request.options.length > 0">
+          <td><b>{{request.shortname}}</b></td>
+          <td>
+            <div *ngFor="let option of request.options">
+              <div *ngIf="option.value.toString() == paneLog.ratings[request.id]">
+                {{option.name}}
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="request.options.length == 0">
+          <td colspan="2"><b>Impression: </b>{{paneLog.ratings[request.id]}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

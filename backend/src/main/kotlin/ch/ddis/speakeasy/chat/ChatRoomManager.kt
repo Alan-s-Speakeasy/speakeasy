@@ -27,7 +27,7 @@ object ChatRoomManager {
             for (i in 6 until lines.size) {
                 when (val chatItem: ChatItemContainer = objectMapper.readValue(lines[i])) {
                     is ChatMessage -> messages.add(chatItem)
-                    is ChatMessageReaction -> reactions[chatItem.messageOrdinal] = chatItem
+                    is ChatMessageReactionContainer -> reactions[chatItem.reaction.messageOrdinal] = chatItem.reaction
                     is Assessor -> assessedBy.add(chatItem)
                 }
             }

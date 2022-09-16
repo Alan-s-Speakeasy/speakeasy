@@ -73,7 +73,7 @@ class LoggingChatRoom(
             this.writerLock.write {
                 try {
                     super.addReaction(reaction)
-                    writer.println(objectMapper.writeValueAsString(reaction))
+                    writer.println(objectMapper.writeValueAsString(ChatMessageReactionContainer(reaction)))
                     writer.flush()
                     null
                 } catch (e: IllegalArgumentException) {

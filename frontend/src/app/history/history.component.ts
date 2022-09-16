@@ -89,6 +89,7 @@ export class HistoryComponent implements OnInit {
           }
 
         }
+        this.paneLogs.reverse()
       },
       (error) => {console.log("Chat rooms are not retrieved properly.", error);},
     )

@@ -120,25 +120,8 @@ export class ChatPaneComponent implements OnInit {
 
   // send a message to the chatroom
   doQuery(query: string): void {
-    if (!this.paneLog.ratingOpen) {
-      if (query !== "" && query !== null) {
-        this.chatService.postApiRoomWithRoomid(this.paneLog.roomID, undefined, query).subscribe(
-          (response) => {
-            //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
-          },
-          (error) => {
-            console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
-          }
-        );
-        this.query.reset()  // reset the input field
-      }
-    }
-  }
-
-  // mark a message as THUMBS_UP/DOWN or STAR
-  react(type: string, ordinal: number): void {
-    if (!this.paneLog.ratingOpen) {
-      this.chatService.postApiRoomWithRoomidReaction(this.paneLog.roomID, undefined, {messageOrdinal: ordinal, type: type} as ChatMessageReaction).subscribe(
+    if (query !== "" && query !== null) {
+      this.chatService.postApiRoomWithRoomid(this.paneLog.roomID, undefined, query).subscribe(
         (response) => {
           //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
         },
@@ -146,7 +129,20 @@ export class ChatPaneComponent implements OnInit {
           console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
         }
       );
+      this.query.reset()  // reset the input field
     }
+  }
+
+  // mark a message as THUMBS_UP/DOWN or STAR
+  react(type: string, ordinal: number): void {
+    this.chatService.postApiRoomWithRoomidReaction(this.paneLog.roomID, undefined, {messageOrdinal: ordinal, type: type} as ChatMessageReaction).subscribe(
+      (response) => {
+        //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
+      },
+      (error) => {
+        console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
+      }
+    );
   }
 
   range(i: number) {

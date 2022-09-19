@@ -41,17 +41,6 @@ export type ChartOptions = {
   selector: 'app-user-feedback',
   templateUrl: './user-feedback.component.html',
   styleUrls: ['./user-feedback.component.css'],
-  animations: [
-    trigger('inOutAnimation', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('200ms', style({ opacity: 1 })),
-      ]),
-      transition(':leave', [
-        animate('200ms', style({ opacity: 0 }))
-      ])
-    ])
-  ]
 })
 export class UserFeedbackComponent implements OnInit, OnDestroy {
   options = {
@@ -81,7 +70,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   impressionToRead: string = ""
 
   usernames: string[] = []
-  selectedUsername: string | null = null
+  selectedUsernames: string[] = []
   usernameChartData: Map<string, number>[] = []
   remainderChartData: Map<string, number>[] = []
 
@@ -116,6 +105,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
         )
         this.usernames.push(average.username)
       })
+      this.usernames.sort((a, b) => a.localeCompare(b))
+      this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username))
     })
 
     this.adminService.getApiFeedbackHistory().subscribe((r) => {
@@ -165,19 +156,37 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     return res
   }
 
-  getChartData(username: string | null, id: string) : number[] {
-    if (username != null) {
+  getChartData(usernames: string[], id: string) : number[] {
+    if (usernames.length > 0) {
       return Array.from(this.usernameChartData[parseInt(id) - 1].values())
     } else {
       return Array.from(this.remainderChartData[parseInt(id) - 1].values())
     }
   }
 
+  isSelected(username: string): boolean {
+    return this.selectedUsernames.includes(username)
+  }
+
+  switch(username: string): void {
+    const idx = this.selectedUsernames.findIndex(u => u == username)
+    if (idx >= 0) {
+      this.selectedUsernames.splice(idx, 1)
+    } else {
+      this.selectedUsernames.push(username)
+    }
+  }
+
+  resetSelected(): void {
+    this.selectedUsernames = []
+    this.updateUsernameAndCharts()
+  }
+
   updateUsernameAndCharts() : void {
     this.usernameChartData = this.generateEmptyChartBuckets()
     this.remainderChartData = this.generateEmptyChartBuckets()
     this.chartDataPerUsername.forEach((v, username) => {
-      if (this.selectedUsername == username) {
+      if (this.selectedUsernames.includes(username)) {
         for (let category = 0; category < this.usernameChartData.length; category++) {
           this.usernameChartData[category].forEach((value, name) => {
             let newValue = value + v[category]!.get(name)!
@@ -203,13 +212,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   generateCharts(): void {
     this.ratingForm.slice(0, -1).forEach(f => {
       let series = [{
-        name: "All other users",
-        data: this.getChartData(null, f.id)
+        name: this.selectedUsernames.length != 0 ? "All other users" : "All users",
+        data: this.getChartData([], f.id)
       }]
-      if (this.selectedUsername != null) {
+      if (this.selectedUsernames.length != 0) {
         series.push({
-          name: this.selectedUsername,
-          data: this.getChartData(this.selectedUsername, f.id)
+          name: "Selected users",
+          data: this.getChartData(this.selectedUsernames, f.id)
         })
       }
       this.allChartOptions?.push(
@@ -264,13 +273,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   updateCharts(): void {
     this.ratingForm.slice(0, -1).forEach(f => {
       let series = [{
-        name: "All other users",
-        data: this.getChartData(null, f.id)
+        name: this.selectedUsernames.length != 0 ? "All other users" : "All users",
+        data: this.getChartData([], f.id)
       }]
-      if (this.selectedUsername != null) {
+      if (this.selectedUsernames.length != 0) {
         series.push({
-          name: this.selectedUsername,
-          data: this.getChartData(this.selectedUsername, f.id)
+          name: "Selected users",
+          data: this.getChartData(this.selectedUsernames, f.id)
         })
       }
       this.allChartOptions[parseInt(f.id) - 1].series = series
@@ -286,8 +295,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   getAverageFeedback(): FrontendAverageFeedback[] {
-    if (this.selectedUsername != null) {
-      return this.averageFeedback.filter(f => f.username == this.selectedUsername)
+    if (this.selectedUsernames.length != 0) {
+      return this.averageFeedback.filter(f => this.selectedUsernames.includes(f.username))
     } else {
       return this.averageFeedback
     }

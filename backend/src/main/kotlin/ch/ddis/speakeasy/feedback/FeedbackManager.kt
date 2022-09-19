@@ -138,7 +138,11 @@ object FeedbackManager {
         }
 
         responseMap.forEach { (triple, responses) ->
-            responseList.add(FeedbackResponseItem(triple.first, triple.second, triple.third, responses))
+            var res = responses
+            if (responses.size > this.requests.requests.size) {
+                res = responses.take(this.requests.requests.size) as MutableList<FeedbackResponse>
+            }
+            responseList.add(FeedbackResponseItem(triple.first, triple.second, triple.third, res))
         }
 
         return responseList

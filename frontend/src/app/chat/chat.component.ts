@@ -11,6 +11,7 @@ import {AuthService} from "../authentication.service";
 import {interval, Subscription} from "rxjs";
 import {AlertService} from "../_alert";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {CommonService} from "../common.service";
 
 @Component({selector: 'app-chat', templateUrl: './chat.component.html', styleUrls: ['./chat.component.css'],})
 
@@ -23,6 +24,7 @@ export class ChatComponent implements OnInit, OnDestroy {
               private frontendDataService: FrontendDataService,
               private titleService: Title,
               private authService: AuthService,
+              @Inject(CommonService) private commonService: CommonService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(ChatService) private chatService: ChatService,
               @Inject(DOCUMENT) private document: Document,
@@ -50,7 +52,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatroomSubscription = interval(1000).subscribe(
       (response) => {
-        this.chatService.getApiRooms().subscribe(
+        this.commonService.getChatRooms().subscribe(
           (response)=>{
             for (let room of response.rooms) {
               let addRoom = true
@@ -86,26 +88,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       prompt: "",
       spectate: false
     }
-
-    // fetch prompt and determine whether the ratings pane should be shown
-    this.chatService.getApiRoomWithRoomidWithSince(paneLog.roomID, 0, undefined).subscribe(
-      (response) => {
-        // if the chat has been finished, directly show the ratings pane
-        if (response.info.remainingTime <= 0) {
-          paneLog.ratingOpen = true
-        }
-        // if there is submitted ratings, directly show the ratings pane
-        this.feedbackService.getApiFeedbackhistoryWithRoomid(paneLog.roomID, undefined).subscribe(
-          (feedback) => {
-            if (feedback.responses.length > 0) {
-              paneLog.ratingOpen = true
-            }
-          },
-          (error) => {console.log("Feedback responses are not retrieved properly for the chat room.", error);}
-        )
-      },
-      (error) => {console.log("Messages are not retrieved properly for the chat room.", error);}
-    );
 
     this.paneLogs.push(paneLog)
   }

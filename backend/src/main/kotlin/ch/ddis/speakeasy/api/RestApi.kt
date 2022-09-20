@@ -57,8 +57,6 @@ object RestApi {
             GetAdminFeedbackHistoryHandler(),
             GetAdminFeedbackAverageHandler(),
 
-            GetAliasRoomHandler(),
-
             PostAssignmentGeneratorHandler(),
             GetAssignmentGeneratorHandler(),
             PostGenerateAssignmentHandler(),

@@ -87,7 +87,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       spectate: false
     }
 
-    this.paneLogs.push(paneLog)
+    this.paneLogs.unshift(paneLog)
   }
 
   // request chatroom with a specified user

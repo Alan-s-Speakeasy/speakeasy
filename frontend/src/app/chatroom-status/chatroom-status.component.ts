@@ -5,6 +5,7 @@ import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
 import {AdminService, ChatRoomAdminInfo, ChatRoomAdminInfoUsers} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
+import {exhaustMap} from "rxjs/operators";
 
 @Component({
   selector: 'app-chatroom-status',
@@ -17,7 +18,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService) { }
 
-  private allChatRoomsSubscription!: Subscription;
+  private activeRoomsSubscription!: Subscription;
+  private allRoomsSubscription!: Subscription;
 
   activateChatroomDetails: FrontendChatroomDetail[] = []
   allChatroomDetails: FrontendChatroomDetail[] = []
@@ -25,16 +27,18 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
 
-    this.allChatRoomsSubscription = interval(1000).subscribe(() => {
-
-      this.adminService.getApiRoomsActive().subscribe((activechatrooms)=>{
+    this.activeRoomsSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsActive()}))
+      .subscribe((activechatrooms) => {
         this.activateChatroomDetails = []
         activechatrooms.rooms.forEach(room => {
           this.pushChatRoomDetails(this.activateChatroomDetails, room)
         })
-      });
+      })
 
-      this.adminService.getApiRoomsAll().subscribe((allchatrooms)=>{
+    this.allRoomsSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsAll()}))
+      .subscribe((allchatrooms) => {
         allchatrooms.rooms.forEach(room => {
           let update = true
           this.allChatroomDetails.forEach(currentRoom => {
@@ -47,8 +51,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
             this.pushChatRoomDetails(this.allChatroomDetails, room)
           }
         })
-      });
-    });
+      })
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
@@ -83,6 +86,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.allChatRoomsSubscription.unsubscribe();
+    this.activeRoomsSubscription.unsubscribe()
+    this.allRoomsSubscription.unsubscribe()
   }
 }

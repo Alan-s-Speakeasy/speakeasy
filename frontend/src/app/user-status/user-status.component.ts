@@ -12,6 +12,7 @@ import {
   UserSessionDetails
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
+import {exhaustMap} from "rxjs/operators";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -35,7 +36,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
               public alertService: AlertService,
               private modalService: NgbModal) { }
 
+  private allRoomsSubscription!: Subscription;
+  private userSessionSubscription!: Subscription;
   private userListSubscription!: Subscription;
+
   humanDetails: FrontendUserDetail[] = []
   adminDetails: FrontendUserDetail[] = []
   botDetails: FrontendUserDetail[] = []
@@ -58,9 +62,9 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
-    this.userListSubscription = interval(1000).subscribe(response=> {
-
-      this.adminService.getApiRoomsAll().subscribe((allchatrooms)=>{
+    this.allRoomsSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsAll()}))
+      .subscribe((allchatrooms) => {
         allchatrooms.rooms.forEach(room => {
           let update = true
           this.allChatroomDetails.forEach(currentRoom => {
@@ -73,9 +77,11 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.pushChatRoomDetails(this.allChatroomDetails, room)
           }
         })
-      });
+      })
 
-      this.adminService.getApiUserSessions().subscribe((usersessions) => {
+    this.userSessionSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.adminService.getApiUserSessions()}))
+      .subscribe((usersessions) => {
         while (this.humanDetails.length > 0) {
           this.humanDetails.pop()
         }
@@ -96,10 +102,11 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.pushDetail(this.botDetails, usersession)
           }
         })
-      });
+      })
 
-
-      this.adminService.getApiUserList().subscribe((userlist) => {
+    this.userListSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.adminService.getApiUserList()}))
+      .subscribe((userlist) => {
         while (this.humanList.length > 0) {
           this.humanList.pop()
         }
@@ -120,8 +127,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.pushItem(this.botList, user)
           }
         })
-      });
-    })
+      })
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {

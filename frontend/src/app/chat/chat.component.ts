@@ -5,10 +5,11 @@ import { DOCUMENT } from '@angular/common';
 import {Title} from "@angular/platform-browser";
 import {FrontendDataService} from "../frontend-data.service";
 import {ChatPaneComponent} from "../chat-pane/chat-pane.component";
-import {ChatService, ChatRoomList, FeedbackService, ChatRequest, ChatRoomInfo} from "../../../openapi";
+import {ChatService, FeedbackService, ChatRequest, ChatRoomInfo} from "../../../openapi";
 import {Component, Inject, OnDestroy, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {AuthService} from "../authentication.service";
 import {interval, Subscription} from "rxjs";
+import {exhaustMap} from "rxjs/operators";
 import {AlertService} from "../_alert";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonService} from "../common.service";
@@ -50,28 +51,25 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.router.navigateByUrl('/login').then()
     }
 
-    this.chatroomSubscription = interval(1000).subscribe(
-      (response) => {
-        this.commonService.getChatRooms().subscribe(
-          (response)=>{
-            for (let room of response.rooms) {
-              let addRoom = true
+    this.chatroomSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.commonService.getChatRooms()}))
+      .subscribe((response) => {
+        for (let room of response.rooms) {
+          let addRoom = true
 
-              this.paneLogs.forEach((paneLog) => {
-                if (paneLog.roomID == room.uid) {
-                  addRoom = false
-                }
-              })
-
-              if (addRoom) {
-                this.addChatRoom(room)
-              }
+          this.paneLogs.forEach((paneLog) => {
+            if (paneLog.roomID == room.uid) {
+              addRoom = false
             }
-          },
-          (error) => {console.log("Chat rooms are not retrieved properly.", error);},
-        )
-      }
-    );
+          })
+
+          if (addRoom) {
+            this.addChatRoom(room)
+          }
+        }
+      },
+      (error) => {console.log("Chat rooms are not retrieved properly.", error);},
+    )
   }
 
   // add a chatroom to the UI

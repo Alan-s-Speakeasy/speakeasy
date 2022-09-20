@@ -2,6 +2,7 @@
 
 import {FormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
+import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog} from "../new_data";
 import {ChatMessageReaction, ChatService} from "../../../openapi";
 import {Component, ElementRef, Inject, Input, OnInit, ViewChild} from '@angular/core';
@@ -30,20 +31,10 @@ export class ChatPaneComponent implements OnInit {
     ) { }
 
   ngOnInit(): void {
-    this.chatMessagesSubscription = interval(1000).subscribe(
-      (response) => {
-        this.updatePaneLog()
-        if (this.paneLogScroll) {
-          this.scrollToBottom()
-          this.paneLogScroll = false
-        }
-      }
-    );
-  }
-
-  updatePaneLog(): void {
-    this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, this.lastGetTime, undefined).subscribe(
-      (response) => {
+    this.chatMessagesSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {
+        return this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, this.lastGetTime, undefined)
+      })).subscribe((response) => {
         this.paneLog.prompt = response.info.prompt
         if (response.messages.length > 0) {
           // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
@@ -87,10 +78,15 @@ export class ChatPaneComponent implements OnInit {
           this.paneLog.ratingOpen = true
           this.paneLog.active = false
         }
+        if (this.paneLogScroll) {
+          this.scrollToBottom()
+          this.paneLogScroll = false
+        }
       },
       (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
     );
   }
+
 // when the user wants to start rating
   rating(): void {
     let questionsAsked = 0

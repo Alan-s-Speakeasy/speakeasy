@@ -22,12 +22,13 @@ import {
   ApexPlotOptions,
   ApexYAxis,
   ApexTitleSubtitle,
-  ApexXAxis
+  ApexXAxis,
+  ApexLegend
 } from "ng-apexcharts";
-import {animate, style, transition, trigger} from "@angular/animations";
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
+  legend: ApexLegend;
   chart: ApexChart;
   colors: any[];
   dataLabels: ApexDataLabels;
@@ -71,8 +72,9 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   usernames: string[] = []
   selectedUsernames: string[] = []
-  usernameChartData: Map<string, number>[] = []
-  remainderChartData: Map<string, number>[] = []
+  appliedSelectedUsernames: string[] = []
+  selectedChartData: Map<string, number>[] = []
+  allChartData: Map<string, number>[] = []
 
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
@@ -158,9 +160,9 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   getChartData(usernames: string[], id: string) : number[] {
     if (usernames.length > 0) {
-      return Array.from(this.usernameChartData[parseInt(id) - 1].values())
+      return Array.from(this.selectedChartData[parseInt(id) - 1].values())
     } else {
-      return Array.from(this.remainderChartData[parseInt(id) - 1].values())
+      return Array.from(this.allChartData[parseInt(id) - 1].values())
     }
   }
 
@@ -177,31 +179,53 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     }
   }
 
-  resetSelected(): void {
-    this.selectedUsernames = []
+  applyFilter(): void {
+    this.appliedSelectedUsernames = this.selectedUsernames
     this.updateUsernameAndCharts()
   }
 
+  resetSelected(): void {
+    this.selectedUsernames = []
+    this.applyFilter()
+  }
+
   updateUsernameAndCharts() : void {
-    this.usernameChartData = this.generateEmptyChartBuckets()
-    this.remainderChartData = this.generateEmptyChartBuckets()
+    this.selectedChartData = this.generateEmptyChartBuckets()
+    this.allChartData = this.generateEmptyChartBuckets()
+
+    let totalSelected: number[] = new Array(this.selectedChartData.length).fill(0)
+    let totalAll: number[] = new Array(this.allChartData.length).fill(0)
+
     this.chartDataPerUsername.forEach((v, username) => {
-      if (this.selectedUsernames.includes(username)) {
-        for (let category = 0; category < this.usernameChartData.length; category++) {
-          this.usernameChartData[category].forEach((value, name) => {
+      if (this.appliedSelectedUsernames.includes(username)) {
+        for (let category = 0; category < this.selectedChartData.length; category++) {
+          this.selectedChartData[category].forEach((value, name) => {
             let newValue = value + v[category]!.get(name)!
-            this.usernameChartData[category].set(name, newValue)
-          })
-        }
-      } else {
-        for (let category = 0; category < this.remainderChartData.length; category++) {
-          this.remainderChartData[category].forEach((value, name) => {
-            let newValue = value + v[category]!.get(name)!
-            this.remainderChartData[category].set(name, newValue)
+            this.selectedChartData[category].set(name, newValue)
+            totalSelected[category] += v[category]!.get(name)!
           })
         }
       }
+      for (let category = 0; category < this.allChartData.length; category++) {
+        this.allChartData[category].forEach((value, name) => {
+          let newValue = value + v[category]!.get(name)!
+          this.allChartData[category].set(name, newValue)
+          totalAll[category] += v[category]!.get(name)!
+        })
+      }
     })
+
+    for (let category = 0; category < this.selectedChartData.length; category++) {
+      this.selectedChartData[category].forEach((value, name) => {
+        this.selectedChartData[category].set(name, value / totalSelected[category])
+      })
+    }
+    for (let category = 0; category < this.allChartData.length; category++) {
+      this.allChartData[category].forEach((value, name) => {
+        this.allChartData[category].set(name, value / totalAll[category])
+      })
+    }
+
     if (this.allChartOptions.length == 0) {
       this.generateCharts()
     } else {
@@ -212,26 +236,28 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   generateCharts(): void {
     this.ratingForm.slice(0, -1).forEach(f => {
       let series = [{
-        name: this.selectedUsernames.length != 0 ? "All other users" : "All users",
-        data: this.getChartData([], f.id)
+        name: "All users",
+        data: this.getChartData([], f.id),
       }]
-      if (this.selectedUsernames.length != 0) {
+      if (this.appliedSelectedUsernames.length != 0) {
         series.push({
           name: "Selected users",
-          data: this.getChartData(this.selectedUsernames, f.id)
+          data: this.getChartData(this.appliedSelectedUsernames, f.id)
         })
       }
       this.allChartOptions?.push(
         {
           series: series,
+          legend: {
+            showForSingleSeries: true
+          },
           colors: ['#0066ff', '#ff9933'],
           chart: {
             height: 300,
             type: "bar",
             animations: {
               enabled: false
-            },
-            stacked: true
+            }
           },
           plotOptions: {
             bar: {
@@ -241,7 +267,17 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
             }
           },
           dataLabels: {
-            enabled: true
+            enabled: false
+          },
+          yaxis: {
+            min: 0,
+            max: 1,
+            tickAmount: 5,
+            labels: {
+              formatter: function (val) {
+                return val.toFixed(1);
+              }
+            },
           },
           xaxis: {
             categories: Array.from(f.options.map(o => o.name)),
@@ -273,13 +309,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   updateCharts(): void {
     this.ratingForm.slice(0, -1).forEach(f => {
       let series = [{
-        name: this.selectedUsernames.length != 0 ? "All other users" : "All users",
+        name: "All users",
         data: this.getChartData([], f.id)
       }]
-      if (this.selectedUsernames.length != 0) {
+      if (this.appliedSelectedUsernames.length != 0) {
         series.push({
           name: "Selected users",
-          data: this.getChartData(this.selectedUsernames, f.id)
+          data: this.getChartData(this.appliedSelectedUsernames, f.id)
         })
       }
       this.allChartOptions[parseInt(f.id) - 1].series = series
@@ -295,8 +331,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   getAverageFeedback(): FrontendAverageFeedback[] {
-    if (this.selectedUsernames.length != 0) {
-      return this.averageFeedback.filter(f => this.selectedUsernames.includes(f.username))
+    if (this.appliedSelectedUsernames.length != 0) {
+      return this.averageFeedback.filter(f => this.appliedSelectedUsernames.includes(f.username))
     } else {
       return this.averageFeedback
     }

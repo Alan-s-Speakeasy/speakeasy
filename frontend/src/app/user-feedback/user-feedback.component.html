@@ -21,7 +21,7 @@
           </mat-checkbox>
         </div>
       </div>
-      <button type="button" class="btn btn-secondary float-end m-1" (click)="updateUsernameAndCharts()">Apply</button>
+      <button type="button" class="btn btn-secondary float-end m-1" (click)="applyFilter()">Apply</button>
       <button type="button" class="btn btn-outline-secondary float-end m-1" (click)="resetSelected()">Reset</button>
     </div>
     <div class="col-2">
@@ -37,6 +37,7 @@
     <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
       <apx-chart
         [series]="chartOptions.series"
+        [legend]="chartOptions.legend"
         [colors]="chartOptions.colors"
         [chart]="chartOptions.chart"
         [dataLabels]="chartOptions.dataLabels"

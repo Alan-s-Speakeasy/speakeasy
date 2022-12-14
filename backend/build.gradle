@@ -19,6 +19,7 @@ group 'ch.ddis.speakeasy'
 version '0.1'
 
 mainClassName = 'ch.ddis.speakeasy.Main'
+applicationDefaultJvmArgs = ["-Xms4G", "-Xmx16G"]
 
 repositories {
     mavenCentral()

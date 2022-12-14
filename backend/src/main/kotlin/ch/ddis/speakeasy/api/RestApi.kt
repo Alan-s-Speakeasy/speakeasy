@@ -129,6 +129,8 @@ object RestApi {
                 apiRestHandlers.forEach { handler ->
                     path(handler.route) {
 
+                        println(handler.route)
+
                         val permittedRoles = if (handler is AccessManagedRestHandler) {
                             handler.permittedRoles
                         } else {

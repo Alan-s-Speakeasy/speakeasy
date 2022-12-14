@@ -20,6 +20,7 @@ import org.eclipse.jetty.server.session.DefaultSessionCache
 import org.eclipse.jetty.server.session.FileSessionDataStore
 import org.eclipse.jetty.server.session.SessionHandler
 import org.eclipse.jetty.util.ssl.SslContextFactory
+import org.eclipse.jetty.util.thread.QueuedThreadPool
 import java.io.File
 
 object RestApi {
@@ -214,7 +215,7 @@ object RestApi {
             val fallback = HttpConnectionFactory(httpsConfig)
 
 
-            return Server().apply {
+            return Server(QueuedThreadPool(10_000)).apply {
                 //HTTP Connector
                 addConnector(
                     ServerConnector(
@@ -230,7 +231,7 @@ object RestApi {
                 })
             }
         } else {
-            return Server().apply {
+            return Server(QueuedThreadPool(10_000)).apply {
                 //HTTP Connector
                 addConnector(
                     ServerConnector(

@@ -43,7 +43,7 @@ data class ChatRoomAdminInfo(
         room.uid.string,
         room.startTime,
         room.remainingTime,
-        room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key)!!) },
+        room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key) ?: "n/a") },
         room.prompt
     )
 }

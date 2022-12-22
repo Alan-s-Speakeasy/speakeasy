@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %p %c - %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <MarkerFilter marker="REST" onMatch="DENY" onMismatch="ACCEPT"/>
+        </Console>
+
+        <File name="RestRequests" fileName="logs/rest.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <MarkerFilter marker="REST" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
+        <File name="Libraries" fileName="logs/libraries.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </File>
+
+        <File name="Everything" fileName="logs/all.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="org.eclipse.jetty" level="WARN">
+            <AppenderRef ref="Libraries"/>
+        </Logger>
+
+        <Logger name="org.jline" level="WARN">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="Libraries"/>
+        </Logger>
+
+        <Logger name="ch.ddis.speakeasy" level="INFO">
+            <AppenderRef ref="RestRequests"/>
+        </Logger>
+
+        <Root level="INFO">
+            <AppenderRef ref="Everything"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

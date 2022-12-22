@@ -32,6 +32,13 @@ configurations {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir 'config'
+        }
+    }
+}
 
 dependencies {
 

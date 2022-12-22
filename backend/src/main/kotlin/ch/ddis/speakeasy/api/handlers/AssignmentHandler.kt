@@ -29,8 +29,6 @@ class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessMan
         ]
     )
     override fun doPost(ctx: Context): SuccessStatus {
-
-        AccessManager.updateLastAccess(ctx.req.session.id)
         UIChatAssignmentGenerator.init()
         return SuccessStatus("Assignment generator created")
     }
@@ -53,8 +51,6 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
         ]
     )
     override fun doGet(ctx: Context): AssignmentGeneratorObject {
-
-        AccessManager.updateLastAccess(ctx.req.session.id)
         return UIChatAssignmentGenerator.getStatus()
     }
 }
@@ -78,8 +74,6 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
         ]
     )
     override fun doPost(ctx: Context): List<GeneratedAssignment> {
-
-        AccessManager.updateLastAccess(ctx.req.session.id)
 
         val newAssignment = try {
             ctx.bodyAsClass(NewAssignmentObject::class.java)

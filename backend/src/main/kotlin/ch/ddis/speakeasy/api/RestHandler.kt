@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.util.errorResponse
+import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.core.security.Role
 import io.javalin.http.Context
 
@@ -14,6 +15,7 @@ interface RestHandler {
 interface GetRestHandler<T: Any> : RestHandler {
 
     fun get(ctx: Context) {
+        AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doGet(ctx))
         } catch (e: ErrorStatusException) {
@@ -30,6 +32,7 @@ interface GetRestHandler<T: Any> : RestHandler {
 interface PostRestHandler<T: Any> : RestHandler {
 
     fun post(ctx: Context) {
+        AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doPost(ctx))
         } catch (e: ErrorStatusException) {
@@ -46,6 +49,7 @@ interface PostRestHandler<T: Any> : RestHandler {
 interface PatchRestHandler<T: Any> : RestHandler {
 
     fun patch(ctx: Context) {
+        AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doPatch(ctx))
         } catch (e: ErrorStatusException) {
@@ -62,6 +66,7 @@ interface PatchRestHandler<T: Any> : RestHandler {
 interface DeleteRestHandler<T: Any> : RestHandler {
 
     fun delete(ctx: Context) {
+        AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doDelete(ctx))
         } catch (e: ErrorStatusException) {

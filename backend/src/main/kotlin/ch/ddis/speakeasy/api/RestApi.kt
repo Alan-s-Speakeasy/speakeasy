@@ -13,15 +13,10 @@ import io.javalin.plugin.openapi.jackson.JacksonToJsonMapper
 import io.javalin.plugin.openapi.ui.SwaggerOptions
 import io.swagger.v3.oas.models.info.Info
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
-import org.eclipse.jetty.http.HttpCookie
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
-import org.eclipse.jetty.server.session.DefaultSessionCache
-import org.eclipse.jetty.server.session.FileSessionDataStore
-import org.eclipse.jetty.server.session.SessionHandler
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.eclipse.jetty.util.thread.QueuedThreadPool
-import java.io.File
 
 object RestApi {
 
@@ -118,11 +113,30 @@ object RestApi {
             )
             it.defaultContentType = "application/json"
             it.prefer405over404 = true
-            it.sessionHandler { fileSessionHandler(config) }
             it.accessManager(AccessManager::manage)
             it.enforceSsl = config.enableSsl
             it.addStaticFiles("html")
             it.addSinglePageRoot("/", "html/index.html")
+        }.before { ctx ->
+
+            //check for session cookie
+            val cookieId = ctx.cookie(AccessManager.SESSION_COOKIE_NAME)
+
+            if (cookieId != null) {
+                //update cookie lifetime
+                ctx.cookie(AccessManager.SESSION_COOKIE_NAME, cookieId, AccessManager.SESSION_COOKIE_LIFETIME)
+                //store id in attribute for later use
+                ctx.attribute("session", cookieId)
+            }
+
+            //check for query parameter
+            val paramId = ctx.queryParam("session")
+
+            if (paramId != null) {
+                //store id in attribute for later use
+                ctx.attribute("session", paramId)
+            }
+
         }.routes {
 
             path("api") {
@@ -165,22 +179,6 @@ object RestApi {
 
     }
 
-
-    private fun fileSessionHandler(config: Config) = SessionHandler().apply {
-        sessionCache = DefaultSessionCache(this).apply {
-            sessionDataStore = FileSessionDataStore().apply {
-                val baseDir = File(".")
-                this.storeDir = File(baseDir, "session-store").apply { mkdir() }
-            }
-        }
-
-        if (config.enableSsl) {
-            sameSite = HttpCookie.SameSite.NONE
-            sessionCookieConfig.isSecure = true
-            isSecureRequestOnly = true
-        }
-
-    }
 
     private fun setupHttpServer(config: Config): Server {
 

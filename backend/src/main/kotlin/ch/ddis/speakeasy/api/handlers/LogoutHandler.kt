@@ -22,8 +22,11 @@ class LogoutHandler : RestHandler, GetRestHandler<SuccessStatus> {
         ]
     )
     override fun doGet(ctx: Context): SuccessStatus {
-        AccessManager.clearUserSession(ctx.sessionToken())
-        return SuccessStatus("Logged out")
+        return if( AccessManager.clearUserSession(ctx.sessionToken()) ){
+            SuccessStatus("Logged out")
+        } else {
+            SuccessStatus("Not logged in")
+        }
 
     }
 

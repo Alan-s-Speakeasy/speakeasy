@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.user.PlainPassword
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserSessionDetails
+import ch.ddis.speakeasy.util.getOrCreateSessionToken
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
@@ -36,7 +37,12 @@ class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
         val user = UserManager.getMatchingUser(loginRequest.username, password)
             ?: throw ErrorStatusException(401, "Invalid credentials. Please try again!", ctx)
 
-        val session = AccessManager.setUserForSession(ctx.req.session.id, user)
+        val sessionToken = ctx.getOrCreateSessionToken()
+
+        val session = AccessManager.setUserForSession(sessionToken, user)
+
+        //explicitly set cookie on login
+        ctx.cookie(AccessManager.SESSION_COOKIE_NAME, sessionToken, AccessManager.SESSION_COOKIE_LIFETIME)
 
         return UserSessionDetails(session)
 

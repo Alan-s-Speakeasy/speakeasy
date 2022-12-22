@@ -1,8 +1,6 @@
 package ch.ddis.speakeasy.api
 
-import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.*
-import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import ch.ddis.speakeasy.util.write
@@ -33,6 +31,12 @@ object AccessManager {
         true
     )
     private val cleanupTimer = Timer()
+
+    const val SESSION_COOKIE_NAME = "SESSIONID"
+    const val SESSION_COOKIE_LIFETIME = 60 * 60 * 24 //a day
+
+    val SESSION_TOKEN_CHAR_POOL : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-' + '_'
+    const val SESSION_TOKEN_LENGTH = 32
 
     fun manage(handler: Handler, ctx: Context, permittedRoles: Set<Role>) {
         when {
@@ -115,11 +119,17 @@ object AccessManager {
         updateLastAccess(session.sessionToken)
     }
 
-    fun updateLastAccess(sessionToken: String) {
+    fun updateLastAccess(sessionToken: String?) {
+        if (sessionToken == null) {
+            return
+        }
         sessionTokenLastAccessMap[sessionToken] = System.currentTimeMillis()
     }
 
-    fun getUserSessionForSessionToken(sessionToken: String): UserSession? {
+    fun getUserSessionForSessionToken(sessionToken: String?): UserSession? {
+        if (sessionToken == null) {
+            return null
+        }
         updateLastAccess(sessionToken)
         return sessionTokenUserSessionMap[sessionToken]
     }
@@ -132,12 +142,17 @@ object AccessManager {
         return userIdUserSessionMap[userId]?.isNotEmpty() == true
     }
 
-    fun clearUserSession(sessionToken: String) {
+    fun clearUserSession(sessionToken: String?): Boolean {
+        if (sessionToken == null) {
+            return false
+        }
         val session = sessionTokenUserSessionMap.remove(sessionToken)
         if (session != null) {
             sessionTokenLastAccessMap.remove(sessionToken)
             userIdUserSessionMap[session.user.id]!!.remove(session)
+            return true
         }
+        return false
     }
 
     fun forceClearUserId(userId: UserId) {
@@ -157,8 +172,10 @@ object AccessManager {
         }
     }
 
-    private fun rolesOfSession(sessionToken: String): Set<RestApiRole> =
-        sessionTokenUserSessionMap[sessionToken]?.user?.role?.let { userRoleToApiRole(it) } ?: emptySet()
+    private fun rolesOfSession(sessionToken: String?): Set<RestApiRole> =
+        if (sessionToken != null)
+            sessionTokenUserSessionMap[sessionToken]?.user?.role?.let { userRoleToApiRole(it) } ?: emptySet()
+        else emptySet()
 
     fun listSessions(): List<UserSession> = sessionTokenUserSessionMap.values.toList()
 }

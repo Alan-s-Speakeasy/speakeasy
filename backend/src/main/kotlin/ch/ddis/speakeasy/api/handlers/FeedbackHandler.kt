@@ -165,8 +165,6 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     override fun doGet(ctx: Context): FeedbackResponseMapList {
 
         val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
-
-        AccessManager.updateLastAccess(ctx.req.session.id)
         return FeedbackResponseMapList(allFeedbackResponses)
     }
 }
@@ -199,7 +197,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
         )
         val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
 
-        AccessManager.updateLastAccess(ctx.req.session.id)
+        AccessManager.updateLastAccess(ctx.sessionToken())
         val feedbackResponsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author)
 
         // Return all averages to admin

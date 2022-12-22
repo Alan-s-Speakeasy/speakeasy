@@ -16,7 +16,6 @@ class ListUsersHandler : GetRestHandler<List<UserDetails>>, AccessManagedRestHan
         responses = [OpenApiResponse("200", [OpenApiContent(Array<UserDetails>::class)])]
     )
     override fun doGet(ctx: Context): List<UserDetails> {
-        AccessManager.updateLastAccess(ctx.req.session.id)
         return UserManager.list().map(UserDetails.Companion::of)
     }
 
@@ -34,7 +33,6 @@ class ListUserSessionsHandler : GetRestHandler<List<UserSessionDetails>>, Access
         responses = [OpenApiResponse("200", [OpenApiContent(Array<UserSessionDetails>::class)])]
     )
     override fun doGet(ctx: Context): List<UserSessionDetails> {
-        AccessManager.updateLastAccess(ctx.req.session.id)
         return AccessManager.listSessions().map { UserSessionDetails(it) }
     }
 

@@ -8,7 +8,7 @@ import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
-import io.javalin.core.security.Role
+import io.javalin.core.security.RouteRole
 import io.javalin.http.Context
 import io.javalin.plugin.openapi.annotations.*
 
@@ -52,7 +52,7 @@ data class ChatRoomList(val rooms: List<ChatRoomInfo>)
 data class ChatRoomAdminList(val rooms: List<ChatRoomAdminInfo>)
 
 class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
-    override val permittedRoles: Set<Role> = setOf(RestApiRole.USER)
+    override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.USER)
     override val route = "rooms"
 
     @OpenApi(
@@ -82,7 +82,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
 }
 
 class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
-    override val permittedRoles: Set<Role> = setOf(RestApiRole.USER)
+    override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.USER)
     override val route = "rooms/assessed"
 
     @OpenApi(
@@ -112,7 +112,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
 }
 
 class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManagedRestHandler {
-    override val permittedRoles: Set<Role> = setOf(RestApiRole.ADMIN)
+    override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.ADMIN)
     override val route = "rooms/all"
 
     @OpenApi(
@@ -132,7 +132,7 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
 }
 
 class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManagedRestHandler {
-    override val permittedRoles: Set<Role> = setOf(RestApiRole.ADMIN)
+    override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.ADMIN)
     override val route = "rooms/active"
 
     @OpenApi(
@@ -165,11 +165,11 @@ data class ChatRoomState(
 
 class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.ADMIN)
-    override val route = "room/:roomId/:since"
+    override val route = "room/{roomId}/{since}"
 
     @OpenApi(
         summary = "Get state and all messages for a chat room since a specified time",
-        path = "/api/room/:roomId/:since",
+        path = "/api/room/{roomId}/{since}",
         tags = ["Chat"],
         pathParams = [
             OpenApiParam("roomId", String::class, "Id of the Chatroom"),
@@ -213,11 +213,11 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
 
 class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
-    override val route = "room/:roomId"
+    override val route = "room/{roomId}"
 
     @OpenApi(
         summary = "Post a message to a Chatroom.",
-        path = "/api/room/:roomId",
+        path = "/api/room/{roomId}",
         method = HttpMethod.POST,
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
@@ -266,11 +266,11 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
 class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
-    override val route = "room/:roomId/reaction"
+    override val route = "room/{roomId}/reaction"
 
     @OpenApi(
         summary = "Post a chat message reaction to a Chatroom.",
-        path = "/api/room/:roomId/reaction",
+        path = "/api/room/{roomId}/reaction",
         method = HttpMethod.POST,
         requestBody = OpenApiRequestBody([OpenApiContent(ChatMessageReaction::class)]),
         tags = ["Chat"],
@@ -307,7 +307,8 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
-        val reaction = ctx.body<ChatMessageReaction>()
+//        val reaction = ctx.body<ChatMessageReaction>() // todo
+        val reaction = ctx.bodyAsClass(ChatMessageReaction::class.java)
 
         try {
             room.addReaction(reaction)
@@ -350,7 +351,8 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(403, "Cannot establish a chat at this time", ctx)
         }
 
-        val request = ctx.body<ChatRequest>()
+//        val request = ctx.body<ChatRequest>() // todo
+        val request = ctx.bodyAsClass(ChatRequest::class.java)
 
         val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
 

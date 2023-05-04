@@ -7,6 +7,7 @@ import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.core.security.SecurityUtil
+import io.javalin.http.staticfiles.Location
 import io.javalin.plugin.openapi.OpenApiOptions
 import io.javalin.plugin.openapi.OpenApiPlugin
 import io.javalin.plugin.openapi.jackson.JacksonToJsonMapper
@@ -115,7 +116,8 @@ object RestApi {
             it.prefer405over404 = true
             it.accessManager(AccessManager::manage)
             it.enforceSsl = config.enableSsl
-            it.addStaticFiles("html")
+//            it.addStaticFiles("html") // todo
+            it.addStaticFiles("html", Location.CLASSPATH)
             it.addSinglePageRoot("/", "html/index.html")
         }.before { ctx ->
 
@@ -147,23 +149,24 @@ object RestApi {
                         val permittedRoles = if (handler is AccessManagedRestHandler) {
                             handler.permittedRoles
                         } else {
-                            SecurityUtil.roles(RestApiRole.ANYONE)
+//                            SecurityUtil.roles(RestApiRole.ANYONE) // todo
+                            setOf(RestApiRole.ANYONE)
                         }
 
                         if (handler is GetRestHandler<*>) {
-                            ApiBuilder.get(handler::get, permittedRoles)
+                            ApiBuilder.get(handler::get, *permittedRoles.toTypedArray())
                         }
 
                         if (handler is PostRestHandler<*>) {
-                            ApiBuilder.post(handler::post, permittedRoles)
+                            ApiBuilder.post(handler::post, *permittedRoles.toTypedArray())
                         }
 
                         if (handler is PatchRestHandler<*>) {
-                            ApiBuilder.patch(handler::patch, permittedRoles)
+                            ApiBuilder.patch(handler::patch, *permittedRoles.toTypedArray())
                         }
 
                         if (handler is DeleteRestHandler<*>) {
-                            ApiBuilder.delete(handler::delete, permittedRoles)
+                            ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
 
                     }

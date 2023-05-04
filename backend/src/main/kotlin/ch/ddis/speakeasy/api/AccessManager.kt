@@ -4,7 +4,7 @@ import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import ch.ddis.speakeasy.util.write
-import io.javalin.core.security.Role
+import io.javalin.core.security.RouteRole
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import java.io.File
@@ -38,7 +38,7 @@ object AccessManager {
     val SESSION_TOKEN_CHAR_POOL : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-' + '_'
     const val SESSION_TOKEN_LENGTH = 32
 
-    fun manage(handler: Handler, ctx: Context, permittedRoles: Set<Role>) {
+    fun manage(handler: Handler, ctx: Context, permittedRoles: Set<RouteRole>) {
         when {
             permittedRoles.isEmpty() -> handler.handle(ctx) //fallback in case no roles are set, none are required
             permittedRoles.contains(RestApiRole.ANYONE) -> handler.handle(ctx)
@@ -180,4 +180,4 @@ object AccessManager {
     fun listSessions(): List<UserSession> = sessionTokenUserSessionMap.values.toList()
 }
 
-enum class RestApiRole : Role { ANYONE, USER, HUMAN, ADMIN }
+enum class RestApiRole : RouteRole { ANYONE, USER, HUMAN, ADMIN }

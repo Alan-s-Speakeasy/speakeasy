@@ -1,4 +1,9 @@
 username,password,role,id
-admin,adM1nP4ssw0rD,ADMIN,
-bot,0010110101001,BOT,
-human,Password123,HUMAN,
+huiran.duan_admin,huiran.duan_admin,ADMIN,
+huiran.duan_bot,huiran.duan_bot,BOT,
+huiran.duan,huiran.duan,HUMAN,
+bot1,bot1,BOT,
+bot2,bot2,BOT,
+bot3,bot3,BOT,
+bot4,bot4,BOT,
+bot5,bot5,BOT,

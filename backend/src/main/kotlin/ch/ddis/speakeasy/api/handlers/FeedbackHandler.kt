@@ -57,11 +57,11 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
 
     override val permittedRoles = setOf(RestApiRole.USER)
 
-    override val route: String = "feedback/:roomId"
+    override val route: String = "feedback/{roomId}"
 
     @OpenApi(
         summary = "Returns Feedback for a Chatroom.",
-        path = "/api/feedback/:roomId",
+        path = "/api/feedback/{roomId}",
         method = HttpMethod.POST,
         requestBody = OpenApiRequestBody([OpenApiContent(FeedbackResponseList::class)]),
         tags = ["Feedback"],
@@ -112,11 +112,11 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
 
     override val permittedRoles = setOf(RestApiRole.USER)
 
-    override val route: String = "feedbackhistory/:roomId"
+    override val route: String = "feedbackhistory/{roomId}"
 
     @OpenApi(
         summary = "Gets the list of feedback responses for a Chatroom.",
-        path = "/api/feedbackhistory/:roomId",
+        path = "/api/feedbackhistory/{roomId}",
         method = HttpMethod.GET,
         tags = ["Feedback"],
         pathParams = [

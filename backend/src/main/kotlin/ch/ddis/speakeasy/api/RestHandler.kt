@@ -2,7 +2,7 @@ package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.util.errorResponse
 import ch.ddis.speakeasy.util.sessionToken
-import io.javalin.core.security.Role
+import io.javalin.core.security.RouteRole
 import io.javalin.http.Context
 
 
@@ -82,6 +82,6 @@ interface DeleteRestHandler<T: Any> : RestHandler {
 
 interface AccessManagedRestHandler : RestHandler {
 
-    val permittedRoles: Set<Role>
+    val permittedRoles: Set<RouteRole>
 
 }

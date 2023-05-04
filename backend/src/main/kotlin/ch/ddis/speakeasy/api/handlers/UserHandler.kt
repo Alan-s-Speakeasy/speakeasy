@@ -138,7 +138,8 @@ class ChangePasswordHandler : PatchRestHandler<SuccessStatus>, AccessManagedRest
     override fun doPatch(ctx: Context): SuccessStatus {
 
         val changeRequest = try {
-            ctx.body<PasswordChangeRequest>()
+//            ctx.body<PasswordChangeRequest>()
+            ctx.bodyAsClass(PasswordChangeRequest::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid change request", ctx)
         }

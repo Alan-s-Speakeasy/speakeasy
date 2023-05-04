@@ -1,5 +1,6 @@
 buildscript {
-    ext.kotlinVersion = '1.5.10'
+    ext.kotlinVersion = '1.5.10' // todo
+//    ext.kotlinVersion = '1.8.10'
     repositories {
         mavenCentral()
     }
@@ -49,9 +50,12 @@ dependencies {
     implementation frontendClasspath(project(path: ":frontend", configuration: 'frontendFiles'))
 
     ////// Javalin
-    implementation ('io.javalin:javalin-bundle:3.13.0'){
+    implementation ('io.javalin:javalin-bundle:4.6.0'){
         exclude group: 'ch.qos.logback', module: 'logback-classic'
     }
+//    implementation ('io.javalin:javalin-bundle:3.13.0'){ // todo
+//        exclude group: 'ch.qos.logback', module: 'logback-classic'
+//    }
     implementation group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.1.5'
     implementation group: 'org.webjars', name: 'swagger-ui', version: '3.24.3'
     implementation group: 'org.webjars.npm', name: 'js-tokens', version: '3.0.2'

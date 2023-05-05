@@ -7,7 +7,7 @@ import ch.ddis.speakeasy.user.UserSessionDetails
 import ch.ddis.speakeasy.util.getOrCreateSessionToken
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
-import io.javalin.plugin.openapi.annotations.*
+import io.javalin.openapi.*
 
 class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
 
@@ -15,7 +15,7 @@ class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
 
     @OpenApi(
         summary = "Sets roles for session based on user account and returns a session cookie.", path = "/api/login",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         tags = ["User"],
         requestBody = OpenApiRequestBody([OpenApiContent(LoginRequest::class)]),
         responses = [
@@ -31,7 +31,6 @@ class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
         }
-
         val password = PlainPassword(loginRequest.password)
 
         val user = UserManager.getMatchingUser(loginRequest.username, password)

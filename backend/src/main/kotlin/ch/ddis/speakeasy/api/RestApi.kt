@@ -2,17 +2,18 @@ package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.util.Config
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.ApiBuilder.path
-import io.javalin.core.security.SecurityUtil
 import io.javalin.http.staticfiles.Location
-import io.javalin.plugin.openapi.OpenApiOptions
-import io.javalin.plugin.openapi.OpenApiPlugin
-import io.javalin.plugin.openapi.jackson.JacksonToJsonMapper
-import io.javalin.plugin.openapi.ui.SwaggerOptions
-import io.swagger.v3.oas.models.info.Info
+import io.javalin.json.JavalinJackson
+import io.javalin.openapi.plugin.OpenApiPlugin
+import io.javalin.openapi.plugin.OpenApiPluginConfiguration
+import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
+import io.javalin.openapi.plugin.swagger.SwaggerPlugin
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
@@ -61,64 +62,46 @@ object RestApi {
             DeleteAssignmentGeneratorHandler()
         )
 
-        javalin = Javalin.create {
-            it.enableCorsForAllOrigins()
-            it.server { setupHttpServer(config) }
-            it.registerPlugin(
+        javalin = Javalin.create { it ->
+            it.plugins.enableCors {corsContainer ->
+                corsContainer.add { cfg ->
+                    cfg.anyHost()
+                }
+            }
+            it.plugins.register(
                 OpenApiPlugin(
-                    OpenApiOptions(
-                        Info().apply {
-                            title("Alan's Speakeasy")
-                            version("0.1")
-                            description("Full API for Alan's Speakeasy, Version 0.1")
-                        }
-                    ).apply {
-                        path("/swagger-docs")
-                        swagger(SwaggerOptions("/swagger-ui"))
-                        activateAnnotationScanningFor("ch.ddis.speakeasy.api.handlers")
-                        toJsonMapper(JacksonToJsonMapper(jacksonMapper.enable(SerializationFeature.INDENT_OUTPUT)))
-                    },
-                    OpenApiOptions(
-                        Info().apply {
-                            title("Alan's Speakeasy")
-                            version("0.1")
-                            description("Client API for Alan's Speakeasy, Version 0.1")
-                        }
-                    ).apply {
-                        path("/client-specs")
-                        swagger(SwaggerOptions("/client-swagger"))
-                        activateAnnotationScanningFor("ch.ddis.speakeasy.api.handlers")
-                        toJsonMapper(JacksonToJsonMapper(jacksonMapper.enable(SerializationFeature.INDENT_OUTPUT)))
-                        listOf(
-                            "/api/user/list",
-                            "/api/user/sessions",
-                            "/api/user/add",
-                            "/api/user/remove",
-                            "/api/user/password",
-                            "/api/rooms/all",
-                            "/api/rooms/active",
-                            "/api/rooms/assessed",
-                            "/api/rooms/request",
-                            "/api/feedback",
-                            "/api/feedback/*",
-                            "/api/feedbackaverage",
-                            "/api/feedbackhistory",
-                            "/api/feedbackhistory/*",
-                            "/api/assignment",
-                            "/api/assignment/*",
-                        ).forEach {
-                            ignorePath(it)
-                        }
-                    },
+                    OpenApiPluginConfiguration()
+                        .withDefinitionConfiguration { _, configuration ->
+                            configuration.withOpenApiInfo {
+                                it.title = "Alan's Speakeasy"
+                                it.version = "0.1"
+                                it.description = "Full API for Alan's Speakeasy, Version 0.1"
+                            }
+                        }.withDocumentationPath("/swagger-docs") // TODO: swagger-docs not working now
                 )
             )
-            it.defaultContentType = "application/json"
-            it.prefer405over404 = true
+            it.plugins.register(
+                SwaggerPlugin(
+                    SwaggerConfiguration().apply {
+                        uiPath =  "/swagger-ui" // TODO: swagger-ui not working now
+                    }
+                )
+            )
+            // TODO: add "/client-specs" & "/client-swagger" with ignorePath list
+
+            it.jsonMapper(
+                JavalinJackson(
+                    ObjectMapper()
+                        .enable(SerializationFeature.INDENT_OUTPUT)
+                        .registerModule(kotlinModule())
+                )
+            )
+            it.http.defaultContentType = "application/json"
+            it.http.prefer405over404 = true
             it.accessManager(AccessManager::manage)
-            it.enforceSsl = config.enableSsl
-//            it.addStaticFiles("html") // todo
-            it.addStaticFiles("html", Location.CLASSPATH)
-            it.addSinglePageRoot("/", "html/index.html")
+            if(config.enableSsl) { it.plugins.enableSslRedirects() }
+            it.staticFiles.add("html", Location.CLASSPATH)
+            it.spaRoot.addFile("/", "html/index.html")
         }.before { ctx ->
 
             //check for session cookie
@@ -149,7 +132,6 @@ object RestApi {
                         val permittedRoles = if (handler is AccessManagedRestHandler) {
                             handler.permittedRoles
                         } else {
-//                            SecurityUtil.roles(RestApiRole.ANYONE) // todo
                             setOf(RestApiRole.ANYONE)
                         }
 

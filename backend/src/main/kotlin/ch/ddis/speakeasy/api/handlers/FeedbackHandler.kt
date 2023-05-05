@@ -8,7 +8,7 @@ import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
-import io.javalin.plugin.openapi.annotations.*
+import io.javalin.openapi.*
 
 data class FeedbackAnswerOption(val name: String, val value: Int)
 data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>)
@@ -29,7 +29,7 @@ class GetFeedbackRequestListHandler : GetRestHandler<FeedbackRequestList>, Acces
     @OpenApi(
         summary = "Gets the list of feedback requests for a Chatroom.",
         path = "/api/feedback",
-        method = HttpMethod.GET,
+        methods = [HttpMethod.GET],
         tags = ["Feedback"],
 
         queryParams = [
@@ -62,7 +62,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
     @OpenApi(
         summary = "Returns Feedback for a Chatroom.",
         path = "/api/feedback/{roomId}",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(FeedbackResponseList::class)]),
         tags = ["Feedback"],
         pathParams = [
@@ -117,7 +117,7 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
     @OpenApi(
         summary = "Gets the list of feedback responses for a Chatroom.",
         path = "/api/feedbackhistory/{roomId}",
-        method = HttpMethod.GET,
+        methods = [HttpMethod.GET],
         tags = ["Feedback"],
         pathParams = [
             OpenApiParam("roomId", String::class, "Id of the Chatroom"),
@@ -155,7 +155,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     @OpenApi(
         summary = "Gets the list of feedback responses",
         path = "/api/feedbackhistory",
-        method = HttpMethod.GET,
+        methods = [HttpMethod.GET],
         tags = ["Admin"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(FeedbackResponseMapList::class)]),
@@ -178,7 +178,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
     @OpenApi(
         summary = "Gets the list of feedback averages per user",
         path = "/api/feedbackaverage",
-        method = HttpMethod.GET,
+        methods = [HttpMethod.GET],
         tags = ["Admin", "Feedback"],
         queryParams = [
             OpenApiParam("author", String::class, "author or recipient")

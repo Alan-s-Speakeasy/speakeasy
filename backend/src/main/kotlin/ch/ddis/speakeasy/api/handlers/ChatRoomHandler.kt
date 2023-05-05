@@ -8,9 +8,9 @@ import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
-import io.javalin.core.security.RouteRole
+import io.javalin.security.RouteRole
 import io.javalin.http.Context
-import io.javalin.plugin.openapi.annotations.*
+import io.javalin.openapi.*
 
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
@@ -218,7 +218,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Post a message to a Chatroom.",
         path = "/api/room/{roomId}",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
         pathParams = [
@@ -271,7 +271,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
     @OpenApi(
         summary = "Post a chat message reaction to a Chatroom.",
         path = "/api/room/{roomId}/reaction",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatMessageReaction::class)]),
         tags = ["Chat"],
         pathParams = [
@@ -331,7 +331,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Creates a Chatroom with another user.",
         path = "/api/rooms/request",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatRequest::class)]),
         tags = ["Chat"],
         responses = [

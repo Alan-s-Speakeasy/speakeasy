@@ -4,7 +4,7 @@ import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import ch.ddis.speakeasy.util.write
-import io.javalin.core.security.RouteRole
+import io.javalin.security.RouteRole
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import java.io.File

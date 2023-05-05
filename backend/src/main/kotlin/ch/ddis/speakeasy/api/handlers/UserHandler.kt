@@ -5,7 +5,7 @@ import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
-import io.javalin.plugin.openapi.annotations.*
+import io.javalin.openapi.*
 
 class ListUsersHandler : GetRestHandler<List<UserDetails>>, AccessManagedRestHandler {
 
@@ -48,7 +48,7 @@ class AddUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler 
     @OpenApi(
         summary = "Adds a new user.",
         path = "/api/user/add",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(AddUserRequest::class)]),
         tags = ["Admin"],
         responses = [
@@ -78,7 +78,7 @@ class RemoveUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandl
     @OpenApi(
         summary = "Removes an existing user.",
         path = "/api/user/remove?force",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Admin"],
         queryParams = [
@@ -122,7 +122,7 @@ class ChangePasswordHandler : PatchRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Changes the password for a given user.",
         path = "/api/user/password",
-        method = HttpMethod.PATCH,
+        methods = [HttpMethod.PATCH],
         requestBody = OpenApiRequestBody([OpenApiContent(PasswordChangeRequest::class)]),
         tags = ["User"],
         responses = [
@@ -177,7 +177,7 @@ class GetCurrentUserHandler : GetRestHandler<UserSessionDetails>, AccessManagedR
     @OpenApi(
         summary = "Returns details for the current session.",
         path = "/api/user/current",
-        method = HttpMethod.GET,
+        methods = [HttpMethod.GET],
         tags = ["User"],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")

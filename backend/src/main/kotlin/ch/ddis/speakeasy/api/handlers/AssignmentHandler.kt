@@ -4,7 +4,7 @@ import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
-import io.javalin.plugin.openapi.annotations.*
+import io.javalin.openapi.*
 
 data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>)
 data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val round: Int, val remainingTime: Long, val rooms: List<ChatRoomAdminInfo>)
@@ -21,7 +21,7 @@ class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessMan
     @OpenApi(
         summary = "Initialize a new assignment generator.",
         path = "/api/assignment/new",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         tags = ["Assignment"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -43,7 +43,7 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
     @OpenApi(
         summary = "Get the status of the current assignment generator",
         path = "/api/assignment",
-        method = HttpMethod.GET,
+        methods = [HttpMethod.GET],
         tags = ["Assignment"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(AssignmentGeneratorObject::class)]),
@@ -64,7 +64,7 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
     @OpenApi(
         summary = "Generate a new assignment round",
         path = "/api/assignment/round",
-        method = HttpMethod.POST,
+        methods = [HttpMethod.POST],
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
         responses = [
@@ -113,7 +113,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
     @OpenApi(
         summary = "Start the generated assignment round",
         path = "/api/assignment/round",
-        method = HttpMethod.PATCH,
+        methods = [HttpMethod.PATCH],
         tags = ["Assignment"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(RoundStarted::class)]),
@@ -138,7 +138,7 @@ class DeleteAssignmentGeneratorHandler : DeleteRestHandler<SuccessStatus>, Acces
     @OpenApi(
         summary = "Delete the active assignment generator.",
         path = "/api/assignment",
-        method = HttpMethod.DELETE,
+        methods = [HttpMethod.DELETE],
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
         responses = [

@@ -2,7 +2,7 @@ package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.util.errorResponse
 import ch.ddis.speakeasy.util.sessionToken
-import io.javalin.core.security.RouteRole
+import io.javalin.security.RouteRole
 import io.javalin.http.Context
 
 

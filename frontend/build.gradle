@@ -32,17 +32,17 @@ task buildFrontend(type: NpmTask) {
     dependsOn npmInstall
 }
 
-task packageFrontend(type: Zip) {
-    outputs.upToDateWhen {
-        return file("$buildDir/lib/frontend.jar").exists()
-    }
-    dependsOn buildFrontend
-    baseName 'frontend'
-    extension 'jar'
-    destinationDir file("$buildDir/lib")
-    from("$buildDir/dist") {
-        into 'html'
-    }
+task packageFrontend(type: Jar) {
+  outputs.upToDateWhen {
+    return file("$buildDir/lib/frontend.jar").exists()
+  }
+  dependsOn buildFrontend
+  archiveBaseName.set('frontend')
+  archiveExtension.set('jar')
+  destinationDirectory.set(file("$buildDir/lib"))
+  from("$buildDir/dist") {
+    into 'html'
+  }
 }
 
 artifacts {

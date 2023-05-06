@@ -6,21 +6,22 @@ plugins {
 group 'ch.ddis.speakeasy'
 version '0.1'
 
+/// Variables used for Open API generation.
 def oasFile = "${project.projectDir}/docs/openapi-full.json"
 
 /// Generates the openapi frontend bindings
 openApiGenerate {
     /// Source command:
-    generateApiTests = false 
-    generateModelTests = false 
+    generateApiTests = false
+    generateModelTests = false
     validateSpec = false
 
     generatorName = 'typescript-angular'
     inputSpec = oasFile
     outputDir = file("${project.projectDir}/frontend/openapi").toString()
     configOptions = [
-        npmName: '@speakeasy-openapi/api',
-        ngVersion: '9.1.0',
-        enumPropertyNaming: 'original'
+            npmName: '@speakeasy-openapi/api',
+            ngVersion: '9.1.0',
+            enumPropertyNaming: 'original'
     ]
 }

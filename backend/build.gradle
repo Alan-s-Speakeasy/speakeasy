@@ -25,6 +25,9 @@ applicationDefaultJvmArgs = ["-Xms4G", "-Xmx16G"]
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://maven.reposilite.com/snapshots'
+    } //javalin openapi snapshot
 }
 
 configurations {
@@ -47,7 +50,7 @@ dependencies {
     def jettyVersion = '9.4.25.v20191220'
     def alpnApiVersion = '1.1.3.v20160715'
     def alpnBootVersion = '8.1.12.v20180117'
-    def javaLinVersion = '5.5.0'
+    def javaLinVersion =  '5.4.2'
     def openApiVersion = '5.4.2'
 
     implementation frontendClasspath(project(path: ":frontend", configuration: 'frontendFiles'))
@@ -56,14 +59,11 @@ dependencies {
     implementation ("io.javalin:javalin-bundle:$javaLinVersion"){
         exclude group: 'ch.qos.logback', module: 'logback-classic'
     }
+    kapt("io.javalin.community.openapi:openapi-annotation-processor:$openApiVersion")
     ////// OpenApi
-    implementation "io.javalin.community.openapi:javalin-openapi-plugin:$openApiVersion" // for /openapi route with JSON scheme
-    implementation "io.javalin.community.openapi:javalin-swagger-plugin:$openApiVersion" // for Swagger UI
-    implementation "io.javalin.community.openapi:javalin-redoc-plugin:$openApiVersion" // for ReDoc UI
+    implementation group: 'io.javalin.community.openapi', name: 'javalin-openapi-plugin', version: openApiVersion
+    implementation group: 'io.javalin.community.openapi', name:'javalin-swagger-plugin', version: openApiVersion
 
-    implementation group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.1.5'
-    implementation group: 'org.webjars', name: 'swagger-ui', version: '3.24.3'
-    implementation group: 'org.webjars.npm', name: 'js-tokens', version: '3.0.2'
     implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.12.+'
     implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.34'
     implementation group: 'org.eclipse.jetty.http2', name: 'http2-server', version: jettyVersion

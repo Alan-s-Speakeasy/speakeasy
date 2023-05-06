@@ -14,7 +14,8 @@ class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
     data class LoginRequest(var username: String, var password: String)
 
     @OpenApi(
-        summary = "Sets roles for session based on user account and returns a session cookie.", path = "/api/login",
+        summary = "Sets roles for session based on user account and returns a session cookie.",
+        path = "/api/login",
         methods = [HttpMethod.POST],
         tags = ["User"],
         requestBody = OpenApiRequestBody([OpenApiContent(LoginRequest::class)]),

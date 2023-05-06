@@ -62,33 +62,36 @@ object RestApi {
             DeleteAssignmentGeneratorHandler()
         )
 
-        javalin = Javalin.create { it ->
+        javalin = Javalin.create {
             it.plugins.enableCors {corsContainer ->
                 corsContainer.add { cfg ->
                     cfg.anyHost()
                 }
             }
+            it.jetty.server { setupHttpServer(config) }
             it.plugins.register(
                 OpenApiPlugin(
                     OpenApiPluginConfiguration()
-                        .withDefinitionConfiguration { _, configuration ->
-                            configuration.withOpenApiInfo {
-                                it.title = "Alan's Speakeasy"
-                                it.version = "0.1"
-                                it.description = "Full API for Alan's Speakeasy, Version 0.1"
+                        .withDocumentationPath("/swagger-docs")
+                        .withDefinitionConfiguration { _, cfg ->
+                            cfg.withOpenApiInfo { info ->
+                                info.title = "Alan's Speakeasy"
+                                info.version = "0.1"
+                                info.description = "Full API for Alan's Speakeasy, Version 0.1"
                             }
-                        }.withDocumentationPath("/swagger-docs") // TODO: swagger-docs not working now
+                        }
                 )
             )
+            it.plugins.register(ClientOpenApiPlugin())
+            // TODO: add "/client-swagger" with ignorePath list
             it.plugins.register(
                 SwaggerPlugin(
                     SwaggerConfiguration().apply {
-                        uiPath =  "/swagger-ui" // TODO: swagger-ui not working now
+                        this.documentationPath = "/swagger-docs"
+                        this.uiPath =  "/swagger-ui"
                     }
                 )
             )
-            // TODO: add "/client-specs" & "/client-swagger" with ignorePath list
-
             it.jsonMapper(
                 JavalinJackson(
                     ObjectMapper()

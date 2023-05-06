@@ -78,7 +78,9 @@ object AccessManager {
 
     fun setUserForSession(sessionToken: String, user: User): UserSession {
 
-        if (sessionTokenUserSessionMap.containsKey(sessionToken)) {
+        if (sessionTokenUserSessionMap.containsKey(sessionToken)
+            // if the role in HashMap and the role of current user don't match (e.g. BOT == HUMAN), we need to create a new UserSession
+            && sessionTokenUserSessionMap[sessionToken]!!.user.role == user.role) {
             return sessionTokenUserSessionMap[sessionToken]!!
         }
 

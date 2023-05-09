@@ -1,16 +1,19 @@
 package ch.ddis.speakeasy.api
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import io.javalin.openapi.plugin.OpenApiConfiguration
 import io.javalin.openapi.plugin.OpenApiPlugin
+import io.javalin.openapi.plugin.OpenApiPluginConfiguration
 
-class ClientOpenApiPlugin : OpenApiPlugin(OpenApiConfiguration().apply {
-    this.info.title = "Alan's Speakeasy"
-    this.info.version = "0.1"
-    this.info.description = "Client API for Alan's Speakeasy, Version 0.1"
-    this.documentationPath = "/client-specs"
-    this.documentProcessor = {doc ->
-        val blacklist = setOf(
+class ClientOpenApiPlugin : OpenApiPlugin(OpenApiPluginConfiguration()
+    .withDocumentationPath("/client-specs")
+    .withDefinitionConfiguration { _, cfg ->
+        cfg.withOpenApiInfo { info ->
+            info.title = "Alan's Speakeasy"
+            info.version = "0.1"
+            info.description = "Client API for Alan's Speakeasy, Version 0.1"
+        }
+        cfg.withDefinitionProcessor { doc ->
+            val blacklist = setOf(
             "/api/user/list",
             "/api/user/sessions",
             "/api/user/add",
@@ -28,18 +31,15 @@ class ClientOpenApiPlugin : OpenApiPlugin(OpenApiConfiguration().apply {
             "/api/assignment",
             "/api/assignment/*",
         )
+            val relevantRoutes =
+                doc["paths"].fields().asSequence().filter { blacklist.none { b -> it.key.contains(b) } }.map { it.key }
+                    .toList()
 
-        val relevantRoutes = doc["paths"].fields()
-            .asSequence()
-            .filter {
-                blacklist.none { b -> it.key.contains(b) }
-            }
-            .map { it.key }.toList()
+            (doc["paths"] as ObjectNode).retain(relevantRoutes)
 
-        (doc["paths"] as ObjectNode).retain(relevantRoutes)
+            doc.toPrettyString()
 
-        doc.toPrettyString()
-
+        }
     }
-}) {
-}
+
+)

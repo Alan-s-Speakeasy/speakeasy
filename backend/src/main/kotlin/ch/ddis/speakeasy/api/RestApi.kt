@@ -82,8 +82,7 @@ object RestApi {
                         }
                 )
             )
-            it.plugins.register(ClientOpenApiPlugin())
-            // TODO: add "/client-swagger" with ignorePath list
+
             it.plugins.register(
                 SwaggerPlugin(
                     SwaggerConfiguration().apply {
@@ -92,6 +91,9 @@ object RestApi {
                     }
                 )
             )
+            // client-side
+            it.plugins.register(ClientOpenApiPlugin())
+            it.plugins.register(ClientSwaggerPlugin())
             it.jsonMapper(
                 JavalinJackson(
                     ObjectMapper()

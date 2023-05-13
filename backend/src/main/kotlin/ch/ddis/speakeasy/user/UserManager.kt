@@ -5,56 +5,71 @@ import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
-import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
-import java.io.File
-import java.io.RandomAccessFile
-import java.nio.channels.FileLock
+import org.sqlite.SQLiteException
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.Statement
+import java.sql.ResultSet
 import java.util.concurrent.locks.StampedLock
-
 object UserManager {
 
     private val users = mutableListOf<User>()
 
-    private lateinit var userFile: File
+
+    private lateinit var userSQLitePath: String
+
+    private lateinit var userConnection: Connection
+
+    private lateinit var statement: Statement
 
     private val lock: StampedLock = StampedLock()
 
-    private lateinit var fileLock: FileLock
 
-    private fun updateFileLock() {
-        this.fileLock = RandomAccessFile(userFile, "rw").channel.lock()
-    }
 
-    fun init(config: Config) = this.lock.write {
-        this.userFile = File(File(config.dataPath), "users.csv")
-        if (!this.userFile.exists()) {
-            return
-        }
-        csvReader { skipEmptyLine = true }.open(this.userFile) {
-            readAllWithHeader().forEach { row: Map<String, String> ->
+    fun init(config: Config) {
+        this.lock.write {
+            this.userSQLitePath = "jdbc:sqlite:${config.dataPath}/users.db"
+            this.userConnection = DriverManager.getConnection(this.userSQLitePath) // if file not exists, it will create this db file
+            this.statement = this.userConnection.createStatement()
+
+            val sqlCreate = "create table if not exists users(" +
+                    "username varchar(255), " +
+                    "password varchar(255), " +
+                    "role varchar(255), " +
+                    "id varchar(255)," +
+                    "UNIQUE(username))"
+            this.statement.executeUpdate(sqlCreate)
+
+            // initialize users from users.db
+            val sqlQuery = "select * from users"
+            val results: ResultSet = statement.executeQuery(sqlQuery)
+            while (results.next()){
+                val username = results.getString("username")
+                if ( users.find { it.name == username } != null ){ // Theoretically it will not happen here, just in case
+                    System.err.println("Username conflict! Ignore the second '$username'")
+                    continue
+                }
                 val role = try {
-                    UserRole.valueOf(row["role"]!!)
+                    UserRole.valueOf(results.getString("role"))
                 } catch (e: IllegalArgumentException) {
-                    System.err.println("Cannot parse user role ${row["role"]}, defaulting to HUMAN")
+                    System.err.println("Cannot parse user role ${results.getString("role")}, defaulting to HUMAN")
                     UserRole.HUMAN
                 }
-                val password = if (row["password"]!!.startsWith("$")) {
-                    HashedPassword(row["password"]!!)
+                val password = if (results.getString("password").startsWith("$")) {
+                    HashedPassword(results.getString("password"))
                 } else {
-                    PlainPassword(row["password"]!!)
+                    System.err.println("The password of $username is not hashed in database!")
+                    PlainPassword(results.getString("password"))
                 }
                 val uid = try {
-                    row["id"]!!.UID()
+                    results.getString("id").UID()
                 } catch (e: IllegalArgumentException) {
                     UID()
                 }
-
-                users.add(User(uid, row["username"]!!, role, password))
+                users.add(User(uid, username, role, password)) // will convert password to hashed password
 
             }
         }
-        updateFileLock()
     }
 
 
@@ -68,10 +83,14 @@ object UserManager {
 
     fun addUser(username: String, role: UserRole, password: Password) {
         this.lock.write {
+            if (users.find { it.name == username } != null) {
+                throw UsernameConflictException()
+            }
             val uid = UID()
-            users.add(User(uid, username, role, password))
+            val newUser = User(uid, username, role, password)
+            users.add(newUser)
+            flushAddedUser(newUser)
         }
-        store()
     }
 
     fun removeUser(username: String, force: Boolean): Boolean {
@@ -85,23 +104,12 @@ object UserManager {
                         AccessManager.forceClearUserId(user.id)
                     }
                     users.remove(user)
+                    flushRemovedUser(user)
                     return true
                 }
             }
         }
-        store()
         return true
-    }
-
-    fun store() = this.lock.read {
-        this.fileLock.release()
-        csvWriter().open(this.userFile) {
-            writeRow(listOf("username", "password", "role", "id"))
-            users.forEach {
-                writeRow(listOf(it.name, it.password.hash, it.role.name, it.id.string))
-            }
-        }
-        updateFileLock()
     }
 
     fun getMatchingUser(username: String, password: PlainPassword): User? = this.lock.read {
@@ -128,12 +136,42 @@ object UserManager {
             users.remove(oldUser)
             val newUser = User(oldUser.id, oldUser.name, oldUser.role, newPassword)
             users.add(newUser)
+            flushUpdatedUser(newUser)
         }
-        store()
     }
 
     fun list(): List<User> = this.lock.read {
         this.users.toList()
     }
 
+    private fun flushAddedUser(user: User){
+        try {
+            val sqlInsert =
+                "insert into users values ('${user.name}', '${user.password.hash}', '${user.role.name}', '${user.id.string}')"
+            statement.executeUpdate(sqlInsert)
+        } catch (e: SQLiteException){
+            System.err.println("Username conflict in database! Ignore the second '${user.name}.'")
+        }
+    }
+
+    private fun flushRemovedUser(user: User){
+        try {
+            val sqlInsert = "delete from users where username = '${user.name}'"
+            statement.executeUpdate(sqlInsert)
+        } catch (e: SQLiteException){
+            System.err.println("Failed to remove '${user.name}' from database.")
+        }
+    }
+
+    private fun flushUpdatedUser(user: User){
+        try {
+            val sqlInsert = "update users set password = '${user.password.hash}' where username = '${user.name}'"
+            statement.executeUpdate(sqlInsert)
+        } catch (e: SQLiteException){
+            System.err.println("Failed to update the password of '${user.name}' in database.")
+        }
+    }
+
 }
+
+class UsernameConflictException(message: String = "Username already exists!") : Exception(message)

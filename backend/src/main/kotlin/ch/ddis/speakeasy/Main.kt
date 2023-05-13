@@ -32,7 +32,6 @@ object Main {
 
         AccessManager.stop()
         RestApi.stop()
-        UserManager.store()
     }
 
 }

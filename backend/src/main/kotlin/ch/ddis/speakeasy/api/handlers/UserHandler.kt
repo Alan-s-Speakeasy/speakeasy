@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.sessionToken
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -54,6 +55,7 @@ class AddUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler 
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("409", [OpenApiContent(ErrorStatus::class)]),
         ]
     )
     override fun doPost(ctx: Context): SuccessStatus {
@@ -61,9 +63,15 @@ class AddUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler 
             ctx.bodyAsClass(AddUserRequest::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+        } catch (e: InvalidFormatException){
+            throw ErrorStatusException(400, "Invalid request format.", ctx)
         }
 
-        UserManager.addUser(addUserRequest.username, addUserRequest.role, PlainPassword(addUserRequest.password))
+        try {
+            UserManager.addUser(addUserRequest.username, addUserRequest.role, PlainPassword(addUserRequest.password))
+        } catch (e: UsernameConflictException) {
+            throw ErrorStatusException(409, "Username already exists!", ctx)
+        }
 
         return SuccessStatus("User added")
     }

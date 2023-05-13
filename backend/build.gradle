@@ -77,6 +77,9 @@ dependencies {
     ////// CSV
     implementation group: 'com.github.doyaaaaaken', name: 'kotlin-csv-jvm', version: '0.7.3'
 
+    ////// SQLite-JDBC
+    implementation 'org.xerial:sqlite-jdbc:3.41.2.1'
+
     ////// Log4J
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.16.0'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.16.0'

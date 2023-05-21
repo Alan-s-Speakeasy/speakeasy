@@ -9,40 +9,52 @@ import org.sqlite.SQLiteException
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.locks.StampedLock
 object UserManager {
 
     private val users = mutableListOf<User>()
 
-
     private lateinit var userSQLitePath: String
 
     private lateinit var userConnection: Connection
 
-    private lateinit var statement: Statement
+    private lateinit var tableName: String
+
+    private lateinit var initStatement: Statement
+    private lateinit var preparedInsertStatement: PreparedStatement
+    private lateinit var preparedDeleteStatement: PreparedStatement
+    private lateinit var preparedUpdateStatement: PreparedStatement
 
     private val lock: StampedLock = StampedLock()
-
 
 
     fun init(config: Config) {
         this.lock.write {
             this.userSQLitePath = "jdbc:sqlite:${config.dataPath}/users.db"
             this.userConnection = DriverManager.getConnection(this.userSQLitePath) // if file not exists, it will create this db file
-            this.statement = this.userConnection.createStatement()
+            this.tableName = "users"
+            this.initStatement = this.userConnection.createStatement()
+            // create table if not exists
+            val sqlCreate = "CREATE TABLE IF NOT EXISTS $tableName (" +
+                    "username VARCHAR(60) NOT NULL UNIQUE, " +
+                    "password CHAR(60) NOT NULL, " + // password hashes have the same length 60
+                    "role TINYINT NOT NULL, " +
+                    "id CHAR(36) NOT NULL)" // ids have the same length 36
+            this.initStatement.executeUpdate(sqlCreate)
 
-            val sqlCreate = "create table if not exists users(" +
-                    "username varchar(255), " +
-                    "password varchar(255), " +
-                    "role varchar(255), " +
-                    "id varchar(255)," +
-                    "UNIQUE(username))"
-            this.statement.executeUpdate(sqlCreate)
+            // prepare some statements for later use
+            val sqlInsert = "INSERT INTO $tableName VALUES (?, ?, ?, ?)"
+            this.preparedInsertStatement = userConnection.prepareStatement(sqlInsert)
+            val sqlDelete = "DELETE FROM $tableName WHERE username = ?"
+            this.preparedDeleteStatement = userConnection.prepareStatement(sqlDelete)
+            val sqlUpdate = "UPDATE $tableName SET password = ? WHERE username = ?"
+            this.preparedUpdateStatement = userConnection.prepareStatement(sqlUpdate)
 
             // initialize users from users.db
-            val sqlQuery = "select * from users"
-            val results: ResultSet = statement.executeQuery(sqlQuery)
+            val sqlQuery = "select * from $tableName"
+            val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
             while (results.next()){
                 val username = results.getString("username")
                 if ( users.find { it.name == username } != null ){ // Theoretically it will not happen here, just in case
@@ -50,9 +62,10 @@ object UserManager {
                     continue
                 }
                 val role = try {
-                    UserRole.valueOf(results.getString("role"))
-                } catch (e: IllegalArgumentException) {
-                    System.err.println("Cannot parse user role ${results.getString("role")}, defaulting to HUMAN")
+                    UserRole.values()[results.getInt("role")]
+                } catch (e: IndexOutOfBoundsException) {
+                    System.err.println("Role in database should be integer 0, 1 or 2, " +
+                            "not ${results.getInt("role")}, defaulting to 0(HUMAN)")
                     UserRole.HUMAN
                 }
                 val password = if (results.getString("password").startsWith("$")) {
@@ -146,9 +159,11 @@ object UserManager {
 
     private fun flushAddedUser(user: User){
         try {
-            val sqlInsert =
-                "insert into users values ('${user.name}', '${user.password.hash}', '${user.role.name}', '${user.id.string}')"
-            statement.executeUpdate(sqlInsert)
+            preparedInsertStatement.setString(1, user.name)
+            preparedInsertStatement.setString(2, user.password.hash)
+            preparedInsertStatement.setInt(3, user.role.ordinal)
+            preparedInsertStatement.setString(4, user.id.string)
+            preparedInsertStatement.executeUpdate()
         } catch (e: SQLiteException){
             System.err.println("Username conflict in database! Ignore the second '${user.name}.'")
         }
@@ -156,8 +171,8 @@ object UserManager {
 
     private fun flushRemovedUser(user: User){
         try {
-            val sqlInsert = "delete from users where username = '${user.name}'"
-            statement.executeUpdate(sqlInsert)
+            preparedDeleteStatement.setString(1, user.name)
+            preparedDeleteStatement.executeUpdate()
         } catch (e: SQLiteException){
             System.err.println("Failed to remove '${user.name}' from database.")
         }
@@ -165,13 +180,13 @@ object UserManager {
 
     private fun flushUpdatedUser(user: User){
         try {
-            val sqlInsert = "update users set password = '${user.password.hash}' where username = '${user.name}'"
-            statement.executeUpdate(sqlInsert)
+            preparedUpdateStatement.setString(1, user.password.hash)
+            preparedUpdateStatement.setString(2, user.name)
+            preparedUpdateStatement.executeUpdate()
         } catch (e: SQLiteException){
             System.err.println("Failed to update the password of '${user.name}' in database.")
         }
     }
-
 }
 
 class UsernameConflictException(message: String = "Username already exists!") : Exception(message)

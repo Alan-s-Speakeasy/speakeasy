@@ -6,26 +6,30 @@ import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import org.sqlite.SQLiteException
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.Statement
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import java.sql.*
 import java.util.concurrent.locks.StampedLock
 object UserManager {
 
     private val users = mutableListOf<User>()
+    private val groups = mutableListOf<Group>() // id, name, users
 
     private lateinit var userSQLitePath: String
 
     private lateinit var userConnection: Connection
 
-    private lateinit var tableName: String
+    private lateinit var tableNameForUser: String
+    private lateinit var tableNameForGroup: String
 
     private lateinit var initStatement: Statement
-    private lateinit var preparedInsertStatement: PreparedStatement
-    private lateinit var preparedDeleteStatement: PreparedStatement
-    private lateinit var preparedUpdateStatement: PreparedStatement
+
+    private lateinit var preparedInsertStatementForUser: PreparedStatement
+    private lateinit var preparedDeleteStatementForUser: PreparedStatement
+    private lateinit var preparedUpdateStatementForUser: PreparedStatement
+
+    private lateinit var preparedInsertStatementForGroup: PreparedStatement
+    private lateinit var preparedDeleteStatementForGroup: PreparedStatement
+    private lateinit var preparedQueryStatementForGroup: PreparedStatement
+    private lateinit var preparedClearAllStatementForGroup: PreparedStatement
 
     private val lock: StampedLock = StampedLock()
 
@@ -34,57 +38,143 @@ object UserManager {
         this.lock.write {
             this.userSQLitePath = "jdbc:sqlite:${config.dataPath}/users.db"
             this.userConnection = DriverManager.getConnection(this.userSQLitePath) // if file not exists, it will create this db file
-            this.tableName = "users"
+            this.tableNameForUser = "users"
+            this.tableNameForGroup = "groups"
             this.initStatement = this.userConnection.createStatement()
-            // create table if not exists
-            val sqlCreate = "CREATE TABLE IF NOT EXISTS $tableName (" +
-                    "username VARCHAR(60) NOT NULL UNIQUE, " +
-                    "password CHAR(60) NOT NULL, " + // password hashes have the same length 60
-                    "role TINYINT NOT NULL, " +
-                    "id CHAR(36) NOT NULL)" // ids have the same length 36
-            this.initStatement.executeUpdate(sqlCreate)
 
-            // prepare some statements for later use
-            val sqlInsert = "INSERT INTO $tableName VALUES (?, ?, ?, ?)"
-            this.preparedInsertStatement = userConnection.prepareStatement(sqlInsert)
-            val sqlDelete = "DELETE FROM $tableName WHERE username = ?"
-            this.preparedDeleteStatement = userConnection.prepareStatement(sqlDelete)
-            val sqlUpdate = "UPDATE $tableName SET password = ? WHERE username = ?"
-            this.preparedUpdateStatement = userConnection.prepareStatement(sqlUpdate)
+            this.createUserTable()
+            this.prepareStatementsForUserTable()
+            this.initUsersFromDB()
 
-            // initialize users from users.db
-            val sqlQuery = "select * from $tableName"
-            val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
-            while (results.next()){
-                val username = results.getString("username")
-                if ( users.find { it.name == username } != null ){ // Theoretically it will not happen here, just in case
-                    System.err.println("Username conflict! Ignore the second '$username'")
-                    continue
-                }
-                val role = try {
-                    UserRole.values()[results.getInt("role")]
-                } catch (e: IndexOutOfBoundsException) {
-                    System.err.println("Role in database should be integer 0, 1 or 2, " +
-                            "not ${results.getInt("role")}, defaulting to 0(HUMAN)")
-                    UserRole.HUMAN
-                }
-                val password = if (results.getString("password").startsWith("$")) {
-                    HashedPassword(results.getString("password"))
-                } else {
-                    System.err.println("The password of $username is not hashed in database!")
-                    PlainPassword(results.getString("password"))
-                }
-                val uid = try {
-                    results.getString("id").UID()
-                } catch (e: IllegalArgumentException) {
-                    UID()
-                }
-                users.add(User(uid, username, role, password)) // will convert password to hashed password
-
-            }
+            this.createGroupTable()
+            this.prepareStatementsForGroupTable()
+            this.initGroupsFromDB()
         }
     }
 
+    private fun createUserTable() {
+        val sqlCreate = "CREATE TABLE IF NOT EXISTS $tableNameForUser (" +
+                "username VARCHAR(60) NOT NULL UNIQUE, " +
+                "password CHAR(60) NOT NULL, " + // password hashes have the same length 60
+                "role TINYINT NOT NULL, " +
+                "id CHAR(36) NOT NULL)" // ids have the same length 36
+        this.initStatement.executeUpdate(sqlCreate)
+    }
+
+    private fun createGroupTable() {
+        val sqlCreate = "CREATE TABLE IF NOT EXISTS $tableNameForGroup (" +
+                "groupName VARCHAR(60) NOT NULL, " +
+                "groupId CHAR(36) NOT NULL, " +
+                "username VARCHAR(60) NOT NULL, " +
+                "userId CHAR(36) NOT NULL, " +
+                "UNIQUE(groupName, username)" +
+                ")"
+        this.initStatement.executeUpdate(sqlCreate)
+    }
+
+    private fun prepareStatementsForUserTable() {
+        // prepare some statements for later use
+        val sqlInsert = "INSERT INTO $tableNameForUser VALUES (?, ?, ?, ?)"
+        this.preparedInsertStatementForUser = userConnection.prepareStatement(sqlInsert)
+        val sqlDelete = "DELETE FROM $tableNameForUser WHERE username = ?"
+        this.preparedDeleteStatementForUser = userConnection.prepareStatement(sqlDelete)
+        val sqlUpdate = "UPDATE $tableNameForUser SET password = ? WHERE username = ?"
+        this.preparedUpdateStatementForUser = userConnection.prepareStatement(sqlUpdate)
+    }
+
+    private fun prepareStatementsForGroupTable() {
+        val sqlInsert = "INSERT INTO $tableNameForGroup VALUES (?, ?, ?, ?)"
+        this.preparedInsertStatementForGroup = userConnection.prepareStatement(sqlInsert)
+        val sqlDelete = "DELETE FROM $tableNameForGroup WHERE (groupName = ? AND username = ? )"
+        this.preparedDeleteStatementForGroup = userConnection.prepareStatement(sqlDelete)
+        val sqlQuery = "SELECT * FROM $tableNameForGroup WHERE groupName = ?"
+        this.preparedQueryStatementForGroup = userConnection.prepareStatement(sqlQuery)
+        val sqlClear = "DELETE FROM $tableNameForGroup"
+        this.preparedClearAllStatementForGroup = userConnection.prepareStatement(sqlClear)
+
+        // todo: need query all?
+    }
+
+    private fun initUsersFromDB() {
+        // initialize users from users.db
+        val sqlQuery = "SELECT * FROM $tableNameForUser"
+        val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
+        while (results.next()){
+            val username = results.getString("username")
+            if ( users.find { it.name == username } != null ){ // Theoretically it will not happen here, just in case
+                System.err.println("Username conflict! Ignore the second '$username'")
+                continue
+            }
+            val role = try {
+                UserRole.values()[results.getInt("role")]
+            } catch (e: IndexOutOfBoundsException) {
+                System.err.println("Role in database should be integer 0, 1 or 2, " +
+                        "not ${results.getInt("role")}, defaulting to 0(HUMAN)")
+                UserRole.HUMAN
+            }
+            val password = if (results.getString("password").startsWith("$")) {
+                HashedPassword(results.getString("password"))
+            } else {
+                System.err.println("The password of $username is not hashed in database!")
+                PlainPassword(results.getString("password"))
+            }
+            val uid = try {
+                results.getString("id").UID()
+            } catch (e: IllegalArgumentException) {
+                UID()
+            }
+            users.add(User(uid, username, role, password)) // will convert password to hashed password
+        }
+    }
+
+    private fun initGroupsFromDB() {
+        // initialize groups from users.db
+        val sqlQuery = "SELECT * FROM $tableNameForGroup"
+        val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
+        while (results.next()){
+            val groupName = try {
+                results.getString("groupName")
+            } catch (e: SQLException){
+                System.err.println("Something wrong when getting the groupName from group table. Skipped this line.")
+                continue
+            }
+
+            val groupId = try {
+                results.getString("groupId").UID()
+            } catch (e: SQLException){
+                System.err.println("Something wrong when getting the groupId from group table. Skipped this line.")
+                continue
+            } catch (e: IllegalArgumentException){
+                System.err.println("Something wrong when convert groupId to UID. Skipped this line.")
+                continue
+            }
+
+            val username = try {
+                results.getString("username")
+            } catch (e: SQLException){
+                System.err.println("Something wrong when getting the username from group table. Skipped this line.")
+                continue
+            }
+
+            val user = users.find{ it.name == username}
+            if (user == null) {
+                System.err.println("Cannot find user $username in user table, something wrong with group table. " +
+                        "Skipped this user when adding it to some group.")
+                continue
+            }
+
+            val group = groups.find { it.name ==  groupName } ?: Group(
+                groupId,
+                groupName
+            )
+
+            if (group.isEmpty()) { // only a new group to add is empty here
+                groups.add(group)
+            }
+            group.addUser(user)
+
+        }
+    }
 
     fun addUser(username: String, role: UserRole): String {
         val alphabet: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
@@ -103,6 +193,61 @@ object UserManager {
             val newUser = User(uid, username, role, password)
             users.add(newUser)
             flushAddedUser(newUser)
+        }
+    }
+
+    fun createGroup(groupName: String, usernames: List<String>) {
+        this.lock.write {
+            if (groups.find { it.name == groupName } != null) {
+                throw GroupNameConflictException()
+            }
+            val groupId = UID()
+            val groupToAdd = Group(groupId, groupName)
+
+            for (username in usernames) {
+                val userToAdd = users.find { it.name ==  username}
+                if (userToAdd != null) {
+                    groupToAdd.addUser(userToAdd)
+                }else {
+                    // once a user is not found by username, abort the whole process
+                    throw UsernameNotFoundException("$username is not found, abort this group creation")
+                }
+            }
+            groups.add(groupToAdd)
+            flushCreatedGroup(groupToAdd)
+        }
+    }
+
+    fun checkGroups() { // TODO: Just for development checking, will delete it later
+        this.lock.write {
+            println("---> checkGroups:")
+            groups.forEach { group ->
+                group.users.forEach { user ->
+                    println("groupName: ${group.name} | groupId: ${group.id.string} | username: ${user.name} | userId: ${user.id.string}")
+                }
+            }
+        }
+    }
+
+    fun checkGroupsInDB() { // TODO: Just for development checking, will delete it later
+        this.lock.write {
+            println("---> checkGroupsInDB:")
+            val sqlQuery = "SELECT * FROM $tableNameForGroup"
+            val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
+            while (results.next()){
+                val groupName: String = results.getString("groupName")
+                val groupId: String = results.getString("groupId")
+                val username: String = results.getString("username")
+                val userId: String = results.getString("userId")
+                println("groupName: $groupName | groupId: $groupId | username: $username | userId: $userId")
+            }
+        }
+    }
+
+    fun clearAllGroups() {
+        this.lock.write {
+            groups.clear()
+            preparedClearAllStatementForGroup.executeUpdate()
         }
     }
 
@@ -159,11 +304,11 @@ object UserManager {
 
     private fun flushAddedUser(user: User){
         try {
-            preparedInsertStatement.setString(1, user.name)
-            preparedInsertStatement.setString(2, user.password.hash)
-            preparedInsertStatement.setInt(3, user.role.ordinal)
-            preparedInsertStatement.setString(4, user.id.string)
-            preparedInsertStatement.executeUpdate()
+            preparedInsertStatementForUser.setString(1, user.name)
+            preparedInsertStatementForUser.setString(2, user.password.hash)
+            preparedInsertStatementForUser.setInt(3, user.role.ordinal)
+            preparedInsertStatementForUser.setString(4, user.id.string)
+            preparedInsertStatementForUser.executeUpdate()
         } catch (e: SQLiteException){
             System.err.println("Username conflict in database! Ignore the second '${user.name}.'")
         }
@@ -171,8 +316,8 @@ object UserManager {
 
     private fun flushRemovedUser(user: User){
         try {
-            preparedDeleteStatement.setString(1, user.name)
-            preparedDeleteStatement.executeUpdate()
+            preparedDeleteStatementForUser.setString(1, user.name)
+            preparedDeleteStatementForUser.executeUpdate()
         } catch (e: SQLiteException){
             System.err.println("Failed to remove '${user.name}' from database.")
         }
@@ -180,13 +325,29 @@ object UserManager {
 
     private fun flushUpdatedUser(user: User){
         try {
-            preparedUpdateStatement.setString(1, user.password.hash)
-            preparedUpdateStatement.setString(2, user.name)
-            preparedUpdateStatement.executeUpdate()
+            preparedUpdateStatementForUser.setString(1, user.password.hash)
+            preparedUpdateStatementForUser.setString(2, user.name)
+            preparedUpdateStatementForUser.executeUpdate()
         } catch (e: SQLiteException){
             System.err.println("Failed to update the password of '${user.name}' in database.")
+        }
+    }
+
+    private fun flushCreatedGroup(group: Group){
+        try {
+            preparedInsertStatementForGroup.setString(1, group.name)
+            preparedInsertStatementForGroup.setString(2, group.id.string)
+            group.users.forEach{ user ->
+                preparedInsertStatementForGroup.setString(3, user.name)
+                preparedInsertStatementForGroup.setString(4, user.id.string)
+                preparedInsertStatementForGroup.executeUpdate()
+            }
+        } catch (e: SQLiteException){
+            System.err.println("Failed to flush the database when adding group ${group.name}.")
         }
     }
 }
 
 class UsernameConflictException(message: String = "Username already exists!") : Exception(message)
+class GroupNameConflictException(message: String = "Group Name already exists!") : Exception(message)
+class UsernameNotFoundException(message: String = "Username not found") : Exception(message)

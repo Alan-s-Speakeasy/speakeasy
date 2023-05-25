@@ -65,7 +65,9 @@ object RestApi {
         javalin = Javalin.create {
             it.plugins.enableCors {corsContainer ->
                 corsContainer.add { cfg ->
-                    cfg.anyHost()
+//                    cfg.anyHost() // TODO: anyHost does not work for dev when using 4200 frontend port
+                    cfg.reflectClientOrigin = true
+                    cfg.allowCredentials = true
                 }
             }
             it.jetty.server { setupHttpServer(config) }

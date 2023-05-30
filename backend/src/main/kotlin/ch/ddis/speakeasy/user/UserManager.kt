@@ -27,7 +27,8 @@ object UserManager {
     private lateinit var preparedUpdateStatementForUser: PreparedStatement
 
     private lateinit var preparedInsertStatementForGroup: PreparedStatement
-    private lateinit var preparedDeleteStatementForGroup: PreparedStatement
+    private lateinit var preparedDeleteGroupStatementForGroup: PreparedStatement
+    private lateinit var preparedDeleteUserStatementForGroup: PreparedStatement
     private lateinit var preparedQueryStatementForGroup: PreparedStatement
     private lateinit var preparedClearAllStatementForGroup: PreparedStatement
 
@@ -85,14 +86,14 @@ object UserManager {
     private fun prepareStatementsForGroupTable() {
         val sqlInsert = "INSERT INTO $tableNameForGroup VALUES (?, ?, ?, ?)"
         this.preparedInsertStatementForGroup = userConnection.prepareStatement(sqlInsert)
-        val sqlDelete = "DELETE FROM $tableNameForGroup WHERE (groupName = ? AND username = ? )"
-        this.preparedDeleteStatementForGroup = userConnection.prepareStatement(sqlDelete)
+        val sqlDeleteGroup = "DELETE FROM $tableNameForGroup WHERE groupName = ?"
+        this.preparedDeleteGroupStatementForGroup = userConnection.prepareStatement(sqlDeleteGroup)
+        val sqlDeleteUser = "DELETE FROM $tableNameForGroup WHERE username = ?"
+        this.preparedDeleteUserStatementForGroup = userConnection.prepareStatement(sqlDeleteUser)
         val sqlQuery = "SELECT * FROM $tableNameForGroup WHERE groupName = ?"
         this.preparedQueryStatementForGroup = userConnection.prepareStatement(sqlQuery)
         val sqlClear = "DELETE FROM $tableNameForGroup"
         this.preparedClearAllStatementForGroup = userConnection.prepareStatement(sqlClear)
-
-        // todo: need query all?
     }
 
     private fun initUsersFromDB() {
@@ -196,61 +197,6 @@ object UserManager {
         }
     }
 
-    fun createGroup(groupName: String, usernames: List<String>) {
-        this.lock.write {
-            if (groups.find { it.name == groupName } != null) {
-                throw GroupNameConflictException()
-            }
-            val groupId = UID()
-            val groupToAdd = Group(groupId, groupName)
-
-            for (username in usernames) {
-                val userToAdd = users.find { it.name ==  username}
-                if (userToAdd != null) {
-                    groupToAdd.addUser(userToAdd)
-                }else {
-                    // once a user is not found by username, abort the whole process
-                    throw UsernameNotFoundException("$username is not found, abort this group creation")
-                }
-            }
-            groups.add(groupToAdd)
-            flushCreatedGroup(groupToAdd)
-        }
-    }
-
-    fun checkGroups() { // TODO: Just for development checking, will delete it later
-        this.lock.write {
-            println("---> checkGroups:")
-            groups.forEach { group ->
-                group.users.forEach { user ->
-                    println("groupName: ${group.name} | groupId: ${group.id.string} | username: ${user.name} | userId: ${user.id.string}")
-                }
-            }
-        }
-    }
-
-    fun checkGroupsInDB() { // TODO: Just for development checking, will delete it later
-        this.lock.write {
-            println("---> checkGroupsInDB:")
-            val sqlQuery = "SELECT * FROM $tableNameForGroup"
-            val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
-            while (results.next()){
-                val groupName: String = results.getString("groupName")
-                val groupId: String = results.getString("groupId")
-                val username: String = results.getString("username")
-                val userId: String = results.getString("userId")
-                println("groupName: $groupName | groupId: $groupId | username: $username | userId: $userId")
-            }
-        }
-    }
-
-    fun clearAllGroups() {
-        this.lock.write {
-            groups.clear()
-            preparedClearAllStatementForGroup.executeUpdate()
-        }
-    }
-
     fun removeUser(username: String, force: Boolean): Boolean {
         this.lock.write {
             for (user in users) {
@@ -261,6 +207,7 @@ object UserManager {
                     if (force) {
                         AccessManager.forceClearUserId(user.id)
                     }
+                    removeUserInGroups(user) // Consistent with group table
                     users.remove(user)
                     flushRemovedUser(user)
                     return true
@@ -268,6 +215,12 @@ object UserManager {
             }
         }
         return true
+    }
+
+    private fun removeUserInGroups(user: User){
+        groups.forEach { it.removeUser(user) }
+        groups.removeAll { it.isEmpty() }
+        flushRemovedUserFromAllGroups(user)
     }
 
     fun getMatchingUser(username: String, password: PlainPassword): User? = this.lock.read {
@@ -300,6 +253,76 @@ object UserManager {
 
     fun list(): List<User> = this.lock.read {
         this.users.toList()
+    }
+
+    fun listGroups(): List<Group> = this.lock.read {
+        this.groups.toList()
+    }
+
+    fun createGroup(groupName: String, usernames: List<String>) {
+        this.lock.write {
+            if (groups.find { it.name == groupName } != null) {
+                throw GroupNameConflictException()
+            }
+            val groupId = UID()
+            val groupToAdd = Group(groupId, groupName)
+
+            for ( username in usernames.distinct() ) { // remove duplicates in usernames
+                val userToAdd = users.find { it.name ==  username}
+                if (userToAdd != null) {
+                    groupToAdd.addUser(userToAdd)
+                }else {
+                    // once a user is not found by username, abort the whole process
+                    throw UsernameNotFoundException("$username is not found, abort this group creation")
+                }
+            }
+            if (!groupToAdd.isEmpty()) { // group with empty users will not be added
+                groups.add(groupToAdd)
+                flushCreatedGroup(groupToAdd)
+            }
+        }
+    }
+
+    fun removeGroup(groupName: String) {
+        this.lock.write {
+            val groupToRemove = groups.find { it.name == groupName } ?: throw GroupNameNotFoundException()
+            groups.remove(groupToRemove)
+            flushRemovedGroup(groupToRemove)
+        }
+    }
+
+    fun checkGroups() { // TODO: Just for development checking, will delete it later
+        this.lock.read {
+            println("---> checkGroups:")
+            println("groups.size: ${groups.size}")
+            groups.forEach { group ->
+                group.users.forEach { user ->
+                    println("groupName: ${group.name} | groupId: ${group.id.string} | username: ${user.name} | userId: ${user.id.string}")
+                }
+            }
+        }
+    }
+
+    fun checkGroupsInDB() { // TODO: Just for development checking, will delete it later
+        this.lock.read {
+            println("---> checkGroupsInDB:")
+            val sqlQuery = "SELECT * FROM $tableNameForGroup"
+            val results: ResultSet = this.initStatement.executeQuery(sqlQuery)
+            while (results.next()){
+                val groupName: String = results.getString("groupName")
+                val groupId: String = results.getString("groupId")
+                val username: String = results.getString("username")
+                val userId: String = results.getString("userId")
+                println("groupName: $groupName | groupId: $groupId | username: $username | userId: $userId")
+            }
+        }
+    }
+
+    fun removeAllGroups() {
+        this.lock.write {
+            groups.clear()
+            preparedClearAllStatementForGroup.executeUpdate()
+        }
     }
 
     private fun flushAddedUser(user: User){
@@ -340,14 +363,38 @@ object UserManager {
             group.users.forEach{ user ->
                 preparedInsertStatementForGroup.setString(3, user.name)
                 preparedInsertStatementForGroup.setString(4, user.id.string)
-                preparedInsertStatementForGroup.executeUpdate()
+                try {
+                    preparedInsertStatementForGroup.executeUpdate()
+                } catch (e: SQLiteException) {
+                    System.err.println("Failed to add ${user.name} to ${group.name} in database, Skipped this line. " +
+                            "Error:${e.message}")
+                }
             }
         } catch (e: SQLiteException){
-            System.err.println("Failed to flush the database when adding group ${group.name}.")
+            System.err.println("Failed to flush the database when adding group ${group.name}")
+        }
+    }
+
+    private fun flushRemovedGroup(group: Group){
+        try {
+            preparedDeleteGroupStatementForGroup.setString(1, group.name)
+            preparedDeleteGroupStatementForGroup.executeUpdate()
+        } catch (e: SQLiteException){
+            System.err.println("Failed to flush the database when removing group ${group.name}.")
+        }
+    }
+
+    private fun flushRemovedUserFromAllGroups(user: User){
+        try {
+            preparedDeleteUserStatementForGroup.setString(1, user.name)
+            preparedDeleteUserStatementForGroup.executeUpdate()
+        } catch (e: SQLiteException){
+            System.err.println("Failed to flush the database when removing user ${user.name} from all groups.")
         }
     }
 }
 
 class UsernameConflictException(message: String = "Username already exists!") : Exception(message)
-class GroupNameConflictException(message: String = "Group Name already exists!") : Exception(message)
-class UsernameNotFoundException(message: String = "Username not found") : Exception(message)
+class GroupNameConflictException(message: String = "Group name already exists!") : Exception(message)
+class UsernameNotFoundException(message: String = "Username not found.") : Exception(message)
+class GroupNameNotFoundException(message: String = "Group name not found.") : Exception(message)

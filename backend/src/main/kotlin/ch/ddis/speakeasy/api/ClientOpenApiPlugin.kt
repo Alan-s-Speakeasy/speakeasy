@@ -14,23 +14,25 @@ class ClientOpenApiPlugin : OpenApiPlugin(OpenApiPluginConfiguration()
         }
         cfg.withDefinitionProcessor { doc ->
             val blacklist = setOf(
-            "/api/user/list",
-            "/api/user/sessions",
-            "/api/user/add",
-            "/api/user/remove",
-            "/api/user/password",
-            "/api/rooms/all",
-            "/api/rooms/active",
-            "/api/rooms/assessed",
-            "/api/rooms/request",
-            "/api/feedback",
-            "/api/feedback/*",
-            "/api/feedbackaverage",
-            "/api/feedbackhistory",
-            "/api/feedbackhistory/*",
-            "/api/assignment",
-            "/api/assignment/*",
-        )
+                "/api/user/list",
+                "/api/user/sessions",
+                "/api/user/add",
+                "/api/user/remove",
+                "/api/user/password",
+                "/api/rooms/all",
+                "/api/rooms/active",
+                "/api/rooms/assessed",
+                "/api/rooms/request",
+                "/api/feedback",
+                "/api/feedback/*",
+                "/api/feedbackaverage",
+                "/api/feedbackhistory",
+                "/api/feedbackhistory/*",
+                "/api/assignment",
+                "/api/assignment/*",
+                "/api/group",
+                "/api/group/*"
+            )
             val relevantRoutes =
                 doc["paths"].fields().asSequence().filter { blacklist.none { b -> it.key.contains(b) } }.map { it.key }
                     .toList()

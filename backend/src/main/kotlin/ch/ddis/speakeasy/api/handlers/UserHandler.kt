@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
+import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
 import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.sessionToken
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
@@ -206,4 +207,121 @@ class GetCurrentUserHandler : GetRestHandler<UserSessionDetails>, AccessManagedR
         return UserSessionDetails(session)
     }
 
+}
+
+class CreateGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    data class CreateGroupRequest(var name: String, var usernames: List<String>)
+
+    @OpenApi(
+        summary = "Creates a group with existing, non-duplicate and at least one users.",
+        path = "/api/group/create",
+        methods = [HttpMethod.POST],
+        requestBody = OpenApiRequestBody([OpenApiContent(CreateGroupRequest::class)]),
+        tags = ["Admin"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("409", [OpenApiContent(ErrorStatus::class)]),
+        ]
+    )
+    override fun doPost(ctx: Context): SuccessStatus {
+        val createGroupRequest = try {
+            ctx.bodyAsClass(CreateGroupRequest::class.java)
+        } catch (e: BadRequestResponse) {
+            throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+        } catch (e: InvalidFormatException){
+            throw ErrorStatusException(400, "Invalid request format.", ctx)
+        }
+        if (createGroupRequest.usernames.isEmpty()) { throw ErrorStatusException(400, "usernames cannot be empty", ctx)}
+
+        try {
+            UserManager.createGroup(createGroupRequest.name, createGroupRequest.usernames)
+        } catch (e: GroupNameConflictException) {
+            throw ErrorStatusException(409, "Group name already exists!", ctx)
+        } catch (e: UsernameNotFoundException) {
+            throw ErrorStatusException(404, e.message!!, ctx)
+        }
+
+        return SuccessStatus("Group created")
+    }
+
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "group/create"
+}
+
+class RemoveGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    @OpenApi(
+        summary = "Deletes an existing group.",
+        path = "/api/group/remove",
+        methods = [HttpMethod.POST],
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
+        tags = ["Admin"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPost(ctx: Context): SuccessStatus {
+        val groupName = ctx.body()
+
+        if (groupName.isBlank()) {
+            throw ErrorStatusException(400, "Group name cannot be empty", ctx)
+        }
+        try {
+            UserManager.removeGroup(groupName)
+        } catch (e: GroupNameNotFoundException) {
+            throw ErrorStatusException(404, e.message!!, ctx)
+        }
+
+        return SuccessStatus("Group removed")
+    }
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "group/remove"
+}
+
+
+class ListGroupsHandler : GetRestHandler<List<GroupDetails>>, AccessManagedRestHandler {
+    @OpenApi(
+        summary = "Lists all groups with corresponding users.",
+        path = "/api/group/list",
+        tags = ["Admin"],
+        responses = [OpenApiResponse("200", [OpenApiContent(Array<GroupDetails>::class)])]
+    )
+    override fun doGet(ctx: Context): List<GroupDetails> {
+
+        return UserManager.listGroups().map(GroupDetails.Companion::of)
+    }
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "group/list"
+}
+
+class RemoveAllGroupsHandler : DeleteRestHandler<SuccessStatus>, AccessManagedRestHandler {
+    @OpenApi(
+        summary = "Removes all existing groups.",
+        path = "/api/group",
+        methods = [HttpMethod.DELETE],
+        tags = ["Admin"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        ]
+    )
+    override fun doDelete(ctx: Context):SuccessStatus {
+        UserManager.removeAllGroups()
+        return SuccessStatus("All groups removed")
+    }
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "group"
 }

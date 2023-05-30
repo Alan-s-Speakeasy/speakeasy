@@ -37,6 +37,10 @@ object RestApi {
             AddUserHandler(),
             RemoveUserHandler(),
             ChangePasswordHandler(),
+            CreateGroupHandler(),
+            RemoveGroupHandler(),
+            ListGroupsHandler(),
+            RemoveAllGroupsHandler(),
 
             ListChatRoomsHandler(),
             ListAllChatRoomsHandler(),

@@ -84,11 +84,11 @@ object ChatRoomManager {
     }
 
     fun markAsAssessed(session: UserSession, id: ChatRoomId) {
-        this.chatrooms[id]?.addAssessor(Assessor(session.user.id))
+        this.chatrooms[id]?.addAssessor(Assessor(session.user.id.UID()))
     }
 
     fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
-        return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id))
+        return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id.UID()))
     }
 
 }

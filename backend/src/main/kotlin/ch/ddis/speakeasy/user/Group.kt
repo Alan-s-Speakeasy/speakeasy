@@ -1,26 +1,18 @@
 package ch.ddis.speakeasy.user
 
 import ch.ddis.speakeasy.util.UID
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import java.util.*
 
 typealias GroupId = UID
 
-class Group(var id: GroupId, var name: String, var users: MutableList<User> = mutableListOf()) {
+class Group(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Group>(Groups)
 
-    fun size(): Int {
-        return users.size
-    }
-
-    fun isEmpty(): Boolean {
-        return users.isEmpty()
-    }
-
-    fun addUser(user: User) {
-        users.add(user)
-    }
-
-    fun removeUser(user: User): Boolean {
-        return users.remove(user)
-    }
+    var name by Groups.name
+    var users by User via GroupUsers
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

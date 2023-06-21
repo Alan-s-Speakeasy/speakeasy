@@ -6,6 +6,7 @@ import ch.ddis.speakeasy.assignment.ShuffledChatAssignmentGenerator
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.util.UID
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -107,7 +108,7 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
 
             next.forEach { assignment ->
                 ChatRoomManager.create(
-                    listOf(assignment.human.id, assignment.bot.id),
+                    listOf(assignment.human.id.UID(), assignment.bot.id.UID()),
                     true, assignment.prompt
                 ).also { it.setEndTime(endTime) }
             }

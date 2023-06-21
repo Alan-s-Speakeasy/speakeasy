@@ -1,16 +1,19 @@
 package ch.ddis.speakeasy.user
 
 import ch.ddis.speakeasy.util.UID
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import java.util.*
 
 typealias UserId = UID
 
-class User(val id: UserId, val name: String, val role: UserRole, pass: Password?) {
-
-    val password: HashedPassword = when (pass) {
-        is HashedPassword -> pass
-        is PlainPassword -> pass.hash()
-        else -> UserManager.getPasswordFromId(id)!! as HashedPassword
-    }
+fun EntityID<UUID>.string() : String = this.toString()
+class User(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<User>(Users)
+    var name by Users.username
+    var role by Users.role
+    var password by Users.password
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -31,6 +34,5 @@ class User(val id: UserId, val name: String, val role: UserRole, pass: Password?
         result = 31 * result + role.hashCode()
         return result
     }
-
 
 }

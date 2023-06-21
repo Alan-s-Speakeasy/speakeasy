@@ -7,6 +7,7 @@ import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.CyclicList
+import ch.ddis.speakeasy.util.UID
 
 /**
  * Generates a round-robin-style assignment of humans and bots with a fixed number of bots per human.
@@ -60,8 +61,8 @@ object UIChatAssignmentGenerator {
             humans.map { it.name },
             bots.map { it.name },
             admins.map { it.name },
-            humans.filter { AccessManager.hasUserIdActiveSessions(it.id) }.map { it.name } +
-                bots.filter { AccessManager.hasUserIdActiveSessions(it.id) }.map { it.name },
+            humans.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
+                bots.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
             selected,
             nextRound,
             prompts,

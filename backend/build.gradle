@@ -52,6 +52,7 @@ dependencies {
     def alpnBootVersion = '8.1.12.v20180117'
     def javaLinVersion =  '5.4.2'
     def openApiVersion = '5.4.2'
+    def exposedVersion = '0.41.1'
 
     implementation frontendClasspath(project(path: ":frontend", configuration: 'frontendFiles'))
 
@@ -79,6 +80,13 @@ dependencies {
 
     ////// SQLite-JDBC
     implementation 'org.xerial:sqlite-jdbc:3.41.2.1'
+
+    ////// Jetbrains Exposed
+    implementation "org.jetbrains.exposed:exposed-core:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-dao:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-jdbc:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-java-time:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-jodatime:$exposedVersion"
 
     ////// Log4J
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.16.0'

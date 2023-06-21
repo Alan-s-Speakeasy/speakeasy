@@ -40,7 +40,7 @@ class UserCommand : NoOpCliktCommand(name = "user") {
                     }
                     body {
                         UserManager.list().forEach {
-                            row(it.name, it.role.name, it.id.string)
+                            row(it.name, it.role.name, it.id.toString())
                         }
                     }
                 }
@@ -65,7 +65,7 @@ class UserCommand : NoOpCliktCommand(name = "user") {
                     }
                     body {
                         AccessManager.listSessions().forEach {
-                            row(it.user.name, it.user.role.name, it.user.id.string, it.sessionId.string)
+                            row(it.user.name, it.user.role.name, it.user.id.toString(), it.sessionId.string)
                         }
                     }
                 }

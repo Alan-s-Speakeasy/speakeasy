@@ -30,7 +30,7 @@ class ListChatAssignmentGenerator(jsonFile: File) : ChatAssignmentGenerator {
 
         val list = jsonList[idx++]
 
-        val currentSessions = AccessManager.listSessions().associateBy { it.user.id }
+        val currentSessions = AccessManager.listSessions().associateBy { it.user.id.UID() }
 
         return list.mapNotNull {
             if ( it.size < 3) {

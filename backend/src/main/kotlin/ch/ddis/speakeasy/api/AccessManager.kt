@@ -66,7 +66,7 @@ object AccessManager {
     private val writerLock = StampedLock()
 
     private fun logSession(userSession: UserSession) = writerLock.write {
-        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken},${userSession.user.id.string},${userSession.user.name}")
+        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken},${userSession.user.id.string()},${userSession.user.name}")
         sessionWriter.flush()
     }
 
@@ -86,8 +86,8 @@ object AccessManager {
 
         val sessionId: SessionId
 
-        if (userIdUserSessionMap.containsKey(user.id) && userIdUserSessionMap[user.id]!!.size > 0) {
-            val userSessions = userIdUserSessionMap[user.id]!!
+        if (userIdUserSessionMap.containsKey(user.id.UID()) && userIdUserSessionMap[user.id.UID()]!!.size > 0) {
+            val userSessions = userIdUserSessionMap[user.id.UID()]!!
             val sessions = userSessions.filter { it.sessionToken == sessionToken }
             sessionId = if (sessions.size == 1) {
                 sessions[0].sessionId
@@ -96,7 +96,7 @@ object AccessManager {
             }
 
             if (user.role == UserRole.BOT) { //in case of login, invalidate all other session of the same bot
-                userIdUserSessionMap[user.id]!!.clear()
+                userIdUserSessionMap[user.id.UID()]!!.clear()
             }
 
         } else {
@@ -114,10 +114,10 @@ object AccessManager {
     private fun addSessionToMaps(session: UserSession, user: User) {
         sessionTokenUserSessionMap[session.sessionToken] = session
 
-        if (!userIdUserSessionMap.containsKey(user.id)) {
-            userIdUserSessionMap[user.id] = ArrayList()
+        if (!userIdUserSessionMap.containsKey(user.id.UID())) {
+            userIdUserSessionMap[user.id.UID()] = ArrayList()
         }
-        userIdUserSessionMap[user.id]?.add(session)
+        userIdUserSessionMap[user.id.UID()]?.add(session)
         updateLastAccess(session.sessionToken)
     }
 
@@ -151,7 +151,7 @@ object AccessManager {
         val session = sessionTokenUserSessionMap.remove(sessionToken)
         if (session != null) {
             sessionTokenLastAccessMap.remove(sessionToken)
-            userIdUserSessionMap[session.user.id]!!.remove(session)
+            userIdUserSessionMap[session.user.id.UID()]!!.remove(session)
             return true
         }
         return false

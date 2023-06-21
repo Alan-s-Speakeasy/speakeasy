@@ -76,7 +76,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUser(session.user.id, session.user.role == UserRole.BOT).map { ChatRoomInfo(it, session.user.id) }
+            ChatRoomManager.getByUser(session.user.id.UID(), session.user.role == UserRole.BOT).map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }
@@ -106,7 +106,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserId(session.user.id).map { ChatRoomInfo(it, session.user.id) }
+            ChatRoomManager.getAssessedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }
@@ -201,12 +201,12 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (session.user.role != UserRole.ADMIN) {
-            if (!room.users.containsKey(session.user.id)) {
+            if (!room.users.containsKey(session.user.id.UID())) {
                 throw ErrorStatusException(401, "Unauthorized", ctx)
             }
         }
 
-        return ChatRoomState(room, since, session.user.id)
+        return ChatRoomState(room, since, session.user.id.UID())
 
     }
 }
@@ -246,7 +246,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        val userAlias = room.users[session.user.id] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
+        val userAlias = room.users[session.user.id.UID()] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
 
         if (!room.active) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
@@ -299,7 +299,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (!room.users.containsKey(session.user.id)) {
+        if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 
@@ -369,7 +369,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         }
 
         ChatRoomManager.create(
-            listOf(session.user.id, UserManager.getUserIdFromUsername(request.username)!!), true,
+            listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
             null, System.currentTimeMillis() + 10 * 1000 * 60)
 
         return SuccessStatus("Chatroom created")

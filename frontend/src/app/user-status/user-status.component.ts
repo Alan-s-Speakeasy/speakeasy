@@ -1,5 +1,11 @@
 import {Component, Inject, OnDestroy, OnInit} from '@angular/core';
-import {FrontendUserDetail, FrontendUser, FrontendChatroomDetail} from "../new_data";
+import {
+  FrontendUserDetail,
+  FrontendUser,
+  FrontendChatroomDetail,
+  FrontendGroup,
+  FrontendUserInGroup
+} from "../new_data";
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
@@ -7,7 +13,8 @@ import {
   AddUserRequest,
   AdminService,
   ChatRoomAdminInfo,
-  ChatRoomAdminInfoUsers,
+  ChatRoomAdminInfoUsers, CreateGroupRequest,
+  GroupDetails,
   UserDetails,
   UserSessionDetails
 } from "../../../openapi";
@@ -39,6 +46,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   private allRoomsSubscription!: Subscription;
   private userSessionSubscription!: Subscription;
   private userListSubscription!: Subscription;
+  private allGroupsSubscription!: Subscription;
 
   humanDetails: FrontendUserDetail[] = []
   adminDetails: FrontendUserDetail[] = []
@@ -48,14 +56,24 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   adminList: FrontendUser[] = []
   botList: FrontendUser[] = []
 
+  groupList: FrontendGroup[] = []
+
   toggleElement: number = -1
   toggleList: string = ""
 
+  existingUsernames:Set<string> = new Set<string>()
+
   usernameToAdd = new FormControl("")
   passwordToAdd = new FormControl("")
+  groupNameToAdd = new FormControl("")
+  usersInGroupToAdd = new FormControl("")
+  validUsersInGroupToAdd: string[] = []
+
   roleToAdd: string = ""
   usernameToRemove: string = ""
   forceRemove: boolean = false
+
+  groupNameToRemove: string = ""
 
   allChatroomDetails: FrontendChatroomDetail[] = []
 
@@ -77,6 +95,18 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.pushChatRoomDetails(this.allChatroomDetails, room)
           }
         })
+      })
+
+    this.allGroupsSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.adminService.getGroupList()}))
+      .subscribe((allGroups) => {
+        while (this.groupList.length > 0) {
+          this.groupList.pop()
+        }
+        allGroups.forEach(groupDetails => {
+          this.pushGroup(this.groupList, groupDetails)
+          }
+        )
       })
 
     this.userSessionSubscription = interval(1000)
@@ -126,8 +156,38 @@ export class UserStatusComponent implements OnInit, OnDestroy {
           if (user.role == "BOT") {
             this.pushItem(this.botList, user)
           }
+          this.existingUsernames.add(user.username)
         })
       })
+  }
+
+  isValidUsernames(): boolean {
+    const usernameList: string[] = this.usersInGroupToAdd.value.split(",").map((item: string) => item.trim())
+    if (usernameList.length == 0) return false
+    for (let username of usernameList){
+          if (!this.existingUsernames.has(username)){
+            this.validUsersInGroupToAdd = []
+            return false
+          }
+    }
+    this.validUsersInGroupToAdd = usernameList
+    return true
+  }
+
+  pushGroup(groupList: FrontendGroup[], groupDetails: GroupDetails){
+    let usersInGroup: FrontendUserInGroup[] = []
+    groupDetails.users.forEach(
+      u => usersInGroup.push(
+        {username: u.username, role:u.role}
+      )
+    )
+    groupList.push(
+      {
+        groupID: groupDetails.id,
+        groupName: groupDetails.name,
+        users: usersInGroup
+      }
+    )
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
@@ -233,9 +293,47 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     this.modalService.open(content, { centered: true })
   }
 
+  openGroupAddModal(content: any) {
+    this.modalService.open(content, { centered: true })
+  }
+  openRemoveGroupModal(content: any, groupName: string) {
+    this.groupNameToRemove = groupName
+    this.modalService.open(content, { centered: true })
+  }
+
   openRemoveUserModal(content: any, username: string) {
     this.usernameToRemove = username
     this.modalService.open(content, { centered: true })
+  }
+
+  addGroup(): void {
+    if (!this.isValidUsernames()) {
+      this.alertService.error("Usernames in a group are invalid! Please enter existing usernames, separating them with commas.", this.options)
+      return
+    }
+    this.adminService.createGroup(
+      {
+        "name": this.groupNameToAdd.value,
+        "usernames": this.validUsersInGroupToAdd
+      } as CreateGroupRequest).subscribe(
+      () => {
+        this.alertService.success("Group successfully created.", this.options)
+      },
+      (error) => {
+        if (error.status === 409) {
+          this.alertService.error("Conflict: Group name already exists.", this.options);
+        } else if (error.status === 404) {
+          this.alertService.error("Cannot find some username(s). Abort this group creation.", this.options);
+        } else {
+          this.alertService.error("Group could not be created.", this.options);
+        }
+      }
+    )
+
+    this.groupNameToAdd.reset("")
+    this.usersInGroupToAdd.reset("")
+    this.validUsersInGroupToAdd = []
+
   }
 
   addUser(): void {
@@ -253,6 +351,21 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     this.passwordToAdd.reset("")
   }
 
+  removeGroup(): void {
+    this.adminService.deleteOneGroup(this.groupNameToRemove).subscribe(() => {
+        this.alertService.success("Group successfully removed.", this.options)
+      },
+      (error) => {
+        if (error.status == 404) {
+          this.alertService.error("Cannot find this group to remove.", this.options)
+        }else {
+          this.alertService.error("Group could not be removed.", this.options)
+        }
+      }
+    )
+    this.forceRemove = false
+  }
+
   removeUser(): void {
     this.adminService.removeApiUser(this.forceRemove, this.usernameToRemove).subscribe(() => {
         this.alertService.success("User successfully removed.", this.options)
@@ -263,6 +376,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     )
     this.forceRemove = false
   }
+
 
   readableTime(remainingTime: number): string {
     const s = Math.floor(remainingTime / 1000);

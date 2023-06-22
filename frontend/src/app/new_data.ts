@@ -46,6 +46,17 @@ export interface FrontendUserDetail {
   sessionToken: string[],
 }
 
+export interface FrontendGroup {
+  groupID: string,
+  groupName: string,
+  users: FrontendUserInGroup[],
+}
+
+export interface FrontendUserInGroup {
+  username: string,
+  role: string,
+}
+
 export interface FrontendChatroomDetail {
   prompt: string,
   roomID: string,

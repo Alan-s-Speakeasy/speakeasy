@@ -218,7 +218,7 @@ class CreateGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
         path = "/api/group/create",
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(CreateGroupRequest::class)]),
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
@@ -260,7 +260,7 @@ class RemoveGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
         path = "/api/group/remove",
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
@@ -292,7 +292,7 @@ class ListGroupsHandler : GetRestHandler<List<GroupDetails>>, AccessManagedRestH
     @OpenApi(
         summary = "Lists all groups with corresponding users.",
         path = "/api/group/list",
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [OpenApiResponse("200", [OpenApiContent(Array<GroupDetails>::class)])]
     )
     override fun doGet(ctx: Context): List<GroupDetails> {
@@ -310,7 +310,7 @@ class RemoveAllGroupsHandler : DeleteRestHandler<SuccessStatus>, AccessManagedRe
         summary = "Removes all existing groups.",
         path = "/api/group",
         methods = [HttpMethod.DELETE],
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),

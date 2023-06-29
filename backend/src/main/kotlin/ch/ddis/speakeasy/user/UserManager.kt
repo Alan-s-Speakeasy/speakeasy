@@ -49,25 +49,22 @@ object UserManager {
         }
     }
 
-    fun removeUser(username: String, force: Boolean): Boolean {
-        this.lock.write {
-            transaction {
-                val queryRes = User.find { Users.username eq username }
-                val userToRemove = queryRes.firstOrNull() ?: return@transaction true
+    fun removeUser(username: String, force: Boolean): Boolean = this.lock.write {
+        transaction {
+            val queryRes = User.find { Users.username eq username }
+            val userToRemove = queryRes.firstOrNull() ?: return@transaction true
 
-                if (!force && AccessManager.hasUserIdActiveSessions(userToRemove.id.UID())) {
-                    return@transaction false
-                }
-                if (force) {
-                    AccessManager.forceClearUserId(userToRemove.id.UID())
-                }
-
-                removeUserInGroups(userToRemove)
-                userToRemove.delete()
-                return@transaction true
+            if (!force && AccessManager.hasUserIdActiveSessions(userToRemove.id.UID())) {
+                return@transaction false
             }
+            if (force) {
+                AccessManager.forceClearUserId(userToRemove.id.UID())
+            }
+
+            removeUserInGroups(userToRemove)
+            userToRemove.delete()
+            return@transaction true
         }
-        return true
     }
 
     private fun removeUserInGroups(user: User) {
@@ -180,19 +177,20 @@ object UserManager {
         }
     }
 
-    fun checkGroups() { // TODO: Just for development checking, will delete it later
-        this.lock.read {
-            println("---> checkGroups:")
-            println("Group.count: ${Group.count()}")
+    fun areInSameGroup(username1: String, username2: String): Boolean = this.lock.read {
+        transaction {
+            val user1 = User.find { Users.username eq username1 }.firstOrNull()
+            val user2 = User.find { Users.username eq username2 }.firstOrNull()
+            if (user1 == null || user2 == null) throw UsernameNotFoundException()
 
-            transaction {
-                Group.all().forEach { group ->
-                    group.users.forEach { user ->
-                        println("groupName: ${group.name} | groupId: ${group.id.string()} | username: ${user.name} | userId: ${user.id.string()}")
-                    }
-                }
-            }
+            val user1Groups = GroupUsers.slice(GroupUsers.group_id).select{GroupUsers.user_id eq user1.id}
+                .map { it[GroupUsers.group_id] }
+                .toSet()
 
+            val user2Groups = GroupUsers.slice(GroupUsers.group_id).select{GroupUsers.user_id eq user2.id}
+                .map { it[GroupUsers.group_id] }
+                .toSet()
+            return@transaction user1Groups.intersect(user2Groups).isNotEmpty()
         }
     }
 }

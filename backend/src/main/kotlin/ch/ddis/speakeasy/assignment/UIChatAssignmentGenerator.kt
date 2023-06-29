@@ -74,7 +74,7 @@ object UIChatAssignmentGenerator {
         )
     }
 
-    private fun wasAlreadySelected(human: String, bot: String, slack: Int): Boolean {
+    private fun wasNotAlreadySelected(human: String, bot: String, slack: Int): Boolean {
         val previous = humanAssignments[human]!!.count { it == bot }
         val current = nextRound.count { it.human == human && it.bot == bot }
         return current == 0 && previous <= slack
@@ -105,21 +105,25 @@ object UIChatAssignmentGenerator {
                 var slack = 0
                 while (!assigned) {
                     val bot = bots[botIndex]
-                    if (wasAlreadySelected(human, bot, slack)) {
-                        nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
-                        assigned = true
-                    } else {
-                        botIndex += 1
-                        if (botIndex == bots.size) {
-                            slack += 1
-                            botIndex = 0
+                    if (slack < bots.size){ // Comply with group constraint
+                        if (wasNotAlreadySelected(human, bot, slack) && !UserManager.areInSameGroup(human, bot)) {
+                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
+                            assigned = true
+                        } else {
+                            botIndex = (botIndex + 1) % bots.size
+                            if (botIndex == 0) { slack += 1 }
+                        }
+                    } else { // When the attempts are too many, we drop the group constraint (Just for some edge cases)
+                        if (wasNotAlreadySelected(human, bot, slack)) {
+                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
+                            assigned = true
+                        } else {
+                            botIndex = (botIndex + 1) % bots.size
+                            if (botIndex == 0) { slack += 1 }
                         }
                     }
                 }
-                botIndex += 1
-                if (botIndex == bots.size) {
-                    botIndex = 0
-                }
+                botIndex = (botIndex + 1) % bots.size
             }
         }
 

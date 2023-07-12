@@ -5,7 +5,7 @@
       <div class="chat-header text-center">
         <h5>
           Ratings for {{paneLog.otherAlias}}
-          <span (click)="close()" class="label label-default" style="color: black; cursor: pointer; float: right"><i class="fa fa-close"></i></span>
+          <span (click)="close()" class="label label-default" style="color: black; cursor: pointer; float: right"><i class="fa fa-chevron-circle-left"></i></span>
         </h5>
       </div>
     </div>
@@ -35,8 +35,9 @@
       </div>
     </div>
     <div class="chat-message clearfix">
-      <div class="input-group-append text-center">
-        <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
+      <div class="d-flex justify-content-between">
+          <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary text-start" type="button">Submit and Close</button>
+          <button (click)="closeWithoutRating()" class="btn btn-outline-warning text-end" type="button">Close without Rating</button>
       </div>
     </div>
   </div>

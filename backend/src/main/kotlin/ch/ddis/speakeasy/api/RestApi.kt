@@ -54,6 +54,7 @@ object RestApi {
 
             GetFeedbackRequestListHandler(),
             PostFeedbackHandler(),
+            PostNoFeedbackHandler(),
             GetFeedbackHistoryHandler(),
 
             GetAdminFeedbackHistoryHandler(),

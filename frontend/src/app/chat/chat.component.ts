@@ -54,6 +54,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.chatroomSubscription = interval(1000)
       .pipe(exhaustMap(_ => {return this.commonService.getChatRooms()}))
       .subscribe((response) => {
+        console.log("response", response)
         for (let room of response.rooms) {
           let addRoom = true
 
@@ -75,6 +76,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   // add a chatroom to the UI
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
+      isAssignment:room.assignment,
+      markAsNoFeedback:room.markAsNoFeedback,
       roomID: room.uid,
       ordinals: 0,
       messageLog: {},

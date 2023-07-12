@@ -108,6 +108,78 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
 
 }
 
+class PostNoFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    override val permittedRoles = setOf(RestApiRole.USER)
+
+    override val route: String = "feedback/no/{roomId}"
+
+    @OpenApi(
+        summary = "Marks as not wanting to submit feedback when this chatroom is not an assignment.",
+        path = "/api/feedback/no/{roomId}",
+        methods = [HttpMethod.POST],
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
+        tags = ["Feedback"],
+        pathParams = [
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
+        ],
+        queryParams = [
+            OpenApiParam("session", String::class, "Session Token")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("409", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPost(ctx: Context): SuccessStatus {
+
+        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+            401,
+            "Unauthorized",
+            ctx
+        )
+        val roomId = (ctx.pathParamMap().getOrElse("roomId") {
+            throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
+        }).UID()
+
+        val notWantFeedback = try {
+            ctx.body().toBoolean()
+        } catch (e: BadRequestResponse) {
+            throw ErrorStatusException(400, "Invalid boolean value.", ctx)
+        }
+
+        val isAssessedBy = try {
+            ChatRoomManager.isAssessedBy(session, roomId)
+        } catch (e : NullPointerException) {
+            throw ErrorStatusException(404, "Chatroom ${roomId.string} not found.", ctx)
+        }
+
+        if (isAssessedBy) {
+            throw ErrorStatusException(409, "Chatroom already assessed.", ctx)
+        }
+
+        if (!notWantFeedback) {
+            return SuccessStatus("You can fill-in the feedback form.")
+        }
+
+        if (ChatRoomManager.isAssignment(roomId)) {
+            throw ErrorStatusException(403, "This chatroom is an assignment, you must fill-in the feedback form.", ctx)
+        }
+
+        if (session.user.role == UserRole.BOT) {
+            throw ErrorStatusException(403, "Bot is not allowed to send this request.", ctx)
+        }
+
+        ChatRoomManager.markAsNoFeedback(roomId)
+        return SuccessStatus("No feedback required for this chat now.")
+    }
+
+}
+
 class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.USER)

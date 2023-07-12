@@ -88,6 +88,28 @@ export class RatingPaneComponent implements OnInit {
     }
   }
 
+  closeWithoutRating(): void {
+    this.feedbackService.postApiDoNotWantFeedback(this.paneLog.roomID, undefined, "true").subscribe(
+      (response) => {
+        this.alertService.success("Closed Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") without rating successfully.", this.options)
+        this.removeRoom.emit()
+      },
+      (error) => {
+        if (error.status == 409) {
+          this.alertService.error("Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") already submitted from this user!", this.options)
+          this.removeRoom.emit()
+        } else if (error.status == 404) {
+          this.alertService.error("Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") not found, just closed it.", this.options)
+          this.removeRoom.emit()
+        } else if (error.status == 403) {
+          this.alertService.error(error.message)
+        } else {
+          this.alertService.error("Something wrong when closing feedback form", this.options)
+        }
+      }
+    )
+  }
+
   ratings2Responses(ratings: Ratings): FeedbackResponseList {
     let responses: FeedbackResponseList = {responses: []}
     for (let key in ratings) {

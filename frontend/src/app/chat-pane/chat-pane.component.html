@@ -61,7 +61,9 @@
             <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
           </div>
           <div class="input-group-append">
-            <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">Assess</button>
+            <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
+              Assess <i class="fa fa-chevron-circle-{{paneLog.ratingOpen ? 'left' : 'right'}}"></i>
+            </button>
           </div>
         </div>
       </div>

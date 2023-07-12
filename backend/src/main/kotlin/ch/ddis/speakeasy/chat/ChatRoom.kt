@@ -10,13 +10,15 @@ import kotlin.math.max
 typealias ChatRoomId = UID
 
 open class ChatRoom(
+    val isAssignment: Boolean = false,
     val uid: ChatRoomId = UID(),
     val users: Map<UserId, String>, //UserId --> UserAlias
     val startTime: Long = System.currentTimeMillis(),
     var prompt: String = "",
     private val messages: MutableList<ChatMessage> = mutableListOf(),
     private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
-    val assessedBy: MutableList<Assessor> = mutableListOf()
+    val assessedBy: MutableList<Assessor> = mutableListOf(),
+    var markAsNoFeedback: Boolean = false,
 ) {
     internal var endTime: Long? = null
     val aliasToUserId = users.entries.associateBy({ it.value }) { it.key }
@@ -65,6 +67,11 @@ open class ChatRoom(
 
     open fun addAssessor(assessor: Assessor): Unit = this.lock.write {
         this.assessedBy.add(assessor)
+        return@write
+    }
+
+    open fun addMarkAsNoFeedback(noFeedback: NoFeedback): Unit = this.lock.write {
+        this.markAsNoFeedback = noFeedback.mark
         return@write
     }
 

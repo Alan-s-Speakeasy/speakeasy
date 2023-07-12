@@ -15,24 +15,29 @@ import io.javalin.openapi.*
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
 data class ChatRoomInfo(
+    val isAssignment: Boolean,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
     val userAliases: List<String>,
-    val alias: String?,
-    val prompt: String
+    val alias: String,
+    val prompt: String,
+    val markAsNoFeedback: Boolean
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
+        room.isAssignment,
         room.uid.string,
         room.startTime,
         room.remainingTime,
         room.users.values.toList(),
-        room.users[userId],
-        room.prompt
+        room.users[userId]!!,
+        room.prompt,
+        room.markAsNoFeedback
     )
 }
 
 data class ChatRoomAdminInfo(
+//    val isAssignment: Boolean,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
@@ -76,7 +81,8 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUser(session.user.id.UID(), session.user.role == UserRole.BOT).map { ChatRoomInfo(it, session.user.id.UID()) }
+            ChatRoomManager.getByUser(session.user.id.UID(), session.user.role == UserRole.BOT)
+                .map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }

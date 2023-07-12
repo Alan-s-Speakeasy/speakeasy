@@ -24,6 +24,7 @@ export class ChatPaneComponent implements OnInit {
   remainingTime: string = ''
   num_to_ask!: number
   lastGetTime: number = 0
+  direction: string = 'left'
 
   constructor(
     @Inject(ChatService) private chatService: ChatService,
@@ -99,7 +100,9 @@ export class ChatPaneComponent implements OnInit {
     if (this.paneLog.active && questionsAsked < this.num_to_ask) {
      this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
     } else {
-     this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+      this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+      this.direction = this.paneLog.ratingOpen ? 'left' : 'right'
+      console.log(this.direction)
     }
   }
 

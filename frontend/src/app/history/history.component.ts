@@ -98,6 +98,8 @@ export class HistoryComponent implements OnInit {
   // add a chatroom to the UI
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
+      isAssignment: room.assignment,
+      markAsNoFeedback: room.markAsNoFeedback,
       roomID: room.uid,
       ordinals: 0,
       messageLog: {},

@@ -14,6 +14,8 @@ export interface MessageLog {
 }
 
 export interface PaneLog {
+  isAssignment: boolean,
+  markAsNoFeedback: boolean,
   roomID: string,  // id of the chatroom;
   ordinals: number,  // number of messages
   messageLog: MessageLog,  // all messages of the chatroom;

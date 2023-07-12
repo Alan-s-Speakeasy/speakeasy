@@ -19,29 +19,33 @@ object ChatRoomManager {
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
-            val users: Map<UserId, String> = objectMapper.readValue(lines[4])
+            val users: Map<UserId, String> = objectMapper.readValue(lines[5])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf()
             val assessedBy: MutableList<Assessor> = mutableListOf()
+            var markAsNoFeedback: Boolean = false
 
-            for (i in 6 until lines.size) {
+            for (i in 7 until lines.size) {
                 when (val chatItem: ChatItemContainer = objectMapper.readValue(lines[i])) {
                     is ChatMessage -> messages.add(chatItem)
                     is ChatMessageReactionContainer -> reactions[chatItem.reaction.messageOrdinal] = chatItem.reaction
                     is Assessor -> assessedBy.add(chatItem)
+                    is NoFeedback -> markAsNoFeedback = true  // If this kind of record exists, then it must be true
                 }
             }
 
             val chatRoom = LoggingChatRoom(
-                uid = UID(lines[0]),
-                startTime = lines[1].toLong(),
-                endTime = lines[2].toLongOrNull() ?: lines[1].toLong(),
-                prompt = lines[3],
+                isAssignment = lines[0].toBoolean(),
+                uid = UID(lines[1]),
+                startTime = lines[2].toLong(),
+                endTime = lines[3].toLongOrNull() ?: lines[2].toLong(),
+                prompt = lines[4],
                 basePath = basePath,
                 users = users,
                 messages = messages,
                 reactions = reactions,
-                assessedBy = assessedBy
+                assessedBy = assessedBy,
+                markAsNoFeedback = markAsNoFeedback,
             )
             chatrooms[chatRoom.uid] = chatRoom
         }
@@ -57,8 +61,11 @@ object ChatRoomManager {
         when (bot) {
             true -> this.chatrooms.values.filter { it.users.contains(userId)
                     && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
-            false -> this.chatrooms.values.filter { it.users.contains(userId) && !it.assessedBy.contains(Assessor(userId))
-                    && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
+            false -> this.chatrooms.values.filter { it.users.contains(userId)
+                    && ( (it.isAssignment && !it.assessedBy.contains(Assessor(userId)))
+                        || (!it.isAssignment && !it.markAsNoFeedback && !it.assessedBy.contains(Assessor(userId))) )
+                    && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }
+                .sortedBy { it.startTime }
         }
 
     fun getAssessedRoomsByUserId(userId: UserId): List<ChatRoom> =
@@ -69,13 +76,17 @@ object ChatRoomManager {
         return userIds?.find { it != userId }
     }
 
-    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null): ChatRoom {
+    fun create(userIds: List<UserId>,
+               log: Boolean = true,
+               prompt: String?,
+               endTime: Long? = null,
+               isAssignment: Boolean=false): ChatRoom {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
-            LoggingChatRoom(users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
+            LoggingChatRoom(isAssignment = isAssignment, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
         } else {
-            ChatRoom(users = users, prompt = roomPrompt)
+            ChatRoom(isAssignment = isAssignment, users = users, prompt = roomPrompt)
         }
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
@@ -89,6 +100,14 @@ object ChatRoomManager {
 
     fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
         return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id.UID()))
+    }
+
+    fun markAsNoFeedback(id: ChatRoomId) {
+        this.chatrooms[id]?.addMarkAsNoFeedback(NoFeedback(mark = true))
+    }
+
+    fun isAssignment(id: ChatRoomId): Boolean {
+        return this.chatrooms[id]?.isAssignment ?: false
     }
 
 }

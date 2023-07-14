@@ -10,7 +10,7 @@ import java.io.PrintWriter
 import java.util.concurrent.locks.StampedLock
 
 class LoggingChatRoom(
-    isAssignment: Boolean = false,
+    assignment: Boolean = false,
     uid: UID = UID(),
     users: Map<UserId, String>,
     startTime: Long = System.currentTimeMillis(),
@@ -21,7 +21,7 @@ class LoggingChatRoom(
     reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
     assessedBy: MutableList<Assessor> = mutableListOf(),
     markAsNoFeedback: Boolean = false,
-) : ChatRoom(isAssignment, uid, users, startTime, prompt, messages, reactions, assessedBy, markAsNoFeedback) {
+) : ChatRoom(assignment, uid, users, startTime, prompt, messages, reactions, assessedBy, markAsNoFeedback) {
 
     init {
         if (!basePath.isDirectory) {
@@ -43,7 +43,7 @@ class LoggingChatRoom(
 
     init {
         if (!file.exists() || file.length() == 0L) {
-            writer.println(this.isAssignment)
+            writer.println(this.assignment)
             writer.println(this.uid.string)
             writer.println(this.startTime.toString())
             writer.println(this.endTime.toString())

@@ -18,7 +18,7 @@ data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val responses: MutableList<FeedbackResponseItem>)
 data class FeedbackResponseAverageItem(val username: String, val count: Int, val responses: List<FeedbackResponse>)
-data class FeedbackResponseAverageMapList(val responses: List<FeedbackResponseAverageItem>)
+data class FeedbackResponseAverageMapList(val assigned: List<FeedbackResponseAverageItem>, val requested: List<FeedbackResponseAverageItem>)
 
 class GetFeedbackRequestListHandler : GetRestHandler<FeedbackRequestList>, AccessManagedRestHandler {
 
@@ -146,11 +146,7 @@ class PostNoFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestH
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val notWantFeedback = try {
-            ctx.body().toBoolean()
-        } catch (e: BadRequestResponse) {
-            throw ErrorStatusException(400, "Invalid boolean value.", ctx)
-        }
+        val notWantFeedback = ctx.body().toBooleanStrictOrNull() ?: false
 
         val isAssessedBy = try {
             ChatRoomManager.isAssessedBy(session, roomId)
@@ -236,6 +232,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     )
     override fun doGet(ctx: Context): FeedbackResponseMapList {
 
+        // TODO: change this use case readFeedbackHistory()
         val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
         return FeedbackResponseMapList(allFeedbackResponses)
     }
@@ -248,7 +245,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
     override val route: String = "feedbackaverage"
 
     @OpenApi(
-        summary = "Gets the list of feedback averages per user",
+        summary = "Gets the list of feedback averages (both assigned and requested) per user",
         path = "/api/feedbackaverage",
         methods = [HttpMethod.GET],
         tags = ["Admin", "Feedback"],
@@ -270,19 +267,27 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
         val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
 
         AccessManager.updateLastAccess(ctx.sessionToken())
-        val feedbackResponsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author)
+        val feedbackResponsesPerUserAssigned = FeedbackManager.readFeedbackHistoryPerUser(author, assignment = true)
+        val feedbackResponsesPerUserRequested = FeedbackManager.readFeedbackHistoryPerUser(author, assignment = false)
 
         // Return all averages to admin
         if (session.user.role == UserRole.ADMIN) {
-            return FeedbackResponseAverageMapList(feedbackResponsesPerUser)
+            return FeedbackResponseAverageMapList(
+                assigned = feedbackResponsesPerUserAssigned,
+                requested = feedbackResponsesPerUserRequested
+            )
         }
         // Return only the user's average to human
         else {
-            val averageForUser = feedbackResponsesPerUser.find { it.username == session.user.name }
-            if (averageForUser != null) {
-                return FeedbackResponseAverageMapList(listOf(averageForUser))
-            }
-            return FeedbackResponseAverageMapList(listOf())
+            val averageForUserAssigned = feedbackResponsesPerUserAssigned
+                .find { it.username == session.user.name }
+            val averageForUserRequested = feedbackResponsesPerUserRequested
+                .find { it.username == session.user.name }
+
+            return FeedbackResponseAverageMapList(
+                assigned = listOfNotNull(averageForUserAssigned),
+                requested = listOfNotNull(averageForUserRequested)
+            )
         }
     }
 }

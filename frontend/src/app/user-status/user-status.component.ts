@@ -196,11 +196,13 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
     chatRoomDetails.push(
       {
+        assignment: chatRoom.assignment,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo
+        userInfo: userInfo,
+        markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )
   }
@@ -277,6 +279,8 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     if (user && partner) {
       this.router.navigateByUrl('/spectate', {
         state: {
+          assignment: chatroomDetail.assignment,
+          markAsNoFeedback: chatroomDetail.markAsNoFeedBack,
           roomID: chatroomDetail.roomID,
           username: user.username,
           userAlias: user.alias,
@@ -387,6 +391,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.userListSubscription.unsubscribe();
+    // TODO: In production environments, forgetting to unsubscribe creates a huge problem for the load.
+    this.allRoomsSubscription.unsubscribe();
+    this.userSessionSubscription.unsubscribe();
+    this.allGroupsSubscription.unsubscribe();
   }
 
 }

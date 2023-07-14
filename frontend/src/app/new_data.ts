@@ -14,7 +14,7 @@ export interface MessageLog {
 }
 
 export interface PaneLog {
-  isAssignment: boolean,
+  assignment: boolean,
   markAsNoFeedback: boolean,
   roomID: string,  // id of the chatroom;
   ordinals: number,  // number of messages
@@ -60,11 +60,13 @@ export interface FrontendUserInGroup {
 }
 
 export interface FrontendChatroomDetail {
+  assignment: boolean,
   prompt: string,
   roomID: string,
   startTime: number,
   remainingTime: number,
-  userInfo: ChatRoomAdminInfoUsers[]
+  userInfo: ChatRoomAdminInfoUsers[],
+  markAsNoFeedBack: boolean
 }
 
 export interface FrontendUserFeedback {

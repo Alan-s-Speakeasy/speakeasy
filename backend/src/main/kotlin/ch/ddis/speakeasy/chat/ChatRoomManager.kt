@@ -35,7 +35,7 @@ object ChatRoomManager {
             }
 
             val chatRoom = LoggingChatRoom(
-                isAssignment = lines[0].toBoolean(),
+                assignment = lines[0].toBoolean(),
                 uid = UID(lines[1]),
                 startTime = lines[2].toLong(),
                 endTime = lines[3].toLongOrNull() ?: lines[2].toLong(),
@@ -62,14 +62,16 @@ object ChatRoomManager {
             true -> this.chatrooms.values.filter { it.users.contains(userId)
                     && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
             false -> this.chatrooms.values.filter { it.users.contains(userId)
-                    && ( (it.isAssignment && !it.assessedBy.contains(Assessor(userId)))
-                        || (!it.isAssignment && !it.markAsNoFeedback && !it.assessedBy.contains(Assessor(userId))) )
+                    && ( (it.assignment && !it.assessedBy.contains(Assessor(userId)))
+                        || (!it.assignment && !it.markAsNoFeedback && !it.assessedBy.contains(Assessor(userId))) )
                     && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }
                 .sortedBy { it.startTime }
         }
 
-    fun getAssessedRoomsByUserId(userId: UserId): List<ChatRoom> =
-        this.chatrooms.values.filter { it.users.contains(userId) && it.assessedBy.contains(Assessor(userId)) }.sortedBy { it.startTime }
+    fun getAssessedOrMarkedRoomsByUserId(userId: UserId): List<ChatRoom> =
+        this.chatrooms.values.filter { it.users.contains(userId)
+                && (it.assessedBy.contains(Assessor(userId)) || it.markAsNoFeedback)}
+            .sortedBy { it.startTime }
 
     fun getChatPartner(roomId: UID, userId: UserId): UserId? {
         val userIds = this.chatrooms[roomId]?.users?.keys
@@ -80,13 +82,13 @@ object ChatRoomManager {
                log: Boolean = true,
                prompt: String?,
                endTime: Long? = null,
-               isAssignment: Boolean=false): ChatRoom {
+               assignment: Boolean=false): ChatRoom {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
-            LoggingChatRoom(isAssignment = isAssignment, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
+            LoggingChatRoom(assignment = assignment, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
         } else {
-            ChatRoom(isAssignment = isAssignment, users = users, prompt = roomPrompt)
+            ChatRoom(assignment = assignment, users = users, prompt = roomPrompt)
         }
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
@@ -107,7 +109,7 @@ object ChatRoomManager {
     }
 
     fun isAssignment(id: ChatRoomId): Boolean {
-        return this.chatrooms[id]?.isAssignment ?: false
+        return this.chatrooms[id]?.assignment ?: false
     }
 
 }

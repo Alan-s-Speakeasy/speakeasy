@@ -10,7 +10,7 @@ import kotlin.math.max
 typealias ChatRoomId = UID
 
 open class ChatRoom(
-    val isAssignment: Boolean = false,
+    val assignment: Boolean = false,
     val uid: ChatRoomId = UID(),
     val users: Map<UserId, String>, //UserId --> UserAlias
     val startTime: Long = System.currentTimeMillis(),

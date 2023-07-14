@@ -104,8 +104,8 @@ object FeedbackManager {
         return FeedbackResponseList(responses)
     }
 
-    fun readFeedbackHistory(): MutableList<FeedbackResponseItem> = this.lock.read {
-
+    fun readFeedbackHistory(assignment: Boolean = false): MutableList<FeedbackResponseItem> = this.lock.read {
+    // TODO: readFeedbackHistory change all the use cases of it
         var response: FeedbackResponse
         val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
         val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
@@ -122,7 +122,12 @@ object FeedbackManager {
                     val responseId = row["responseid"]
                     val responseValue = row["responsevalue"]
 
-                    if ((room != null) && (user != null) && (partner != null) && (responseId != null) && (responseValue != null)) {
+                    if ((room != null)
+                        && ChatRoomManager.isAssignment(room.UID()) == assignment
+                        && (user != null)
+                        && (partner != null)
+                        && (responseId != null)
+                        && (responseValue != null)) {
                         response = FeedbackResponse(responseId, responseValue)
                         val authorUsername = UserManager.getUsernameFromId(UserId(user)) ?: ""
                         val recipientUsername = UserManager.getUsernameFromId(UserId(partner)) ?: ""
@@ -148,8 +153,8 @@ object FeedbackManager {
         return responseList
     }
 
-    fun readFeedbackHistoryPerUser(author: Boolean): List<FeedbackResponseAverageItem> {
-        val allFeedbackResponses = readFeedbackHistory()
+    fun readFeedbackHistoryPerUser(author: Boolean, assignment: Boolean = false): List<FeedbackResponseAverageItem> {
+        val allFeedbackResponses = readFeedbackHistory(assignment = assignment)
         val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
         val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
 

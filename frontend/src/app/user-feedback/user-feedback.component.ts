@@ -98,7 +98,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     this.adminService.getApiFeedbackAverage(this.authorPerspective).subscribe((r) => {
       this.averageFeedback = []
       this.usernames = []
-      r.responses.forEach(average => {
+      r.requested.forEach(average => { // TODO: also do it with assigned and requested
         this.averageFeedback.push(
           {
             username: average.username,

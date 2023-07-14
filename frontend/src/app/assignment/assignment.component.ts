@@ -281,11 +281,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     this.chatroomDetails.set(chatRoom.uid, {
+        assignment: chatRoom.assignment,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo
+        userInfo: userInfo,
+        markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )
   }
@@ -307,6 +309,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     let user1 = chatroomDetail.userInfo[0]
     let user2 = chatroomDetail.userInfo[1]
     this.router.navigateByUrl('/spectate', { state: {
+        assignment: chatroomDetail.assignment,
+        markAsNoFeedback: chatroomDetail.markAsNoFeedBack,
         roomID: chatroomDetail.roomID,
         username: user1.username,
         userAlias: user1.alias,

@@ -360,11 +360,11 @@
         }
       }
     },
-    "/api/rooms/assessed" : {
+    "/api/rooms/assessed-and-marked" : {
       "get" : {
         "tags" : [ "Chat" ],
-        "summary" : "Lists all assessed chatrooms for current user",
-        "operationId" : "getApiAssessedRooms",
+        "summary" : "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
+        "operationId" : "getApiAssessedAndMarkedRooms",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1007,7 +1007,7 @@
     "/api/feedbackaverage" : {
       "get" : {
         "tags" : [ "Admin", "Feedback" ],
-        "summary" : "Gets the list of feedback averages per user",
+        "summary" : "Gets the list of feedback averages (both assigned and requested) per user",
         "operationId" : "getApiFeedbackAverage",
         "parameters" : [ {
           "name" : "author",
@@ -1532,9 +1532,12 @@
         "required" : [ "assignment", "uid", "remainingTime", "userAliases", "alias", "prompt", "markAsNoFeedback" ]
       },
       "ChatRoomAdminInfo" : {
-        "required" : [ "prompt", "startTime", "remainingTime", "users", "uid" ],
+        "required" : [ "assignment", "prompt", "startTime", "remainingTime", "users", "uid", "markAsNoFeedback" ],
         "type" : "object",
         "properties" : {
+          "assignment" : {
+            "type" : "boolean"
+          },
           "uid" : {
             "type" : "string"
           },
@@ -1563,6 +1566,9 @@
           },
           "prompt" : {
             "type" : "string"
+          },
+          "markAsNoFeedback" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1779,16 +1785,23 @@
         }
       },
       "FeedbackResponseAverageMapList" : {
-        "required" : [ "responses" ],
         "type" : "object",
-        "properties": {
-          "responses": {
-            "type": "array",
-            "items": {
+        "additionalProperties" : false,
+        "properties" : {
+          "assigned" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
+            }
+          },
+          "requested" : {
+            "type" : "array",
+            "items" : {
               "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
             }
           }
-        }
+        },
+        "required" : [ "assigned", "requested" ]
       },
       "AssignmentGeneratorObject" : {
         "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ],

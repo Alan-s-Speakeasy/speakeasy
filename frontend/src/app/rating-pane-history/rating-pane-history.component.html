@@ -8,8 +8,18 @@
         </h5>
       </div>
     </div>
+    <div *ngIf="paneLog.markAsNoFeedback; then hasNoFeedback else hasFeedback"></div>
+    <ng-template #hasNoFeedback>
+      <div class="p-5">
+        <h6 class="text-secondary">
+          You closed this chat room (which was requested by yourself) without rating,
+          <br>
+          so there is no assessment history.
+        </h6>
+      </div>
+    </ng-template>
 
-    <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
+    <ng-template #hasFeedback class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
       <table class="table">
         <thead>
         <tr>
@@ -33,7 +43,7 @@
         </tr>
         </tbody>
       </table>
-    </div>
+    </ng-template>
   </div>
 </div>
 

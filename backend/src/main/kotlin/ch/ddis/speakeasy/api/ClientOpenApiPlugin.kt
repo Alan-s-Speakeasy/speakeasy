@@ -21,7 +21,7 @@ class ClientOpenApiPlugin : OpenApiPlugin(OpenApiPluginConfiguration()
                 "/api/user/password",
                 "/api/rooms/all",
                 "/api/rooms/active",
-                "/api/rooms/assessed",
+                "/api/rooms/assessed-and-marked",
                 "/api/rooms/request",
                 "/api/feedback",
                 "/api/feedback/*",

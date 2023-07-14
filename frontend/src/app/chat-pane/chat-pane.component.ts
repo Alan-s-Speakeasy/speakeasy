@@ -24,7 +24,6 @@ export class ChatPaneComponent implements OnInit {
   remainingTime: string = ''
   num_to_ask!: number
   lastGetTime: number = 0
-  direction: string = 'left'
 
   constructor(
     @Inject(ChatService) private chatService: ChatService,
@@ -36,7 +35,9 @@ export class ChatPaneComponent implements OnInit {
       .pipe(exhaustMap(_ => {
         return this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, this.lastGetTime, undefined)
       })).subscribe((response) => {
-        this.paneLog.prompt = response.info.prompt
+        if (!this.paneLog.spectate) {
+          this.paneLog.prompt = response.info.prompt
+        }
         if (response.messages.length > 0) {
           // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
           this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
@@ -101,8 +102,6 @@ export class ChatPaneComponent implements OnInit {
      this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
     } else {
       this.paneLog.ratingOpen = !this.paneLog.ratingOpen
-      this.direction = this.paneLog.ratingOpen ? 'left' : 'right'
-      console.log(this.direction)
     }
   }
 

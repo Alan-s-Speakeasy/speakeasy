@@ -37,7 +37,8 @@ export class HistoryComponent implements OnInit {
   sessionId!: string
 
   ratingForm!: Array<FeedbackRequest>;
-  averageFeedback!: FeedbackResponseAverageItem;
+  averageFeedbackAssigned!: FeedbackResponseAverageItem;
+  averageFeedbackRequested!: FeedbackResponseAverageItem;
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
 
@@ -64,16 +65,21 @@ export class HistoryComponent implements OnInit {
       }
     )
     this.feedbackService.getApiFeedbackAverage(true).subscribe((response) => {
-      if (response) {
-        this.averageFeedback = response.responses[0]
+      if (response.assigned) {
+        this.averageFeedbackAssigned = response.assigned[0]
       }
+      if (response.requested) {
+        this.averageFeedbackRequested = response.requested[0]
+      }
+      console.log("averageFeedbackAssigned:", this.averageFeedbackAssigned)
+      console.log("averageFeedbackRequested:", this.averageFeedbackRequested)
     })
 
     this.paneLogsInit()
   }
 
   paneLogsInit(): void {
-    this.chatService.getApiAssessedRooms().subscribe(
+    this.chatService.getApiAssessedAndMarkedRooms().subscribe(
       (response)=>{
         for (let room of response.rooms) {
 
@@ -90,6 +96,7 @@ export class HistoryComponent implements OnInit {
 
         }
         this.paneLogs.reverse()
+        console.log(this.paneLogs)
       },
       (error) => {console.log("Chat rooms are not retrieved properly.", error);},
     )
@@ -98,7 +105,7 @@ export class HistoryComponent implements OnInit {
   // add a chatroom to the UI
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
-      isAssignment: room.assignment,
+      assignment: room.assignment,
       markAsNoFeedback: room.markAsNoFeedback,
       roomID: room.uid,
       ordinals: 0,

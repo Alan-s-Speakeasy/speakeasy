@@ -15,41 +15,44 @@ import io.javalin.openapi.*
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
 data class ChatRoomInfo(
-    val isAssignment: Boolean,
+    val assignment: Boolean,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
     val userAliases: List<String>,
-    val alias: String,
+    val alias: String?,
     val prompt: String,
     val markAsNoFeedback: Boolean
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
-        room.isAssignment,
+        room.assignment,
         room.uid.string,
         room.startTime,
         room.remainingTime,
         room.users.values.toList(),
-        room.users[userId]!!,
+        room.users[userId],
         room.prompt,
         room.markAsNoFeedback
     )
 }
 
 data class ChatRoomAdminInfo(
-//    val isAssignment: Boolean,
+    val assignment: Boolean,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
     val users: List<ChatRoomUserAdminInfo>,
-    val prompt: String
+    val prompt: String,
+    val markAsNoFeedback: Boolean
 ) {
     constructor(room: ChatRoom) : this(
+        room.assignment,
         room.uid.string,
         room.startTime,
         room.remainingTime,
         room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key) ?: "n/a") },
-        room.prompt
+        room.prompt,
+        room.markAsNoFeedback
     )
 }
 
@@ -89,11 +92,11 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
 
 class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
     override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.USER)
-    override val route = "rooms/assessed"
+    override val route = "rooms/assessed-and-marked"
 
     @OpenApi(
-        summary = "Lists all assessed chatrooms for current user",
-        path = "/api/rooms/assessed",
+        summary = "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
+        path = "/api/rooms/assessed-and-marked",
         tags = ["Chat"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
@@ -112,7 +115,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
+            ChatRoomManager.getAssessedOrMarkedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }

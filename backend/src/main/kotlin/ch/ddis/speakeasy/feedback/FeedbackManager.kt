@@ -105,7 +105,6 @@ object FeedbackManager {
     }
 
     fun readFeedbackHistory(assignment: Boolean = false): MutableList<FeedbackResponseItem> = this.lock.read {
-    // TODO: readFeedbackHistory change all the use cases of it
         var response: FeedbackResponse
         val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
         val responseList: MutableList<FeedbackResponseItem> = mutableListOf()

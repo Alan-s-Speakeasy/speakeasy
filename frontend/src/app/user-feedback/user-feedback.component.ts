@@ -61,8 +61,10 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   ratingForm!: Array<FeedbackRequest>;
   averageFeedback: FrontendAverageFeedback[] = []
   userFeedback: FrontendUserFeedback[] = []
+  chooseAssignments: boolean = true
 
-  chartDataPerUsername: Map<string, Map<string, number>[]> = new Map
+  // TODO: TypeError: Cannot read properties of undefined (reading '0')
+  chartDataPerUsername: Map<string, Map<string, number>[]> = new Map<string, Map<string, number>[]>()
   @ViewChild("chart") chart: ChartComponent | undefined;
   allChartOptions: Partial<ChartOptions>[] | any[] = [];
 
@@ -98,7 +100,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     this.adminService.getApiFeedbackAverage(this.authorPerspective).subscribe((r) => {
       this.averageFeedback = []
       this.usernames = []
-      r.requested.forEach(average => { // TODO: also do it with assigned and requested
+      let responses = this.chooseAssignments ? r.assigned : r.requested
+      responses.forEach(average => {
         this.averageFeedback.push(
           {
             username: average.username,
@@ -112,9 +115,11 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     })
 
     this.adminService.getApiFeedbackHistory().subscribe((r) => {
+      console.log(r)
       this.userFeedback = []
       this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername()
-      r.responses.forEach(response => {
+      let responses = this.chooseAssignments ? r.assigned : r.requested
+      responses.forEach(response => {
         this.userFeedback.push(
           {
             author: response.author,
@@ -130,7 +135,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
             this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].set(r.value, current + 1)
           })
         }
-        })
+      })
       this.updateUsernameAndCharts()
     })
   }
@@ -361,6 +366,12 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     this.authorPerspective = value == "author"
     this.fetchFeedback()
   }
+
+  toggleAssignments(value: string): void {
+    this.chooseAssignments = value == "assigned"
+    this.fetchFeedback()
+  }
+
 
   home(): void {
     this.router.navigateByUrl('/panel').then()

@@ -316,7 +316,6 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
-//        val reaction = ctx.body<ChatMessageReaction>() // todo
         val reaction = ctx.bodyAsClass(ChatMessageReaction::class.java)
 
         try {
@@ -360,7 +359,6 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(403, "Cannot establish a chat at this time", ctx)
         }
 
-//        val request = ctx.body<ChatRequest>() // todo
         val request = ctx.bodyAsClass(ChatRequest::class.java)
 
         val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }

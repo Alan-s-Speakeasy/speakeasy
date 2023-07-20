@@ -240,6 +240,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     inner class FromRating : CliktCommand(name = "from", help = "Lists ratings made by a user") {
         private val username: String by argument()
         private val output: String? by option("-o", "--output")
+        private val assigned: Boolean by option("--assigned",
+            help = "Flag to list ratings only for chat rooms assigned by administrators.").flag()
+        private val requested: Boolean by option("--requested",
+            help = "Flag to list ratings only for chat rooms requested by students.").flag()
 
         override fun run() {
             val user = UserManager.list().find { it.name == username }
@@ -247,14 +251,22 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println("no user found")
                 return
             }
+            if ((assigned && requested) || (!assigned && !requested)) {
+                println("Assigned or requested flag required")
+                println(getFormattedHelp())
+                return
+            }
+
             val header = FeedbackManager.readFeedbackRequests()
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned)
             val userResponses = allFeedbackResponses.filter { it.author == user.name }
 
             if (userResponses.isEmpty()) {
                 println("no evaluations found")
                 return
             }
+            val supplement = if (assigned) "assigned by administrators" else "requested by students"
+            println("filtered evaluations for chat rooms $supplement:")
             EvaluationCommand().printEvaluationPerUser(header, userResponses, output, true)
         }
     }
@@ -262,6 +274,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     inner class ForRating : CliktCommand(name = "for", help = "Lists ratings received by a user") {
         private val username: String by argument()
         private val output: String? by option("-o", "--output")
+        private val assigned: Boolean by option("--assigned",
+            help = "Flag to list ratings only for chat rooms assigned by administrators.").flag()
+        private val requested: Boolean by option("--requested",
+            help = "Flag to list ratings only for chat rooms requested by students.").flag()
 
         override fun run() {
             val user = UserManager.list().find { it.name == username }
@@ -269,14 +285,23 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println("no user found")
                 return
             }
+            if ((assigned && requested) || (!assigned && !requested)) {
+                println("Assigned or requested flag required")
+                println(getFormattedHelp())
+                return
+            }
+
             val header = FeedbackManager.readFeedbackRequests()
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned)
             val userResponses = allFeedbackResponses.filter { it.recipient == user.name }
 
             if (userResponses.isEmpty()) {
                 println("no evaluations found")
                 return
             }
+
+            val supplement = if (assigned) "assigned by administrators" else "requested by students"
+            println("filtered evaluations for chat rooms $supplement:")
             EvaluationCommand().printEvaluationPerUser(header, userResponses, output, false)
         }
     }
@@ -285,6 +310,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
         private val author: Boolean by option("-a", "--author", help = "Flag to list averages for all authors").flag()
         private val recipient: Boolean by option("-r", "--recipient", help = "Flag to list averages for all recipients").flag()
+        private val assigned: Boolean by option("--assigned",
+            help = "Flag to list ratings only for chat rooms assigned by administrators.").flag()
+        private val requested: Boolean by option("--requested",
+            help = "Flag to list ratings only for chat rooms requested by students.").flag()
         private val output: String? by option("-o", "--output")
 
         override fun run() {
@@ -294,10 +323,17 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
+            if ((assigned && requested) || (!assigned && !requested)) {
+                println("Assigned or requested flag required")
+                println(getFormattedHelp())
+                return
+            }
 
             val header = FeedbackManager.readFeedbackRequests()
-            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author)
+            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author, assigned)
 
+            val supplement = if (assigned) "assigned by administrators" else "requested by students"
+            println("filtered evaluations for chat rooms $supplement:")
             EvaluationCommand().printAllEvaluations(header, responsesPerUser, output, author = author)
         }
     }
@@ -305,10 +341,23 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     inner class Summary : CliktCommand(name = "summary", help = "Lists rating averages over all evaluations") {
 
         private val output: String? by option("-o", "--output")
+        private val assigned: Boolean by option("--assigned",
+            help = "Flag to list ratings only for chat rooms assigned by administrators.").flag()
+        private val requested: Boolean by option("--requested",
+            help = "Flag to list ratings only for chat rooms requested by students.").flag()
 
         override fun run() {
+            if ((assigned && requested) || (!assigned && !requested)) {
+                println("Assigned or requested flag required")
+                println(getFormattedHelp())
+                return
+            }
+
             val header = FeedbackManager.readFeedbackRequests()
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned)
+
+            val supplement = if (assigned) "assigned by administrators" else "requested by students"
+            println("filtered evaluations for chat rooms $supplement:")
             EvaluationCommand().printSummary(header, allFeedbackResponses, output)
         }
     }

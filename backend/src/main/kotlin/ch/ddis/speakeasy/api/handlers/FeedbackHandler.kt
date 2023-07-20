@@ -16,7 +16,7 @@ data class FeedbackRequestList(val requests: List<FeedbackRequest>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
-data class FeedbackResponseMapList(val responses: MutableList<FeedbackResponseItem>)
+data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseItem>, val requested: MutableList<FeedbackResponseItem>)
 data class FeedbackResponseAverageItem(val username: String, val count: Int, val responses: List<FeedbackResponse>)
 data class FeedbackResponseAverageMapList(val assigned: List<FeedbackResponseAverageItem>, val requested: List<FeedbackResponseAverageItem>)
 
@@ -221,7 +221,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     override val route: String = "feedbackhistory"
 
     @OpenApi(
-        summary = "Gets the list of feedback responses",
+        summary = "Gets two lists (assigned and requested) of feedback responses",
         path = "/api/feedbackhistory",
         methods = [HttpMethod.GET],
         tags = ["Admin"],
@@ -232,9 +232,11 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     )
     override fun doGet(ctx: Context): FeedbackResponseMapList {
 
-        // TODO: change this use case readFeedbackHistory()
-        val allFeedbackResponses = FeedbackManager.readFeedbackHistory()
-        return FeedbackResponseMapList(allFeedbackResponses)
+        val assignedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = true)
+        val requestedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = false)
+        return FeedbackResponseMapList(
+            assigned =  assignedFeedbackResponses,
+            requested = requestedFeedbackResponses)
     }
 }
 

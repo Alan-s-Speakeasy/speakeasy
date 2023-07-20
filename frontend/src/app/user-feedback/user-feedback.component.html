@@ -12,8 +12,10 @@
   </div>
 
   <div class="row p-2 justify-content-between">
-    <div class="col-8">
-      <h5>Filter {{authorPerspective ? "Authors" : "Recipients"}}</h5>
+    <div class="col-6">
+      <h5>Filter <span [style.color]="authorPerspective ? '#5F9EA0' : '#9370DB'">[{{authorPerspective ? "Authors" : "Recipients"}}]</span>
+        and <span [style.color]="chooseAssignments ? '#4682B4' : '#008080'">[{{chooseAssignments ? "Assignments by TAs" : "Requests by Students"}}]</span>
+      </h5>
       <div class="row">
         <div class="col-4" *ngFor="let username of usernames">
           <mat-checkbox [checked]="isSelected(username) == true" (change)="switch(username)" color="primary">
@@ -28,6 +30,12 @@
       <mat-button-toggle-group class="border-0 float-end" (change)="toggleDirection($event.value)">
         <mat-button-toggle checked value="author"><b>Author</b></mat-button-toggle>
         <mat-button-toggle value="recipient"><b>Recipient</b></mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+    <div class="col-2">
+      <mat-button-toggle-group class="border-0 float-end" (change)="toggleAssignments($event.value)">
+        <mat-button-toggle checked value="assigned"><b>Assignments</b></mat-button-toggle>
+        <mat-button-toggle value="requested"><b>Requests</b></mat-button-toggle>
       </mat-button-toggle-group>
     </div>
   </div>

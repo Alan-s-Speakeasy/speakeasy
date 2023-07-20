@@ -978,7 +978,7 @@
     "/api/feedbackhistory" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Gets the list of feedback responses.",
+        "summary" : "Gets two lists (assigned and requested) of feedback responses",
         "operationId" : "getApiFeedbackHistory",
         "responses" : {
           "200" : {
@@ -1755,10 +1755,16 @@
         }
       },
       "FeedbackResponseMapList" : {
-        "required" : [ "responses" ],
+        "required" : [ "assigned", "requested" ],
         "type" : "object",
         "properties" : {
-          "responses" : {
+          "assigned" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseItem"
+            }
+          },
+          "requested" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/FeedbackResponseItem"

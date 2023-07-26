@@ -91,4 +91,18 @@ object ChatRoomManager {
         return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id.UID()))
     }
 
+    // add user to chatroom
+    fun addUser(newUserId: UserId, id: ChatRoomId) {
+        val newUSer = newUserId to SessionAliasGenerator.getRandomName()
+        val currentUsers = this.chatrooms[id]?.users
+        if (currentUsers != null) {
+            this.chatrooms[id]?.users = currentUsers.plus(newUSer)
+        }
+    }
+
+    fun getUsers(id: ChatRoomId): List<String> {
+        return this.chatrooms[id]?.users?.values?.toList() ?: listOf()
+    }
+
+
 }

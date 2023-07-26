@@ -24,7 +24,8 @@ export interface PaneLog {
   myAlias: string,
   otherAlias: string,
   spectate: boolean,
-  history?: boolean
+  history?: boolean,
+  evaluation?: boolean
 }
 
 export interface Ratings {

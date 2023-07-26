@@ -377,3 +377,51 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     }
 
 }
+
+class PostNewUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+    override val permittedRoles = setOf(RestApiRole.USER)
+    override val route = "request/{roomId}"
+
+    @OpenApi(
+        summary = "Post a new user to a Chatroom.",
+        path = "/api/request/{roomId}",
+        methods = [HttpMethod.POST],
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
+        tags = ["Chat"],
+        pathParams = [
+            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+        ],
+        queryParams = [
+            OpenApiParam("session", String::class, "Session Token")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPost(ctx: Context): SuccessStatus {
+
+        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+            401,
+            "Unauthorized",
+            ctx
+        )
+        val roomId = (ctx.pathParamMap().getOrElse("roomId") {
+            throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
+        }).UID()
+
+        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+
+        if (!room.active) {
+            throw ErrorStatusException(400, "Chatroom not active", ctx)
+        }
+
+        val newUser = UserManager.getUserIdFromUsername(ctx.body())!!
+
+        ChatRoomManager.addUser(newUser, roomId)
+
+        return SuccessStatus("User added")
+
+    }
+}

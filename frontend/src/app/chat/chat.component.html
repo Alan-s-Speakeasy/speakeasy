@@ -33,7 +33,7 @@
   </div>
 
   <div class="row p-2" style="margin-top: 10px">
-    <div class="col-12 col-md-7 p-2" *ngIf="paneLogs.length > 0">
+    <div class="col-12 col-md-7 p-2" *ngIf="paneLogs.length > 1">
       <div class="input-group">
         <input (keyup.enter)="askALl()" type="text" class="form-control" placeholder="Send questions to all chat rooms..." maxlength="1000" [formControl]="queryAll">
         <div class="input-group-append">

@@ -37,6 +37,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
   numQueries = 5  // the number of queries recommended to ask
+  evaluation = false
 
   ngOnInit(): void {
     this.titleService.setTitle("Chat Page")
@@ -84,7 +85,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       myAlias: room.alias,
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
-      spectate: false
+      spectate: false,
+      evaluation: this.evaluation
     }
 
     this.paneLogs.unshift(paneLog)
@@ -93,6 +95,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   // request chatroom with a specified user
   uname = new FormControl("")
   requestChatRoom() {
+    if (this.uname.value == "evaluator") {
+      this.evaluation = true
+    }
     this.chatService.postApiRoomsRequest({username: this.uname.value} as ChatRequest).subscribe(
       (response) => {
         this.alertService.success("Your request is successful. A new chatroom has been created with "+this.uname.value,this.options)

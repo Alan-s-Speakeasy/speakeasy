@@ -19,7 +19,8 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
         this.subcommands(
             ListAllChatRoomsCommand(),
             ListActiveChatRoomsCommand(),
-            ShowChatRoomCommand()
+            ShowChatRoomCommand(),
+            ShowUsersInChatCommand()
         )
     }
 
@@ -124,6 +125,35 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                 }
                 println()
             }
+        }
+    }
+
+    inner class ShowUsersInChatCommand : CliktCommand(name = "users", help = "Shows the current users of a chat room") {
+
+        val id: String by option("-i", "--id", help = "The id of the chat room").required()
+
+        override fun run() {
+
+            val uid = try {
+                id.UID()
+            } catch (e: IllegalArgumentException) {
+                println("'$id' is not a valid id")
+                return
+            }
+
+            val room = ChatRoomManager[uid]
+
+            if (room == null) {
+                println("Chatroom with id '$id' not found")
+                return
+            }
+
+            var listUsers = ChatRoomManager.getUsers(uid)
+            println("Users in chatroom $id:")
+            listUsers.forEach { user ->
+                println(user)
+            }
+
         }
     }
 

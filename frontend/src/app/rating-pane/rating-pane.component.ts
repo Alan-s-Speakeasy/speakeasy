@@ -2,7 +2,7 @@
 
 import {Component, EventEmitter, Inject, Input, OnInit, Output} from '@angular/core';
 import {PaneLog, Ratings} from "../new_data";
-import {FeedbackRequest, FeedbackResponse, FeedbackResponseList, FeedbackService} from "../../../openapi";
+import {ChatService, FeedbackRequest, FeedbackResponse, FeedbackResponseList, FeedbackService} from "../../../openapi";
 import {AlertService} from "../_alert";
 
 @Component({
@@ -16,6 +16,7 @@ export class RatingPaneComponent implements OnInit {
     keepAfterRouteChange: true
   };
   constructor(@Inject(FeedbackService) private feedbackService: FeedbackService,
+              @Inject(ChatService) private chatService: ChatService,
               public alertService: AlertService) { }
 
   @Input() paneLog!: PaneLog;
@@ -99,6 +100,17 @@ export class RatingPaneComponent implements OnInit {
       )
     }
     return responses
+  }
+
+  closeRoom(): void {
+    this.chatService.patchApiRoomWithRoomid(this.paneLog.roomID, undefined).subscribe(
+      (response) => {
+        //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
+      },
+      (error) => {
+        console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
+      }
+    );
   }
 
 

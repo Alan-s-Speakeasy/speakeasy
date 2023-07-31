@@ -36,7 +36,7 @@
     </div>
     <div class="chat-message clearfix">
       <div class="input-group-append text-center">
-        <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
+        <button (click)="submit(); closeRoom()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
       </div>
     </div>
   </div>

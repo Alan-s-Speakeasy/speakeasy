@@ -195,6 +195,14 @@ object UserManager {
 
         }
     }
+
+    fun getUserRoleByUserID(userId: UserId): UserRole? = this.lock.read {
+        transaction {
+            val userToGet = User.findById(userId.toUUID())
+            return@transaction userToGet?.role
+        }
+    }
+
 }
 
 

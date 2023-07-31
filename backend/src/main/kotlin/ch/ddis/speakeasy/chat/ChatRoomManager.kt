@@ -1,6 +1,8 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
@@ -91,7 +93,6 @@ object ChatRoomManager {
         return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id.UID()))
     }
 
-    // add user to chatroom
     fun addUser(newUserId: UserId, id: ChatRoomId) {
         val newUSer = newUserId to SessionAliasGenerator.getRandomName()
         val currentUsers = this.chatrooms[id]?.users
@@ -100,9 +101,13 @@ object ChatRoomManager {
         }
     }
 
-    fun getUsers(id: ChatRoomId): List<String> {
-        return this.chatrooms[id]?.users?.values?.toList() ?: listOf()
+    fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
+        return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
     }
+//
+//    fun closeRoom(roomId: UID) {
+//        this.chatrooms[roomId]?.endTime = System.currentTimeMillis()
+//    }
 
 
 }

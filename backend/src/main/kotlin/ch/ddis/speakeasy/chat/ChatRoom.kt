@@ -1,6 +1,8 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
@@ -16,7 +18,8 @@ open class ChatRoom(
     var prompt: String = "",
     private val messages: MutableList<ChatMessage> = mutableListOf(),
     private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
-    val assessedBy: MutableList<Assessor> = mutableListOf()
+    val assessedBy: MutableList<Assessor> = mutableListOf(),
+    var isEvaluation: Boolean = false
 ) {
     internal var endTime: Long? = null
     val aliasToUserId = users.entries.associateBy({ it.value }) { it.key }
@@ -46,8 +49,28 @@ open class ChatRoom(
     /**
      * @return all [ChatMessage]s since a specified timestamp
      */
-    fun getMessagesSince(since: Long): List<ChatMessage> = this.lock.read {
-        this.messages.filter { it.time >= since }
+//    fun getMessagesSince(since: Long): List<ChatMessage> = this.lock.read {
+//        this.messages.filter { it.time >= since }
+//    }
+
+//    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
+//        val userRole = UserManager.getUserRoleByUserID(userId)
+//        return this.lock.read {
+//            this.messages.filter { it.time >= since && it.recipients.contains(userRole) }
+//        }
+//    }
+
+    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
+        val userRole = UserManager.getUserRoleByUserID(userId)
+        return if (userRole == UserRole.BOT) {
+            this.lock.read {
+                this.messages.filter { it.time >= since && !it.private }
+            }
+        } else {
+            this.lock.read {
+                this.messages.filter { it.time >= since }
+            }
+        }
     }
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
@@ -77,4 +100,5 @@ open class ChatRoom(
             this.endTime = System.currentTimeMillis()
         }
     }
+
 }

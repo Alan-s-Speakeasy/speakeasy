@@ -158,13 +158,14 @@ data class ChatRoomState(
 ) {
     constructor(room: ChatRoom, since: Long, userId: UserId) : this(
         ChatRoomInfo(room, userId),
-        ChatMessage.toRestMessages(room.getMessagesSince(since)),
+        //ChatMessage.toRestMessages(room.getMessagesSince(since)),
+        ChatMessage.toRestMessages(room.getMessagesSince(since, userId)),
         room.getAllReactions()
     )
 }
 
 class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandler {
-    override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.ADMIN)
+    override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.ADMIN, RestApiRole.EVALUATOR)
     override val route = "room/{roomId}/{since}"
 
     @OpenApi(
@@ -212,7 +213,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
 }
 
 class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
-    override val permittedRoles = setOf(RestApiRole.USER)
+    override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.BOT, RestApiRole.EVALUATOR)
     override val route = "room/{roomId}"
 
     @OpenApi(
@@ -225,7 +226,8 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             OpenApiParam("roomId", String::class, "Id of the Chatroom"),
         ],
         queryParams = [
-            OpenApiParam("session", String::class, "Session Token")
+            OpenApiParam("session", String::class, "Session Token"),
+            OpenApiParam("private", String::class, "Private Message"),
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -256,8 +258,22 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         if (message.isBlank()) {
             throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
+        var privateMessage = false
 
-        room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal))
+
+        if(room.isEvaluation){
+            if(session.user.role == UserRole.HUMAN){
+                privateMessage = true
+            }
+            if(session.user.role == UserRole.EVALUATOR){
+                //obtain the private status from the query parameter
+                privateMessage = ctx.queryParam("private") == "true"
+                room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, privateMessage))
+                return SuccessStatus(privateMessage.toString())
+            }
+        }
+
+        room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, privateMessage))
 
         return SuccessStatus("Message received")
 
@@ -364,9 +380,9 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             )
         }
 
-        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {
-            throw ErrorStatusException(403, "Cannot establish a chat with that user", ctx)
-        }
+//        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {
+//            throw ErrorStatusException(403, "Cannot establish a chat with that user", ctx)
+//        }
 
         ChatRoomManager.create(
             listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
@@ -420,8 +436,57 @@ class PostNewUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
         val newUser = UserManager.getUserIdFromUsername(ctx.body())!!
 
         ChatRoomManager.addUser(newUser, roomId)
+        room.isEvaluation = true
 
         return SuccessStatus("User added")
 
     }
 }
+
+class CloseChatRoomHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    override val permittedRoles = setOf(RestApiRole.USER)
+    override val route = "room/{roomId}"
+
+    @OpenApi(
+        summary = "Closes a Chatroom.",
+        path = "/api/room/{roomId}",
+        methods = [HttpMethod.PATCH],
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
+        tags = ["Chat"],
+        pathParams = [
+            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+        ],
+        queryParams = [
+            OpenApiParam("session", String::class, "Session Token")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPatch(ctx: Context): SuccessStatus {
+
+        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+            401,
+            "Unauthorized",
+            ctx
+        )
+        val roomId = (ctx.pathParamMap().getOrElse("roomId") {
+            throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
+        }).UID()
+
+        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+
+        if (!room.users.containsKey(session.user.id.UID())) {
+            throw ErrorStatusException(401, "Unauthorized", ctx)
+        }
+
+        room.deactivate()
+
+        return SuccessStatus("Chatroom closed")
+
+    }
+}
+

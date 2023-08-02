@@ -3,7 +3,7 @@
 
     <div class="row text-center mx-auto p-0 bg-info text-white" style="position: absolute; top: -1.2em; width: 100%; word-break: break-all"
          *ngIf="paneLog.assignment ">
-      <small> Assigned by TAs (assessment required) </small>
+      <small> Assigned by TAs {{paneLog.formRef === '' ? '' : '(assessment required)'}} </small>
     </div>
 
     <div class="row p-2">
@@ -67,9 +67,17 @@
             <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
           </div>
           <div class="input-group-append">
-            <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
-              Assess <i class="fa fa-chevron-circle-{{paneLog.ratingOpen ? 'left' : 'right'}}"></i>
-            </button>
+            <ng-container *ngIf="paneLog.formRef === ''; then directlyClose; else assess"></ng-container>
+            <ng-template #directlyClose>
+              <button (click)="close()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
+                Close <i class="fa fa-chevron-circle}}"></i>
+              </button>
+            </ng-template>
+            <ng-template #assess>
+              <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
+                Assess <i class="fa fa-chevron-circle-{{paneLog.ratingOpen ? 'left' : 'right'}}"></i>
+              </button>
+            </ng-template>
           </div>
         </div>
       </div>

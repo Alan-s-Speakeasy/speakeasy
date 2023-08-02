@@ -52,9 +52,9 @@ object RestApi {
             PostChatMessageHandler(),
             PostChatMessageReactionHandler(),
 
-            GetFeedbackRequestListHandler(),
+            GetFeedbackFormListHandler(),
+            GetFeedbackFormHandler(),
             PostFeedbackHandler(),
-            PostNoFeedbackHandler(),
             GetFeedbackHistoryHandler(),
 
             GetAdminFeedbackHistoryHandler(),

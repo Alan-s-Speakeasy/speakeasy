@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -16,6 +17,7 @@ data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
 data class ChatRoomInfo(
     val assignment: Boolean,
+    val formRef: String,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
@@ -26,6 +28,7 @@ data class ChatRoomInfo(
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
         room.assignment,
+        room.formRef,
         room.uid.string,
         room.startTime,
         room.remainingTime,
@@ -38,6 +41,7 @@ data class ChatRoomInfo(
 
 data class ChatRoomAdminInfo(
     val assignment: Boolean,
+    val formRef: String,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
@@ -47,6 +51,7 @@ data class ChatRoomAdminInfo(
 ) {
     constructor(room: ChatRoom) : this(
         room.assignment,
+        room.formRef,
         room.uid.string,
         room.startTime,
         room.remainingTime,
@@ -92,11 +97,11 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
 
 class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
     override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.USER)
-    override val route = "rooms/assessed-and-marked"
+    override val route = "rooms/assessed"
 
     @OpenApi(
         summary = "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
-        path = "/api/rooms/assessed-and-marked",
+        path = "/api/rooms/assessed",
         tags = ["Chat"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
@@ -376,8 +381,12 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         }
 
         ChatRoomManager.create(
-            listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-            null, System.currentTimeMillis() + 10 * 1000 * 60)
+            userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!),
+//            formRef = FeedbackManager.DEFAULT_FORM_NAME,
+            formRef = "", // TODO: parameterize formRef
+            log = true,
+            prompt = null,
+            endTime = System.currentTimeMillis() + 10 * 1000 * 60)
 
         return SuccessStatus("Chatroom created")
 

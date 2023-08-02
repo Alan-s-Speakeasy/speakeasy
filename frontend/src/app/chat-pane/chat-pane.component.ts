@@ -4,8 +4,8 @@ import {FormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog} from "../new_data";
-import {ChatMessageReaction, ChatService} from "../../../openapi";
-import {Component, ElementRef, Inject, Input, OnInit, ViewChild} from '@angular/core';
+import {ChatMessageReaction, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
+import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {AlertService} from "../_alert";
 
 @Component({
@@ -14,19 +14,25 @@ import {AlertService} from "../_alert";
   styleUrls: ['./chat-pane.component.css']
 })
 export class ChatPaneComponent implements OnInit {
+  options = {
+    autoClose: true,
+    keepAfterRouteChange: true
+  };
 
   private chatMessagesSubscription!: Subscription;
   @Input() paneLog!: PaneLog
   @Input() numQueries!: number
+
+  @Output("removeRoom") removeRoom: EventEmitter<any> = new EventEmitter()
 
   num_messages: number = 0
   paneLogScroll: boolean = false
   remainingTime: string = ''
   num_to_ask!: number
   lastGetTime: number = 0
-
   constructor(
     @Inject(ChatService) private chatService: ChatService,
+    @Inject(FeedbackService) private feedbackService: FeedbackService,
     public alertService: AlertService
     ) { }
 
@@ -77,7 +83,9 @@ export class ChatPaneComponent implements OnInit {
 
         if (response.info.remainingTime <= 0) { //chat session complete
           this.chatMessagesSubscription.unsubscribe();
-          this.paneLog.ratingOpen = true
+          if (this.paneLog.formRef !== '') {
+            this.paneLog.ratingOpen = true
+          }
           this.paneLog.active = false
         }
         if (this.paneLogScroll) {
@@ -103,6 +111,25 @@ export class ChatPaneComponent implements OnInit {
     } else {
       this.paneLog.ratingOpen = !this.paneLog.ratingOpen
     }
+  }
+  close(): void {
+    const responses: FeedbackResponseList = {responses: []};
+    this.feedbackService.postApiFeedbackWithRoomid(this.paneLog.roomID, undefined, responses).subscribe(
+      (response) => {
+        this.alertService.success("Closed Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ")", this.options)
+        this.removeRoom.emit()
+      },
+      (error) => {
+        if (error.status == 404) {
+          this.alertService.error("Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") not found, just closed it.", this.options)
+          this.removeRoom.emit()
+        } else if (error.status == 403) {
+          this.alertService.error(error.message)
+        } else {
+          this.alertService.error("Something wrong when closing chat room", this.options)
+        }
+      }
+    )
   }
 
   @ViewChild('scroll') scroll!: ElementRef;

@@ -11,6 +11,7 @@ typealias ChatRoomId = UID
 
 open class ChatRoom(
     val assignment: Boolean = false,
+    val formRef: String,
     val uid: ChatRoomId = UID(),
     val users: Map<UserId, String>, //UserId --> UserAlias
     val startTime: Long = System.currentTimeMillis(),

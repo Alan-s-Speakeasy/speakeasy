@@ -1,5 +1,5 @@
 /** Frontend variables and mock data */
-import {ChatRoomAdminInfoUsers, FeedbackResponse} from "../../openapi";
+import {ChatRoomAdminInfoUsers, FeedbackRequest, FeedbackResponse} from "../../openapi";
 
 export interface Message {
   myMessage: boolean,  // true: the message will be shown as my message (green bubble, on the right side);
@@ -15,6 +15,7 @@ export interface MessageLog {
 
 export interface PaneLog {
   assignment: boolean,
+  formRef: string,
   markAsNoFeedback: boolean,
   roomID: string,  // id of the chatroom;
   ordinals: number,  // number of messages
@@ -31,6 +32,11 @@ export interface PaneLog {
 
 export interface Ratings {
   [key: string]: string
+}
+
+export interface FeedbackForm {
+  formName: string,
+  requests: FeedbackRequest[],
 }
 
 export interface FrontendUser {
@@ -61,6 +67,7 @@ export interface FrontendUserInGroup {
 
 export interface FrontendChatroomDetail {
   assignment: boolean,
+  formRef: string,
   prompt: string,
   roomID: string,
   startTime: number,

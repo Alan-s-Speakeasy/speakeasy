@@ -197,6 +197,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     chatRoomDetails.push(
       {
         assignment: chatRoom.assignment,
+        formRef: chatRoom.formRef,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,

@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.SessionAliasGenerator
@@ -19,13 +20,13 @@ object ChatRoomManager {
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
-            val users: Map<UserId, String> = objectMapper.readValue(lines[5])
+            val users: Map<UserId, String> = objectMapper.readValue(lines[6])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf()
             val assessedBy: MutableList<Assessor> = mutableListOf()
             var markAsNoFeedback: Boolean = false
 
-            for (i in 7 until lines.size) {
+            for (i in 8 until lines.size) {
                 when (val chatItem: ChatItemContainer = objectMapper.readValue(lines[i])) {
                     is ChatMessage -> messages.add(chatItem)
                     is ChatMessageReactionContainer -> reactions[chatItem.reaction.messageOrdinal] = chatItem.reaction
@@ -36,10 +37,11 @@ object ChatRoomManager {
 
             val chatRoom = LoggingChatRoom(
                 assignment = lines[0].toBoolean(),
-                uid = UID(lines[1]),
-                startTime = lines[2].toLong(),
-                endTime = lines[3].toLongOrNull() ?: lines[2].toLong(),
-                prompt = lines[4],
+                formRef = lines[1],
+                uid = UID(lines[2]),
+                startTime = lines[3].toLong(),
+                endTime = lines[4].toLongOrNull() ?: lines[3].toLong(),
+                prompt = lines[5],
                 basePath = basePath,
                 users = users,
                 messages = messages,
@@ -62,8 +64,8 @@ object ChatRoomManager {
             true -> this.chatrooms.values.filter { it.users.contains(userId)
                     && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
             false -> this.chatrooms.values.filter { it.users.contains(userId)
-                    && ( (it.assignment && !it.assessedBy.contains(Assessor(userId)))
-                        || (!it.assignment && !it.markAsNoFeedback && !it.assessedBy.contains(Assessor(userId))) )
+                    && !it.markAsNoFeedback
+                    && !it.assessedBy.contains(Assessor(userId))
                     && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }
                 .sortedBy { it.startTime }
         }
@@ -78,7 +80,13 @@ object ChatRoomManager {
         return userIds?.find { it != userId }
     }
 
+    fun getFeedbackFormReference(roomId: UID): String? {
+        val formRef = this.chatrooms[roomId]?.formRef
+        return if (formRef == "") null else formRef
+    }
+
     fun create(userIds: List<UserId>,
+               formRef: String = DEFAULT_FORM_NAME,
                log: Boolean = true,
                prompt: String?,
                endTime: Long? = null,
@@ -86,9 +94,9 @@ object ChatRoomManager {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
-            LoggingChatRoom(assignment = assignment, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
+            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
         } else {
-            ChatRoom(assignment = assignment, users = users, prompt = roomPrompt)
+            ChatRoom(assignment = assignment, formRef = formRef, users = users, prompt = roomPrompt)
         }
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"

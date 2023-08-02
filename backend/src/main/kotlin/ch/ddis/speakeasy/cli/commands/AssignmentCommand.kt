@@ -107,9 +107,11 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
             val endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
             next.forEach { assignment ->
+                // TODO: change formRef with CLI
                 ChatRoomManager.create(
-                    listOf(assignment.human.id.UID(), assignment.bot.id.UID()),
-                    true, assignment.prompt
+                    userIds = listOf(assignment.human.id.UID(), assignment.bot.id.UID()),
+                    log = true,
+                    prompt = assignment.prompt
                 ).also { it.setEndTime(endTime) }
             }
 

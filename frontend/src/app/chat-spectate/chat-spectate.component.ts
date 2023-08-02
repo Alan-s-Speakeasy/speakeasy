@@ -27,6 +27,7 @@ export class ChatSpectateComponent implements OnInit {
     this.roomID = history.state.roomID;
     this.paneLog = {
       assignment: history.state.assignment,
+      formRef: history.state.formRef,
       markAsNoFeedback: history.state.markAsNoFeedback,
       roomID: history.state.roomID,
       ordinals: 0,
@@ -39,7 +40,6 @@ export class ChatSpectateComponent implements OnInit {
       prompt: "spectating " + history.state.username,
       spectate: true
     }
-    console.log(this.paneLog)
   }
 
   // exit chat/rating and redirect to the panel page

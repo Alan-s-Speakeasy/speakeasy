@@ -76,6 +76,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
       assignment: room.assignment,
+      formRef: room.formRef,
       markAsNoFeedback: room.markAsNoFeedback,
       roomID: room.uid,
       ordinals: 0,

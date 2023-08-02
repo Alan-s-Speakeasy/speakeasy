@@ -11,6 +11,16 @@
     </div>
   </div>
 
+  <mat-form-field class="m-2">
+    <mat-label>Choose Feedback Form</mat-label>
+    <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
+      <mat-option *ngFor="let formName of formNameOptions" [value]="formName">
+        {{formName}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+
   <div class="row p-2 justify-content-between">
     <div class="col-6">
       <h5>Filter <span [style.color]="authorPerspective ? '#5F9EA0' : '#9370DB'">[{{authorPerspective ? "Authors" : "Recipients"}}]</span>
@@ -66,15 +76,19 @@
   <div class="row p-2">
     <table class="table small">
       <thead>
-      <tr *ngIf="this.ratingForm">
+      <tr *ngIf="this.ratingRequests">
         <th class="px-0">{{authorPerspective ? "Author" : "Recipient"}}</th>
-        <th class="px-0" *ngFor="let question of this.ratingForm.slice(0, -1)">{{question.shortname}}</th>
+        <ng-container *ngFor="let question of this.ratingRequests">
+          <th class="px-0" *ngIf="!nonOptionQuestionIds.includes(question.id)">{{question.shortname}}</th>
+        </ng-container>
       </tr>
       </thead>
       <tbody *ngFor="let entry of getAverageFeedback(); let i = index">
       <tr class="align-middle" role="button" (click)="toggleElement = toggleElement == i ? -1 : i">
         <td class="px-0">{{entry.username}}</td>
-        <td class="px-0" *ngFor="let response of entry.responses.slice(0, -1)">{{idToText(response)}}</td>
+        <ng-container *ngFor="let response of entry.responses">
+          <td class="px-0" *ngIf="!nonOptionQuestionIds.includes(response.id)">{{idToText(response)}}</td>
+        </ng-container>
       </tr>
       <tr *ngIf="toggleElement == i">
         <td [colSpan]="entry.responses.length">
@@ -82,16 +96,26 @@
             <thead>
             <tr class="table-secondary">
               <th>{{authorPerspective ? "Recipient" : "Author"}}</th>
-              <th *ngFor="let question of this.ratingForm">{{question.shortname}}</th>
+              <th *ngFor="let question of this.ratingRequests">{{question.shortname}}</th>
             </tr>
             </thead>
             <tbody *ngFor="let userFeedback of getFeedbacks(entry.username)">
             <tr class="table-secondary">
               <td class="p-2">{{this.authorPerspective ? userFeedback.recipient : userFeedback.author}}</td>
-              <td class="p-2" *ngFor="let response of userFeedback.responses.slice(0, -1)">{{idToText(response)}}</td>
-              <td *ngFor="let impression of userFeedback.responses.slice(-1)">
-                <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, impression)"><i>&nbsp;Read</i></p>
-              </td>
+              <ng-container *ngFor="let response of userFeedback.responses">
+                <ng-container
+                  *ngIf="!nonOptionQuestionIds.includes(response.id); then optionQuestion; else nonOptionQuestion">
+                </ng-container>
+                <ng-template #optionQuestion>
+                  <td class="p-2">{{idToText(response)}}</td>
+                </ng-template>
+                <ng-template #nonOptionQuestion>
+                  <td>
+                    <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, response)"><i>&nbsp;Read</i></p>
+                  </td>
+                </ng-template>
+              </ng-container>
+
             </tr>
             </tbody>
           </table>

@@ -1,9 +1,10 @@
 package ch.ddis.speakeasy.cli.commands
 
-import ch.ddis.speakeasy.api.handlers.FeedbackRequestList
+import ch.ddis.speakeasy.api.handlers.FeedbackForm
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseAverageItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.UserManager
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -29,8 +30,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
         )
     }
 
-    private fun getFeedbackNameForValue(requests: FeedbackRequestList, id: String, value: String, csv: Boolean = false): String {
-        requests.requests.forEach { if (it.id == id) {
+    private fun getFeedbackNameForValue(form: FeedbackForm, id: String, value: String, csv: Boolean = false): String {
+        form.requests.forEach { if (it.id == id) {
             it.options.forEach { o -> if (o.value.toString() == value) {return o.name} }
         } }
         return if (value == "0") {
@@ -59,7 +60,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     }
 
     fun printEvaluationPerUser(
-        header: FeedbackRequestList,
+        header: FeedbackForm,
         responses: List<FeedbackResponseItem>,
         output: String?,
         author: Boolean
@@ -117,7 +118,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                         }
                         row {
                             cell("AVERAGE")
-                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }).forEach {
+                            // TODO: change formRef with CLI
+                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, DEFAULT_FORM_NAME).forEach {
                                 cell(getFeedbackNameForValue(header, it.id, it.value))
                             }
                         }
@@ -128,7 +130,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     }
 
     fun printAllEvaluations(
-        header: FeedbackRequestList,
+        header: FeedbackForm,
         allResponses: List<FeedbackResponseAverageItem>,
         output: String?,
         author: Boolean
@@ -141,7 +143,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 val parts: MutableList<String> = mutableListOf()
                 parts.add(response.username)
                 parts.add(response.count.toString())
-                FeedbackManager.computeFeedbackAverage(response.responses).forEach {
+                // TODO: change formRef with CLI
+                FeedbackManager.computeFeedbackAverage(response.responses, DEFAULT_FORM_NAME).forEach {
                     parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
                 }
                 fileWriter.println(parts.joinToString(","))
@@ -177,7 +180,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                             row {
                                 cell(response.username)
                                 cell(response.count)
-                                FeedbackManager.computeFeedbackAverage(response.responses).forEach {
+                                // TODO: change formRef with CLI
+                                FeedbackManager.computeFeedbackAverage(response.responses, DEFAULT_FORM_NAME).forEach {
                                     cell(getFeedbackNameForValue(header, it.id, it.value))
                                 }
                             }
@@ -189,7 +193,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     }
 
     fun printSummary(
-        header: FeedbackRequestList,
+        header: FeedbackForm,
         responses: MutableList<FeedbackResponseItem>,
         output: String?
     ) {
@@ -197,7 +201,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             val fileWriter = createOutputFile(output)
             fileWriter.println(header.requests.joinToString(",") { it.shortname })
             val parts: MutableList<String> = mutableListOf()
-            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }).forEach {
+            // TODO: change formRef with CLI
+            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, DEFAULT_FORM_NAME).forEach {
                 parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
             }
             fileWriter.println(parts.joinToString(","))
@@ -227,7 +232,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                     }
                     body {
                         row {
-                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }).forEach {
+                            // TODO: change formRef with CLI
+                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, DEFAULT_FORM_NAME).forEach {
                                 cell(getFeedbackNameForValue(header, it.id, it.value))
                             }
                         }
@@ -257,8 +263,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            val header = FeedbackManager.readFeedbackRequests()
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned)
+            // TODO: change formRef with CLI
+            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
+            // TODO: change formRef with CLI
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, DEFAULT_FORM_NAME)
             val userResponses = allFeedbackResponses.filter { it.author == user.name }
 
             if (userResponses.isEmpty()) {
@@ -291,8 +299,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            val header = FeedbackManager.readFeedbackRequests()
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned)
+            // TODO: change formRef with CLI
+            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
+            // TODO: change formRef with CLI
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, DEFAULT_FORM_NAME)
             val userResponses = allFeedbackResponses.filter { it.recipient == user.name }
 
             if (userResponses.isEmpty()) {
@@ -329,8 +339,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            val header = FeedbackManager.readFeedbackRequests()
-            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author, assigned)
+            // TODO: change formRef with CLI
+            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
+            // TODO: change formRef with CLI
+            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author, assigned, DEFAULT_FORM_NAME)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")
@@ -352,9 +364,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
-
-            val header = FeedbackManager.readFeedbackRequests()
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned)
+            // TODO: change formRef with CLI
+            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
+            // TODO: change formRef with CLI
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, DEFAULT_FORM_NAME)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")

@@ -31,7 +31,7 @@ export class RatingPaneComponent implements OnInit {
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedback(undefined).subscribe(
+    this.feedbackService.getApiFeedbackFormByName(this.paneLog.formRef, undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },
@@ -89,7 +89,8 @@ export class RatingPaneComponent implements OnInit {
   }
 
   closeWithoutRating(): void {
-    this.feedbackService.postApiDoNotWantFeedback(this.paneLog.roomID, undefined, "true").subscribe(
+    const responses: FeedbackResponseList = {responses: []};
+    this.feedbackService.postApiFeedbackWithRoomid(this.paneLog.roomID, undefined, responses).subscribe(
       (response) => {
         this.alertService.success("Closed Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") without rating successfully.", this.options)
         this.removeRoom.emit()

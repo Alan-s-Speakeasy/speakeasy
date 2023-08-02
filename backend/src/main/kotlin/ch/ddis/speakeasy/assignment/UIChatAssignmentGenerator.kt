@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.CyclicList
@@ -141,7 +142,14 @@ object UIChatAssignmentGenerator {
             if (AccessManager.hasUserIdActiveSessions(humanId) && AccessManager.hasUserIdActiveSessions(botId)) {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
-                val chatRoom = ChatRoomManager.create(listOf(humanId, botId),true, a.prompt, endTime, assignment = true)
+                val chatRoom = ChatRoomManager.create(
+                    userIds = listOf(humanId, botId),
+//                  formRef = "",
+                    formRef = DEFAULT_FORM_NAME, // TODO: parameterize formRef
+                    log = true,
+                    prompt = a.prompt,
+                    endTime = endTime,
+                    assignment = true)
                 chatRooms.add(chatRoom)
             }
         }

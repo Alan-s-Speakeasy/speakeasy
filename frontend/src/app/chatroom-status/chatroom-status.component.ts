@@ -61,6 +61,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     chatRoomDetails.push(
       {
         assignment: chatRoom.assignment,
+        formRef: chatRoom.formRef,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime,
@@ -80,6 +81,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     let user2 = chatroomDetail.userInfo[1]
     this.router.navigateByUrl('/spectate', { state: {
       assignment: chatroomDetail.assignment,
+      formRef: chatroomDetail.formRef,
       markAsNoFeedback: chatroomDetail.markAsNoFeedBack,
       roomID: chatroomDetail.roomID,
       username: user1.username,

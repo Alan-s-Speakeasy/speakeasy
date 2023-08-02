@@ -263,6 +263,6 @@ gradle-app.setting
 .idea/
 
 session-store
-data/sessionfeedback.csv
+data/feedbackresults/*
 data/sessions.csv
 frontend/openapi

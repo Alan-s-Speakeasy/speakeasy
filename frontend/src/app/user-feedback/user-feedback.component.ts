@@ -58,10 +58,14 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   private feedbackSubscription!: Subscription;
 
-  ratingForm!: Array<FeedbackRequest>;
+  ratingRequests!: Array<FeedbackRequest>;
   averageFeedback: FrontendAverageFeedback[] = []
   userFeedback: FrontendUserFeedback[] = []
   chooseAssignments: boolean = true
+
+  selectedFormName!: string
+
+  formNameOptions: string[] = []
 
   // TODO: TypeError: Cannot read properties of undefined (reading '0')
   chartDataPerUsername: Map<string, Map<string, number>[]> = new Map<string, Map<string, number>[]>()
@@ -78,26 +82,40 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   selectedChartData: Map<string, number>[] = []
   allChartData: Map<string, number>[] = []
 
+  nonOptionQuestionIds: string[] = []
+
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
 
-    this.feedbackService.getApiFeedback(undefined).subscribe((feedbackForm) => {
-        this.ratingForm = feedbackForm.requests;
+    this.feedbackService.getApiFeedbackForms(undefined).subscribe((feedbackForms) => {
+      this.formNameOptions = feedbackForms.forms.map( form => form.formName )
+      this.selectedFormName = this.formNameOptions[0] // use the first one as default form
+
+      // Fetch initially and then periodically refetch
+      this.fetchFeedback()
+      this.feedbackSubscription = interval(10000).subscribe(() => {
+        this.fetchFeedback()
+      })
+    })
+
+  }
+
+  fetchFeedback(): void {
+    this.feedbackService.getApiFeedbackFormByName(this.selectedFormName,undefined).subscribe((feedbackForm) => {
+        this.ratingRequests = feedbackForm.requests;
+        feedbackForm.requests.forEach( (request) => {
+          // record text questions
+          if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {
+            this.nonOptionQuestionIds.push(request.id)
+          }
+        })
       },
       (error) => {
         console.log("Ratings form for this chat room is not retrieved properly.", error);
       }
     )
 
-    // Fetch initially and then periodically refetch
-    this.fetchFeedback()
-    this.feedbackSubscription = interval(10000).subscribe(() => {
-      this.fetchFeedback()
-    })
-  }
-
-  fetchFeedback(): void {
-    this.adminService.getApiFeedbackAverage(this.authorPerspective).subscribe((r) => {
+    this.adminService.getApiFeedbackAverageWithFormName(this.selectedFormName,this.authorPerspective).subscribe((r) => {
       this.averageFeedback = []
       this.usernames = []
       let responses = this.chooseAssignments ? r.assigned : r.requested
@@ -114,8 +132,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username))
     })
 
-    this.adminService.getApiFeedbackHistory().subscribe((r) => {
-      console.log(r)
+    this.adminService.getApiFeedbackHistoryWithFormName(this.selectedFormName).subscribe((r) => {
       this.userFeedback = []
       this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername()
       let responses = this.chooseAssignments ? r.assigned : r.requested
@@ -128,11 +145,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
             responses: response.responses
           }
         )
-        if (this.ratingForm) {
+        if (this.ratingRequests) {
           let username = this.authorPerspective ? response.author : response.recipient
-          response.responses.slice(0, -1).forEach(r => {
-            let current = this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].get(r.value) || 0
-            this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].set(r.value, current + 1)
+          response.responses.forEach(r => {
+            if (!this.nonOptionQuestionIds.includes(r.id)){
+              let current = this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].get(r.value) || 0
+              this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].set(r.value, current + 1)
+            }
           })
         }
       })
@@ -142,10 +161,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   generateEmptyChartBuckets(): Map<string, number>[] {
     let res: Map<string, number>[] = []
-    this.ratingForm.slice(0, -1).forEach(f => {
-      let x = new Map()
-      f.options.forEach(o => x.set(o.value.toString(), 0))
-      res.push(x)
+    console.log(this.ratingRequests)
+    this.ratingRequests.forEach(f => {
+      if (!this.nonOptionQuestionIds.includes(f.id)){
+        let x = new Map()
+        f.options.forEach(o => x.set(o.value.toString(), 0))
+        res.push(x)
+      }
     })
     return res
   }
@@ -154,10 +176,12 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     let res: Map<string, Map<string, number>[]> = new Map
     this.usernames.forEach(u => {
       res.set(u, [])
-      this.ratingForm.slice(0, -1).forEach(f => {
-        let x = new Map()
-        f.options.forEach(o => x.set(o.value.toString(), 0))
-        res.get(u)!.push(x)
+      this.ratingRequests.forEach(f => {
+        if (!this.nonOptionQuestionIds.includes(f.id)) {
+          let x = new Map()
+          f.options.forEach(o => x.set(o.value.toString(), 0))
+          res.get(u)!.push(x)
+        }
       })
     })
     return res
@@ -239,91 +263,95 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   generateCharts(): void {
-    this.ratingForm.slice(0, -1).forEach(f => {
-      let series = [{
-        name: "All users",
-        data: this.getChartData([], f.id),
-      }]
-      if (this.appliedSelectedUsernames.length != 0) {
-        series.push({
-          name: "Selected users",
-          data: this.getChartData(this.appliedSelectedUsernames, f.id)
-        })
-      }
-      this.allChartOptions?.push(
-        {
-          series: series,
-          legend: {
-            showForSingleSeries: true
-          },
-          colors: ['#0066ff', '#ff9933'],
-          chart: {
-            height: 300,
-            type: "bar",
-            animations: {
-              enabled: false
-            }
-          },
-          plotOptions: {
-            bar: {
-              dataLabels: {
-                position: "bottom"
-              }
-            }
-          },
-          dataLabels: {
-            enabled: false
-          },
-          yaxis: {
-            min: 0,
-            max: 1,
-            tickAmount: 5,
-            labels: {
-              formatter: function (val) {
-                return val.toFixed(1);
+    this.ratingRequests.forEach(f => {
+      if (!this.nonOptionQuestionIds.includes(f.id)) {
+        let series = [{
+          name: "All users",
+          data: this.getChartData([], f.id),
+        }]
+        if (this.appliedSelectedUsernames.length != 0) {
+          series.push({
+            name: "Selected users",
+            data: this.getChartData(this.appliedSelectedUsernames, f.id)
+          })
+        }
+        this.allChartOptions?.push(
+          {
+            series: series,
+            legend: {
+              showForSingleSeries: true
+            },
+            colors: ['#0066ff', '#ff9933'],
+            chart: {
+              height: 300,
+              type: "bar",
+              animations: {
+                enabled: false
               }
             },
-          },
-          xaxis: {
-            categories: Array.from(f.options.map(o => o.name)),
-            crosshairs: {
-              fill: {
-                type: "gradient",
-                gradient: {
-                  colorFrom: "#D8E3F0",
-                  colorTo: "#BED1E6",
-                  stops: [0, 100],
-                  opacityFrom: 0.4,
-                  opacityTo: 0.5
+            plotOptions: {
+              bar: {
+                dataLabels: {
+                  position: "bottom"
                 }
               }
-            }
-          },
-          title: {
-            text: f.shortname,
-            align: "center",
-            style: {
-              color: "#444"
+            },
+            dataLabels: {
+              enabled: false
+            },
+            yaxis: {
+              min: 0,
+              max: 1,
+              tickAmount: 5,
+              labels: {
+                formatter: function (val) {
+                  return val.toFixed(1);
+                }
+              },
+            },
+            xaxis: {
+              categories: Array.from(f.options.map(o => o.name)),
+              crosshairs: {
+                fill: {
+                  type: "gradient",
+                  gradient: {
+                    colorFrom: "#D8E3F0",
+                    colorTo: "#BED1E6",
+                    stops: [0, 100],
+                    opacityFrom: 0.4,
+                    opacityTo: 0.5
+                  }
+                }
+              }
+            },
+            title: {
+              text: f.shortname,
+              align: "center",
+              style: {
+                color: "#444"
+              }
             }
           }
-        }
-      )
+        )
+      }
     })
   }
 
   updateCharts(): void {
-    this.ratingForm.slice(0, -1).forEach(f => {
-      let series = [{
-        name: "All users",
-        data: this.getChartData([], f.id)
-      }]
-      if (this.appliedSelectedUsernames.length != 0) {
-        series.push({
-          name: "Selected users",
-          data: this.getChartData(this.appliedSelectedUsernames, f.id)
-        })
+    this.ratingRequests.forEach(f => {
+      if (!this.nonOptionQuestionIds.includes(f.id)) {
+        let series = [{
+          name: "All users",
+          data: this.getChartData([], f.id)
+        }]
+        if (this.appliedSelectedUsernames.length != 0) {
+          series.push({
+            name: "Selected users",
+            data: this.getChartData(this.appliedSelectedUsernames, f.id)
+          })
+        }
+        this.allChartOptions[parseInt(f.id) - 1].series = series
       }
-      this.allChartOptions[parseInt(f.id) - 1].series = series
     })
   }
 
@@ -350,7 +378,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   idToText(response: FeedbackResponse): string {
     let text = response.value
-    this.ratingForm.forEach(r => {
+    this.ratingRequests.forEach(r => {
       if (r.id == response.id) {
         r.options.forEach(o => {
           if (o.value.toString() == response.value) {
@@ -369,6 +397,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   toggleAssignments(value: string): void {
     this.chooseAssignments = value == "assigned"
+    this.fetchFeedback()
+  }
+
+  toggleFormName(value: string): void {
+    this.nonOptionQuestionIds = []
+    this.allChartOptions = []
+    this.selectedFormName = value
     this.fetchFeedback()
   }
 

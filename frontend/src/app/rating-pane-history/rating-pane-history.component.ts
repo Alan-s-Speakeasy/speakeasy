@@ -25,7 +25,7 @@ export class RatingPaneHistoryComponent implements OnInit {
   ratingForm!: Array<FeedbackRequest>;
 
   ngOnInit(): void {
-    if (!this.paneLog.markAsNoFeedback){
+    if (!this.paneLog.markAsNoFeedback && this.paneLog.formRef != ""){
       this.fetchRatingForm()
       this.retrieveFeedbackHistory()
     }
@@ -33,7 +33,7 @@ export class RatingPaneHistoryComponent implements OnInit {
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedback(undefined).subscribe(
+    this.feedbackService.getApiFeedbackFormByName(this.paneLog.formRef,undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },

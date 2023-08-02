@@ -23,7 +23,8 @@
     <div class="row-fluid">
     <div *ngFor="let paneLog of paneLogs" style="display: inline">
       <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" style="margin-right: 5px">
-        <app-chat-pane [numQueries]="numQueries" [paneLog]="paneLog" id="chat{{paneLog.roomID}}"></app-chat-pane>
+        <app-chat-pane (removeRoom)="removeRoom(paneLog.roomID)"
+                       [numQueries]="numQueries" [paneLog]="paneLog" id="chat{{paneLog.roomID}}"></app-chat-pane>
       </div>
       <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" *ngIf="paneLog.ratingOpen" style="margin-right: 10px">
         <app-rating-pane (removeRoom)="removeRoom(paneLog.roomID)" [paneLog]="paneLog" id="rating{{paneLog.roomID}}"></app-rating-pane>
@@ -55,17 +56,17 @@
 
 <ng-template #modalData let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title">Unassessed Chatrooms</h4>
+    <h4 class="modal-title" id="modal-basic-title">Unclosed or Unassessed Chatrooms</h4>
     <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
       <span aria-hidden="true">×</span>
     </button>
   </div>
   <div class="modal-body">
     <p>
-      1. You will not be able to see any unassessed chatrooms in the history.
+      1. You will not be able to see any unclosed chatrooms in the history.
       <br>
       <br>
-      2. By clicking on "Close without Rating", you will be able to view the chat history (without the rating history) for that chat room requested by yourself.
+      2. You will not be able to see any unassessed chatrooms in the history if assessment is required to be submitted.
       <br>
       <br>
       Do you want to continue?

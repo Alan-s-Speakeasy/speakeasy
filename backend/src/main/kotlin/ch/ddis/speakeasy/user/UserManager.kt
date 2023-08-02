@@ -203,6 +203,21 @@ object UserManager {
         }
     }
 
+    fun getUserRoleByUserName(username: String): UserRole? = this.lock.read {
+        transaction {
+            val userToGet = User.find { Users.username eq username }.firstOrNull()
+            return@transaction userToGet?.role
+        }
+    }
+
+    fun checkIfUserIsActive(username: String): Boolean{
+        val userSession = AccessManager.listSessions().firstOrNull { it.user.name == username }
+        if (userSession != null) {
+            return true
+        }
+        return false
+    }
+
 }
 
 

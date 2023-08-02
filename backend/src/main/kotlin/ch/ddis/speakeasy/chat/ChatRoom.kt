@@ -53,13 +53,6 @@ open class ChatRoom(
 //        this.messages.filter { it.time >= since }
 //    }
 
-//    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
-//        val userRole = UserManager.getUserRoleByUserID(userId)
-//        return this.lock.read {
-//            this.messages.filter { it.time >= since && it.recipients.contains(userRole) }
-//        }
-//    }
-
     fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
         val userRole = UserManager.getUserRoleByUserID(userId)
         return if (userRole == UserRole.BOT) {

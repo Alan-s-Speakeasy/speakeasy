@@ -325,3 +325,49 @@ class RemoveAllGroupsHandler : DeleteRestHandler<SuccessStatus>, AccessManagedRe
 
     override val route = "group"
 }
+
+class GetCurrentUserbyUsername : GetRestHandler<SuccessStatus>, AccessManagedRestHandler {
+    override val permittedRoles = setOf(RestApiRole.USER)
+    override val route = "user/check"
+
+    @OpenApi(
+        summary = "Returns details for the current session.",
+        path = "/api/user/check",
+        methods = [HttpMethod.GET],
+        tags = ["User"],
+        queryParams = [
+            OpenApiParam("session", String::class, "Session Token"),
+            OpenApiParam("username", String::class, "Username")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(UserSessionDetails::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doGet(ctx: Context): SuccessStatus {
+
+        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+            401,
+            "Invalid user session",
+            ctx
+        )
+
+        val username = ctx.queryParam("username") ?: throw ErrorStatusException(
+            401,
+            "Invalid user session",
+            ctx
+        )
+        val user = UserManager.getUserIdFromUsername(username) ?: return SuccessStatus("The username is incorrect")
+
+        var message = "User found"
+
+        if(!UserManager.checkIfUserIsActive(username)){
+            message = "The BOT is not active"
+        }
+        if(UserManager.getUserRoleByUserName(username) != UserRole.BOT){
+            message = "The username doesn't belongs to a BOT"
+        }
+
+        return SuccessStatus(message)
+    }
+}

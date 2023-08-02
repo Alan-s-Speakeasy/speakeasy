@@ -41,6 +41,7 @@ object RestApi {
             RemoveGroupHandler(),
             ListGroupsHandler(),
             RemoveAllGroupsHandler(),
+            GetCurrentUserbyUsername(),
 
             ListChatRoomsHandler(),
             ListAllChatRoomsHandler(),

@@ -71,7 +71,7 @@ object ChatRoomManager {
         return userIds?.find { it != userId }
     }
 
-    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null): ChatRoom {
+    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null, evaluation: Boolean? = false): ChatRoom {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
@@ -82,6 +82,9 @@ object ChatRoomManager {
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
+        if (evaluation != null) {
+            chatRoom.isEvaluation = evaluation
+        }
         return chatRoom
     }
 
@@ -104,10 +107,5 @@ object ChatRoomManager {
     fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
         return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
     }
-//
-//    fun closeRoom(roomId: UID) {
-//        this.chatrooms[roomId]?.endTime = System.currentTimeMillis()
-//    }
-
 
 }

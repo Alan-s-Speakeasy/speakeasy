@@ -98,7 +98,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.uname.value == "evaluator") {
       this.evaluation = true
     }
-    this.chatService.postApiRoomsRequest({username: this.uname.value} as ChatRequest).subscribe(
+    this.chatService.postApiRoomsRequest({username: this.uname.value, evaluation: this.evaluation} as ChatRequest).subscribe(
       (response) => {
         this.alertService.success("Your request is successful. A new chatroom has been created with "+this.uname.value,this.options)
       },

@@ -266,10 +266,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
                 privateMessage = true
             }
             if(session.user.role == UserRole.EVALUATOR){
-                //obtain the private status from the query parameter
                 privateMessage = ctx.queryParam("private") == "true"
-                room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, privateMessage))
-                return SuccessStatus(privateMessage.toString())
             }
         }
 
@@ -337,7 +334,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
 
 }
 
-data class ChatRequest(val username: String)
+data class ChatRequest(val username: String, val evaluation: Boolean)
 
 class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -386,7 +383,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         ChatRoomManager.create(
             listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-            null, System.currentTimeMillis() + 10 * 1000 * 60)
+            null, System.currentTimeMillis() + 10 * 1000 * 60, request.evaluation)
 
         return SuccessStatus("Chatroom created")
 
@@ -436,7 +433,6 @@ class PostNewUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
         val newUser = UserManager.getUserIdFromUsername(ctx.body())!!
 
         ChatRoomManager.addUser(newUser, roomId)
-        room.isEvaluation = true
 
         return SuccessStatus("User added")
 

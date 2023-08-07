@@ -152,7 +152,7 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
             var listUsers = ChatRoomManager.getUsersIDofARoom(uid)
             println("Users in chatroom $id:")
             listUsers.forEach { user ->
-                println(user)
+                println(UserManager.getUsernameFromId(user))
             }
 
         }

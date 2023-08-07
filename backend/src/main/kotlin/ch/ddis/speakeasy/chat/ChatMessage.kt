@@ -9,6 +9,7 @@ data class ChatMessage(
     val authorSessionId: SessionId,
     val ordinal: Int,
     var private : Boolean,
+    val isRead : Boolean = false,
     val recipients: MutableList<UserRole> = mutableListOf(),
     val time: Long = System.currentTimeMillis()
 
@@ -17,10 +18,10 @@ data class ChatMessage(
     companion object {
         fun toRestMessages(chatMessages: List<ChatMessage>):
             List<RestChatMessage> = chatMessages.map {
-            RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message, it.private)
+            RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message, it.private, it.isRead)
         }
     }
 
 }
 
-data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, var private: Boolean)
+data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, var private: Boolean, val isRead: Boolean)

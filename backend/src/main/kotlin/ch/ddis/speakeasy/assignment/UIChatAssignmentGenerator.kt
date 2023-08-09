@@ -4,7 +4,6 @@ import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomManager
-import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.CyclicList
@@ -25,6 +24,7 @@ object UIChatAssignmentGenerator {
     private var duration = 0
     private var endTime = 0L
     private var round = 0
+    private var formName: String = ""
     private var nextRound: MutableList<GeneratedAssignment> = mutableListOf()
     private val humanAssignments = hashMapOf<String, MutableList<String>>().withDefault { mutableListOf() }
     private val chatRooms: MutableList<ChatRoom> = mutableListOf()
@@ -48,6 +48,7 @@ object UIChatAssignmentGenerator {
         duration = 0
         endTime = 0L
         round = 0
+        formName = ""
         nextRound.clear()
         humanAssignments.clear()
         chatRooms.clear()
@@ -67,6 +68,7 @@ object UIChatAssignmentGenerator {
             selected,
             nextRound,
             prompts,
+            formName,
             botsPerHuman,
             duration,
             round,
@@ -87,6 +89,7 @@ object UIChatAssignmentGenerator {
         prompts = assignment.prompts
         botsPerHuman = assignment.botsPerHuman
         duration = assignment.duration
+        formName = assignment.formName
 
         selected.humans = assignment.humans
         selected.bots = assignment.bots
@@ -108,7 +111,7 @@ object UIChatAssignmentGenerator {
                     val bot = bots[botIndex]
                     if (slack < bots.size){ // Comply with group constraint
                         if (wasNotAlreadySelected(human, bot, slack) && !UserManager.areInSameGroup(human, bot)) {
-                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
+                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next(), formName))
                             assigned = true
                         } else {
                             botIndex = (botIndex + 1) % bots.size
@@ -116,7 +119,7 @@ object UIChatAssignmentGenerator {
                         }
                     } else { // When the attempts are too many, we drop the group constraint (Just for some edge cases)
                         if (wasNotAlreadySelected(human, bot, slack)) {
-                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
+                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next(), formName))
                             assigned = true
                         } else {
                             botIndex = (botIndex + 1) % bots.size
@@ -144,8 +147,7 @@ object UIChatAssignmentGenerator {
                 humanAssignments[a.human]?.add(a.bot)
                 val chatRoom = ChatRoomManager.create(
                     userIds = listOf(humanId, botId),
-//                  formRef = "",
-                    formRef = DEFAULT_FORM_NAME, // TODO: parameterize formRef
+                    formRef = a.formName,
                     log = true,
                     prompt = a.prompt,
                     endTime = endTime,

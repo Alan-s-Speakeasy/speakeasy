@@ -382,8 +382,8 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         ChatRoomManager.create(
             userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!),
-//            formRef = FeedbackManager.DEFAULT_FORM_NAME,
-            formRef = "", // TODO: parameterize formRef
+//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
+            formRef = "",
             log = true,
             prompt = null,
             endTime = System.currentTimeMillis() + 10 * 1000 * 60)

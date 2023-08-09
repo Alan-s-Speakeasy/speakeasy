@@ -86,7 +86,8 @@ object ChatRoomManager {
     }
 
     fun create(userIds: List<UserId>,
-               formRef: String = DEFAULT_FORM_NAME,
+//               formRef: String = DEFAULT_FORM_NAME,
+               formRef: String,
                log: Boolean = true,
                prompt: String?,
                endTime: Long? = null,

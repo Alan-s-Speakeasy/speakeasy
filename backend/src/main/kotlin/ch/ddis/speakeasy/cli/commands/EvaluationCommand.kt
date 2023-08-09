@@ -4,7 +4,6 @@ import ch.ddis.speakeasy.api.handlers.FeedbackForm
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseAverageItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.feedback.FeedbackManager
-import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.UserManager
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -12,6 +11,7 @@ import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
 import com.jakewharton.picnic.BorderStyle
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
@@ -63,7 +63,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
         header: FeedbackForm,
         responses: List<FeedbackResponseItem>,
         output: String?,
-        author: Boolean
+        author: Boolean,
+        formName: String,
     ) {
         if (output != null) {
             val fileWriter = createOutputFile(output)
@@ -118,8 +119,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                         }
                         row {
                             cell("AVERAGE")
-                            // TODO: change formRef with CLI
-                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, DEFAULT_FORM_NAME).forEach {
+                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, formName).forEach {
                                 cell(getFeedbackNameForValue(header, it.id, it.value))
                             }
                         }
@@ -133,7 +133,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
         header: FeedbackForm,
         allResponses: List<FeedbackResponseAverageItem>,
         output: String?,
-        author: Boolean
+        author: Boolean,
+        formName: String
     ) {
         if (output != null) {
             val fileWriter = createOutputFile(output)
@@ -143,8 +144,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 val parts: MutableList<String> = mutableListOf()
                 parts.add(response.username)
                 parts.add(response.count.toString())
-                // TODO: change formRef with CLI
-                FeedbackManager.computeFeedbackAverage(response.responses, DEFAULT_FORM_NAME).forEach {
+                FeedbackManager.computeFeedbackAverage(response.responses, formName).forEach {
                     parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
                 }
                 fileWriter.println(parts.joinToString(","))
@@ -180,8 +180,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                             row {
                                 cell(response.username)
                                 cell(response.count)
-                                // TODO: change formRef with CLI
-                                FeedbackManager.computeFeedbackAverage(response.responses, DEFAULT_FORM_NAME).forEach {
+                                FeedbackManager.computeFeedbackAverage(response.responses, formName).forEach {
                                     cell(getFeedbackNameForValue(header, it.id, it.value))
                                 }
                             }
@@ -195,14 +194,14 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
     fun printSummary(
         header: FeedbackForm,
         responses: MutableList<FeedbackResponseItem>,
-        output: String?
+        output: String?,
+        formName: String
     ) {
         if (output != null) {
             val fileWriter = createOutputFile(output)
             fileWriter.println(header.requests.joinToString(",") { it.shortname })
             val parts: MutableList<String> = mutableListOf()
-            // TODO: change formRef with CLI
-            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, DEFAULT_FORM_NAME).forEach {
+            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, formName).forEach {
                 parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
             }
             fileWriter.println(parts.joinToString(","))
@@ -232,8 +231,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                     }
                     body {
                         row {
-                            // TODO: change formRef with CLI
-                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, DEFAULT_FORM_NAME).forEach {
+                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, formName).forEach {
                                 cell(getFeedbackNameForValue(header, it.id, it.value))
                             }
                         }
@@ -251,6 +249,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
         private val requested: Boolean by option("--requested",
             help = "Flag to list ratings only for chat rooms requested by students.").flag()
 
+        private val formName: String by option(
+            "-f", "--form",
+            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
+
         override fun run() {
             val user = UserManager.list().find { it.name == username }
             if (user == null) {
@@ -263,10 +265,13 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            // TODO: change formRef with CLI
-            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
-            // TODO: change formRef with CLI
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, DEFAULT_FORM_NAME)
+            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+                return
+            }
+
+            val header = FeedbackManager.readFeedbackFrom(formName)
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName)
             val userResponses = allFeedbackResponses.filter { it.author == user.name }
 
             if (userResponses.isEmpty()) {
@@ -275,7 +280,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             }
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")
-            EvaluationCommand().printEvaluationPerUser(header, userResponses, output, true)
+            EvaluationCommand().printEvaluationPerUser(header, userResponses, output, true, formName)
         }
     }
 
@@ -286,6 +291,10 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             help = "Flag to list ratings only for chat rooms assigned by administrators.").flag()
         private val requested: Boolean by option("--requested",
             help = "Flag to list ratings only for chat rooms requested by students.").flag()
+        private val formName: String by option(
+            "-f", "--form",
+            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
+
 
         override fun run() {
             val user = UserManager.list().find { it.name == username }
@@ -298,11 +307,13 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
+            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+                return
+            }
 
-            // TODO: change formRef with CLI
-            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
-            // TODO: change formRef with CLI
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, DEFAULT_FORM_NAME)
+            val header = FeedbackManager.readFeedbackFrom(formName)
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName)
             val userResponses = allFeedbackResponses.filter { it.recipient == user.name }
 
             if (userResponses.isEmpty()) {
@@ -312,7 +323,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")
-            EvaluationCommand().printEvaluationPerUser(header, userResponses, output, false)
+            EvaluationCommand().printEvaluationPerUser(header, userResponses, output, false, formName)
         }
     }
 
@@ -325,6 +336,9 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
         private val requested: Boolean by option("--requested",
             help = "Flag to list ratings only for chat rooms requested by students.").flag()
         private val output: String? by option("-o", "--output")
+        private val formName: String by option(
+            "-f", "--form",
+            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
 
         override fun run() {
 
@@ -338,15 +352,17 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
+            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+                return
+            }
 
-            // TODO: change formRef with CLI
-            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
-            // TODO: change formRef with CLI
-            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author, assigned, DEFAULT_FORM_NAME)
+            val header = FeedbackManager.readFeedbackFrom(formName)
+            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author, assigned, formName)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")
-            EvaluationCommand().printAllEvaluations(header, responsesPerUser, output, author = author)
+            EvaluationCommand().printAllEvaluations(header, responsesPerUser, output, author = author, formName)
         }
     }
 
@@ -357,6 +373,9 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             help = "Flag to list ratings only for chat rooms assigned by administrators.").flag()
         private val requested: Boolean by option("--requested",
             help = "Flag to list ratings only for chat rooms requested by students.").flag()
+        private val formName: String by option(
+            "-f", "--form",
+            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
 
         override fun run() {
             if ((assigned && requested) || (!assigned && !requested)) {
@@ -364,14 +383,16 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
-            // TODO: change formRef with CLI
-            val header = FeedbackManager.readFeedbackFrom(DEFAULT_FORM_NAME)
-            // TODO: change formRef with CLI
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, DEFAULT_FORM_NAME)
+            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+                return
+            }
+            val header = FeedbackManager.readFeedbackFrom(formName)
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")
-            EvaluationCommand().printSummary(header, allFeedbackResponses, output)
+            EvaluationCommand().printSummary(header, allFeedbackResponses, output, formName)
         }
     }
 }

@@ -5,6 +5,7 @@ import ch.ddis.speakeasy.assignment.ListChatAssignmentGenerator
 import ch.ddis.speakeasy.assignment.ShuffledChatAssignmentGenerator
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.UID
 import com.github.ajalt.clikt.core.CliktCommand
@@ -95,10 +96,20 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
             help = "duration of the next assignment in minutes (defaults to 10)"
         ).int().default(10)
 
+        private val formName: String by option(
+            "-f",
+            "--form",
+            help = "which feedback form to use: ${FeedbackManager.readFeedbackFromList().map { it.formName }} (default no feedback)"
+        ).default("")
+
         override fun run() {
 
             if (Cli.assignmentGenerator == null) {
                 println("No assignment generator active")
+                return
+            }
+            if (!FeedbackManager.isValidFormName(formName)){
+                println("You should leave it blank or choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
                 return
             }
 
@@ -107,11 +118,12 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
             val endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
             next.forEach { assignment ->
-                // TODO: change formRef with CLI
                 ChatRoomManager.create(
                     userIds = listOf(assignment.human.id.UID(), assignment.bot.id.UID()),
                     log = true,
-                    prompt = assignment.prompt
+                    prompt = assignment.prompt,
+                    assignment = true,
+                    formRef = formName
                 ).also { it.setEndTime(endTime) }
             }
 

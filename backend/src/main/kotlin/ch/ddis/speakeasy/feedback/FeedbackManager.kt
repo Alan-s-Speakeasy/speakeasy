@@ -22,13 +22,13 @@ import java.util.concurrent.locks.StampedLock
 object FeedbackManager {
     private var sessionWriters: HashMap<String, PrintWriter> = hashMapOf() // formName -> feedback PrintWriter
 
-    private lateinit var feedbackFormsFile: File
+    private lateinit var formsPath: File
 
     private var feedbackFiles: HashMap<String, File> = hashMapOf() // formName -> feedback results
 
     private val kMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
 
-    private lateinit var forms: MutableList<FeedbackForm>
+    private var forms: MutableList<FeedbackForm> = mutableListOf()
 
     lateinit var DEFAULT_FORM_NAME: String // Use the name of the first form as the default value (or "").
 
@@ -37,19 +37,24 @@ object FeedbackManager {
     fun init(config: Config) {
 
         // INIT Reading Feedback Forms
-
-        this.feedbackFormsFile = File(File(config.dataPath), "feedbackforms.json")
-        if (!this.feedbackFormsFile.exists()) {
-            return
+        this.formsPath = File(File(config.dataPath), "feedbackforms/")
+        this.formsPath
+            .walk()
+            .filter { it.isFile }
+            .forEach { file ->
+                val feedbackForm: FeedbackForm = kMapper.readValue(file)
+                if (this.forms.none{ it.formName == feedbackForm.formName }) {
+                    this.forms.add(feedbackForm)
+                } else {
+                    System.err.println("formNames in feedbackforms should be unique  -> ignored duplicates ${feedbackForm.formName}.")
+                }
         }
+        this.forms.sortBy { it.formName } // Ensure that after each initialization, the forms are sorted in ascending order by formName
 
-        val rawForms: MutableList<FeedbackForm> = kMapper.readValue(this.feedbackFormsFile)
-        this.forms = rawForms.distinctBy { it.formName }.toMutableList()
-        if (rawForms.size > this.forms.size) {
-            System.err.println("formNames in feedbackforms should be unique  -> ignored duplicates.")
+        this.DEFAULT_FORM_NAME = this.forms.firstOrNull()?.formName ?: run {
+            System.err.println("Not found any feedback forms when init.")
+            return@run ""
         }
-
-        this.DEFAULT_FORM_NAME = this.forms.firstOrNull()?.formName ?: ""
 
         // INIT Writing Feedback Responses
         this.forms.forEach {
@@ -76,6 +81,11 @@ object FeedbackManager {
 
     fun readFeedbackFrom(formName: String): FeedbackForm {
         return forms.find { it.formName ==  formName}!!  // throw NullPointerException
+    }
+
+    fun isValidFormName(formName: String): Boolean {
+        if (formName == "") { return true }
+        return this.forms.find { it.formName ==  formName} != null
     }
 
     fun readFeedbackFromList(): MutableList<FeedbackForm> = forms

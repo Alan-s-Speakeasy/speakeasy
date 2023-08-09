@@ -6,14 +6,14 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomAdminInfo, ChatRoomAdminInfoUsers,
+  ChatRoomAdminInfo, ChatRoomAdminInfoUsers, FeedbackRequest, FeedbackService,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {HttpClient} from '@angular/common/http';
 import {FormControl} from "@angular/forms";
 import {AlertService} from "../_alert";
-import {FrontendChatroomDetail} from "../new_data";
+import {FeedbackForm, FrontendChatroomDetail} from "../new_data";
 
 
 @Component({
@@ -30,6 +30,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
               private httpClient: HttpClient,
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
+              @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(AssignmentService) private assignmentService: AssignmentService,
               public alertService: AlertService) { }
 
@@ -50,6 +51,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   promptForm = new FormControl("")
   prompts: string[] = []
 
+  formsMap: Map<string, FeedbackRequest[]> = new Map([
+    [ "", [] ]   // default value, no feedback form
+  ])
+  selectedFormName: string = ""
+
   botsPerUser = 3
   duration = 10
 
@@ -67,6 +73,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
+
+    this.feedbackService.getApiFeedbackForms(undefined).subscribe((feedbackForms) => {
+     feedbackForms.forms.forEach( (form) => {
+       this.formsMap.set(form.formName, form.requests)
+     } )
+    })
 
     this.fetchGenerator(true)
     this.generatorSubscription = interval(5000).subscribe(() => {
@@ -112,6 +124,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.active = response.active
       if (initial) {
         this.prompts = response.prompts
+        this.selectedFormName = response.formName
         this.botsPerUser = response.botsPerHuman
         this.duration = response.duration
         response.humans.forEach(human => {
@@ -250,13 +263,15 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   generateNextRound(): void {
+    console.log(this.selectedFormName)
     this.assignmentService.generateAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
       prompts: this.prompts,
       botsPerHuman: this.botsPerUser,
-      duration: this.duration
+      duration: this.duration,
+      formName: this.selectedFormName
     }).subscribe(response => {
       let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
       this.nextAssignment = response
@@ -296,6 +311,10 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   getChatrooms(active: boolean): FrontendChatroomDetail[] {
     let arr = Array.from(this.chatroomDetails.values())
     return arr.filter(c => (c.remainingTime > 0) == active)
+  }
+
+  toggleFormName(value: string): void {
+    this.selectedFormName = value
   }
 
   countdown(): void {

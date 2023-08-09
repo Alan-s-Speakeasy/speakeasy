@@ -1833,7 +1833,7 @@
         "required" : [ "assigned", "requested" ]
       },
       "AssignmentGeneratorObject" : {
-        "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ],
+        "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ],
         "type": "object",
         "properties": {
           "humans": {
@@ -1896,6 +1896,9 @@
               "type": "string"
             }
           },
+          "formName" : {
+            "type" : "string"
+          },
           "botsPerHuman": {
             "type": "integer"
           },
@@ -1917,7 +1920,7 @@
         }
       },
       "NewAssignmentObject" : {
-        "required": [ "humans", "bots", "admins", "prompts", "botsPerHuman", "duration" ],
+        "required": [ "humans", "bots", "admins", "prompts", "botsPerHuman", "duration", "formName" ],
         "type": "object",
         "properties": {
           "humans": {
@@ -1949,11 +1952,14 @@
           },
           "duration": {
             "type": "integer"
+          },
+          "formName" : {
+            "type" : "string"
           }
         }
       },
       "GeneratedAssignment": {
-        "required": [ "human", "bot", "prompt" ],
+        "required": [ "human", "bot", "prompt", "formName" ],
         "type": "object",
         "properties": {
           "human": {
@@ -1964,6 +1970,9 @@
           },
           "prompt": {
             "type": "string"
+          },
+          "formName" : {
+            "type" : "string"
           }
         }
       },

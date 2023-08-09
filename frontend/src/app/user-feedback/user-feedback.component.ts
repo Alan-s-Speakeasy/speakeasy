@@ -161,7 +161,6 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   generateEmptyChartBuckets(): Map<string, number>[] {
     let res: Map<string, number>[] = []
-    console.log(this.ratingRequests)
     this.ratingRequests.forEach(f => {
       if (!this.nonOptionQuestionIds.includes(f.id)){
         let x = new Map()

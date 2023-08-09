@@ -24,8 +24,8 @@
       <mat-form-field class="col-2">
         <mat-label>Choose Feedback Form</mat-label>
         <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
-          <mat-option *ngFor="let formName of formsMap.keys()" [value]="formName">
-            {{formName}}
+          <mat-option *ngFor="let form of formsMap | keyvalue" [value]="form.key">
+            {{form.key}}
           </mat-option>
         </mat-select>
       </mat-form-field>

@@ -228,6 +228,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         queryParams = [
             OpenApiParam("session", String::class, "Session Token"),
             OpenApiParam("private", String::class, "Private Message"),
+            OpenApiParam("isDisplayed", String::class, "Displayed Message"),
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -270,7 +271,16 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             }
         }
 
-        room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, privateMessage))
+        var isDisplayed = true
+
+        if (ctx.queryParam("isDisplayed") == "false") {
+            isDisplayed = false
+        }
+
+        val isRead = false
+
+        room.addMessage(ChatMessage(message, userAlias, session.sessionId,
+            room.nextMessageOrdinal, privateMessage, isRead, isDisplayed))
 
         return SuccessStatus("Message received")
 

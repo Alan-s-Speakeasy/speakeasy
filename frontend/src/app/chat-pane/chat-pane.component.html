@@ -11,7 +11,7 @@
 
       <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
 
-        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage">
+        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
             <span class="message-data-time">{{paneLog.messageLog[ordinal].ordinal}}</span>
@@ -45,7 +45,7 @@
           </div>
         </li>
 
-        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage">
+        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>

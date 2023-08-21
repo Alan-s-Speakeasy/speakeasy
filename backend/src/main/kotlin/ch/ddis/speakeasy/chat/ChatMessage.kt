@@ -10,7 +10,7 @@ data class ChatMessage(
     val ordinal: Int,
     var private : Boolean,
     val isRead : Boolean = false,
-    val recipients: MutableList<UserRole> = mutableListOf(),
+    val isDisplayed : Boolean = true,
     val time: Long = System.currentTimeMillis()
 
 ) : ChatItemContainer() {
@@ -18,10 +18,10 @@ data class ChatMessage(
     companion object {
         fun toRestMessages(chatMessages: List<ChatMessage>):
             List<RestChatMessage> = chatMessages.map {
-            RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message, it.private, it.isRead)
+            RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message, it.private, it.isRead, it.isDisplayed)
         }
     }
 
 }
 
-data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, var private: Boolean, val isRead: Boolean)
+data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, var private: Boolean, val isRead: Boolean, val isDisplayed: Boolean)

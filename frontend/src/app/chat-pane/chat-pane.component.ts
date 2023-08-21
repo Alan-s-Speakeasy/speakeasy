@@ -50,7 +50,8 @@ export class ChatPaneComponent implements OnInit {
             ordinal: api_message.ordinal,
             message: api_message.message,
             time: api_message.timeStamp,
-            type: ""
+            type: "",
+            isDisplayed: api_message.isDisplayed
           };
           this.paneLog.ordinals = message.ordinal + 1
           this.paneLog.messageLog[message.ordinal] = message

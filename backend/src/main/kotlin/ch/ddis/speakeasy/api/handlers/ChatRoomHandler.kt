@@ -20,7 +20,8 @@ data class ChatRoomInfo(
     val remainingTime: Long,
     val userAliases: List<String>,
     val alias: String?,
-    val prompt: String
+    val prompt: String,
+    val isEvaluation: Boolean,
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
         room.uid.string,
@@ -28,7 +29,8 @@ data class ChatRoomInfo(
         room.remainingTime,
         room.users.values.toList(),
         room.users[userId],
-        room.prompt
+        room.prompt,
+        room.isEvaluation
     )
 }
 
@@ -387,13 +389,22 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             )
         }
 
+        if (request.username == "evaluator"){
+            val evaluation = true
+            ChatRoomManager.create(
+                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
+                null, System.currentTimeMillis() + 60 * 1000 * 60, evaluation)
+        }
+        else{
+            val evaluation = false
+            ChatRoomManager.create(
+                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
+                null, System.currentTimeMillis() + 10 * 1000 * 60, evaluation)
+        }
+
 //        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {
 //            throw ErrorStatusException(403, "Cannot establish a chat with that user", ctx)
 //        }
-
-        ChatRoomManager.create(
-            listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-            null, System.currentTimeMillis() + 10 * 1000 * 60, request.evaluation)
 
         return SuccessStatus("Chatroom created")
 

@@ -51,10 +51,14 @@ export class ChatPaneComponent implements OnInit {
             message: api_message.message,
             time: api_message.timeStamp,
             type: "",
-            isDisplayed: api_message.isDisplayed
+            isDisplayed: api_message.isDisplayed,
+            authorAlias: api_message.authorAlias
           };
           this.paneLog.ordinals = message.ordinal + 1
           this.paneLog.messageLog[message.ordinal] = message
+          if(this.paneLog.evaluatorAlias == "" && this.paneLog.myAlias != message.authorAlias && this.paneLog.isEvaluation){
+            this.paneLog.evaluatorAlias = message.authorAlias
+          }
         })
 
         response.reactions.forEach(reaction => {

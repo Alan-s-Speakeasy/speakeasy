@@ -1,8 +1,8 @@
-<div class="card chat-app">
+<div class="card chat-app" *ngIf="!paneLog.isEvaluation">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">
-        <h5>Chat with {{paneLog.otherAlias}} Is evaluator {{paneLog.isEvaluation}} <span *ngIf="paneLog.active && remainingTime" style="color: darkred">({{remainingTime}})</span></h5>
+        <h5>Chat with {{paneLog.otherAlias}} <span *ngIf="paneLog.active && remainingTime" style="color: darkred">({{remainingTime}})</span></h5>
         <p><span *ngIf="paneLog.prompt" style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
       </div>
     </div>
@@ -14,7 +14,6 @@
         <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
-            <span class="message-data-time">{{paneLog.messageLog[ordinal].ordinal}}</span>
           </div>
           <div class="message other-message" style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
 
@@ -48,6 +47,61 @@
         <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
+          </div>
+          <div class="message my-message" style="max-width: 100%; white-space: normal"><span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span></div>
+        </li>
+      </ul>
+    </div>
+
+    <div *ngIf="!paneLog.spectate && !paneLog.history">
+      <div class="chat-message clearfix">
+        <div class="input-group">
+          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." maxlength="1000" [readonly]="!paneLog.active" [formControl]="query">
+          <div class="input-group-append">
+            <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
+          </div>
+          <div class="input-group-append">
+            <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">Assess</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+
+<div class="card chat-app"  *ngIf="paneLog.isEvaluation">
+  <div class="chat">
+    <div class="row p-2">
+      <div class="chat-header text-center" style="white-space: break-spaces">
+        <h5>Chat with {{paneLog.otherAlias}}<span *ngIf="paneLog.active && remainingTime" style="color: darkred"></span></h5>
+        <p><span *ngIf="paneLog.prompt" style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
+      </div>
+    </div>
+
+    <div class="chat-history" style="overflow-y: scroll; height: 500px" #scroll>
+
+      <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
+
+        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
+          <div class="message-data">
+            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
+            <span class="message-data-time"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
+          </div>
+          <div class="message evaluated-message" *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.evaluatorAlias"
+               style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
+          </div>
+          <div class="message other-message" *ngIf="paneLog.messageLog[ordinal].authorAlias != paneLog.evaluatorAlias"
+               style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
+          </div>
+        </li>
+
+        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
+          <div class="message-data">
+            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
+            <span class="message-data-time"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
           </div>
           <div class="message my-message" style="max-width: 100%; white-space: normal"><span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span></div>
         </li>

@@ -1,0 +1,1839 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Alan's Speakeasy",
+    "description" : "API for Alan's Speakeasy, Version 0.1",
+    "version" : "0.1"
+  },
+  "paths" : {
+    "/api/login" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Sets roles for session based on user account and returns a session cookie.",
+        "operationId" : "postApiLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserSessionDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logout" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Clears all user roles of the current session.",
+        "operationId" : "getApiLogout",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/current" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Returns details for the current session.",
+        "operationId" : "getApiUserCurrent",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserSessionDetails"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/list" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all available users.",
+        "operationId" : "getApiUserList",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/sessions" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all current user sessions.",
+        "operationId" : "getApiUserSessions",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserSessionDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/add" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Adds a new user.",
+        "operationId" : "addApiUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddUserRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/remove" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Removes an existing user.",
+        "operationId" : "removeApiUser",
+        "parameters" : [ {
+          "name" : "force",
+          "in" : "query",
+          "description" : "Ignore active user sessions.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/password" : {
+      "patch" : {
+        "tags" : [ "User" ],
+        "summary" : "Changes the password for a given user.",
+        "operationId" : "patchApiUserPassword",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Lists all Chatrooms for current user",
+        "operationId" : "getApiRooms",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/assessed" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Lists all assessed chatrooms for current user",
+        "operationId" : "getApiAssessedRooms",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/all" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all Chatrooms",
+        "operationId" : "getApiRoomsAll",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomAdminList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/active" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all active Chatrooms",
+        "operationId" : "getApiRoomsActive",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomAdminList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/request" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Creates a Chatroom with another user.",
+        "operationId" : "postApiRoomsRequest",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/room/{roomId}/{since}" : {
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Get state and all messages for a chat room since a specified time",
+        "operationId" : "getApiRoomWithRoomidWithSince",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "since",
+          "in" : "path",
+          "description" : "Timestamp for new messages",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomState"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/room/{roomId}" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Post a message to a Chatroom.",
+        "operationId" : "postApiRoomWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/room/{roomId}/reaction" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Post a chat message reaction to a Chatroom.",
+        "operationId" : "postApiRoomWithRoomidReaction",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChatMessageReaction"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback" : {
+      "get" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Gets the list of feedback requests for a Chatroom.",
+        "operationId" : "getApiFeedback",
+        "parameters" : [ {
+            "name" : "session",
+            "in" : "query",
+            "description" : "Session Token",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackRequestList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback/{roomId}" : {
+      "post" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Returns Feedback for a Chatroom.",
+        "operationId" : "postApiFeedbackWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FeedbackResponseList"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbackhistory/{roomId}" : {
+      "get" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Gets the list of feedback responses for a Chatroom.",
+        "operationId" : "getApiFeedbackhistoryWithRoomid",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackResponseList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbackhistory" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Gets the list of feedback responses.",
+        "operationId" : "getApiFeedbackHistory",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackResponseMapList"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedbackaverage" : {
+      "get" : {
+        "tags" : [ "Admin", "Feedback" ],
+        "summary" : "Gets the list of feedback averages per user",
+        "operationId" : "getApiFeedbackAverage",
+        "parameters" : [ {
+          "name" : "author",
+          "in" : "query",
+          "description" : "Author or recipient",
+          "required" : true,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackResponseAverageMapList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/group" : {
+      "delete" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Removes all existing groups.",
+        "operationId": "deleteAllGroups",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/group/create" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Creates a group with existing, non-duplicate and at least one users.",
+        "operationId": "createGroup",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateGroupRequest"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/group/list" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Lists all groups with corresponding users.",
+        "operationId": "getGroupList",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GroupDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/group/remove" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Deletes an existing group.",
+        "operationId": "deleteOneGroup",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignment" : {
+      "get": {
+        "tags": [ "Assignment" ],
+        "summary": "Get the status of the current assignment generator",
+        "operationId": "getAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [ "Assignment" ],
+        "summary": "Delete the active assignment generator",
+        "operationId": "deleteAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignment/new": {
+      "post": {
+        "tags": [ "Assignment" ],
+        "summary": "Initialize a new assignment generator",
+        "operationId": "createNewAssignmentGenerator",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignment/round": {
+      "post": {
+        "tags": [ "Assignment" ],
+        "summary": "Generate a new assignment round",
+        "operationId": "generateAssignmentRound",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewAssignmentObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedAssignments"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [ "Assignment" ],
+        "summary": "Start the generated assignment round",
+        "operationId": "startAssignmentRound",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoundStarted"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "LoginRequest" : {
+        "required" : [ "password", "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UserDetails" : {
+        "required" : [ "id", "role", "username" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "username" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "HUMAN", "BOT", "ADMIN" ]
+          }
+        }
+      },
+      "AddUserRequest" : {
+        "required" : [ "role", "username", "password" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "HUMAN", "BOT", "ADMIN" ]
+          },
+          "password" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UserSessionDetails" : {
+        "required" : [ "sessionId", "sessionToken", "startTime", "userDetails" ],
+        "type" : "object",
+        "properties" : {
+          "userDetails" : {
+            "$ref" : "#/components/schemas/UserDetails"
+          },
+          "sessionToken" : {
+            "type" : "string"
+          },
+          "sessionId" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CreateGroupRequest" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "usernames" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "name", "usernames" ]
+      },
+      "GroupDetails" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "users" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserDetails"
+            }
+          }
+        },
+        "required" : [ "id", "name", "users" ]
+      },
+      "ErrorStatus" : {
+        "required" : [ "description" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SuccessStatus" : {
+        "required" : [ "description" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PasswordChangeRequest" : {
+        "required" : [ "currentPassword", "newPassword" ],
+        "type" : "object",
+        "properties" : {
+          "currentPassword" : {
+            "type" : "string"
+          },
+          "newPassword" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatRoomInfo" : {
+        "required" : [ "prompt", "startTime", "remainingTime", "uid", "userAliases", "alias" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remainingTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "userAliases" : {
+            "type" : "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "alias" : {
+            "type" : "string"
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatRoomAdminInfo" : {
+        "required" : [ "prompt", "startTime", "remainingTime", "users", "uid" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remainingTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "users" : {
+            "type" : "array",
+            "items" : {
+              "required": [ "alias", "username" ],
+              "type" : "object",
+              "properties" : {
+                "alias" : {
+                  "type": "string"
+                },
+                "username" : {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatRoomList" : {
+        "required" : [ "rooms" ],
+        "type" : "object",
+        "properties" : {
+          "rooms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChatRoomInfo"
+            }
+          }
+        }
+      },
+      "ChatRoomAdminList" : {
+        "required" : [ "rooms" ],
+        "type" : "object",
+        "properties" : {
+          "rooms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChatRoomAdminInfo"
+            }
+          }
+        }
+      },
+      "ChatRequest" : {
+        "required" : [ "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ChatMessageReaction" : {
+        "required" : [ "messageOrdinal", "type" ],
+        "type" : "object",
+        "properties" : {
+          "messageOrdinal" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "THUMBS_UP", "THUMBS_DOWN", "STAR" ]
+          }
+        }
+      },
+      "ChatRoomState" : {
+        "required" : [ "info", "messages", "reactions" ],
+        "type" : "object",
+        "properties" : {
+          "info" : {
+            "$ref" : "#/components/schemas/ChatRoomAdminInfo"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RestChatMessage"
+            }
+          },
+          "reactions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChatMessageReaction"
+            }
+          }
+        }
+      },
+      "RestChatMessage" : {
+        "required" : [ "message", "ordinal", "authorAlias", "timeStamp" ],
+        "type" : "object",
+        "properties" : {
+          "timeStamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "authorAlias" : {
+            "type" : "string"
+          },
+          "ordinal" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FeedbackAnswerOption" : {
+        "required" : [ "name", "value" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "FeedbackRequest" : {
+        "required" : [ "id", "name", "shortname", "options", "type" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "shortname" : {
+            "type" : "string"
+          },
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackAnswerOption"
+            }
+          }
+        }
+      },
+      "FeedbackRequestList" : {
+        "required" : [ "requests" ],
+        "type" : "object",
+        "properties" : {
+          "requests" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackRequest"
+            }
+          }
+        }
+      },
+      "FeedbackResponse" : {
+        "required" : [ "id", "value" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FeedbackResponseItem" : {
+        "required" : [ "author", "recipient", "room", "responses" ],
+        "type" : "object",
+        "properties" : {
+          "author" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "room" : {
+            "type" : "string"
+          },
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
+      "FeedbackResponseList" : {
+        "required" : [ "responses" ],
+        "type" : "object",
+        "properties" : {
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
+      "FeedbackResponseMapList" : {
+        "required" : [ "responses" ],
+        "type" : "object",
+        "properties" : {
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseItem"
+            }
+          }
+        }
+      },
+      "FeedbackResponseAverageItem" : {
+        "required" : [ "username", "responses", "count" ],
+        "type" : "object",
+        "properties" : {
+          "username": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          },
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponse"
+            }
+          }
+        }
+      },
+      "FeedbackResponseAverageMapList" : {
+        "required" : [ "responses" ],
+        "type" : "object",
+        "properties": {
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
+            }
+          }
+        }
+      },
+      "AssignmentGeneratorObject" : {
+        "required": [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ],
+        "type": "object",
+        "properties": {
+          "humans": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "admins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "selected": {
+            "required": ["humans", "bots", "admins"],
+            "type": "object",
+            "properties": {
+              "humans": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "bots": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "admins": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneratedAssignment"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "botsPerHuman": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer"
+          },
+          "round": {
+            "type": "integer"
+          },
+          "remainingTime": {
+            "type": "number"
+          },
+          "rooms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatRoomAdminInfo"
+            }
+          }
+        }
+      },
+      "NewAssignmentObject" : {
+        "required": [ "humans", "bots", "admins", "prompts", "botsPerHuman", "duration" ],
+        "type": "object",
+        "properties": {
+          "humans": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "admins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "botsPerHuman": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer"
+          }
+        }
+      },
+      "GeneratedAssignment": {
+        "required": [ "human", "bot", "prompt" ],
+        "type": "object",
+        "properties": {
+          "human": {
+            "type": "string"
+          },
+          "bot": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          }
+        }
+      },
+      "GeneratedAssignments": {
+        "type": "array",
+        "items" : {
+          "$ref" : "#/components/schemas/GeneratedAssignment"
+        }
+      },
+      "RoundStarted" : {
+        "required": [ "remainingTime" ],
+        "type": "object",
+        "properties": {
+          "remainingTime": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

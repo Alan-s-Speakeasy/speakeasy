@@ -229,8 +229,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token"),
-            OpenApiParam("private", String::class, "Private Message"),
-            OpenApiParam("isDisplayed", String::class, "Displayed Message"),
+            OpenApiParam("recipients", String::class, "Recipients of Message"),
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -257,32 +256,28 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
-        val message = ctx.body()
+        var message = ctx.body()
         if (message.isBlank()) {
             throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
-        var privateMessage = false
 
+        var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableList() ?: mutableListOf()
 
-        if(room.isEvaluation){
-            if(session.user.role == UserRole.HUMAN){
-                privateMessage = true
-            }
-            if(session.user.role == UserRole.EVALUATOR){
-                privateMessage = ctx.queryParam("private") == "true"
+        if(recipients.isEmpty()){
+            val listOfUsers = room.users.values.toList()
+            for(user in listOfUsers){
+                recipients += user
             }
         }
 
-        var isDisplayed = true
+//        val targetMessage = ChatRoomManager.checkRecipientsOfMessage(message, room)
+//
+//        if(targetMessage){
+//            recipients = ChatRoomManager.getRecipientsFromMessage(message, room)
+//            message = ChatRoomManager.getMessageToRecipients(message)
+//        }
 
-        if (ctx.queryParam("isDisplayed") == "false") {
-            isDisplayed = false
-        }
-
-        val isRead = false
-
-        room.addMessage(ChatMessage(message, userAlias, session.sessionId,
-            room.nextMessageOrdinal, privateMessage, isRead, isDisplayed))
+        room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
 
         return SuccessStatus("Message received")
 

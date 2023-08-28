@@ -49,22 +49,23 @@ open class ChatRoom(
     /**
      * @return all [ChatMessage]s since a specified timestamp
      */
-//    fun getMessagesSince(since: Long): List<ChatMessage> = this.lock.read {
-//        this.messages.filter { it.time >= since }
-//    }
-
-    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
-        val userRole = UserManager.getUserRoleByUserID(userId)
-        return if (userRole == UserRole.BOT) {
-            this.lock.read {
-                this.messages.filter { it.time >= since && !it.private }
-            }
-        } else {
-            this.lock.read {
-                this.messages.filter { it.time >= since }
-            }
-        }
+    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
+        val currentUser = this.users[userId]
+        this.messages.filter { it.time >= since && it.recipients.contains(currentUser)}
     }
+
+//    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
+//        val userRole = UserManager.getUserRoleByUserID(userId)
+//        return if (userRole == UserRole.BOT) {
+//            this.lock.read {
+//                this.messages.filter { it.time >= since && it.recipients.contains(UserManager.getUsernameFromId(userId))}
+//            }
+//        } else {
+//            this.lock.read {
+//                this.messages.filter { it.time >= since }
+//            }
+//        }
+//    }
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }

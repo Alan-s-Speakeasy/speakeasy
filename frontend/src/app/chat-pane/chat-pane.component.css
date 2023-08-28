@@ -74,7 +74,7 @@
 }
 
 .chat .chat-history .evaluated-message {
-  background: #C677DF;
+  background: #D68CFF;
   text-align: left;
 }
 
@@ -87,7 +87,7 @@
   width: 0;
   position: absolute;
   pointer-events: none;
-  border-bottom-color: #C677DF;
+  border-bottom-color: #D68CFF;
   border-width: 10px;
   margin-left: -10px
 }

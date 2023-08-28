@@ -2,7 +2,6 @@ package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
-import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
@@ -106,6 +105,49 @@ object ChatRoomManager {
 
     fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
         return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
+    }
+
+    fun checkRecipientsOfMessage(message: String, room: ChatRoom): Boolean {
+        val listRecipients = mutableListOf<String>()
+        val colonIndex = message.indexOf(":")
+
+        val userSubstring = message.substring(0, colonIndex).trim()
+        val messageAfterColon = message.substring(colonIndex + 1).trim()
+
+        val userList = userSubstring.split(",").map { it.trim().removePrefix("@") }
+
+        for (user in userList) {
+            if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
+                listRecipients += user
+            }
+        }
+
+        return listRecipients.isNotEmpty() && messageAfterColon.isNotEmpty()
+    }
+
+    fun getRecipientsFromMessage(message: String, room: ChatRoom): MutableList<String>{
+        val listRecipients = mutableListOf<String>()
+        val colonIndex = message.indexOf(":")
+
+        val userSubstring = message.substring(0, colonIndex).trim()
+
+        val userList = userSubstring.split(",").map { it.trim().removePrefix("@") }
+
+        for (user in userList) {
+            if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
+                listRecipients += user
+            }
+        }
+
+        return listRecipients
+    }
+
+    fun getMessageToRecipients(message: String): String {
+
+        val colonIndex = message.indexOf(":")
+
+        return message.substring(colonIndex + 1).trim()
+
     }
 
 }

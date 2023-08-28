@@ -51,7 +51,7 @@ export class ChatPaneComponent implements OnInit {
             message: api_message.message,
             time: api_message.timeStamp,
             type: "",
-            isDisplayed: api_message.isDisplayed,
+            recipients: api_message.recipients,
             authorAlias: api_message.authorAlias
           };
           this.paneLog.ordinals = message.ordinal + 1
@@ -94,17 +94,22 @@ export class ChatPaneComponent implements OnInit {
 
 // when the user wants to start rating
   rating(): void {
-    let questionsAsked = 0
-    for (let i = 0; i < this.paneLog.ordinals; i++) {
-      if (this.paneLog.messageLog[i].myMessage) {
-        questionsAsked++
+    if (!this.paneLog.isEvaluation) {
+      let questionsAsked = 0
+      for (let i = 0; i < this.paneLog.ordinals; i++) {
+        if (this.paneLog.messageLog[i].myMessage) {
+          questionsAsked++
+        }
+      }
+
+      if (this.paneLog.active && questionsAsked < this.num_to_ask) {
+        this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
+      } else {
+        this.paneLog.ratingOpen = !this.paneLog.ratingOpen
       }
     }
-
-    if (this.paneLog.active && questionsAsked < this.num_to_ask) {
-     this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
-    } else {
-     this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+    else{
+      this.paneLog.ratingOpen = !this.paneLog.ratingOpen
     }
   }
 

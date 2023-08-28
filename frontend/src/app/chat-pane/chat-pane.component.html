@@ -11,7 +11,7 @@
 
       <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
 
-        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
+        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal]">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>
@@ -44,7 +44,7 @@
           </div>
         </li>
 
-        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
+        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal]">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>
@@ -85,23 +85,25 @@
 
       <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
 
-        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
+        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage
+        && paneLog.messageLog[ordinal].recipients.includes(paneLog.myAlias)">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
             <span class="message-data-time"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
           </div>
-          <div class="message evaluated-message" *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.evaluatorAlias"
+          <div class="message other-message" *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.evaluatorAlias"
                style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
           </div>
-          <div class="message other-message" *ngIf="paneLog.messageLog[ordinal].authorAlias != paneLog.evaluatorAlias"
+          <div class="message evaluated-message" *ngIf="paneLog.messageLog[ordinal].authorAlias != paneLog.evaluatorAlias"
                style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
           </div>
         </li>
 
-        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage && paneLog.messageLog[ordinal].isDisplayed">
+        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage
+        && paneLog.messageLog[ordinal].recipients.includes(paneLog.myAlias)">
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
-            <span class="message-data-time"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
+            <span class="message-data-time"> - You </span>
           </div>
           <div class="message my-message" style="max-width: 100%; white-space: normal"><span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span></div>
         </li>

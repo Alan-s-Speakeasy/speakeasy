@@ -107,25 +107,11 @@ object ChatRoomManager {
         return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
     }
 
-    fun checkRecipientsOfMessage(message: String, room: ChatRoom): Boolean {
-        val listRecipients = mutableListOf<String>()
-        val colonIndex = message.indexOf(":")
-
-        val userSubstring = message.substring(0, colonIndex).trim()
-        val messageAfterColon = message.substring(colonIndex + 1).trim()
-
-        val userList = userSubstring.split(",").map { it.trim().removePrefix("@") }
-
-        for (user in userList) {
-            if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
-                listRecipients += user
-            }
-        }
-
-        return listRecipients.isNotEmpty() && messageAfterColon.isNotEmpty()
+    fun checkMessageRecipients(message: String): Boolean {
+        return message.startsWith('@') && message.contains(":")
     }
 
-    fun getRecipientsFromMessage(message: String, room: ChatRoom): MutableList<String>{
+    fun getRecipientsFromMessage(message: String, room: ChatRoom, userAlias: String): MutableList<String>{
         val listRecipients = mutableListOf<String>()
         val colonIndex = message.indexOf(":")
 
@@ -135,10 +121,10 @@ object ChatRoomManager {
 
         for (user in userList) {
             if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
-                listRecipients += user
+                listRecipients += room.users[UserManager.getUserIdFromUsername(user)]!!
             }
         }
-
+        listRecipients += userAlias
         return listRecipients
     }
 

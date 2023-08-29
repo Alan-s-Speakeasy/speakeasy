@@ -270,12 +270,10 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             }
         }
 
-//        val targetMessage = ChatRoomManager.checkRecipientsOfMessage(message, room)
-//
-//        if(targetMessage){
-//            recipients = ChatRoomManager.getRecipientsFromMessage(message, room)
-//            message = ChatRoomManager.getMessageToRecipients(message)
-//        }
+        if(ChatRoomManager.checkMessageRecipients(message)){
+            recipients = ChatRoomManager.getRecipientsFromMessage(message, room, userAlias)
+            message = ChatRoomManager.getMessageToRecipients(message)
+        }
 
         room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
 

@@ -11,6 +11,7 @@ import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.doyaaaaaken.kotlincsv.util.MalformedCSVException
@@ -26,7 +27,7 @@ object FeedbackManager {
 
     private var feedbackFiles: HashMap<String, File> = hashMapOf() // formName -> feedback results
 
-    private val kMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
+    private val kMapper: ObjectMapper = jacksonObjectMapper()
 
     private var forms: MutableList<FeedbackForm> = mutableListOf()
 
@@ -56,12 +57,15 @@ object FeedbackManager {
             return@run ""
         }
 
+        val baseFolder = File(File(config.dataPath), "feedbackresults")
+        baseFolder.mkdirs()
+
         // INIT Writing Feedback Responses
         this.forms.forEach {
-            this.feedbackFiles[it.formName] = File(File(config.dataPath), "feedbackresults/${it.formName}.csv")
-            if (!this.feedbackFiles[it.formName]!!.exists()
-                || this.feedbackFiles[it.formName]!!.length() == 0L) {
-                this.feedbackFiles[it.formName]!!.writeText(
+            val file = File(baseFolder, "${it.formName}.csv")
+            this.feedbackFiles[it.formName] = file
+            if (!file.exists() || file.length() == 0L) {
+                file.writeText(
                     "timestamp,user,session,room,partner,responseid,responsevalue\n",
                     Charsets.UTF_8)
             }

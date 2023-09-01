@@ -15,7 +15,7 @@ import {
   PasswordChangeRequest,
   UserDetails, ChatRoomList, ChatRoomState, ChatMessageReaction, FeedbackRequestList, FeedbackResponseList
 } from "../../openapi";
-import {AlertService} from "./_alert";
+import {AlertService} from "./alert";
 
 
 /**

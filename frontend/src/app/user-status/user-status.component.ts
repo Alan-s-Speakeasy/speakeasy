@@ -23,7 +23,7 @@ import {exhaustMap} from "rxjs/operators";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 
 
 @Component({

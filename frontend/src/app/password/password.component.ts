@@ -4,7 +4,7 @@ import {FormControl, FormGroup} from "@angular/forms";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {PasswordChangeRequest, UserService, UserSessionDetails} from "../../../openapi";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 import {Subscription} from "rxjs";
 
 @Component({

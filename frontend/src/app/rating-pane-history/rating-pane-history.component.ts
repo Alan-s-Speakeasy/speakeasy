@@ -3,7 +3,7 @@
 import {Component, EventEmitter, Inject, Input, OnInit, Output} from '@angular/core';
 import {PaneLog, Ratings} from "../new_data";
 import {FeedbackRequest, FeedbackResponse, FeedbackResponseList, FeedbackService} from "../../../openapi";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 
 @Component({
   selector: 'app-rating-pane-history',

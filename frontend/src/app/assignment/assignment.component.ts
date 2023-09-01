@@ -12,7 +12,7 @@ import {
 import {interval, Subscription} from "rxjs";
 import {HttpClient} from '@angular/common/http';
 import {FormControl} from "@angular/forms";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 import {FeedbackForm, FrontendChatroomDetail} from "../new_data";
 
 

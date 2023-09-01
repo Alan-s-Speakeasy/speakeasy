@@ -13,7 +13,7 @@ import {
   UserService
 } from "../../../openapi";
 import {AuthService} from "../authentication.service";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 import {Subscription} from "rxjs";
 import {CommonService} from "../common.service";
 

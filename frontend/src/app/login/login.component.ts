@@ -8,7 +8,7 @@ import {FrontendDataService} from "../frontend-data.service";
 import {interval} from "rxjs";
 import {ChatRoomList} from "../../../openapi";
 import {take} from "rxjs/operators";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 
 @Component({
   selector: 'app-login',

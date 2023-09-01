@@ -6,7 +6,7 @@ import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog} from "../new_data";
 import {ChatMessageReaction, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
 import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 
 @Component({
   selector: 'app-chat-pane',

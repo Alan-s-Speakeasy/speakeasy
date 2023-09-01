@@ -12,7 +12,7 @@ import {
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {
   ApexAxisChartSeries,

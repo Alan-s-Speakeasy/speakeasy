@@ -1,4 +1,4 @@
-<div class="card chat-app" *ngIf="!paneLog.isEvaluation">
+<div class="card chat-app" *ngIf="!paneLog.isDevelopment">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">
@@ -72,7 +72,7 @@
 </div>
 
 
-<div class="card chat-app"  *ngIf="paneLog.isEvaluation">
+<div class="card chat-app"  *ngIf="paneLog.isDevelopment">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">
@@ -91,10 +91,10 @@
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
             <span class="message-data-time"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
           </div>
-          <div class="message other-message" *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.evaluatorAlias"
+          <div class="message other-message" *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.developerAlias"
                style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
           </div>
-          <div class="message evaluated-message" *ngIf="paneLog.messageLog[ordinal].authorAlias != paneLog.evaluatorAlias"
+          <div class="message evaluated-message" *ngIf="paneLog.messageLog[ordinal].authorAlias != paneLog.developerAlias"
                style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
           </div>
         </li>

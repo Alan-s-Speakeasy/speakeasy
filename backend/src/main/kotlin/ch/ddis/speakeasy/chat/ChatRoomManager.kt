@@ -70,7 +70,7 @@ object ChatRoomManager {
         return userIds?.find { it != userId }
     }
 
-    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null, evaluation: Boolean? = false): ChatRoom {
+    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null, development: Boolean? = false): ChatRoom {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
@@ -81,8 +81,8 @@ object ChatRoomManager {
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
-        if (evaluation != null) {
-            chatRoom.isEvaluation = evaluation
+        if (development != null) {
+            chatRoom.isDevelopment = development
         }
         return chatRoom
     }

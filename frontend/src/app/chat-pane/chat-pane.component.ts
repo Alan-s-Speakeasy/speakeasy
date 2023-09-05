@@ -56,8 +56,8 @@ export class ChatPaneComponent implements OnInit {
           };
           this.paneLog.ordinals = message.ordinal + 1
           this.paneLog.messageLog[message.ordinal] = message
-          if(this.paneLog.evaluatorAlias == "" && this.paneLog.myAlias != message.authorAlias && this.paneLog.isEvaluation){
-            this.paneLog.evaluatorAlias = message.authorAlias
+          if(this.paneLog.developerAlias == "" && this.paneLog.myAlias != message.authorAlias && this.paneLog.isDevelopment){
+            this.paneLog.developerAlias = message.authorAlias
           }
         })
 
@@ -94,7 +94,7 @@ export class ChatPaneComponent implements OnInit {
 
 // when the user wants to start rating
   rating(): void {
-    if (!this.paneLog.isEvaluation) {
+    if (!this.paneLog.isDevelopment) {
       let questionsAsked = 0
       for (let i = 0; i < this.paneLog.ordinals; i++) {
         if (this.paneLog.messageLog[i].myMessage) {

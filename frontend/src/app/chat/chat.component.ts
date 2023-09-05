@@ -85,8 +85,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,
-      isEvaluation: room.isEvaluation,
-      evaluatorAlias: ""
+      isDevelopment: room.isDevelopment,
+      developerAlias: ""
     }
 
     this.paneLogs.unshift(paneLog)

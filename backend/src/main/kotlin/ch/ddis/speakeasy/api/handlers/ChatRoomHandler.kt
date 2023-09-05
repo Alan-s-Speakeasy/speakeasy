@@ -30,7 +30,7 @@ data class ChatRoomInfo(
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
-        room.isEvaluation
+        room.isDevelopment
     )
 }
 
@@ -382,17 +382,17 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             )
         }
 
-        if (request.username == "evaluator"){
-            val evaluation = true
+        if (request.username == "TesterBot"){
+            val development = true
             ChatRoomManager.create(
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-                null, System.currentTimeMillis() + 60 * 1000 * 60, evaluation)
+                null, System.currentTimeMillis() + 60 * 1000 * 60, development)
         }
         else{
-            val evaluation = false
+            val development = false
             ChatRoomManager.create(
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-                null, System.currentTimeMillis() + 10 * 1000 * 60, evaluation)
+                null, System.currentTimeMillis() + 10 * 1000 * 60, development)
         }
 
 //        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {

@@ -21,6 +21,7 @@ data class ChatRoomInfo(
     val userAliases: List<String>,
     val alias: String?,
     val prompt: String,
+    val isDevelopment: Boolean,
     val isEvaluation: Boolean,
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
@@ -30,7 +31,8 @@ data class ChatRoomInfo(
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
-        room.isDevelopment
+        room.isDevelopment,
+        room.isEvaluation
     )
 }
 
@@ -339,7 +341,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
 
 }
 
-data class ChatRequest(val username: String, val evaluation: Boolean)
+data class ChatRequest(val username: String)
 
 class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -384,15 +386,25 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         if (request.username == "TesterBot"){
             val development = true
+            val evaluation = false
+            val testerBot = ChatRoomManager.getTesterBot()
+            ChatRoomManager.create(
+                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!), true,
+                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
+        }
+        else if (request.username == "EvaluatorBot"){
+            val development = false
+            val evaluation = true
             ChatRoomManager.create(
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-                null, System.currentTimeMillis() + 60 * 1000 * 60, development)
+                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
         }
         else{
             val development = false
+            val evaluation = false
             ChatRoomManager.create(
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-                null, System.currentTimeMillis() + 10 * 1000 * 60, development)
+                null, System.currentTimeMillis() + 10 * 1000 * 60, development, evaluation)
         }
 
 //        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {

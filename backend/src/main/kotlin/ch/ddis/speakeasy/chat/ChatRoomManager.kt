@@ -2,6 +2,7 @@ package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
@@ -15,6 +16,7 @@ object ChatRoomManager {
     private val chatrooms = ConcurrentHashMap<ChatRoomId, ChatRoom>()
     private val basePath: File = File("chatlogs/") //TODO make configurable
     private val objectMapper = jacksonObjectMapper()
+    private var indexTesterBot = -1
 
 
     fun init() {
@@ -70,7 +72,7 @@ object ChatRoomManager {
         return userIds?.find { it != userId }
     }
 
-    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null, development: Boolean? = false): ChatRoom {
+    fun create(userIds: List<UserId>, log: Boolean = true, prompt: String?, endTime: Long? = null, development: Boolean? = false, evaluation: Boolean? = false): ChatRoom {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
@@ -83,6 +85,9 @@ object ChatRoomManager {
         chatrooms[chatRoom.uid] = chatRoom
         if (development != null) {
             chatRoom.isDevelopment = development
+        }
+        if (evaluation != null) {
+            chatRoom.isEvaluation = evaluation
         }
         return chatRoom
     }
@@ -133,6 +138,13 @@ object ChatRoomManager {
         val colonIndex = message.indexOf(":")
 
         return message.substring(colonIndex + 1).trim()
+
+    }
+
+    fun getTesterBot(): String {
+        val testerBots = UserManager.listOfActiveUsersByRole(UserRole.TESTER)
+        indexTesterBot = (indexTesterBot + 1) % testerBots.size
+        return testerBots[indexTesterBot].name
 
     }
 

@@ -218,6 +218,18 @@ object UserManager {
         return false
     }
 
+    fun listOfActiveUsersByRole(role: UserRole): List<User> = this.lock.read {
+        transaction {
+            val listOfActiveUsers = mutableListOf<User>()
+            AccessManager.listSessions().forEach { session ->
+                if (session.user.role == role) {
+                    listOfActiveUsers.add(session.user)
+                }
+            }
+            return@transaction listOfActiveUsers
+        }
+    }
+
 }
 
 

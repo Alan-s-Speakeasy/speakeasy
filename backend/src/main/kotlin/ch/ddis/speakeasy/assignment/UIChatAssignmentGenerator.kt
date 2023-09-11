@@ -138,7 +138,7 @@ object UIChatAssignmentGenerator {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
                 if(evaluatorSelected){
-                    val evaluatorUsername = UserManager.getUserIdFromUsername("TesterBot")!!
+                    val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getTesterBot())!!
                     val chatRoom = ChatRoomManager.create(listOf(humanId, botId, evaluatorUsername),true, a.prompt, endTime, evaluation = true)
                     chatRooms.add(chatRoom)
                 }else{

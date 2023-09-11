@@ -385,12 +385,10 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         }
 
         if (request.username == "TesterBot"){
-            val development = true
-            val evaluation = false
             val testerBot = ChatRoomManager.getTesterBot()
             ChatRoomManager.create(
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!), true,
-                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
+                null, System.currentTimeMillis() + 60 * 1000 * 60, development = true)
         }
 //        else if (request.username == "EvaluatorBot"){
 //            val development = false

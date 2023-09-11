@@ -92,6 +92,29 @@
           </tr>
           </tbody>
         </table>
+        <br>
+        <table class="table">
+          <thead>
+          <tr>
+            <td>
+              <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)" (change)="switchAll('admin', $event)" color="primary">
+                <b>EvaluatorBot</b>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>
+              <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
+                EvaluatorBot
+                <i *ngIf="evaluatorSelected" style="color: limegreen" class="fa fa-circle"></i>
+                <i *ngIf="!evaluatorSelected" style="color: red" class="fa fa-circle"></i>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="col-6">

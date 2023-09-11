@@ -36,6 +36,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   private generatorSubscription!: Subscription;
 
   isActive = false
+  evaluatorSelected = false
 
   isHumanSelected: Map<string, boolean> = new Map()
   isBotSelected: Map<string, boolean> = new Map()
@@ -202,6 +203,10 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.changeAfterGenerate = true
   }
 
+  switchEvaluator(): void {
+    this.evaluatorSelected = !this.evaluatorSelected
+  }
+
   switchAdmin(admin: string): void {
     let current = this.isAdminSelected.get(admin)
     this.isAdminSelected.set(admin, !current)
@@ -270,7 +275,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.startAssignmentRound().subscribe(() => {
+    this.assignmentService.startAssignmentRound(this.evaluatorSelected.toString()).subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })

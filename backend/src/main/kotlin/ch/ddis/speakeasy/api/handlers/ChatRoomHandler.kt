@@ -392,13 +392,13 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!), true,
                 null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
         }
-        else if (request.username == "EvaluatorBot"){
-            val development = false
-            val evaluation = true
-            ChatRoomManager.create(
-                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
-        }
+//        else if (request.username == "EvaluatorBot"){
+//            val development = false
+//            val evaluation = true
+//            ChatRoomManager.create(
+//                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
+//                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
+//        }
         else{
             val development = false
             val evaluation = false

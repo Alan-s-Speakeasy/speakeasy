@@ -86,6 +86,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       prompt: "",
       spectate: false,
       isDevelopment: room.isDevelopment,
+      isEvaluation: room.isEvaluation,
       developerAlias: ""
     }
 

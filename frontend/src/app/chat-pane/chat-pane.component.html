@@ -1,4 +1,4 @@
-<div class="card chat-app" *ngIf="!paneLog.isDevelopment">
+<div class="card chat-app" *ngIf="!paneLog.isDevelopment && !paneLog.isEvaluation">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">
@@ -72,7 +72,7 @@
 </div>
 
 
-<div class="card chat-app"  *ngIf="paneLog.isDevelopment">
+<div class="card chat-app"  *ngIf="paneLog.isDevelopment || paneLog.isEvaluation">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">

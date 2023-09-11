@@ -126,7 +126,7 @@ object UIChatAssignmentGenerator {
         return Pair(nextRound, nextRound.size / selected.humans.size == botsPerHuman)
     }
 
-    fun startNewRound(): Long {
+    fun startNewRound(evaluatorSelected: Boolean): Long {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
@@ -137,8 +137,14 @@ object UIChatAssignmentGenerator {
             if (AccessManager.hasUserIdActiveSessions(humanId) && AccessManager.hasUserIdActiveSessions(botId)) {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
-                val chatRoom = ChatRoomManager.create(listOf(humanId, botId),true, a.prompt, endTime)
-                chatRooms.add(chatRoom)
+                if(evaluatorSelected){
+                    val evaluatorUsername = UserManager.getUserIdFromUsername("TesterBot")!!
+                    val chatRoom = ChatRoomManager.create(listOf(humanId, botId, evaluatorUsername),true, a.prompt, endTime, evaluation = true)
+                    chatRooms.add(chatRoom)
+                }else{
+                    val chatRoom = ChatRoomManager.create(listOf(humanId, botId),true, a.prompt, endTime)
+                    chatRooms.add(chatRoom)
+                }
             }
         }
 

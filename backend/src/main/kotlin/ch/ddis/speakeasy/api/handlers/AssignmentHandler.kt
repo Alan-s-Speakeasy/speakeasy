@@ -114,6 +114,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
         summary = "Start the generated assignment round",
         path = "/api/assignment/round",
         methods = [HttpMethod.PATCH],
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Assignment"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(RoundStarted::class)]),
@@ -123,7 +124,13 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
     )
     override fun doPatch(ctx: Context): RoundStarted {
 
-        val remainingTime = UIChatAssignmentGenerator.startNewRound()
+        var evaluatorSelected = false
+
+        if(ctx.body() == "true"){
+            evaluatorSelected = true
+        }
+
+        val remainingTime = UIChatAssignmentGenerator.startNewRound(evaluatorSelected)
 
         return RoundStarted(remainingTime)
     }

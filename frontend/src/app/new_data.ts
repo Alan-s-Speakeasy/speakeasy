@@ -28,6 +28,7 @@ export interface PaneLog {
   spectate: boolean,
   history?: boolean,
   isDevelopment?: boolean,
+  isEvaluation?: boolean,
   developerAlias?: string
 }
 

@@ -41,10 +41,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   isHumanSelected: Map<string, boolean> = new Map()
   isBotSelected: Map<string, boolean> = new Map()
   isAdminSelected: Map<string, boolean> = new Map()
+  isEvaluatorSelected: Map<string, boolean> = new Map()
 
   humans: string[] = []
   bots: string[] = []
   admins: string[] = []
+  evaluator: string[] = []
 
   active: string[] = []
 
@@ -106,10 +108,16 @@ export class AssignmentComponent implements OnInit, OnDestroy {
           this.isAdminSelected.set(admin, false)
         }
       })
+      response.evaluator.forEach(evaluator => {
+        if (!this.isEvaluatorSelected.get(evaluator)) {
+          this.isEvaluatorSelected.set(evaluator, false)
+        }
+      })
 
       this.humans = Array.from(this.isHumanSelected.keys())
       this.bots = Array.from(this.isBotSelected.keys())
       this.admins = Array.from(this.isAdminSelected.keys())
+      this.evaluator = Array.from(this.isEvaluatorSelected.keys())
       this.active = response.active
       if (initial) {
         this.prompts = response.prompts
@@ -123,6 +131,9 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         })
         response.admins.forEach(admin => {
           this.isAdminSelected.set(admin, response.selected.admins.includes(admin))
+        })
+        response.evaluator.forEach(evaluator => {
+          this.isEvaluatorSelected.set(evaluator, response.selected.evaluator.includes(evaluator))
         })
       }
       this.nextAssignment = response.assignments
@@ -147,6 +158,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.isHumanSelected = new Map()
       this.isBotSelected = new Map()
       this.isAdminSelected = new Map()
+      this.isEvaluatorSelected = new Map()
       this.active = []
       this.remainingTime = 0
       this.nextAssignment = []

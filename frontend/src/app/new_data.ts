@@ -29,7 +29,7 @@ export interface PaneLog {
   history?: boolean,
   isDevelopment?: boolean,
   isEvaluation?: boolean,
-  developerAlias?: string
+  testerBotAlias?: string
 }
 
 export interface Ratings {

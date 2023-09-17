@@ -23,6 +23,7 @@ data class ChatRoomInfo(
     val prompt: String,
     val isDevelopment: Boolean,
     val isEvaluation: Boolean,
+    val testerBotAlias: String
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
         room.uid.string,
@@ -32,7 +33,8 @@ data class ChatRoomInfo(
         room.users[userId],
         room.prompt,
         room.isDevelopment,
-        room.isEvaluation
+        room.isEvaluation,
+        room.testerBotAlias,
     )
 }
 
@@ -386,17 +388,12 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         if (request.username == "TesterBot"){
             val testerBot = ChatRoomManager.getTesterBot()
+            val development = true
+            val evaluation = false
             ChatRoomManager.create(
                 listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!), true,
-                null, System.currentTimeMillis() + 60 * 1000 * 60, development = true)
+                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
         }
-//        else if (request.username == "EvaluatorBot"){
-//            val development = false
-//            val evaluation = true
-//            ChatRoomManager.create(
-//                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-//                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
-//        }
         else{
             val development = false
             val evaluation = false

@@ -18,7 +18,8 @@ open class ChatRoom(
     private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
     val assessedBy: MutableList<Assessor> = mutableListOf(),
     var isDevelopment: Boolean = false,
-    var isEvaluation: Boolean = false
+    var isEvaluation: Boolean = false,
+    var testerBotAlias: String = ""
 ) {
     internal var endTime: Long? = null
     val aliasToUserId = users.entries.associateBy({ it.value }) { it.key }

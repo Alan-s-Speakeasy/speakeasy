@@ -87,7 +87,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       spectate: false,
       isDevelopment: room.isDevelopment,
       isEvaluation: room.isEvaluation,
-      developerAlias: ""
+      testerBotAlias: room.testerBotAlias,
     }
 
     this.paneLogs.unshift(paneLog)

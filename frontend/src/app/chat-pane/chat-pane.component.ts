@@ -56,9 +56,6 @@ export class ChatPaneComponent implements OnInit {
           };
           this.paneLog.ordinals = message.ordinal + 1
           this.paneLog.messageLog[message.ordinal] = message
-          if(this.paneLog.developerAlias == "" && this.paneLog.myAlias != message.authorAlias && this.paneLog.isDevelopment){
-            this.paneLog.developerAlias = message.authorAlias
-          }
         })
 
         response.reactions.forEach(reaction => {

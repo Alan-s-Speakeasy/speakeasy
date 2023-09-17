@@ -97,19 +97,19 @@
           <thead>
           <tr>
             <td>
-              <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)" (change)="switchAll('admin', $event)" color="primary">
+              <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
                 <b>EvaluatorBot</b>
               </mat-checkbox>
             </td>
           </tr>
           </thead>
           <tbody>
-          <tr>
-            <td>
+          <tr *ngFor="let evaluator of evaluator; let firstElement = first">
+            <td *ngIf="firstElement" >
               <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
-                EvaluatorBot
-                <i *ngIf="evaluatorSelected" style="color: limegreen" class="fa fa-circle"></i>
-                <i *ngIf="!evaluatorSelected" style="color: red" class="fa fa-circle"></i>
+                {{evaluator}}
+                <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
+                <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
               </mat-checkbox>
             </td>
           </tr>

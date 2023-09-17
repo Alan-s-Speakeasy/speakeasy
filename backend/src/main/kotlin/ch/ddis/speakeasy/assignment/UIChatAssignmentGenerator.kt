@@ -18,6 +18,7 @@ object UIChatAssignmentGenerator {
     private var humans = emptyList<User>()
     private var bots = emptyList<User>()
     private var admins = emptyList<User>()
+    private var evaluator = emptyList<User>()
     private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
     private var prompts = emptyList<String>()
     private var botsPerHuman = 0
@@ -32,6 +33,7 @@ object UIChatAssignmentGenerator {
         humans = UserManager.list().filter { it.role.isHuman() }
         bots = UserManager.list().filter { it.role.isBot() }
         admins = UserManager.list().filter { it.role.isAdmin() }
+        evaluator = UserManager.list().filter { it.role.isEvaluator() }
         botsPerHuman = 3
         duration = 10
         round = 1
@@ -41,6 +43,7 @@ object UIChatAssignmentGenerator {
         humans = emptyList()
         bots = emptyList()
         admins = emptyList()
+        evaluator = emptyList()
         selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
         prompts = emptyList()
         botsPerHuman = 0
@@ -61,8 +64,10 @@ object UIChatAssignmentGenerator {
             humans.map { it.name },
             bots.map { it.name },
             admins.map { it.name },
+            evaluator.map { it.name },
             humans.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
-                bots.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
+                bots.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
+                evaluator.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
             selected,
             nextRound,
             prompts,
@@ -138,8 +143,10 @@ object UIChatAssignmentGenerator {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
                 if(evaluatorSelected){
+                    val development = false
+                    val evaluation = true
                     val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getTesterBot())!!
-                    val chatRoom = ChatRoomManager.create(listOf(humanId, botId, evaluatorUsername),true, a.prompt, endTime, evaluation = true)
+                    val chatRoom = ChatRoomManager.create(listOf(humanId, botId, evaluatorUsername),true, a.prompt, endTime, development, evaluation)
                     chatRooms.add(chatRoom)
                 }else{
                     val chatRoom = ChatRoomManager.create(listOf(humanId, botId),true, a.prompt, endTime)

@@ -21,7 +21,8 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
             ListActiveChatRoomsCommand(),
             ShowChatRoomCommand(),
             ShowUsersInChatCommand(),
-            CloseRoomInChatCommand()
+            CloseRoomInChatCommand(),
+            CloseAllRoomInChatCommand()
         )
     }
 
@@ -180,6 +181,18 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
 
             room.deactivate()
             println("Chatroom $id closed")
+
+        }
+    }
+
+    inner class CloseAllRoomInChatCommand : CliktCommand(name = "closeAll", help = "Close all chat rooms") {
+
+        override fun run() {
+
+            ChatRoomManager.listAll().forEach {
+                it.deactivate()
+            }
+            println("All chatrooms closed")
 
         }
     }

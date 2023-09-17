@@ -84,9 +84,13 @@ object ChatRoomManager {
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
         if (development != null) {
+            val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
+            chatRoom.testerBotAlias = users[testerBotID]!!
             chatRoom.isDevelopment = development
         }
         if (evaluation != null) {
+            val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
+            chatRoom.testerBotAlias = users[testerBotID]!!
             chatRoom.isEvaluation = evaluation
         }
         return chatRoom
@@ -142,7 +146,7 @@ object ChatRoomManager {
     }
 
     fun getTesterBot(): String {
-        val testerBots = UserManager.listOfActiveUsersByRole(UserRole.TESTER)
+        val testerBots = UserManager.listOfActiveUsersByRole(UserRole.EVALUATOR)
         indexTesterBot = (indexTesterBot + 1) % testerBots.size
         return testerBots[indexTesterBot].name
 

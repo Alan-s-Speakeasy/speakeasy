@@ -75,7 +75,6 @@ object AccessManager {
         UserRole.BOT -> setOf(RestApiRole.ANYONE, RestApiRole.USER)
         UserRole.ADMIN -> setOf(RestApiRole.ANYONE, RestApiRole.USER, RestApiRole.HUMAN, RestApiRole.ADMIN)
         UserRole.EVALUATOR -> setOf(RestApiRole.ANYONE, RestApiRole.USER)
-        UserRole.TESTER -> setOf(RestApiRole.ANYONE, RestApiRole.USER)
     }
 
     fun setUserForSession(sessionToken: String, user: User): UserSession {

@@ -13,7 +13,7 @@ import {
   AddUserRequest,
   AdminService,
   ChatRoomAdminInfo,
-  ChatRoomAdminInfoUsers, CreateGroupRequest,
+  ChatRoomUserAdminInfo, CreateGroupRequest,
   GroupDetails,
   UserDetails,
   UserSessionDetails
@@ -191,7 +191,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomAdminInfoUsers[] = []
+    let userInfo: ChatRoomUserAdminInfo[] = []
     chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     chatRoomDetails.push(
@@ -247,7 +247,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     {name: "Admins", table: "info", list: this.adminList},
   ]
 
-  getPartners(userInfo: ChatRoomAdminInfoUsers[], exclude: string): string[] {
+  getPartners(userInfo: ChatRoomUserAdminInfo[], exclude: string): string[] {
     let res = new Set<string>()
     userInfo.forEach(u => {
       if (!exclude.includes(u.username)) {

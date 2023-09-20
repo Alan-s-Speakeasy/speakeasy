@@ -122,16 +122,6 @@
         "tags" : [ "Assignment" ],
         "summary" : "Start the generated assignment round",
         "parameters" : [ ],
-        "requestBody" : {
-          "content" : {
-            "text/plain" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          },
-          "required" : false
-        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -919,9 +909,19 @@
             "type" : "string"
           }
         }, {
-          "name" : "recipients",
+          "name" : "private",
           "in" : "query",
-          "description" : "Recipients of Message",
+          "description" : "Private Message",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "isDisplayed",
+          "in" : "query",
+          "description" : "Displayed Message",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -1697,12 +1697,6 @@
               "type" : "string"
             }
           },
-          "evaluator" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
           "active" : {
             "type" : "array",
             "items" : {
@@ -1747,7 +1741,7 @@
             }
           }
         },
-        "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
+        "required" : [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
       },
       "ChatRequest" : {
         "type" : "object",
@@ -1755,9 +1749,12 @@
         "properties" : {
           "username" : {
             "type" : "string"
+          },
+          "evaluation" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "username" ]
+        "required" : [ "username", "evaluation" ]
       },
       "ChatRoomAdminInfo" : {
         "type" : "object",
@@ -1826,17 +1823,11 @@
           "prompt" : {
             "type" : "string"
           },
-          "development" : {
-            "type" : "boolean"
-          },
           "evaluation" : {
             "type" : "boolean"
-          },
-          "testerBotAlias" : {
-            "type" : "string"
           }
         },
-        "required" : [ "uid", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias" ]
+        "required" : [ "uid", "remainingTime", "userAliases", "prompt", "evaluation" ]
       },
       "ChatRoomList" : {
         "type" : "object",
@@ -2201,17 +2192,17 @@
           "message" : {
             "type" : "string"
           },
-          "recipients" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
+          "private" : {
+            "type" : "boolean"
           },
           "read" : {
             "type" : "boolean"
+          },
+          "displayed" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "timeStamp", "authorAlias", "ordinal", "message", "recipients", "read" ]
+        "required" : [ "timeStamp", "authorAlias", "ordinal", "message", "private", "read", "displayed" ]
       },
       "GroupDetails" : {
         "type" : "object",
@@ -2276,5 +2267,5 @@
     "securitySchemes" : { }
   },
   "servers" : [ ],
-  "security" : []
+  "security" : [ ]
 }

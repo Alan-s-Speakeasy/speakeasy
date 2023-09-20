@@ -6,7 +6,7 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomAdminInfo, ChatRoomAdminInfoUsers,
+  ChatRoomAdminInfo, ChatRoomUserAdminInfo,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
@@ -79,13 +79,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   fetchGenerator(initial: boolean) {
-    this.assignmentService.getAssignmentGenerator().subscribe(response => {
+    this.assignmentService.apiAssignmentGet().subscribe(response => {
       this.storeGeneratorResponse(response, initial)
     })
   }
 
   newGenerator(): void {
-    this.assignmentService.createNewAssignmentGenerator().subscribe(() => {
+    this.assignmentService.apiAssignmentNewPost().subscribe(() => {
       this.fetchGenerator(true)
     })
   }
@@ -153,7 +153,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   removeGenerator(): void {
-    this.assignmentService.deleteAssignmentGenerator().subscribe(() => {
+    this.assignmentService.apiAssignmentDelete().subscribe(() => {
       this.isActive = false
       this.isHumanSelected = new Map()
       this.isBotSelected = new Map()
@@ -267,7 +267,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   generateNextRound(): void {
-    this.assignmentService.generateAssignmentRound({
+    this.assignmentService.apiAssignmentRoundPost({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
@@ -294,7 +294,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomAdminInfoUsers[] = []
+    let userInfo: ChatRoomUserAdminInfo[] = []
     chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     this.chatroomDetails.set(chatRoom.uid, {

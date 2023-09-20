@@ -2,11 +2,7 @@
   "openapi" : "3.0.3",
   "info" : {
     "title" : "Alan's Speakeasy",
-    "summary" : null,
     "description" : "Full API for Alan's Speakeasy, Version 0.1",
-    "termsOfService" : null,
-    "contact" : null,
-    "license" : null,
     "version" : "0.1"
   },
   "paths" : {
@@ -273,7 +269,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -436,7 +432,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -756,7 +752,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -827,7 +823,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -896,7 +892,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -987,7 +983,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -1058,7 +1054,7 @@
           "name" : "roomId",
           "in" : "path",
           "description" : "Id of the Chatroom",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -1068,7 +1064,7 @@
           "name" : "since",
           "in" : "path",
           "description" : "Timestamp for new messages",
-          "required" : false,
+          "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
@@ -2271,5 +2267,5 @@
     "securitySchemes" : { }
   },
   "servers" : [ ],
-  "security" : null
+  "security" : [ ]
 }

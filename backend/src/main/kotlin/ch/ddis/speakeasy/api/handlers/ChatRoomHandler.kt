@@ -186,8 +186,8 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
         path = "/api/room/{roomId}/{since}",
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
-            OpenApiParam("since", Long::class, "Timestamp for new messages"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
+            OpenApiParam("since", Long::class, "Timestamp for new messages", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -236,7 +236,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -289,7 +289,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
         requestBody = OpenApiRequestBody([OpenApiContent(ChatMessageReaction::class)]),
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")

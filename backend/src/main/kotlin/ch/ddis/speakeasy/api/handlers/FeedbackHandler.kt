@@ -62,7 +62,7 @@ class GetFeedbackFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHa
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
         pathParams = [
-            OpenApiParam("formName", String::class, "Name of the feedback form"),
+            OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -108,7 +108,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
         requestBody = OpenApiRequestBody([OpenApiContent(FeedbackResponseList::class)]),
         tags = ["Feedback"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -180,7 +180,7 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -218,7 +218,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
         methods = [HttpMethod.GET],
         tags = ["Admin", "Feedback"],
         pathParams = [
-            OpenApiParam("formName", String::class, "Name of the feedback form"),
+            OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(FeedbackResponseMapList::class)]),
@@ -258,7 +258,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
         methods = [HttpMethod.GET],
         tags = ["Admin", "Feedback"],
         pathParams = [
-            OpenApiParam("formName", String::class, "Name of the feedback form"),
+            OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
         ],
         queryParams = [
             OpenApiParam("author", String::class, "author or recipient")

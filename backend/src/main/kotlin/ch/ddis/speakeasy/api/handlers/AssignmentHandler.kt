@@ -22,6 +22,7 @@ class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessMan
     @OpenApi(
         summary = "Initialize a new assignment generator.",
         path = "/api/assignment/new",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         tags = ["Assignment"],
         responses = [
@@ -44,6 +45,7 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
     @OpenApi(
         summary = "Get the status of the current assignment generator",
         path = "/api/assignment",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Assignment"],
         responses = [
@@ -65,6 +67,7 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
     @OpenApi(
         summary = "Generate a new assignment round",
         path = "/api/assignment/round",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
@@ -118,6 +121,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
     @OpenApi(
         summary = "Start the generated assignment round",
         path = "/api/assignment/round",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.PATCH],
         tags = ["Assignment"],
         responses = [
@@ -142,6 +146,7 @@ class DeleteAssignmentGeneratorHandler : DeleteRestHandler<SuccessStatus>, Acces
     @OpenApi(
         summary = "Delete the active assignment generator.",
         path = "/api/assignment",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.DELETE],
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),

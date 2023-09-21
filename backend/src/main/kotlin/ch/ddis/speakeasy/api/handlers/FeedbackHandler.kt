@@ -27,6 +27,7 @@ class GetFeedbackFormListHandler : GetRestHandler<FeedbackFormList>, AccessManag
     @OpenApi(
         summary = "Gets the list of all feedback forms.",
         path = "/api/feedbackforms",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
 
@@ -59,6 +60,7 @@ class GetFeedbackFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHa
     @OpenApi(
         summary = "Gets the feedback form (with form name and questions).",
         path = "/api/feedbackform/{formName}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
         pathParams = [
@@ -104,6 +106,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
     @OpenApi(
         summary = "Posts Feedback for a Chatroom.",
         path = "/api/feedback/{roomId}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(FeedbackResponseList::class)]),
         tags = ["Feedback"],
@@ -177,6 +180,7 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
     @OpenApi(
         summary = "Gets the list of feedback responses for a Chatroom.",
         path = "/api/feedbackhistory/room/{roomId}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
         pathParams = [
@@ -215,6 +219,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     @OpenApi(
         summary = "Gets two lists (assigned and requested) of feedback responses to this form",
         path = "/api/feedbackhistory/form/{formName}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Admin", "Feedback"],
         pathParams = [
@@ -255,6 +260,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
     @OpenApi(
         summary = "Gets the list of feedback averages (both assigned and requested) per user",
         path = "/api/feedbackaverage/{formName}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Admin", "Feedback"],
         pathParams = [

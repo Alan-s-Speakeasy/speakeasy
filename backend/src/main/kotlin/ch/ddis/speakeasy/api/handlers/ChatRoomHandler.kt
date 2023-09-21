@@ -70,6 +70,8 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
 
     @OpenApi(
         summary = "Lists all Chatrooms for current user",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         path = "/api/rooms",
         tags = ["Chat"],
         responses = [
@@ -102,6 +104,8 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
     @OpenApi(
         summary = "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
         path = "/api/rooms/assessed",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Chat"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
@@ -132,6 +136,8 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     @OpenApi(
         summary = "Lists all Chatrooms",
         path = "/api/rooms/all",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Admin"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -152,6 +158,8 @@ class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessM
     @OpenApi(
         summary = "Lists all active Chatrooms",
         path = "/api/rooms/active",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Admin"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -184,6 +192,8 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
     @OpenApi(
         summary = "Get state and all messages for a chat room since a specified time",
         path = "/api/room/{roomId}/{since}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Chat"],
         pathParams = [
             OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
@@ -232,6 +242,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Post a message to a Chatroom.",
         path = "/api/room/{roomId}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
@@ -285,6 +296,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
     @OpenApi(
         summary = "Post a chat message reaction to a Chatroom.",
         path = "/api/room/{roomId}/reaction",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatMessageReaction::class)]),
         tags = ["Chat"],
@@ -344,6 +356,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Creates a Chatroom with another user.",
         path = "/api/rooms/request",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatRequest::class)]),
         tags = ["Chat"],

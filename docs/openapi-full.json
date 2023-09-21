@@ -17,6 +17,7 @@
       "delete" : {
         "tags" : [ "Assignment" ],
         "summary" : "Delete the active assignment generator.",
+        "operationId" : "deleteApiAssignment",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -66,6 +67,7 @@
       "get" : {
         "tags" : [ "Assignment" ],
         "summary" : "Get the status of the current assignment generator",
+        "operationId" : "getApiAssignment",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -97,6 +99,7 @@
       "post" : {
         "tags" : [ "Assignment" ],
         "summary" : "Initialize a new assignment generator.",
+        "operationId" : "postApiAssignmentNew",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -128,6 +131,7 @@
       "patch" : {
         "tags" : [ "Assignment" ],
         "summary" : "Start the generated assignment round",
+        "operationId" : "patchApiAssignmentRound",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -167,6 +171,7 @@
       "post" : {
         "tags" : [ "Assignment" ],
         "summary" : "Generate a new assignment round",
+        "operationId" : "postApiAssignmentRound",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -221,6 +226,7 @@
       "post" : {
         "tags" : [ "Feedback" ],
         "summary" : "Posts Feedback for a Chatroom.",
+        "operationId" : "postApiFeedbackByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -322,6 +328,7 @@
       "get" : {
         "tags" : [ "Admin", "Feedback" ],
         "summary" : "Gets the list of feedback averages (both assigned and requested) per user",
+        "operationId" : "getApiFeedbackaverageByFormName",
         "parameters" : [ {
           "name" : "formName",
           "in" : "path",
@@ -373,6 +380,7 @@
       "get" : {
         "tags" : [ "Feedback" ],
         "summary" : "Gets the feedback form (with form name and questions).",
+        "operationId" : "getApiFeedbackformByFormName",
         "parameters" : [ {
           "name" : "formName",
           "in" : "path",
@@ -434,6 +442,7 @@
       "get" : {
         "tags" : [ "Feedback" ],
         "summary" : "Gets the list of all feedback forms.",
+        "operationId" : "getApiFeedbackforms",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -485,6 +494,7 @@
       "get" : {
         "tags" : [ "Admin", "Feedback" ],
         "summary" : "Gets two lists (assigned and requested) of feedback responses to this form",
+        "operationId" : "getApiFeedbackhistoryFormByFormName",
         "parameters" : [ {
           "name" : "formName",
           "in" : "path",
@@ -526,6 +536,7 @@
       "get" : {
         "tags" : [ "Feedback" ],
         "summary" : "Gets the list of feedback responses for a Chatroom.",
+        "operationId" : "getApiFeedbackhistoryRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -587,6 +598,7 @@
       "delete" : {
         "tags" : [ "Admin", "Group" ],
         "summary" : "Removes all existing groups.",
+        "operationId" : "deleteApiGroup",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -618,6 +630,7 @@
       "post" : {
         "tags" : [ "Admin", "Group" ],
         "summary" : "Creates a group with existing, non-duplicate and at least one users.",
+        "operationId" : "postApiGroupCreate",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -679,6 +692,7 @@
       "get" : {
         "tags" : [ "Admin", "Group" ],
         "summary" : "Lists all groups with corresponding users.",
+        "operationId" : "getApiGroupList",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -703,6 +717,7 @@
       "post" : {
         "tags" : [ "Admin", "Group" ],
         "summary" : "Deletes an existing group.",
+        "operationId" : "postApiGroupRemove",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -754,6 +769,7 @@
       "post" : {
         "tags" : [ "User" ],
         "summary" : "Sets roles for session based on user account and returns a session cookie.",
+        "operationId" : "postApiLogin",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -805,6 +821,7 @@
       "get" : {
         "tags" : [ "User" ],
         "summary" : "Clears all user roles of the current session.",
+        "operationId" : "getApiLogout",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -846,6 +863,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Post a message to a Chatroom.",
+        "operationId" : "postApiRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -917,6 +935,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Post a chat message reaction to a Chatroom.",
+        "operationId" : "postApiRoomByRoomIdReaction",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -988,6 +1007,7 @@
       "get" : {
         "tags" : [ "Chat" ],
         "summary" : "Get state and all messages for a chat room since a specified time",
+        "operationId" : "getApiRoomByRoomIdBySince",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -1060,6 +1080,7 @@
       "get" : {
         "tags" : [ "Chat" ],
         "summary" : "Lists all Chatrooms for current user",
+        "operationId" : "getApiRooms",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1101,6 +1122,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all active Chatrooms",
+        "operationId" : "getApiRoomsActive",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1132,6 +1154,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all Chatrooms",
+        "operationId" : "getApiRoomsAll",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1163,6 +1186,7 @@
       "get" : {
         "tags" : [ "Chat" ],
         "summary" : "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
+        "operationId" : "getApiRoomsAssessed",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1204,6 +1228,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Creates a Chatroom with another user.",
+        "operationId" : "postApiRoomsRequest",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -1265,6 +1290,7 @@
       "post" : {
         "tags" : [ "Admin" ],
         "summary" : "Adds a new user.",
+        "operationId" : "postApiUserAdd",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -1316,6 +1342,7 @@
       "get" : {
         "tags" : [ "User" ],
         "summary" : "Returns details for the current session.",
+        "operationId" : "getApiUserCurrent",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1357,6 +1384,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all available users.",
+        "operationId" : "getApiUserList",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1381,6 +1409,7 @@
       "patch" : {
         "tags" : [ "User" ],
         "summary" : "Changes the password for a given user.",
+        "operationId" : "patchApiUserPassword",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1438,10 +1467,11 @@
         "security" : [ ]
       }
     },
-    "/api/user/remove?force" : {
+    "/api/user/remove" : {
       "post" : {
         "tags" : [ "Admin" ],
         "summary" : "Removes an existing user.",
+        "operationId" : "postApiUserRemove",
         "parameters" : [ {
           "name" : "force",
           "in" : "query",
@@ -1503,6 +1533,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all current user sessions.",
+        "operationId" : "getApiUserSessions",
         "parameters" : [ ],
         "responses" : {
           "200" : {

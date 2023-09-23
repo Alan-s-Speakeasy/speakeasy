@@ -26,6 +26,9 @@ export class ChatSpectateComponent implements OnInit {
     this.backUrl = history.state.backUrl;
     this.roomID = history.state.roomID;
     this.paneLog = {
+      assignment: history.state.assignment,
+      formRef: history.state.formRef,
+      markAsNoFeedback: history.state.markAsNoFeedback,
       roomID: history.state.roomID,
       ordinals: 0,
       messageLog: {},

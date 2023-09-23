@@ -3,7 +3,7 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
-import {AdminService, ChatRoomAdminInfo, ChatRoomAdminInfoUsers} from "../../../openapi";
+import {AdminService, ChatRoomAdminInfo, ChatRoomUserAdminInfo} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 
@@ -55,16 +55,19 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomAdminInfoUsers[] = []
+    let userInfo: ChatRoomUserAdminInfo[] = []
     chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     chatRoomDetails.push(
       {
+        assignment: chatRoom.assignment,
+        formRef: chatRoom.formRef,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo
+        userInfo: userInfo,
+        markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )
   }
@@ -77,6 +80,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     let user1 = chatroomDetail.userInfo[0]
     let user2 = chatroomDetail.userInfo[1]
     this.router.navigateByUrl('/spectate', { state: {
+      assignment: chatroomDetail.assignment,
+      formRef: chatroomDetail.formRef,
+      markAsNoFeedback: chatroomDetail.markAsNoFeedBack,
       roomID: chatroomDetail.roomID,
       username: user1.username,
       userAlias: user1.alias,

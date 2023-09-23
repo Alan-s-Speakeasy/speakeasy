@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -15,6 +16,8 @@ import io.javalin.openapi.*
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
 data class ChatRoomInfo(
+    val assignment: Boolean,
+    val formRef: String,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
@@ -23,9 +26,12 @@ data class ChatRoomInfo(
     val prompt: String,
     val isDevelopment: Boolean,
     val isEvaluation: Boolean,
-    val testerBotAlias: String
+    val testerBotAlias: String,
+    val markAsNoFeedback: Boolean
 ) {
     constructor(room: ChatRoom, userId: UserId) : this(
+        room.assignment,
+        room.formRef,
         room.uid.string,
         room.startTime,
         room.remainingTime,
@@ -35,22 +41,29 @@ data class ChatRoomInfo(
         room.isDevelopment,
         room.isEvaluation,
         room.testerBotAlias,
+        room.markAsNoFeedback
     )
 }
 
 data class ChatRoomAdminInfo(
+    val assignment: Boolean,
+    val formRef: String,
     val uid: String,
     val startTime: Long?,
     val remainingTime: Long,
     val users: List<ChatRoomUserAdminInfo>,
-    val prompt: String
+    val prompt: String,
+    val markAsNoFeedback: Boolean
 ) {
     constructor(room: ChatRoom) : this(
+        room.assignment,
+        room.formRef,
         room.uid.string,
         room.startTime,
         room.remainingTime,
         room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key) ?: "n/a") },
-        room.prompt
+        room.prompt,
+        room.markAsNoFeedback
     )
 }
 
@@ -63,6 +76,8 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
 
     @OpenApi(
         summary = "Lists all Chatrooms for current user",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         path = "/api/rooms",
         tags = ["Chat"],
         responses = [
@@ -82,7 +97,8 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         )
 
         return ChatRoomList(
-            ChatRoomManager.getByUser(session.user.id.UID(), session.user.role == UserRole.BOT).map { ChatRoomInfo(it, session.user.id.UID()) }
+            ChatRoomManager.getByUser(session.user.id.UID(), session.user.role == UserRole.BOT)
+                .map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }
@@ -92,8 +108,10 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
     override val route = "rooms/assessed"
 
     @OpenApi(
-        summary = "Lists all assessed chatrooms for current user",
+        summary = "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
         path = "/api/rooms/assessed",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Chat"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
@@ -112,7 +130,7 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
+            ChatRoomManager.getAssessedOrMarkedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }
@@ -124,6 +142,8 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     @OpenApi(
         summary = "Lists all Chatrooms",
         path = "/api/rooms/all",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Admin"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -144,6 +164,8 @@ class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessM
     @OpenApi(
         summary = "Lists all active Chatrooms",
         path = "/api/rooms/active",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Admin"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -177,10 +199,12 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
     @OpenApi(
         summary = "Get state and all messages for a chat room since a specified time",
         path = "/api/room/{roomId}/{since}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
-            OpenApiParam("since", Long::class, "Timestamp for new messages"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
+            OpenApiParam("since", Long::class, "Timestamp for new messages", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -225,11 +249,12 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Post a message to a Chatroom.",
         path = "/api/room/{roomId}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token"),
@@ -293,11 +318,12 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
     @OpenApi(
         summary = "Post a chat message reaction to a Chatroom.",
         path = "/api/room/{roomId}/reaction",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatMessageReaction::class)]),
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -329,7 +355,6 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
-//        val reaction = ctx.body<ChatMessageReaction>() // todo
         val reaction = ctx.bodyAsClass(ChatMessageReaction::class.java)
 
         try {
@@ -353,6 +378,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Creates a Chatroom with another user.",
         path = "/api/rooms/request",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatRequest::class)]),
         tags = ["Chat"],
@@ -373,7 +399,6 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(403, "Cannot establish a chat at this time", ctx)
         }
 
-//        val request = ctx.body<ChatRequest>() // todo
         val request = ctx.bodyAsClass(ChatRequest::class.java)
 
         val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
@@ -388,23 +413,27 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         if (request.username == "TesterBot"){
             val testerBot = ChatRoomManager.getTesterBot()
-            val development = true
-            val evaluation = false
             ChatRoomManager.create(
-                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!), true,
-                null, System.currentTimeMillis() + 60 * 1000 * 60, development, evaluation)
+                userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!),
+//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
+                formRef = "",
+                log = true,
+                prompt = null,
+                endTime = System.currentTimeMillis() + 60 * 1000 * 60,
+                development = true,
+                evaluation = false)
         }
         else{
-            val development = false
-            val evaluation = false
             ChatRoomManager.create(
-                listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!), true,
-                null, System.currentTimeMillis() + 10 * 1000 * 60, development, evaluation)
+                userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!),
+//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
+                formRef = "",
+                log = true,
+                prompt = null,
+                endTime = System.currentTimeMillis() + 10 * 1000 * 60,
+                development = false,
+                evaluation = false)
         }
-
-//        if (session.user.role != UserRole.ADMIN && requestedSessions.any { it.user.role != UserRole.BOT }) {
-//            throw ErrorStatusException(403, "Cannot establish a chat with that user", ctx)
-//        }
 
         return SuccessStatus("Chatroom created")
 
@@ -419,11 +448,12 @@ class PostNewUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
     @OpenApi(
         summary = "Post a new user to a Chatroom.",
         path = "/api/request/{roomId}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
@@ -468,11 +498,12 @@ class CloseChatRoomHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestH
     @OpenApi(
         summary = "Closes a Chatroom.",
         path = "/api/room/{roomId}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.PATCH],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
         pathParams = [
-            OpenApiParam("roomId", String::class, "Id of the Chatroom"),
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")

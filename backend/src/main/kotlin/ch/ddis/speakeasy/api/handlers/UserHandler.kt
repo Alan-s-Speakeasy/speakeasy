@@ -14,6 +14,7 @@ class ListUsersHandler : GetRestHandler<List<UserDetails>>, AccessManagedRestHan
     @OpenApi(
         summary = "Lists all available users.",
         path = "/api/user/list",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         tags = ["Admin"],
         responses = [OpenApiResponse("200", [OpenApiContent(Array<UserDetails>::class)])]
     )
@@ -31,6 +32,7 @@ class ListUserSessionsHandler : GetRestHandler<List<UserSessionDetails>>, Access
     @OpenApi(
         summary = "Lists all current user sessions.",
         path = "/api/user/sessions",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         tags = ["Admin"],
         responses = [OpenApiResponse("200", [OpenApiContent(Array<UserSessionDetails>::class)])]
     )
@@ -50,6 +52,7 @@ class AddUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler 
     @OpenApi(
         summary = "Adds a new user.",
         path = "/api/user/add",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(AddUserRequest::class)]),
         tags = ["Admin"],
@@ -86,7 +89,8 @@ class RemoveUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandl
 
     @OpenApi(
         summary = "Removes an existing user.",
-        path = "/api/user/remove?force",
+        path = "/api/user/remove",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Admin"],
@@ -131,6 +135,7 @@ class ChangePasswordHandler : PatchRestHandler<SuccessStatus>, AccessManagedRest
     @OpenApi(
         summary = "Changes the password for a given user.",
         path = "/api/user/password",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.PATCH],
         requestBody = OpenApiRequestBody([OpenApiContent(PasswordChangeRequest::class)]),
         tags = ["User"],
@@ -186,6 +191,7 @@ class GetCurrentUserHandler : GetRestHandler<UserSessionDetails>, AccessManagedR
     @OpenApi(
         summary = "Returns details for the current session.",
         path = "/api/user/current",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["User"],
         queryParams = [
@@ -216,9 +222,10 @@ class CreateGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
     @OpenApi(
         summary = "Creates a group with existing, non-duplicate and at least one users.",
         path = "/api/group/create",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(CreateGroupRequest::class)]),
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
@@ -258,9 +265,10 @@ class RemoveGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
     @OpenApi(
         summary = "Deletes an existing group.",
         path = "/api/group/remove",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
@@ -292,7 +300,8 @@ class ListGroupsHandler : GetRestHandler<List<GroupDetails>>, AccessManagedRestH
     @OpenApi(
         summary = "Lists all groups with corresponding users.",
         path = "/api/group/list",
-        tags = ["Admin"],
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        tags = ["Admin", "Group"],
         responses = [OpenApiResponse("200", [OpenApiContent(Array<GroupDetails>::class)])]
     )
     override fun doGet(ctx: Context): List<GroupDetails> {
@@ -309,8 +318,9 @@ class RemoveAllGroupsHandler : DeleteRestHandler<SuccessStatus>, AccessManagedRe
     @OpenApi(
         summary = "Removes all existing groups.",
         path = "/api/group",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.DELETE],
-        tags = ["Admin"],
+        tags = ["Admin", "Group"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),

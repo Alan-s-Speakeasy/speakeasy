@@ -3,7 +3,7 @@
 import {Component, EventEmitter, Inject, Input, OnInit, Output} from '@angular/core';
 import {PaneLog, Ratings} from "../new_data";
 import {ChatService, FeedbackRequest, FeedbackResponse, FeedbackResponseList, FeedbackService} from "../../../openapi";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 
 @Component({
   selector: 'app-rating-pane',
@@ -32,7 +32,7 @@ export class RatingPaneComponent implements OnInit {
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedback(undefined).subscribe(
+    this.feedbackService.getApiFeedbackformByFormName(this.paneLog.formRef, undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },
@@ -43,7 +43,7 @@ export class RatingPaneComponent implements OnInit {
 
   // try to fetch submitted ratings
   retrieveFeedbackHistory(): void {
-    this.feedbackService.getApiFeedbackhistoryWithRoomid(this.paneLog.roomID, undefined).subscribe(
+    this.feedbackService.getApiFeedbackhistoryRoomByRoomId(this.paneLog.roomID, undefined).subscribe(
       (feedback) => {
         if (feedback.responses.length > 0) {
           for (let each of feedback.responses) {
@@ -70,7 +70,7 @@ export class RatingPaneComponent implements OnInit {
   // submit ratings
   submit(): void {
     if (Object.keys(this.paneLog.ratings).length == this.ratingForm.length) {
-      this.feedbackService.postApiFeedbackWithRoomid(this.paneLog.roomID, undefined, this.ratings2Responses(this.paneLog.ratings)).subscribe(
+      this.feedbackService.postApiFeedbackByRoomId(this.paneLog.roomID, undefined, this.ratings2Responses(this.paneLog.ratings)).subscribe(
         (response) => {
           this.alertService.success("Ratings for Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") successfully submitted!", this.options)
           this.removeRoom.emit()
@@ -89,6 +89,29 @@ export class RatingPaneComponent implements OnInit {
     }
   }
 
+  closeWithoutRating(): void {
+    const responses: FeedbackResponseList = {responses: []};
+    this.feedbackService.postApiFeedbackByRoomId(this.paneLog.roomID, undefined, responses).subscribe(
+      (response) => {
+        this.alertService.success("Closed Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") without rating successfully.", this.options)
+        this.removeRoom.emit()
+      },
+      (error) => {
+        if (error.status == 409) {
+          this.alertService.error("Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") already submitted from this user!", this.options)
+          this.removeRoom.emit()
+        } else if (error.status == 404) {
+          this.alertService.error("Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ") not found, just closed it.", this.options)
+          this.removeRoom.emit()
+        } else if (error.status == 403) {
+          this.alertService.error(error.message)
+        } else {
+          this.alertService.error("Something wrong when closing feedback form", this.options)
+        }
+      }
+    )
+  }
+
   ratings2Responses(ratings: Ratings): FeedbackResponseList {
     let responses: FeedbackResponseList = {responses: []}
     for (let key in ratings) {
@@ -103,7 +126,7 @@ export class RatingPaneComponent implements OnInit {
   }
 
   closeRoom(): void {
-    this.chatService.patchApiRoomWithRoomid(this.paneLog.roomID, undefined).subscribe(
+    this.chatService.patchApiRoomByRoomId(this.paneLog.roomID, undefined).subscribe(
       (response) => {
         //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
       },

@@ -20,6 +20,33 @@
       <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-danger">Delete Generator</button>
     </div>
     <br>
+    <div class="row align-items-center">
+      <mat-form-field class="col-2">
+        <mat-label>Choose Feedback Form</mat-label>
+        <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
+          <mat-option *ngFor="let form of formsMap | keyvalue" [value]="form.key">
+            {{form.key}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div *ngIf=" selectedFormName != '' " class="table-container col-10">
+        <table class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th *ngFor="let question of formsMap.get(selectedFormName)"
+                  [style.font-weight]="'normal'"
+                  [style.font-size.px]="12">
+                {{question.shortname}}</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+      <div *ngIf=" selectedFormName == '' " class="col-10">
+        <small> [No feedback required] </small>
+      </div>
+    </div>
+
     <div class="row p-2">
       <div class="col-2">
         <table class="table">
@@ -168,14 +195,16 @@ One per line..."
         <tr>
           <td class="col-2">Human</td>
           <td class="col-2">Bot</td>
-          <td class="col-8">Prompt</td>
+          <td class="col-5">Prompt</td>
+          <td class="col-2">Form</td>
         </tr>
         </thead>
         <tbody>
         <tr *ngFor="let assignment of nextAssignment">
           <td class="col-2">{{assignment.human}}</td>
           <td class="col-2">{{assignment.bot}}</td>
-          <td class="col-7">{{assignment.prompt}}</td>
+          <td class="col-5">{{assignment.prompt}}</td>
+          <td class="col-2">{{ assignment.formName !== "" ? assignment.formName : "[NOT Required]" }}</td>
           <td class="col-1">
             <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)" class="col-6 fa fa-warning" matTooltip="At least one user offline. Round cannot be created."></i>
           </td>
@@ -200,15 +229,17 @@ One per line..."
         <tr class="d-flex">
           <td class="col-2">Human</td>
           <td class="col-2">Bot</td>
-          <td class="col-5">Prompt</td>
-          <td class="col-3">Remaining Time</td>
+          <td class="col-4">Prompt</td>
+          <td class="col-1">Form</td>
+          <td class="col-2">Remaining Time</td>
         </tr>
         </thead>
         <tbody>
           <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
             <td class="col-2">{{room.userInfo[0].username}}</td>
             <td class="col-2">{{room.userInfo[1].username}}</td>
-            <td class="col-5">{{room.prompt}}</td>
+            <td class="col-4">{{room.prompt}}</td>
+            <td class="col-1">{{room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
             <td class="col-2">{{remainingTime | date: 'mm:ss'}}</td>
             <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
           </tr>
@@ -223,14 +254,16 @@ One per line..."
         <tr class="d-flex">
           <td class="col-2">Human</td>
           <td class="col-2">Bot</td>
-          <td class="col-8">Prompt</td>
+          <td class="col-6">Prompt</td>
+          <td class="col-1">Form</td>
         </tr>
         </thead>
         <tbody>
           <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
             <td class="col-2">{{room.userInfo[0].username}}</td>
             <td class="col-2">{{room.userInfo[1].username}}</td>
-            <td class="col-7">{{room.prompt}}</td>
+            <td class="col-6">{{room.prompt}}</td>
+            <td class="col-1">{{room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
             <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
           </tr>
         </tbody>

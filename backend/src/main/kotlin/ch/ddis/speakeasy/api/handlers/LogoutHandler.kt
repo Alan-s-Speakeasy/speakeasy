@@ -3,16 +3,14 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.http.Context
-import io.javalin.openapi.OpenApi
-import io.javalin.openapi.OpenApiContent
-import io.javalin.openapi.OpenApiParam
-import io.javalin.openapi.OpenApiResponse
+import io.javalin.openapi.*
 
 class LogoutHandler : RestHandler, GetRestHandler<SuccessStatus> {
 
     @OpenApi(
         summary = "Clears all user roles of the current session.",
         path = "/api/logout",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         tags = ["User"],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")

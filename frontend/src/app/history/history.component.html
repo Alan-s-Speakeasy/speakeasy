@@ -9,27 +9,50 @@
       <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
     </div>
   </div>
-
-  <div class="p-2" *ngIf="averageFeedback">
-  <h4>Average Assessment (of {{averageFeedback.count}} Evaluation{{averageFeedback.count > 1 ? "s" : ""}})</h4>
-  <table class="table">
-    <thead>
-    <tr>
-      <th scope="col" *ngFor="let question of ratingForm.slice(0, -1)">{{question.shortname}}</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr class="align-middle">
-      <td *ngFor="let response of averageFeedback.responses.slice(0, -1)">{{idToText(response)}}</td>
-    </tr>
-    </tbody>
-  </table>
+  <div class="p-2" *ngIf="averageFeedbackRequestedMap.size > 0">
+    <h4> <span class="font-italic" style="color: #008800"> Requested by Yourself:</span> </h4>
+    <div class="p-2" *ngFor="let form of averageFeedbackRequestedMap | keyvalue">
+      <h5> Average Rating (of {{form.value!.count}} Evaluation{{form.value!.count > 1 ? "s" : ""}})
+      </h5>
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col" *ngFor="let question of filterOptionQuestions(form.key)">{{question.shortname}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="align-middle">
+          <td *ngFor="let response of filterOptionResponses(form.key, form.value)">{{idToText(response, form.key)}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="p-2" *ngIf="averageFeedbackAssignedMap.size > 0">
+    <h4> <span class="font-italic" style="color: #0d6efd"> Assigned by TAs:</span> </h4>
+    <div class="p-2" *ngFor="let form of averageFeedbackAssignedMap | keyvalue">
+      <h5> Average Rating (of {{form.value!.count}} Evaluation{{form.value!.count > 1 ? "s" : ""}})
+      </h5>
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col" *ngFor="let question of filterOptionQuestions(form.key)">{{question.shortname}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="align-middle">
+          <td *ngFor="let response of filterOptionResponses(form.key, form.value)">{{idToText(response, form.key)}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
+
   <div class="p-2" *ngIf="paneLogs.length > 0">
-    <h4>Detailed Assessments</h4>
+    <h4>Detailed Assessments and Chat Histories</h4>
     <div *ngFor="let paneLog of paneLogs">
-      <div class="row p-2">
+      <div class="row p-2 mb-3">
         <div class="col-7">
           <app-rating-pane-history [paneLog]="paneLog"></app-rating-pane-history>
         </div>

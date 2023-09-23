@@ -2,14 +2,15 @@ package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
+import ch.ddis.speakeasy.feedback.FeedbackManager
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 
-data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>)
-data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val evaluator: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val round: Int, val remainingTime: Long, val rooms: List<ChatRoomAdminInfo>)
-data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int)
-data class GeneratedAssignment(val human: String, val bot: String, val prompt: String)
+data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>, var evaluator: List<String>)
+data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val evaluator: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val formName: String, val botsPerHuman: Int, val duration: Int, val round: Int, val remainingTime: Long, val rooms: List<ChatRoomAdminInfo>)
+data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val formName: String)
+data class GeneratedAssignment(val human: String, val bot: String, val prompt: String, val formName: String)
 data class RoundStarted(val remainingTime: Long)
 
 class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
@@ -21,6 +22,7 @@ class PostAssignmentGeneratorHandler : PostRestHandler<SuccessStatus>, AccessMan
     @OpenApi(
         summary = "Initialize a new assignment generator.",
         path = "/api/assignment/new",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         tags = ["Assignment"],
         responses = [
@@ -43,6 +45,7 @@ class GetAssignmentGeneratorHandler : GetRestHandler<AssignmentGeneratorObject>,
     @OpenApi(
         summary = "Get the status of the current assignment generator",
         path = "/api/assignment",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Assignment"],
         responses = [
@@ -64,6 +67,7 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
     @OpenApi(
         summary = "Generate a new assignment round",
         path = "/api/assignment/round",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
@@ -79,6 +83,10 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
             ctx.bodyAsClass(NewAssignmentObject::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+        }
+
+        if ( !FeedbackManager.isValidFormName(newAssignment.formName) ) {
+            throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
         }
 
         if (newAssignment.humans.isEmpty() || (newAssignment.bots.isEmpty() && newAssignment.admins.isEmpty())) {
@@ -113,6 +121,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
     @OpenApi(
         summary = "Start the generated assignment round",
         path = "/api/assignment/round",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.PATCH],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Assignment"],
@@ -145,6 +154,7 @@ class DeleteAssignmentGeneratorHandler : DeleteRestHandler<SuccessStatus>, Acces
     @OpenApi(
         summary = "Delete the active assignment generator.",
         path = "/api/assignment",
+        operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.DELETE],
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),

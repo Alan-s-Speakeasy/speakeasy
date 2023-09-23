@@ -6,7 +6,7 @@ import {Title} from "@angular/platform-browser";
 import {ChatService, UserService, UserSessionDetails} from "../../../openapi";
 import {FrontendDataService} from "../frontend-data.service";
 import {CommonService} from "../common.service";
-import {AlertService} from '../_alert';
+import {AlertService} from '../alert';
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({

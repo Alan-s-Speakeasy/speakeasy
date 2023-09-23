@@ -19,7 +19,7 @@ import {FrontendDataService} from "./frontend-data.service";
 import {ApiModule, Configuration} from "../../openapi";
 import {AppConfig} from "./app.config";
 import {ChatCommandsPipe} from "./chatcommands.pipe";
-import {AlertModule} from './_alert';
+import {AlertModule} from './alert';
 import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
 import {NgbModule} from "@ng-bootstrap/ng-bootstrap";
 import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";

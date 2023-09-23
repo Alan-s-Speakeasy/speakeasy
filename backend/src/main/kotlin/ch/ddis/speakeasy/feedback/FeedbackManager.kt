@@ -11,6 +11,7 @@ import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.doyaaaaaken.kotlincsv.util.MalformedCSVException
@@ -20,70 +21,99 @@ import java.io.PrintWriter
 import java.util.concurrent.locks.StampedLock
 
 object FeedbackManager {
+    private var sessionWriters: HashMap<String, PrintWriter> = hashMapOf() // formName -> feedback PrintWriter
 
-    private lateinit var sessionWriter: PrintWriter
+    private lateinit var formsPath: File
 
-    private lateinit var feedbackRequestsFile: File
-    private lateinit var feedbackFile: File
+    private var feedbackFiles: HashMap<String, File> = hashMapOf() // formName -> feedback results
 
-    private val kMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
-    private lateinit var requests: FeedbackRequestList
+    private val kMapper: ObjectMapper = jacksonObjectMapper()
+
+    private var forms: MutableList<FeedbackForm> = mutableListOf()
+
+    lateinit var DEFAULT_FORM_NAME: String // Use the name of the first form as the default value (or "").
 
     private val lock: StampedLock = StampedLock()
 
     fun init(config: Config) {
 
-        // INIT Reading Feedback Requests
+        // INIT Reading Feedback Forms
+        this.formsPath = File(File(config.dataPath), "feedbackforms/")
+        this.formsPath
+            .walk()
+            .filter { it.isFile }
+            .forEach { file ->
+                val feedbackForm: FeedbackForm = kMapper.readValue(file)
+                if (this.forms.none{ it.formName == feedbackForm.formName }) {
+                    this.forms.add(feedbackForm)
+                } else {
+                    System.err.println("formNames in feedbackforms should be unique  -> ignored duplicates ${feedbackForm.formName}.")
+                }
+        }
+        this.forms.sortBy { it.formName } // Ensure that after each initialization, the forms are sorted in ascending order by formName
 
-        this.feedbackRequestsFile = File(File(config.dataPath), "feedbackrequests.json")
-        if (!this.feedbackRequestsFile.exists()) {
-            return
+        this.DEFAULT_FORM_NAME = this.forms.firstOrNull()?.formName ?: run {
+            System.err.println("Not found any feedback forms when init.")
+            return@run ""
         }
 
-        this.requests = kMapper.readValue(this.feedbackRequestsFile)
+        val baseFolder = File(File(config.dataPath), "feedbackresults")
+        baseFolder.mkdirs()
 
         // INIT Writing Feedback Responses
-        this.feedbackFile = File(File(config.dataPath), "sessionfeedback.csv")
-
-        if (!this.feedbackFile.exists() || this.feedbackFile.length() == 0L) {
-            this.feedbackFile.writeText("timestamp,user,session,room,partner,responseid,responsevalue\n", Charsets.UTF_8)
-        }
-
-        this.sessionWriter = PrintWriter(
-            FileWriter(
-                this.feedbackFile,
-                Charsets.UTF_8,
+        this.forms.forEach {
+            val file = File(baseFolder, "${it.formName}.csv")
+            this.feedbackFiles[it.formName] = file
+            if (!file.exists() || file.length() == 0L) {
+                file.writeText(
+                    "timestamp,user,session,room,partner,responseid,responsevalue\n",
+                    Charsets.UTF_8)
+            }
+            this.sessionWriters[it.formName] = PrintWriter(
+                FileWriter(
+                    this.feedbackFiles[it.formName],
+                    Charsets.UTF_8,
+                    true
+                ),
                 true
-            ),
-            true
-        )
-
+            )
+        }
     }
 
 
     private val writerLock = StampedLock()
 
-    fun readFeedbackRequests(): FeedbackRequestList = requests
+    fun readFeedbackFrom(formName: String): FeedbackForm {
+        return forms.find { it.formName ==  formName}!!  // throw NullPointerException
+    }
 
-    fun logFeedback(userSession: UserSession, roomId: UID, feedbackResponseList: FeedbackResponseList) =
+    fun isValidFormName(formName: String): Boolean {
+        if (formName == "") { return true }
+        return this.forms.find { it.formName ==  formName} != null
+    }
+
+    fun readFeedbackFromList(): MutableList<FeedbackForm> = forms
+
+    fun logFeedback(userSession: UserSession, roomId: UID, feedbackResponseList: FeedbackResponseList): Unit =
         writerLock.write {
+            val formName = ChatRoomManager.getFeedbackFormReference(roomId) ?: return
             val partnerId = ChatRoomManager.getChatPartner(roomId, userSession.user.id.UID()) ?: UserId("undefined")
             for (response in feedbackResponseList.responses) {
                 val value = response.value.replace("\"", "\"\"")
-                sessionWriter.println("${System.currentTimeMillis()},${userSession.user.id.toString()},${userSession.sessionId.string},\"${roomId.string}\",${partnerId.string},${response.id},\"${value}\"")
+                sessionWriters[formName]?.println("${System.currentTimeMillis()},${userSession.user.id.toString()},${userSession.sessionId.string},\"${roomId.string}\",${partnerId.string},${response.id},\"${value}\"")
             }
-            sessionWriter.flush()
+            sessionWriters[formName]?.flush()
         }
 
     fun readFeedbackHistoryPerRoom(userId: UserId, roomId: UID): FeedbackResponseList = this.lock.read {
-
         var response: FeedbackResponse
         val responses: MutableList<FeedbackResponse> = mutableListOf()
+        val formName = ChatRoomManager.getFeedbackFormReference(roomId) ?: return FeedbackResponseList(responses)
 
         //read all CSV lines with the given userid and roomid
 
         try {
-            csvReader().open(this.feedbackFile) {
+            csvReader().open(this.feedbackFiles[formName]!!) {
                 readAllWithHeader().forEach { row ->
                     //in file CSV file: timestamp,userid,sessionid,room,partnerid,responseid,responsevalue
                     val user = row["user"]
@@ -99,21 +129,24 @@ object FeedbackManager {
             }
         } catch (e: MalformedCSVException) {
             with(e) { printStackTrace() }
+        } catch (e: NullPointerException) {
+            System.err.println("$formName is NOT in feedback forms or results!")
         }
 
         return FeedbackResponseList(responses)
     }
 
-    fun readFeedbackHistory(): MutableList<FeedbackResponseItem> = this.lock.read {
-
+    fun readFeedbackHistory(assignment: Boolean = false, formName: String): MutableList<FeedbackResponseItem> = this.lock.read {
         var response: FeedbackResponse
         val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
         val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
 
+        if (this.feedbackFiles[formName] == null) { return responseList } // no such form -> return empty list
+
         //read all CSV lines with the given userid
 
         try {
-            csvReader().open(this.feedbackFile) {
+            csvReader().open(this.feedbackFiles[formName]!!) {
                 readAllWithHeader().forEach { row ->
                     //in file CSV file: timestamp,userid,sessionid,room,partnerid,responseid,responsevalue
                     val user = row["user"]
@@ -122,7 +155,12 @@ object FeedbackManager {
                     val responseId = row["responseid"]
                     val responseValue = row["responsevalue"]
 
-                    if ((room != null) && (user != null) && (partner != null) && (responseId != null) && (responseValue != null)) {
+                    if ((room != null)
+                        && ChatRoomManager.isAssignment(room.UID()) == assignment
+                        && (user != null)
+                        && (partner != null)
+                        && (responseId != null)
+                        && (responseValue != null)) {
                         response = FeedbackResponse(responseId, responseValue)
                         val authorUsername = UserManager.getUsernameFromId(UserId(user)) ?: ""
                         val recipientUsername = UserManager.getUsernameFromId(UserId(partner)) ?: ""
@@ -139,8 +177,9 @@ object FeedbackManager {
 
         responseMap.forEach { (triple, responses) ->
             var res = responses
-            if (responses.size > this.requests.requests.size) {
-                res = responses.take(this.requests.requests.size) as MutableList<FeedbackResponse>
+            val requestsSize = this.forms.find { it.formName == formName }!!.requests.size
+            if (responses.size > requestsSize) {
+                res = responses.take(requestsSize) as MutableList<FeedbackResponse>
             }
             responseList.add(FeedbackResponseItem(triple.first, triple.second, triple.third, res))
         }
@@ -148,8 +187,8 @@ object FeedbackManager {
         return responseList
     }
 
-    fun readFeedbackHistoryPerUser(author: Boolean): List<FeedbackResponseAverageItem> {
-        val allFeedbackResponses = readFeedbackHistory()
+    fun readFeedbackHistoryPerUser(author: Boolean, assignment: Boolean = false, formName: String): List<FeedbackResponseAverageItem> {
+        val allFeedbackResponses = readFeedbackHistory(assignment = assignment, formName = formName)
         val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
         val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
 
@@ -165,13 +204,14 @@ object FeedbackManager {
             it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
         return responsesPerUser.map {
-            FeedbackResponseAverageItem(it.key, feedbackCountPerUser[it.key] ?: 0, computeFeedbackAverage(it.value))
+            FeedbackResponseAverageItem(it.key, feedbackCountPerUser[it.key] ?: 0, computeFeedbackAverage(it.value, formName))
         }
     }
 
-    fun computeFeedbackAverage(responses: List<FeedbackResponse>): List<FeedbackResponse> {
-        val averages = requests.requests.map { it.id to 0 }.toMap(mutableMapOf())
-        val count = requests.requests.map { it.id to 0 }.toMap(mutableMapOf())
+    fun computeFeedbackAverage(responses: List<FeedbackResponse>, formName: String): List<FeedbackResponse> {
+        val requests = this.forms.find { it.formName == formName }!!.requests
+        val averages = requests.associateTo(mutableMapOf()) { it.id to 0 }
+        val count = requests.associateTo(mutableMapOf()) { it.id to 0 }
 
         responses.forEach { fr ->
             val value = fr.value.toIntOrNull() ?: 0

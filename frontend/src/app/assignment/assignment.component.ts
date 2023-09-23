@@ -6,14 +6,14 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomAdminInfo, ChatRoomAdminInfoUsers,
+  ChatRoomAdminInfo, ChatRoomUserAdminInfo, FeedbackRequest, FeedbackService,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {HttpClient} from '@angular/common/http';
 import {FormControl} from "@angular/forms";
-import {AlertService} from "../_alert";
-import {FrontendChatroomDetail} from "../new_data";
+import {AlertService} from "../alert";
+import {FeedbackForm, FrontendChatroomDetail} from "../new_data";
 
 
 @Component({
@@ -30,6 +30,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
               private httpClient: HttpClient,
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
+              @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(AssignmentService) private assignmentService: AssignmentService,
               public alertService: AlertService) { }
 
@@ -53,6 +54,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   promptForm = new FormControl("")
   prompts: string[] = []
 
+  formsMap: Map<string, FeedbackRequest[]> = new Map([
+    [ "", [] ]   // default value, no feedback form
+  ])
+  selectedFormName: string = ""
+
   botsPerUser = 3
   duration = 10
 
@@ -60,7 +66,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   generated = false
 
   round = 0
-  nextAssignment: GeneratedAssignment[] = []
+  nextAssignment: Array<object> = []
   notOptimalAssignment = false
 
   remainingTime = 0
@@ -71,6 +77,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
+    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
+     feedbackForms.forms.forEach( (form) => {
+       this.formsMap.set(form.formName, form.requests)
+     } )
+    })
+
     this.fetchGenerator(true)
     this.generatorSubscription = interval(5000).subscribe(() => {
       this.fetchGenerator(false)
@@ -79,13 +91,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   fetchGenerator(initial: boolean) {
-    this.assignmentService.getAssignmentGenerator().subscribe(response => {
+    this.assignmentService.getApiAssignment().subscribe(response => {
       this.storeGeneratorResponse(response, initial)
     })
   }
 
   newGenerator(): void {
-    this.assignmentService.createNewAssignmentGenerator().subscribe(() => {
+    this.assignmentService.postApiAssignmentNew().subscribe(() => {
       this.fetchGenerator(true)
     })
   }
@@ -121,6 +133,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.active = response.active
       if (initial) {
         this.prompts = response.prompts
+        this.selectedFormName = response.formName
         this.botsPerUser = response.botsPerHuman
         this.duration = response.duration
         response.humans.forEach(human => {
@@ -153,7 +166,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   removeGenerator(): void {
-    this.assignmentService.deleteAssignmentGenerator().subscribe(() => {
+    this.assignmentService.deleteApiAssignment().subscribe(() => {
       this.isActive = false
       this.isHumanSelected = new Map()
       this.isBotSelected = new Map()
@@ -267,13 +280,15 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   generateNextRound(): void {
-    this.assignmentService.generateAssignmentRound({
+    console.log(this.selectedFormName)
+    this.assignmentService.postApiAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
       prompts: this.prompts,
       botsPerHuman: this.botsPerUser,
-      duration: this.duration
+      duration: this.duration,
+      formName: this.selectedFormName
     }).subscribe(response => {
       let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
       this.nextAssignment = response
@@ -287,22 +302,25 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.startAssignmentRound(this.evaluatorSelected.toString()).subscribe(() => {
+    this.assignmentService.patchApiAssignmentRound(this.evaluatorSelected.toString()).subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })
   }
 
   pushChatRoomDetails(chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomAdminInfoUsers[] = []
+    let userInfo: ChatRoomUserAdminInfo[] = []
     chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     this.chatroomDetails.set(chatRoom.uid, {
+        assignment: chatRoom.assignment,
+        formRef: chatRoom.formRef,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo
+        userInfo: userInfo,
+        markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )
   }
@@ -310,6 +328,10 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   getChatrooms(active: boolean): FrontendChatroomDetail[] {
     let arr = Array.from(this.chatroomDetails.values())
     return arr.filter(c => (c.remainingTime > 0) == active)
+  }
+
+  toggleFormName(value: string): void {
+    this.selectedFormName = value
   }
 
   countdown(): void {
@@ -324,6 +346,9 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     let user1 = chatroomDetail.userInfo[0]
     let user2 = chatroomDetail.userInfo[1]
     this.router.navigateByUrl('/spectate', { state: {
+        assignment: chatroomDetail.assignment,
+        formRef: chatroomDetail.formRef,
+        markAsNoFeedback: chatroomDetail.markAsNoFeedBack,
         roomID: chatroomDetail.roomID,
         username: user1.username,
         userAlias: user1.alias,

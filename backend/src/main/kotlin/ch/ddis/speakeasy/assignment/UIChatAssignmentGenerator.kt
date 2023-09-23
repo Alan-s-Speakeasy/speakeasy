@@ -19,12 +19,13 @@ object UIChatAssignmentGenerator {
     private var bots = emptyList<User>()
     private var admins = emptyList<User>()
     private var evaluator = emptyList<User>()
-    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
+    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
     private var prompts = emptyList<String>()
     private var botsPerHuman = 0
     private var duration = 0
     private var endTime = 0L
     private var round = 0
+    private var formName: String = ""
     private var nextRound: MutableList<GeneratedAssignment> = mutableListOf()
     private val humanAssignments = hashMapOf<String, MutableList<String>>().withDefault { mutableListOf() }
     private val chatRooms: MutableList<ChatRoom> = mutableListOf()
@@ -44,12 +45,13 @@ object UIChatAssignmentGenerator {
         bots = emptyList()
         admins = emptyList()
         evaluator = emptyList()
-        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
+        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
         prompts = emptyList()
         botsPerHuman = 0
         duration = 0
         endTime = 0L
         round = 0
+        formName = ""
         nextRound.clear()
         humanAssignments.clear()
         chatRooms.clear()
@@ -71,6 +73,7 @@ object UIChatAssignmentGenerator {
             selected,
             nextRound,
             prompts,
+            formName,
             botsPerHuman,
             duration,
             round,
@@ -79,7 +82,7 @@ object UIChatAssignmentGenerator {
         )
     }
 
-    private fun wasAlreadySelected(human: String, bot: String, slack: Int): Boolean {
+    private fun wasNotAlreadySelected(human: String, bot: String, slack: Int): Boolean {
         val previous = humanAssignments[human]!!.count { it == bot }
         val current = nextRound.count { it.human == human && it.bot == bot }
         return current == 0 && previous <= slack
@@ -91,6 +94,7 @@ object UIChatAssignmentGenerator {
         prompts = assignment.prompts
         botsPerHuman = assignment.botsPerHuman
         duration = assignment.duration
+        formName = assignment.formName
 
         selected.humans = assignment.humans
         selected.bots = assignment.bots
@@ -110,21 +114,25 @@ object UIChatAssignmentGenerator {
                 var slack = 0
                 while (!assigned) {
                     val bot = bots[botIndex]
-                    if (wasAlreadySelected(human, bot, slack)) {
-                        nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next()))
-                        assigned = true
-                    } else {
-                        botIndex += 1
-                        if (botIndex == bots.size) {
-                            slack += 1
-                            botIndex = 0
+                    if (slack < bots.size){ // Comply with group constraint
+                        if (wasNotAlreadySelected(human, bot, slack) && !UserManager.areInSameGroup(human, bot)) {
+                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next(), formName))
+                            assigned = true
+                        } else {
+                            botIndex = (botIndex + 1) % bots.size
+                            if (botIndex == 0) { slack += 1 }
+                        }
+                    } else { // When the attempts are too many, we drop the group constraint (Just for some edge cases)
+                        if (wasNotAlreadySelected(human, bot, slack)) {
+                            nextRound.add(GeneratedAssignment(human, bot, cyclicPrompts.next(), formName))
+                            assigned = true
+                        } else {
+                            botIndex = (botIndex + 1) % bots.size
+                            if (botIndex == 0) { slack += 1 }
                         }
                     }
                 }
-                botIndex += 1
-                if (botIndex == bots.size) {
-                    botIndex = 0
-                }
+                botIndex = (botIndex + 1) % bots.size
             }
         }
 
@@ -142,14 +150,28 @@ object UIChatAssignmentGenerator {
             if (AccessManager.hasUserIdActiveSessions(humanId) && AccessManager.hasUserIdActiveSessions(botId)) {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
+
                 if(evaluatorSelected){
-                    val development = false
-                    val evaluation = true
                     val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getTesterBot())!!
-                    val chatRoom = ChatRoomManager.create(listOf(humanId, botId, evaluatorUsername),true, a.prompt, endTime, development, evaluation)
+                    val chatRoom = ChatRoomManager.create(
+                        userIds = listOf(humanId, botId, evaluatorUsername),
+                        formRef = a.formName,
+                        log = true,
+                        prompt = a.prompt,
+                        endTime = endTime,
+                        assignment = true,
+                        development = false,
+                        evaluation = true)
+
                     chatRooms.add(chatRoom)
                 }else{
-                    val chatRoom = ChatRoomManager.create(listOf(humanId, botId),true, a.prompt, endTime)
+                    val chatRoom = ChatRoomManager.create(
+                        userIds = listOf(humanId, botId),
+                        formRef = a.formName,
+                        log = true,
+                        prompt = a.prompt,
+                        endTime = endTime,
+                        assignment = true)
                     chatRooms.add(chatRoom)
                 }
             }

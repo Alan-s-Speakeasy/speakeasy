@@ -15,7 +15,9 @@ class ClientSwaggerPlugin : Plugin {
             routingPath = app.cfg.routing.contextPath,
             basePath = null,
             tagsSorter = "'alpha'",
-            operationsSorter = "'alpha'"
+            operationsSorter = "'alpha'",
+            customJavaScriptFiles = emptyList(),
+            customStylesheetFiles = emptyList()
         )
 
         app.get("/client-swagger", swaggerHandler)

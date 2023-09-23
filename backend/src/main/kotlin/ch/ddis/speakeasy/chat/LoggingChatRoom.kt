@@ -10,6 +10,8 @@ import java.io.PrintWriter
 import java.util.concurrent.locks.StampedLock
 
 class LoggingChatRoom(
+    assignment: Boolean = false,
+    formRef: String,
     uid: UID = UID(),
     users: Map<UserId, String>,
     startTime: Long = System.currentTimeMillis(),
@@ -18,8 +20,9 @@ class LoggingChatRoom(
     prompt: String,
     messages: MutableList<ChatMessage> = mutableListOf(),
     reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
-    assessedBy: MutableList<Assessor> = mutableListOf()
-) : ChatRoom(uid, users, startTime, prompt, messages, reactions, assessedBy) {
+    assessedBy: MutableList<Assessor> = mutableListOf(),
+    markAsNoFeedback: Boolean = false,
+) : ChatRoom(assignment, formRef, uid, users, startTime, prompt, messages, reactions, assessedBy, markAsNoFeedback) {
 
     init {
         if (!basePath.isDirectory) {
@@ -41,6 +44,8 @@ class LoggingChatRoom(
 
     init {
         if (!file.exists() || file.length() == 0L) {
+            writer.println(this.assignment)
+            writer.println(this.formRef)
             writer.println(this.uid.string)
             writer.println(this.startTime.toString())
             writer.println(this.endTime.toString())
@@ -91,6 +96,23 @@ class LoggingChatRoom(
                 try {
                     super.addAssessor(assessor)
                     writer.println(objectMapper.writeValueAsString(assessor))
+                    writer.flush()
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e
+                }
+            }
+        if (exception != null) {
+            throw exception
+        }
+    }
+
+    override fun addMarkAsNoFeedback(noFeedback: NoFeedback) {
+        val exception =
+            this.writerLock.write {
+                try {
+                    super.addMarkAsNoFeedback(noFeedback)
+                    writer.println(objectMapper.writeValueAsString(noFeedback))
                     writer.flush()
                     null
                 } catch (e: IllegalArgumentException) {

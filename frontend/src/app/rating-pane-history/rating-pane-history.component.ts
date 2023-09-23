@@ -3,7 +3,7 @@
 import {Component, EventEmitter, Inject, Input, OnInit, Output} from '@angular/core';
 import {PaneLog, Ratings} from "../new_data";
 import {FeedbackRequest, FeedbackResponse, FeedbackResponseList, FeedbackService} from "../../../openapi";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 
 @Component({
   selector: 'app-rating-pane-history',
@@ -25,13 +25,15 @@ export class RatingPaneHistoryComponent implements OnInit {
   ratingForm!: Array<FeedbackRequest>;
 
   ngOnInit(): void {
-    this.fetchRatingForm()
-    this.retrieveFeedbackHistory()
+    if (!this.paneLog.markAsNoFeedback && this.paneLog.formRef != ""){
+      this.fetchRatingForm()
+      this.retrieveFeedbackHistory()
+    }
   }
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedback(undefined).subscribe(
+    this.feedbackService.getApiFeedbackformByFormName(this.paneLog.formRef,undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },
@@ -42,7 +44,7 @@ export class RatingPaneHistoryComponent implements OnInit {
 
   // try to fetch submitted ratings
   retrieveFeedbackHistory(): void {
-    this.feedbackService.getApiFeedbackhistoryWithRoomid(this.paneLog.roomID, undefined).subscribe(
+    this.feedbackService.getApiFeedbackhistoryRoomByRoomId(this.paneLog.roomID, undefined).subscribe(
       (feedback) => {
         if (feedback.responses.length > 0) {
           for (let each of feedback.responses) {

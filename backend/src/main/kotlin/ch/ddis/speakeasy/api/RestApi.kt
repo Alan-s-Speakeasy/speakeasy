@@ -10,8 +10,12 @@ import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.http.staticfiles.Location
 import io.javalin.json.JavalinJackson
+import io.javalin.openapi.CookieAuth
+import io.javalin.openapi.OpenApiContact
+import io.javalin.openapi.OpenApiLicense
 import io.javalin.openapi.plugin.OpenApiPlugin
 import io.javalin.openapi.plugin.OpenApiPluginConfiguration
+import io.javalin.openapi.plugin.SecurityComponentConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
@@ -55,7 +59,8 @@ object RestApi {
             PostChatMessageReactionHandler(),
             PostNewUserHandler(),
 
-            GetFeedbackRequestListHandler(),
+            GetFeedbackFormListHandler(),
+            GetFeedbackFormHandler(),
             PostFeedbackHandler(),
             GetFeedbackHistoryHandler(),
 
@@ -87,7 +92,18 @@ object RestApi {
                                 info.title = "Alan's Speakeasy"
                                 info.version = "0.1"
                                 info.description = "Full API for Alan's Speakeasy, Version 0.1"
+                                val contact = OpenApiContact()
+                                contact.url = "https://speakeasy.ifi.uzh.ch"
+                                contact.name = "The Speakeasy Dev Team"
+                                info.contact = contact
+                                val license = OpenApiLicense()
+                                license.name = "MIT"
+                                info.license = license
                             }
+                            cfg.withSecurity(
+                                SecurityComponentConfiguration()
+                                .withSecurityScheme("CookieAuth", CookieAuth(AccessManager.SESSION_COOKIE_NAME))
+                            )
                         }
                 )
             )

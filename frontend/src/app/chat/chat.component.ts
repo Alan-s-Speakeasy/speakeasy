@@ -10,7 +10,7 @@ import {Component, Inject, OnDestroy, OnInit, QueryList, ViewChildren} from '@an
 import {AuthService} from "../authentication.service";
 import {interval, Subscription} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
-import {AlertService} from "../_alert";
+import {AlertService} from "../alert";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {CommonService} from "../common.service";
 
@@ -75,6 +75,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   // add a chatroom to the UI
   addChatRoom(room: ChatRoomInfo): void {
     let paneLog: PaneLog = {
+      assignment: room.assignment,
+      formRef: room.formRef,
+      markAsNoFeedback: room.markAsNoFeedback,
       roomID: room.uid,
       ordinals: 0,
       messageLog: {},
@@ -85,8 +88,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,
-      isDevelopment: room.isDevelopment,
-      isEvaluation: room.isEvaluation,
+      isDevelopment: room.development,
+      isEvaluation: room.evaluation,
       testerBotAlias: room.testerBotAlias,
     }
 

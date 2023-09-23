@@ -3,6 +3,13 @@
   "info" : {
     "title" : "Alan's Speakeasy",
     "description" : "Full API for Alan's Speakeasy, Version 0.1",
+    "contact" : {
+      "name" : "The Speakeasy Dev Team",
+      "url" : "https://speakeasy.ifi.uzh.ch"
+    },
+    "license" : {
+      "name" : "MIT"
+    },
     "version" : "0.1"
   },
   "paths" : {
@@ -10,6 +17,7 @@
       "delete" : {
         "tags" : [ "Assignment" ],
         "summary" : "Delete the active assignment generator.",
+        "operationId" : "deleteApiAssignment",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -59,6 +67,7 @@
       "get" : {
         "tags" : [ "Assignment" ],
         "summary" : "Get the status of the current assignment generator",
+        "operationId" : "getApiAssignment",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -90,6 +99,7 @@
       "post" : {
         "tags" : [ "Assignment" ],
         "summary" : "Initialize a new assignment generator.",
+        "operationId" : "postApiAssignmentNew",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -121,7 +131,18 @@
       "patch" : {
         "tags" : [ "Assignment" ],
         "summary" : "Start the generated assignment round",
+        "operationId" : "patchApiAssignmentRound",
         "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : false
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -160,6 +181,7 @@
       "post" : {
         "tags" : [ "Assignment" ],
         "summary" : "Generate a new assignment round",
+        "operationId" : "postApiAssignmentRound",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -210,61 +232,11 @@
         "security" : [ ]
       }
     },
-    "/api/feedback" : {
-      "get" : {
-        "tags" : [ "Feedback" ],
-        "summary" : "Gets the list of feedback requests for a Chatroom.",
-        "parameters" : [ {
-          "name" : "session",
-          "in" : "query",
-          "description" : "Session Token",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/FeedbackRequestList"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
     "/api/feedback/{roomId}" : {
       "post" : {
         "tags" : [ "Feedback" ],
-        "summary" : "Returns Feedback for a Chatroom.",
+        "summary" : "Posts Feedback for a Chatroom.",
+        "operationId" : "postApiFeedbackByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -327,6 +299,16 @@
               }
             }
           },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
           "404" : {
             "description" : "Not Found",
             "content" : {
@@ -352,11 +334,22 @@
         "security" : [ ]
       }
     },
-    "/api/feedbackaverage" : {
+    "/api/feedbackaverage/{formName}" : {
       "get" : {
         "tags" : [ "Admin", "Feedback" ],
-        "summary" : "Gets the list of feedback averages per user",
+        "summary" : "Gets the list of feedback averages (both assigned and requested) per user",
+        "operationId" : "getApiFeedbackaverageByFormName",
         "parameters" : [ {
+          "name" : "formName",
+          "in" : "path",
+          "description" : "Name of the feedback form",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "author",
           "in" : "query",
           "description" : "author or recipient",
@@ -393,11 +386,136 @@
         "security" : [ ]
       }
     },
-    "/api/feedbackhistory" : {
+    "/api/feedbackform/{formName}" : {
       "get" : {
-        "tags" : [ "Admin" ],
-        "summary" : "Gets the list of feedback responses",
-        "parameters" : [ ],
+        "tags" : [ "Feedback" ],
+        "summary" : "Gets the feedback form (with form name and questions).",
+        "operationId" : "getApiFeedbackformByFormName",
+        "parameters" : [ {
+          "name" : "formName",
+          "in" : "path",
+          "description" : "Name of the feedback form",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackForm"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/feedbackforms" : {
+      "get" : {
+        "tags" : [ "Feedback" ],
+        "summary" : "Gets the list of all feedback forms.",
+        "operationId" : "getApiFeedbackforms",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedbackFormList"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/feedbackhistory/form/{formName}" : {
+      "get" : {
+        "tags" : [ "Admin", "Feedback" ],
+        "summary" : "Gets two lists (assigned and requested) of feedback responses to this form",
+        "operationId" : "getApiFeedbackhistoryFormByFormName",
+        "parameters" : [ {
+          "name" : "formName",
+          "in" : "path",
+          "description" : "Name of the feedback form",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -424,10 +542,11 @@
         "security" : [ ]
       }
     },
-    "/api/feedbackhistory/{roomId}" : {
+    "/api/feedbackhistory/room/{roomId}" : {
       "get" : {
         "tags" : [ "Feedback" ],
         "summary" : "Gets the list of feedback responses for a Chatroom.",
+        "operationId" : "getApiFeedbackhistoryRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -487,8 +606,9 @@
     },
     "/api/group" : {
       "delete" : {
-        "tags" : [ "Admin" ],
+        "tags" : [ "Admin", "Group" ],
         "summary" : "Removes all existing groups.",
+        "operationId" : "deleteApiGroup",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -518,8 +638,9 @@
     },
     "/api/group/create" : {
       "post" : {
-        "tags" : [ "Admin" ],
+        "tags" : [ "Admin", "Group" ],
         "summary" : "Creates a group with existing, non-duplicate and at least one users.",
+        "operationId" : "postApiGroupCreate",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -579,8 +700,9 @@
     },
     "/api/group/list" : {
       "get" : {
-        "tags" : [ "Admin" ],
+        "tags" : [ "Admin", "Group" ],
         "summary" : "Lists all groups with corresponding users.",
+        "operationId" : "getApiGroupList",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -603,8 +725,9 @@
     },
     "/api/group/remove" : {
       "post" : {
-        "tags" : [ "Admin" ],
+        "tags" : [ "Admin", "Group" ],
         "summary" : "Deletes an existing group.",
+        "operationId" : "postApiGroupRemove",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -656,6 +779,7 @@
       "post" : {
         "tags" : [ "User" ],
         "summary" : "Sets roles for session based on user account and returns a session cookie.",
+        "operationId" : "postApiLogin",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -707,6 +831,7 @@
       "get" : {
         "tags" : [ "User" ],
         "summary" : "Clears all user roles of the current session.",
+        "operationId" : "getApiLogout",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -748,6 +873,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Post a new user to a Chatroom.",
+        "operationId" : "postApiRequestByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -819,6 +945,7 @@
       "patch" : {
         "tags" : [ "Chat" ],
         "summary" : "Closes a Chatroom.",
+        "operationId" : "patchApiRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -888,6 +1015,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Post a message to a Chatroom.",
+        "operationId" : "postApiRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -909,19 +1037,9 @@
             "type" : "string"
           }
         }, {
-          "name" : "private",
+          "name" : "recipients",
           "in" : "query",
-          "description" : "Private Message",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "isDisplayed",
-          "in" : "query",
-          "description" : "Displayed Message",
+          "description" : "Recipients of Message",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -979,6 +1097,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Post a chat message reaction to a Chatroom.",
+        "operationId" : "postApiRoomByRoomIdReaction",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -1050,6 +1169,7 @@
       "get" : {
         "tags" : [ "Chat" ],
         "summary" : "Get state and all messages for a chat room since a specified time",
+        "operationId" : "getApiRoomByRoomIdBySince",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -1122,6 +1242,7 @@
       "get" : {
         "tags" : [ "Chat" ],
         "summary" : "Lists all Chatrooms for current user",
+        "operationId" : "getApiRooms",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1163,6 +1284,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all active Chatrooms",
+        "operationId" : "getApiRoomsActive",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1194,6 +1316,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all Chatrooms",
+        "operationId" : "getApiRoomsAll",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1224,7 +1347,8 @@
     "/api/rooms/assessed" : {
       "get" : {
         "tags" : [ "Chat" ],
-        "summary" : "Lists all assessed chatrooms for current user",
+        "summary" : "Lists all assessed chatrooms for current user (including chatrooms marked as no need for assessment)",
+        "operationId" : "getApiRoomsAssessed",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1266,6 +1390,7 @@
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Creates a Chatroom with another user.",
+        "operationId" : "postApiRoomsRequest",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -1327,6 +1452,7 @@
       "post" : {
         "tags" : [ "Admin" ],
         "summary" : "Adds a new user.",
+        "operationId" : "postApiUserAdd",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {
@@ -1429,6 +1555,7 @@
       "get" : {
         "tags" : [ "User" ],
         "summary" : "Returns details for the current session.",
+        "operationId" : "getApiUserCurrent",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1470,6 +1597,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all available users.",
+        "operationId" : "getApiUserList",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1494,6 +1622,7 @@
       "patch" : {
         "tags" : [ "User" ],
         "summary" : "Changes the password for a given user.",
+        "operationId" : "patchApiUserPassword",
         "parameters" : [ {
           "name" : "session",
           "in" : "query",
@@ -1551,10 +1680,11 @@
         "security" : [ ]
       }
     },
-    "/api/user/remove?force" : {
+    "/api/user/remove" : {
       "post" : {
         "tags" : [ "Admin" ],
         "summary" : "Removes an existing user.",
+        "operationId" : "postApiUserRemove",
         "parameters" : [ {
           "name" : "force",
           "in" : "query",
@@ -1616,6 +1746,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Lists all current user sessions.",
+        "operationId" : "getApiUserSessions",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -1697,6 +1828,12 @@
               "type" : "string"
             }
           },
+          "evaluator" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "active" : {
             "type" : "array",
             "items" : {
@@ -1717,6 +1854,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "formName" : {
+            "type" : "string"
           },
           "botsPerHuman" : {
             "type" : "integer",
@@ -1741,7 +1881,7 @@
             }
           }
         },
-        "required" : [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
+        "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
       },
       "ChatRequest" : {
         "type" : "object",
@@ -1749,17 +1889,20 @@
         "properties" : {
           "username" : {
             "type" : "string"
-          },
-          "evaluation" : {
-            "type" : "boolean"
           }
         },
-        "required" : [ "username", "evaluation" ]
+        "required" : [ "username" ]
       },
       "ChatRoomAdminInfo" : {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "assignment" : {
+            "type" : "boolean"
+          },
+          "formRef" : {
+            "type" : "string"
+          },
           "uid" : {
             "type" : "string"
           },
@@ -1779,9 +1922,12 @@
           },
           "prompt" : {
             "type" : "string"
+          },
+          "markAsNoFeedback" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "uid", "remainingTime", "users", "prompt" ]
+        "required" : [ "assignment", "formRef", "uid", "remainingTime", "users", "prompt", "markAsNoFeedback" ]
       },
       "ChatRoomAdminList" : {
         "type" : "object",
@@ -1800,6 +1946,12 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "assignment" : {
+            "type" : "boolean"
+          },
+          "formRef" : {
+            "type" : "string"
+          },
           "uid" : {
             "type" : "string"
           },
@@ -1823,11 +1975,20 @@
           "prompt" : {
             "type" : "string"
           },
+          "development" : {
+            "type" : "boolean"
+          },
           "evaluation" : {
+            "type" : "boolean"
+          },
+          "testerBotAlias" : {
+            "type" : "string"
+          },
+          "markAsNoFeedback" : {
             "type" : "boolean"
           }
         },
-        "required" : [ "uid", "remainingTime", "userAliases", "prompt", "evaluation" ]
+        "required" : [ "assignment", "formRef", "uid", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",
@@ -1907,6 +2068,35 @@
         },
         "required" : [ "name", "value" ]
       },
+      "FeedbackForm" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "formName" : {
+            "type" : "string"
+          },
+          "requests" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackRequest"
+            }
+          }
+        },
+        "required" : [ "formName", "requests" ]
+      },
+      "FeedbackFormList" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "forms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackForm"
+            }
+          }
+        },
+        "required" : [ "forms" ]
+      },
       "FeedbackRequest" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -1931,19 +2121,6 @@
           }
         },
         "required" : [ "id", "type", "name", "shortname", "options" ]
-      },
-      "FeedbackRequestList" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "requests" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackRequest"
-            }
-          }
-        },
-        "required" : [ "requests" ]
       },
       "FeedbackResponse" : {
         "type" : "object",
@@ -1982,14 +2159,20 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "responses" : {
+          "assigned" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
+            }
+          },
+          "requested" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
             }
           }
         },
-        "required" : [ "responses" ]
+        "required" : [ "assigned", "requested" ]
       },
       "FeedbackResponseItem" : {
         "type" : "object",
@@ -2030,14 +2213,20 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "responses" : {
+          "assigned" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseItem"
+            }
+          },
+          "requested" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/FeedbackResponseItem"
             }
           }
         },
-        "required" : [ "responses" ]
+        "required" : [ "assigned", "requested" ]
       },
       "GeneratedAssignment" : {
         "type" : "object",
@@ -2051,9 +2240,12 @@
           },
           "prompt" : {
             "type" : "string"
+          },
+          "formName" : {
+            "type" : "string"
           }
         },
-        "required" : [ "human", "bot", "prompt" ]
+        "required" : [ "human", "bot", "prompt", "formName" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -2103,9 +2295,12 @@
           "duration" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "formName" : {
+            "type" : "string"
           }
         },
-        "required" : [ "humans", "bots", "admins", "prompts", "botsPerHuman", "duration" ]
+        "required" : [ "humans", "bots", "admins", "prompts", "botsPerHuman", "duration", "formName" ]
       },
       "PasswordChangeRequest" : {
         "type" : "object",
@@ -2192,17 +2387,17 @@
           "message" : {
             "type" : "string"
           },
-          "private" : {
-            "type" : "boolean"
+          "recipients" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           },
           "read" : {
             "type" : "boolean"
-          },
-          "displayed" : {
-            "type" : "boolean"
           }
         },
-        "required" : [ "timeStamp", "authorAlias", "ordinal", "message", "private", "read", "displayed" ]
+        "required" : [ "timeStamp", "authorAlias", "ordinal", "message", "recipients", "read" ]
       },
       "GroupDetails" : {
         "type" : "object",
@@ -2264,7 +2459,13 @@
         "required" : [ "userDetails", "sessionToken", "sessionId", "startTime" ]
       }
     },
-    "securitySchemes" : { }
+    "securitySchemes" : {
+      "CookieAuth" : {
+        "in" : "cookie",
+        "name" : "SESSIONID",
+        "type" : "apiKey"
+      }
+    }
   },
   "servers" : [ ],
   "security" : [ ]

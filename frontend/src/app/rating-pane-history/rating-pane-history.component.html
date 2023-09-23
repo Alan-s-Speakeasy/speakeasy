@@ -8,8 +8,16 @@
         </h5>
       </div>
     </div>
+    <div *ngIf="paneLog.markAsNoFeedback; then hasNoFeedback else hasFeedback"></div>
+    <ng-template #hasNoFeedback>
+      <div class="p-5 d-flex justify-content-center">
+        <h6 class="text-secondary">
+          No assessment history for this chat room.
+        </h6>
+      </div>
+    </ng-template>
 
-    <div class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
+    <ng-template #hasFeedback class="chat-history text-wrap" style="overflow: scroll; height: 540px; overflow-x:hidden;">
       <table class="table">
         <thead>
         <tr>
@@ -29,11 +37,11 @@
           </td>
         </tr>
         <tr *ngIf="request.options.length == 0">
-          <td colspan="2"><b>Impression: </b>{{paneLog.ratings[request.id]}}</td>
+          <td colspan="2"><b>{{request.shortname}}: </b>{{paneLog.ratings[request.id]}}</td>
         </tr>
         </tbody>
       </table>
-    </div>
+    </ng-template>
   </div>
 </div>
 

@@ -280,7 +280,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   generateNextRound(): void {
-    console.log(this.selectedFormName)
     this.assignmentService.postApiAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),

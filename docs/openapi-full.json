@@ -1881,11 +1881,7 @@
             }
           }
         },
-<<<<<<< HEAD
         "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
-=======
-        "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
->>>>>>> 51abc6d3f9d4d65d67269351aa45980cef1da399
       },
       "ChatRequest" : {
         "type" : "object",
@@ -1987,18 +1983,12 @@
           },
           "testerBotAlias" : {
             "type" : "string"
-<<<<<<< HEAD
           },
           "markAsNoFeedback" : {
             "type" : "boolean"
           }
         },
         "required" : [ "assignment", "formRef", "uid", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
-=======
-          }
-        },
-        "required" : [ "uid", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias" ]
->>>>>>> 51abc6d3f9d4d65d67269351aa45980cef1da399
       },
       "ChatRoomList" : {
         "type" : "object",
@@ -2357,9 +2347,15 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "evaluator" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         },
-        "required" : [ "humans", "bots", "admins" ]
+        "required" : [ "humans", "bots", "admins", "evaluator" ]
       },
       "ChatMessageReaction" : {
         "type" : "object",
@@ -2478,5 +2474,5 @@
     }
   },
   "servers" : [ ],
-  "security" : []
+  "security" : [ ]
 }

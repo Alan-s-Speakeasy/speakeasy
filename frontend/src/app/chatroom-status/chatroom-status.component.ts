@@ -64,6 +64,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         formRef: chatRoom.formRef,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
+        // @ts-ignore
         startTime: chatRoom.startTime,
         remainingTime: chatRoom.remainingTime,
         userInfo: userInfo,

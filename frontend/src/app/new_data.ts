@@ -26,7 +26,7 @@ export interface PaneLog {
   ratingOpen: boolean,  // true: open for rating;
   ratings: Ratings, // ratings of this chatroom
   prompt: string,
-  myAlias?: string,
+  myAlias: string,
   otherAlias: string,
   spectate: boolean,
   history?: boolean,
@@ -75,7 +75,7 @@ export interface FrontendChatroomDetail {
   formRef: string,
   prompt: string,
   roomID: string,
-  startTime?: number,
+  startTime: number,
   remainingTime: number,
   userInfo: ChatRoomUserAdminInfo[],
   markAsNoFeedBack: boolean

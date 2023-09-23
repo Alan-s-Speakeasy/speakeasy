@@ -13,7 +13,7 @@ import {
   LoginRequest,
   SuccessStatus,
   PasswordChangeRequest,
-  UserDetails, ChatRoomList, ChatRoomState, ChatMessageReaction, FeedbackRequestList, FeedbackResponseList
+  UserDetails, ChatRoomList, ChatRoomState, ChatMessageReaction, FeedbackResponseList
 } from "../../openapi";
 import {AlertService} from "./alert";
 
@@ -76,7 +76,7 @@ export class CommonService {
    *  Get a chat room status
    */
   public getChatRoomStatus(roomID: string) : Observable<boolean> {
-    return this.chatService.getApiRoomWithRoomidWithSince(roomID, 0, undefined).pipe(
+    return this.chatService.getApiRoomByRoomIdBySince(roomID, 0, undefined).pipe(
       map(response =>
         response.info.remainingTime > 0
       ),
@@ -87,7 +87,7 @@ export class CommonService {
    *  Check chatroom feedback message availability
    */
   public getChatRoomFeedbackStatus(roomID: string) : Observable<boolean> {
-    return this.feedbackService.getApiFeedbackhistoryWithRoomid(roomID).pipe(
+    return this.feedbackService.getApiFeedbackhistoryRoomByRoomId(roomID).pipe(
       map(response =>
         response.responses != null
       ),

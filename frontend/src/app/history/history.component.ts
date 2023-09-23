@@ -122,6 +122,7 @@ export class HistoryComponent implements OnInit {
       ratingOpen: true,
       active: false,
       ratings: {},
+      // @ts-ignore
       myAlias: room.alias,
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",

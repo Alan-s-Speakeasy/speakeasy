@@ -4,7 +4,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ## Some Comments
 
-- To login, please use: `username: ATAI, password: 2021`;
+- To login as a human: `username: human1, password: human1`; To login as an admin: `username: admin1, password: admin1`
 
 - Each page is implemented as a component in [`./src/app/`](https://gitlab.ifi.uzh.ch/ddis/Lectures/atai/speakeasy/-/tree/main/frontend/src/app);
 
@@ -14,9 +14,11 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 - Mock data is defined in [`data.ts`](https://gitlab.ifi.uzh.ch/ddis/Lectures/atai/speakeasy/-/blob/main/frontend/src/app/data.ts); 
   
-## Development server
+## Frontend Development
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+To develop the frontend, please ensure you are now under the path `speakeasy/frontend`.
+
+Run `ng serve` for a dev server. Navigate to `http://127.0.0.1:4200/` (Do NOT use `http://localhost:4200/`, which cannot store the session cookie for you). The app will automatically reload if you change any of the source files.
 
 ## Code scaffolding
 
@@ -24,7 +26,9 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+After your development on port `4200` (`ng serve` mode), please do the production build so that your changes can be updated on port `8080` (when you are running the whole Speakeasy project via the backend `main()` function):
+
+Run `npm run pbuild` to update your frontend changes.
 
 ## Running unit tests
 

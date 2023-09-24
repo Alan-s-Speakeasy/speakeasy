@@ -14,6 +14,36 @@
   },
   "paths" : {
     "/api/assignment" : {
+      "get" : {
+        "tags" : [ "Assignment" ],
+        "summary" : "Get the status of the current assignment generator",
+        "operationId" : "getApiAssignment",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
       "delete" : {
         "tags" : [ "Assignment" ],
         "summary" : "Delete the active assignment generator.",
@@ -46,36 +76,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "get" : {
-        "tags" : [ "Assignment" ],
-        "summary" : "Get the status of the current assignment generator",
-        "operationId" : "getApiAssignment",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
                 }
               }
             }
@@ -191,7 +191,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "type" : "object"
+                    "$ref" : "#/components/schemas/GeneratedAssignment"
                   }
                 }
               }
@@ -347,7 +347,7 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "boolean"
           }
         } ],
         "responses" : {
@@ -1708,7 +1708,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "remainingTime", "users", "prompt", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "users", "prompt", "markAsNoFeedback" ]
       },
       "ChatRoomAdminList" : {
         "type" : "object",
@@ -1760,7 +1760,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "remainingTime", "userAliases", "prompt", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",

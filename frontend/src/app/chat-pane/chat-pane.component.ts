@@ -39,7 +39,7 @@ export class ChatPaneComponent implements OnInit {
   ngOnInit(): void {
     this.chatMessagesSubscription = interval(1000)
       .pipe(exhaustMap(_ => {
-        return this.chatService.getApiRoomWithRoomidWithSince(this.paneLog.roomID, this.lastGetTime, undefined)
+        return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime, undefined)
       })).subscribe((response) => {
         if (!this.paneLog.spectate) {
           this.paneLog.prompt = response.info.prompt
@@ -114,7 +114,7 @@ export class ChatPaneComponent implements OnInit {
   }
   close(): void {
     const responses: FeedbackResponseList = {responses: []};
-    this.feedbackService.postApiFeedbackWithRoomid(this.paneLog.roomID, undefined, responses).subscribe(
+    this.feedbackService.postApiFeedbackByRoomId(this.paneLog.roomID, undefined, responses).subscribe(
       (response) => {
         this.alertService.success("Closed Chat - " + this.paneLog.prompt + " (" + this.paneLog.otherAlias + ")", this.options)
         this.removeRoom.emit()
@@ -146,7 +146,7 @@ export class ChatPaneComponent implements OnInit {
   // send a message to the chatroom
   doQuery(query: string): void {
     if (query !== "" && query !== null) {
-      this.chatService.postApiRoomWithRoomid(this.paneLog.roomID, undefined, query).subscribe(
+      this.chatService.postApiRoomByRoomId(this.paneLog.roomID, undefined, query).subscribe(
         (response) => {
           //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
         },
@@ -160,7 +160,7 @@ export class ChatPaneComponent implements OnInit {
 
   // mark a message as THUMBS_UP/DOWN or STAR
   react(type: string, ordinal: number): void {
-    this.chatService.postApiRoomWithRoomidReaction(this.paneLog.roomID, undefined, {messageOrdinal: ordinal, type: type} as ChatMessageReaction).subscribe(
+    this.chatService.postApiRoomByRoomIdReaction(this.paneLog.roomID, undefined, {messageOrdinal: ordinal, type: type} as ChatMessageReaction).subscribe(
       (response) => {
         //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
       },

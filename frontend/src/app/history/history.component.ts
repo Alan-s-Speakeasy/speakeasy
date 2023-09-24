@@ -60,12 +60,12 @@ export class HistoryComponent implements OnInit {
     this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
 
     // get all forms
-    this.feedbackService.getApiFeedbackForms(undefined).subscribe((feedbackForms) => {
+    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
         feedbackForms.forms.forEach( (form) => {
           this.ratingFormsMap.set(form.formName, form)
 
           // for each form, we get the FeedbackResponseAverageItem
-          this.feedbackService.getApiFeedbackAverageWithFormName(form.formName,true)
+          this.feedbackService.getApiFeedbackaverageByFormName(form.formName,true)
             .subscribe((response) => {
               if (response.assigned.length > 0) {
                 this.averageFeedbackAssignedMap.set(form.formName, response.assigned[0])
@@ -88,7 +88,7 @@ export class HistoryComponent implements OnInit {
   }
 
   paneLogsInit(): void {
-    this.chatService.getApiAssessedAndMarkedRooms().subscribe(
+    this.chatService.getApiRoomsAssessed().subscribe(
       (response)=>{
         for (let room of response.rooms) {
 
@@ -122,7 +122,7 @@ export class HistoryComponent implements OnInit {
       ratingOpen: true,
       active: false,
       ratings: {},
-      myAlias: room.alias,
+      myAlias: room.userAliases.find(a => a == room.alias) || "",
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,

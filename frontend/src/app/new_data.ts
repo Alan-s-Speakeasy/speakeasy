@@ -1,5 +1,5 @@
 /** Frontend variables and mock data */
-import {ChatRoomAdminInfoUsers, FeedbackRequest, FeedbackResponse} from "../../openapi";
+import {ChatRoomUserAdminInfo, FeedbackRequest, FeedbackResponse} from "../../openapi";
 
 export interface Message {
   myMessage: boolean,  // true: the message will be shown as my message (green bubble, on the right side);
@@ -72,7 +72,7 @@ export interface FrontendChatroomDetail {
   roomID: string,
   startTime: number,
   remainingTime: number,
-  userInfo: ChatRoomAdminInfoUsers[],
+  userInfo: ChatRoomUserAdminInfo[],
   markAsNoFeedBack: boolean
 }
 

@@ -13,7 +13,7 @@ import {
   AddUserRequest,
   AdminService,
   ChatRoomAdminInfo,
-  ChatRoomAdminInfoUsers, CreateGroupRequest,
+  ChatRoomUserAdminInfo, CreateGroupRequest,
   GroupDetails,
   UserDetails,
   UserSessionDetails
@@ -98,7 +98,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       })
 
     this.allGroupsSubscription = interval(1000)
-      .pipe(exhaustMap(_ => {return this.adminService.getGroupList()}))
+      .pipe(exhaustMap(_ => {return this.adminService.getApiGroupList()}))
       .subscribe((allGroups) => {
         while (this.groupList.length > 0) {
           this.groupList.pop()
@@ -191,9 +191,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomAdminInfoUsers[] = []
-    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
-
     chatRoomDetails.push(
       {
         assignment: chatRoom.assignment,
@@ -202,7 +199,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo,
+        userInfo: chatRoom.users,
         markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )
@@ -250,7 +247,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     {name: "Admins", table: "info", list: this.adminList},
   ]
 
-  getPartners(userInfo: ChatRoomAdminInfoUsers[], exclude: string): string[] {
+  getPartners(userInfo: ChatRoomUserAdminInfo[], exclude: string): string[] {
     let res = new Set<string>()
     userInfo.forEach(u => {
       if (!exclude.includes(u.username)) {
@@ -316,7 +313,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       this.alertService.error("Usernames in a group are invalid! Please enter existing usernames, separating them with commas.", this.options)
       return
     }
-    this.adminService.createGroup(
+    this.adminService.postApiGroupCreate(
       {
         "name": this.groupNameToAdd.value,
         "usernames": this.validUsersInGroupToAdd
@@ -343,7 +340,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   addUser(): void {
     // username, password, role
-    this.adminService.addApiUser({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
+    this.adminService.postApiUserAdd({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
       () => {
         this.alertService.success("User successfully created.", this.options)
       },
@@ -357,7 +354,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   removeGroup(): void {
-    this.adminService.deleteOneGroup(this.groupNameToRemove).subscribe(() => {
+    this.adminService.postApiGroupRemove(this.groupNameToRemove).subscribe(() => {
         this.alertService.success("Group successfully removed.", this.options)
       },
       (error) => {
@@ -372,7 +369,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   removeUser(): void {
-    this.adminService.removeApiUser(this.forceRemove, this.usernameToRemove).subscribe(() => {
+    this.adminService.postApiUserRemove(this.forceRemove, this.usernameToRemove).subscribe(() => {
         this.alertService.success("User successfully removed.", this.options)
       },
       (error) => {

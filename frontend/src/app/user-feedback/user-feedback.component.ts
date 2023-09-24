@@ -87,7 +87,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
 
-    this.feedbackService.getApiFeedbackForms(undefined).subscribe((feedbackForms) => {
+    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
       this.formNameOptions = feedbackForms.forms.map( form => form.formName )
       this.selectedFormName = this.formNameOptions[0] // use the first one as default form
 
@@ -101,7 +101,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   fetchFeedback(): void {
-    this.feedbackService.getApiFeedbackFormByName(this.selectedFormName,undefined).subscribe((feedbackForm) => {
+    this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName,undefined).subscribe((feedbackForm) => {
         this.ratingRequests = feedbackForm.requests;
         feedbackForm.requests.forEach( (request) => {
           // record text questions
@@ -115,7 +115,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       }
     )
 
-    this.adminService.getApiFeedbackAverageWithFormName(this.selectedFormName,this.authorPerspective).subscribe((r) => {
+    this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName, this.authorPerspective).subscribe((r) => {
       this.averageFeedback = []
       this.usernames = []
       let responses = this.chooseAssignments ? r.assigned : r.requested
@@ -132,7 +132,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username))
     })
 
-    this.adminService.getApiFeedbackHistoryWithFormName(this.selectedFormName).subscribe((r) => {
+    this.adminService.getApiFeedbackhistoryFormByFormName(this.selectedFormName).subscribe((r) => {
       this.userFeedback = []
       this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername()
       let responses = this.chooseAssignments ? r.assigned : r.requested

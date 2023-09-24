@@ -33,7 +33,7 @@ export class RatingPaneHistoryComponent implements OnInit {
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedbackFormByName(this.paneLog.formRef,undefined).subscribe(
+    this.feedbackService.getApiFeedbackformByFormName(this.paneLog.formRef,undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },
@@ -44,7 +44,7 @@ export class RatingPaneHistoryComponent implements OnInit {
 
   // try to fetch submitted ratings
   retrieveFeedbackHistory(): void {
-    this.feedbackService.getApiFeedbackhistoryWithRoomid(this.paneLog.roomID, undefined).subscribe(
+    this.feedbackService.getApiFeedbackhistoryRoomByRoomId(this.paneLog.roomID, undefined).subscribe(
       (feedback) => {
         if (feedback.responses.length > 0) {
           for (let each of feedback.responses) {

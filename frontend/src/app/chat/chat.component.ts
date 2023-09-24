@@ -84,7 +84,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       ratingOpen: false,
       active: true,
       ratings: {},
-      myAlias: room.alias,
+      myAlias: room.userAliases.find(a => a == room.alias) || "",
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false

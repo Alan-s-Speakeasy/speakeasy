@@ -6,7 +6,7 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomAdminInfo, ChatRoomAdminInfoUsers, FeedbackRequest, FeedbackService,
+  ChatRoomAdminInfo, FeedbackRequest, FeedbackService,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
@@ -74,7 +74,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
-    this.feedbackService.getApiFeedbackForms(undefined).subscribe((feedbackForms) => {
+    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
      feedbackForms.forms.forEach( (form) => {
        this.formsMap.set(form.formName, form.requests)
      } )
@@ -88,13 +88,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   fetchGenerator(initial: boolean) {
-    this.assignmentService.getAssignmentGenerator().subscribe(response => {
+    this.assignmentService.getApiAssignment().subscribe(response => {
       this.storeGeneratorResponse(response, initial)
     })
   }
 
   newGenerator(): void {
-    this.assignmentService.createNewAssignmentGenerator().subscribe(() => {
+    this.assignmentService.postApiAssignmentNew().subscribe(() => {
       this.fetchGenerator(true)
     })
   }
@@ -154,7 +154,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   removeGenerator(): void {
-    this.assignmentService.deleteAssignmentGenerator().subscribe(() => {
+    this.assignmentService.deleteApiAssignment().subscribe(() => {
       this.isActive = false
       this.isHumanSelected = new Map()
       this.isBotSelected = new Map()
@@ -264,7 +264,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   generateNextRound(): void {
     console.log(this.selectedFormName)
-    this.assignmentService.generateAssignmentRound({
+    this.assignmentService.postApiAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
@@ -285,16 +285,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.startAssignmentRound().subscribe(() => {
+    this.assignmentService.patchApiAssignmentRound().subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })
   }
 
   pushChatRoomDetails(chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomAdminInfoUsers[] = []
-    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
-
     this.chatroomDetails.set(chatRoom.uid, {
         assignment: chatRoom.assignment,
         formRef: chatRoom.formRef,
@@ -302,7 +299,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo,
+        userInfo: chatRoom.users,
         markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )

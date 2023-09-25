@@ -6,7 +6,7 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomAdminInfo, ChatRoomUserAdminInfo, FeedbackRequest, FeedbackService,
+  ChatRoomAdminInfo, FeedbackRequest, FeedbackService,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
@@ -280,6 +280,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   generateNextRound(): void {
+    console.log(this.selectedFormName)
     this.assignmentService.postApiAssignmentRound({
       humans: this.humans.filter(h => this.isHumanSelected.get(h)),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
@@ -302,16 +303,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.patchApiAssignmentRound(this.evaluatorSelected.toString()).subscribe(() => {
+    this.assignmentService.patchApiAssignmentRound().subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })
   }
 
   pushChatRoomDetails(chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomUserAdminInfo[] = []
-    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
-
     this.chatroomDetails.set(chatRoom.uid, {
         assignment: chatRoom.assignment,
         formRef: chatRoom.formRef,
@@ -319,7 +317,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo,
+        userInfo: chatRoom.users,
         markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )

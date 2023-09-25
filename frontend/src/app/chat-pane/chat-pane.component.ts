@@ -150,7 +150,7 @@ export class ChatPaneComponent implements OnInit {
   // send a message to the chatroom
   doQuery(query: string): void {
     if (query !== "" && query !== null) {
-      this.chatService.postApiRoomByRoomId(this.paneLog.roomID, undefined, query).subscribe(
+      this.chatService.postApiRoomByRoomId(this.paneLog.roomID, undefined, "", query).subscribe(
         (response) => {
           //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
         },

@@ -3,7 +3,8 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
-import {AdminService, ChatRoomAdminInfo, ChatRoomUserAdminInfo} from "../../../openapi";
+
+import {AdminService, ChatRoomAdminInfo} from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 
@@ -55,8 +56,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomUserAdminInfo[] = []
-    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     chatRoomDetails.push(
       {
@@ -64,10 +63,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         formRef: chatRoom.formRef,
         prompt: chatRoom.prompt,
         roomID: chatRoom.uid,
-        // @ts-ignore
         startTime: chatRoom.startTime,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo,
+        userInfo: chatRoom.users,
         markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )

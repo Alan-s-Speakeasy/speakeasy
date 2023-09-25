@@ -115,7 +115,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       }
     )
 
-    this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName,this.authorPerspective.toString()).subscribe((r) => {
+
+    this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName, this.authorPerspective).subscribe((r) => {
       this.averageFeedback = []
       this.usernames = []
       let responses = this.chooseAssignments ? r.assigned : r.requested

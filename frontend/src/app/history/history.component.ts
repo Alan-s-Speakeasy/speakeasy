@@ -65,7 +65,8 @@ export class HistoryComponent implements OnInit {
           this.ratingFormsMap.set(form.formName, form)
 
           // for each form, we get the FeedbackResponseAverageItem
-          this.feedbackService.getApiFeedbackaverageByFormName(form.formName, true.toString())
+
+          this.feedbackService.getApiFeedbackaverageByFormName(form.formName,true)
             .subscribe((response) => {
               if (response.assigned.length > 0) {
                 this.averageFeedbackAssignedMap.set(form.formName, response.assigned[0])
@@ -122,8 +123,7 @@ export class HistoryComponent implements OnInit {
       ratingOpen: true,
       active: false,
       ratings: {},
-      // @ts-ignore
-      myAlias: room.alias,
+      myAlias: room.userAliases.find(a => a == room.alias) || "",
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,

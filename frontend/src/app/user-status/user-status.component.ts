@@ -191,8 +191,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-    let userInfo: ChatRoomUserAdminInfo[] = []
-    chatRoom.users.forEach(u => userInfo.push({username: u.username, alias: u.alias}))
 
     chatRoomDetails.push(
       {
@@ -202,7 +200,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         roomID: chatRoom.uid,
         startTime: chatRoom.startTime!,
         remainingTime: chatRoom.remainingTime,
-        userInfo: userInfo,
+        userInfo: chatRoom.users,
         markAsNoFeedBack: chatRoom.markAsNoFeedback
       }
     )

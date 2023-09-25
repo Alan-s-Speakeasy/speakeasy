@@ -267,7 +267,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
             OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
         ],
         queryParams = [
-            OpenApiParam("author", String::class, "author or recipient")
+            OpenApiParam("author", Boolean::class, "author or recipient")
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(FeedbackResponseAverageMapList::class)]),

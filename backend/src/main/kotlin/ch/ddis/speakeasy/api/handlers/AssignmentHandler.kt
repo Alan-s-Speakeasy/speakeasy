@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.user.UserDetails
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -72,7 +73,7 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
         tags = ["Assignment"],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
         responses = [
-            OpenApiResponse("200", [OpenApiContent(List::class)]),
+            OpenApiResponse("200", [OpenApiContent(Array<GeneratedAssignment>::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]

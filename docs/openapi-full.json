@@ -201,7 +201,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "type" : "object"
+                    "$ref" : "#/components/schemas/GeneratedAssignment"
                   }
                 }
               }
@@ -357,7 +357,7 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "boolean"
           }
         } ],
         "responses" : {
@@ -1927,7 +1927,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "remainingTime", "users", "prompt", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "users", "prompt", "markAsNoFeedback" ]
       },
       "ChatRoomAdminList" : {
         "type" : "object",
@@ -1988,7 +1988,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",

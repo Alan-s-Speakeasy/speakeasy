@@ -5,15 +5,9 @@ import {map, catchError, tap} from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import {AuthService} from "./authentication.service";
 import {
-  UserSessionDetails,
-  UserService,
-  AdminService,
   FeedbackService,
   ChatService,
-  LoginRequest,
-  SuccessStatus,
-  PasswordChangeRequest,
-  UserDetails, ChatRoomList, ChatRoomState, ChatMessageReaction, FeedbackResponseList
+  ChatRoomList
 } from "../../openapi";
 import {AlertService} from "./alert";
 

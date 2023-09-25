@@ -410,7 +410,6 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
                 ctx
             )
         }
-
         if (request.username == "TesterBot"){
             val testerBot = ChatRoomManager.getTesterBot()
             ChatRoomManager.create(

@@ -96,6 +96,7 @@ object ChatRoomManager {
                endTime: Long? = null, development: Boolean? = false,
                evaluation: Boolean? = false,
                assignment: Boolean=false): ChatRoom {
+
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
@@ -106,12 +107,15 @@ object ChatRoomManager {
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
-        if (development != null) {
+
+
+        if (development == true) {
             val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
             chatRoom.testerBotAlias = users[testerBotID]!!
             chatRoom.isDevelopment = development
         }
-        if (evaluation != null) {
+
+        if (evaluation == true) {
             val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
             chatRoom.testerBotAlias = users[testerBotID]!!
             chatRoom.isEvaluation = evaluation

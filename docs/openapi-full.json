@@ -132,7 +132,17 @@
         "tags" : [ "Assignment" ],
         "summary" : "Start the generated assignment round",
         "operationId" : "patchApiAssignmentRound",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "evaluator",
+          "in" : "query",
+          "description" : "Evaluator Selected",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "text/plain" : {

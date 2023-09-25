@@ -1,6 +1,5 @@
 package ch.ddis.speakeasy.chat
 
-import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -93,8 +92,9 @@ object ChatRoomManager {
                formRef: String,
                log: Boolean = true,
                prompt: String?,
-               endTime: Long? = null, development: Boolean? = false,
-               evaluation: Boolean? = false,
+               endTime: Long? = null,
+               development: Boolean = false,
+               evaluation: Boolean = false,
                assignment: Boolean=false): ChatRoom {
 
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
@@ -109,16 +109,16 @@ object ChatRoomManager {
         chatrooms[chatRoom.uid] = chatRoom
 
 
-        if (development == true) {
+        if (development) {
             val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
             chatRoom.testerBotAlias = users[testerBotID]!!
-            chatRoom.isDevelopment = development
+            chatRoom.development = development
         }
 
-        if (evaluation == true) {
+        if (evaluation) {
             val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
             chatRoom.testerBotAlias = users[testerBotID]!!
-            chatRoom.isEvaluation = evaluation
+            chatRoom.evaluation = evaluation
         }
         return chatRoom
     }

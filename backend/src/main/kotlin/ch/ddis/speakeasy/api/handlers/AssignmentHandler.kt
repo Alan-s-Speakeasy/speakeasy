@@ -126,6 +126,9 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
         methods = [HttpMethod.PATCH],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Assignment"],
+        queryParams = [
+            OpenApiParam("evaluator", String::class, "Evaluator Selected"),
+        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(RoundStarted::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
@@ -136,7 +139,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
 
         var evaluatorSelected = false
 
-        if(ctx.body() == "true"){
+        if(ctx.queryParam("evaluator") == "true"){
             evaluatorSelected = true
         }
 

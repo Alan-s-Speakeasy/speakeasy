@@ -3,7 +3,6 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -24,8 +23,8 @@ data class ChatRoomInfo(
     val userAliases: List<String>,
     val alias: String?,
     val prompt: String,
-    val isDevelopment: Boolean,
-    val isEvaluation: Boolean,
+    val development: Boolean,
+    val evaluation: Boolean,
     val testerBotAlias: String,
     val markAsNoFeedback: Boolean
 ) {
@@ -38,8 +37,8 @@ data class ChatRoomInfo(
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
-        room.isDevelopment,
-        room.isEvaluation,
+        room.development,
+        room.evaluation,
         room.testerBotAlias,
         room.markAsNoFeedback
     )

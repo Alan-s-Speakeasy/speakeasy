@@ -303,7 +303,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.patchApiAssignmentRound().subscribe(() => {
+    this.assignmentService.patchApiAssignmentRound(this.evaluatorSelected.toString()).subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })

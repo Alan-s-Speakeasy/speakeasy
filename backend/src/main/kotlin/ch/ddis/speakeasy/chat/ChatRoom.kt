@@ -19,8 +19,8 @@ open class ChatRoom(
     private val messages: MutableList<ChatMessage> = mutableListOf(),
     private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
     val assessedBy: MutableList<Assessor> = mutableListOf(),
-    var isDevelopment: Boolean = false,
-    var isEvaluation: Boolean = false,
+    var development: Boolean = false,
+    var evaluation: Boolean = false,
     var testerBotAlias: String = "",
     var markAsNoFeedback: Boolean = false,
 ) {

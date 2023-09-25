@@ -178,6 +178,17 @@ export class ChatPaneComponent implements OnInit {
     return new Array(i);
   }
 
+  closeRoom(): void {
+    this.chatService.patchApiRoomByRoomId(this.paneLog.roomID, undefined).subscribe(
+      (response) => {
+        //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
+      },
+      (error) => {
+        console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
+      }
+    );
+  }
+
   ngOnDestroy(): void {
     // Unsubscribe from the chatMessagesSubscription before leaving chat page
     this.chatMessagesSubscription.unsubscribe();

@@ -292,7 +292,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableList() ?: mutableListOf()
 
-        if(recipients.isEmpty()){
+        if(recipients.isEmpty() || recipients[0] == ""){
             val listOfUsers = room.users.values.toList()
             for(user in listOfUsers){
                 recipients += user

@@ -54,7 +54,7 @@ open class ChatRoom(
      */
     fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
         val currentUser = this.users[userId]
-        this.messages.filter { it.time >= since && it.recipients.contains(currentUser)}
+        this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
     }
 
 //    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {

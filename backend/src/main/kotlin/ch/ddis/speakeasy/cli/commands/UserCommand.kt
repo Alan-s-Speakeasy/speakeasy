@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.user.PlainPassword
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
+import ch.ddis.speakeasy.user.UsernameConflictException
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -11,7 +12,10 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.enum
+import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.jakewharton.picnic.table
+import java.io.File
+import java.lang.IllegalArgumentException
 
 class UserCommand : NoOpCliktCommand(name = "user") {
 
@@ -20,7 +24,8 @@ class UserCommand : NoOpCliktCommand(name = "user") {
             ListAllUsersCommand(),
             ListCurrentUserSessionsCommand(),
             AddNewUserCommand(),
-            RemoveUserCommand()
+            RemoveUserCommand(),
+            ImportUsersCommand()
         )
     }
 
@@ -143,4 +148,43 @@ class UserCommand : NoOpCliktCommand(name = "user") {
             return
         }
     }
+
+    inner class ImportUsersCommand : CliktCommand(name = "import", help = "Imports users from a CSV file. Expected headers: username, password, role") {
+
+        private val inputFileName: String by option("-f", "--file", help = "the path to the input file").required()
+
+        override fun run() {
+
+            val file = File(inputFileName)
+
+            if (!file.exists() || !file.canRead()) {
+                println("Cannot read '${file.absolutePath}'")
+                return
+            }
+
+            csvReader().open(file) {
+                readAllWithHeaderAsSequence().forEach { row ->
+
+                    val user = row["username"] ?: return@forEach
+                    val password = PlainPassword(row["password"] ?: return@forEach)
+                    val role = try{
+                        UserRole.valueOf(row["role"]?.uppercase() ?: return@forEach)
+                    } catch (e : IllegalArgumentException) {
+                        println("no valid role for user '$user'")
+                        return@forEach
+                    }
+
+                    try{
+                        UserManager.addUser(user, role, password)
+                        println("added user '$user' with role '$role'")
+                    } catch (e: UsernameConflictException) {
+                        println("could not add user '$user', user with this name already exists")
+                    }
+
+                }
+            }
+
+        }
+    }
+
 }

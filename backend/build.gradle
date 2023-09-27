@@ -76,7 +76,7 @@ dependencies {
     implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
 
     ////// CSV
-    implementation group: 'com.github.doyaaaaaken', name: 'kotlin-csv-jvm', version: '0.7.3'
+    implementation group: 'com.github.doyaaaaaken', name: 'kotlin-csv-jvm', version: '1.9.2'
 
     ////// SQLite-JDBC
     implementation 'org.xerial:sqlite-jdbc:3.41.2.1'

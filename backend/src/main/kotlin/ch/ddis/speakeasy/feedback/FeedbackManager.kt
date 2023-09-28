@@ -114,7 +114,7 @@ object FeedbackManager {
 
         try {
             csvReader().open(this.feedbackFiles[formName]!!) {
-                readAllWithHeader().forEach { row ->
+                readAllWithHeaderAsSequence().forEach { row ->
                     //in file CSV file: timestamp,userid,sessionid,room,partnerid,responseid,responsevalue
                     val user = row["user"]
                     val room = row["room"]
@@ -147,7 +147,7 @@ object FeedbackManager {
 
         try {
             csvReader().open(this.feedbackFiles[formName]!!) {
-                readAllWithHeader().forEach { row ->
+                readAllWithHeaderAsSequence().forEach { row ->
                     //in file CSV file: timestamp,userid,sessionid,room,partnerid,responseid,responsevalue
                     val user = row["user"]
                     val room = row["room"]

@@ -185,7 +185,6 @@ data class ChatRoomState(
 ) {
     constructor(room: ChatRoom, since: Long, userId: UserId) : this(
         ChatRoomInfo(room, userId),
-        //ChatMessage.toRestMessages(room.getMessagesSince(since)),
         ChatMessage.toRestMessages(room.getMessagesSince(since, userId)),
         room.getAllReactions()
     )

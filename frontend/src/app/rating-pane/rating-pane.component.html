@@ -35,16 +35,11 @@
       </div>
     </div>
     <div class="chat-message clearfix">
-<<<<<<< HEAD
-      <div class="input-group-append text-center">
-        <button (click)="submit(); closeRoom()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">Submit and Close</button>
-=======
       <div class="{{paneLog.assignment ? 'input-group-append text-center' : 'd-flex justify-content-between' }}">
           <button (click)="submit()" [disabled]="!canSubmit()" class="btn btn-outline-primary" type="button">
             Submit and Close {{paneLog.assignment ? "(required)" : ""}}
           </button>
           <button *ngIf="!paneLog.assignment" (click)="closeWithoutRating()" class="btn btn-outline-warning" type="button">Close without Rating</button>
->>>>>>> dev
       </div>
     </div>
   </div>

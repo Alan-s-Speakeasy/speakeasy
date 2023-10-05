@@ -183,4 +183,4 @@ object AccessManager {
     fun listSessions(): List<UserSession> = sessionTokenUserSessionMap.values.toList()
 }
 
-enum class RestApiRole : RouteRole { ANYONE, USER, HUMAN, ADMIN, BOT, EVALUATOR, TESTER }
+enum class RestApiRole : RouteRole { ANYONE, USER, HUMAN, ADMIN, BOT, EVALUATOR }

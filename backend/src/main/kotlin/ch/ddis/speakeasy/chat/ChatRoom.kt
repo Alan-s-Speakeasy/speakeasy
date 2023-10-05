@@ -57,19 +57,6 @@ open class ChatRoom(
         this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
     }
 
-//    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
-//        val userRole = UserManager.getUserRoleByUserID(userId)
-//        return if (userRole == UserRole.BOT) {
-//            this.lock.read {
-//                this.messages.filter { it.time >= since && it.recipients.contains(UserManager.getUsernameFromId(userId))}
-//            }
-//        } else {
-//            this.lock.read {
-//                this.messages.filter { it.time >= since }
-//            }
-//        }
-//    }
-
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         this.messages.add(message)
@@ -102,5 +89,4 @@ open class ChatRoom(
             this.endTime = System.currentTimeMillis()
         }
     }
-
 }

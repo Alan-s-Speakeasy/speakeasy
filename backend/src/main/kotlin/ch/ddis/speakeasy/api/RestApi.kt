@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.kotlinModule
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.ApiBuilder.path
+import io.javalin.http.sse.SseClient
 import io.javalin.http.staticfiles.Location
 import io.javalin.json.JavalinJackson
 import io.javalin.openapi.CookieAuth
@@ -23,6 +24,8 @@ import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.eclipse.jetty.util.thread.QueuedThreadPool
+import java.util.function.Consumer
+
 
 object RestApi {
 
@@ -68,7 +71,9 @@ object RestApi {
             GetAssignmentGeneratorHandler(),
             PostGenerateAssignmentHandler(),
             PatchStartAssignmentHandler(),
-            DeleteAssignmentGeneratorHandler()
+            DeleteAssignmentGeneratorHandler(),
+
+            SseAllHandler
         )
 
         javalin = Javalin.create {
@@ -150,11 +155,9 @@ object RestApi {
             }
 
         }.routes {
-
             path("api") {
                 apiRestHandlers.forEach { handler ->
                     path(handler.route) {
-
 
                         val permittedRoles = if (handler is AccessManagedRestHandler) {
                             handler.permittedRoles
@@ -176,6 +179,10 @@ object RestApi {
 
                         if (handler is DeleteRestHandler<*>) {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
+                        }
+
+                        if (handler is SseAllHandler) {
+                            ApiBuilder.sse(handler, *permittedRoles.toTypedArray())
                         }
 
                     }

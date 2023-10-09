@@ -343,6 +343,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.generatorSubscription.unsubscribe()
+    // todo: unsubscribe() more?
     clearInterval(this.roundTimer)
   }
 

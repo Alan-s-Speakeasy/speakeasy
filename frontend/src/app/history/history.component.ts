@@ -14,7 +14,6 @@ import {
 } from "../../../openapi";
 import {AuthService} from "../authentication.service";
 import {AlertService} from "../alert";
-import {Subscription} from "rxjs";
 import {CommonService} from "../common.service";
 
 @Component({
@@ -24,7 +23,6 @@ import {CommonService} from "../common.service";
 })
 export class HistoryComponent implements OnInit {
 
-  private chatRoomsSubscription!: Subscription;
   constructor(private router: Router,
               private frontendDataService: FrontendDataService,
               private titleService: Title,
@@ -57,7 +55,7 @@ export class HistoryComponent implements OnInit {
       this.router.navigateByUrl('/panel').then()
     }
 
-    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
+    this.commonService.addNewRoomsAlertEventListener()
 
     // get all forms
     this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
@@ -173,7 +171,7 @@ export class HistoryComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    this.chatRoomsSubscription.unsubscribe()
+    this.commonService.removeNewRoomsAlertEventListener()
   }
 
 }

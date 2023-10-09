@@ -4,6 +4,8 @@ import ch.ddis.speakeasy.util.errorResponse
 import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.security.RouteRole
 import io.javalin.http.Context
+import io.javalin.http.sse.SseClient
+import io.javalin.http.sse.SseHandler
 
 
 interface RestHandler {

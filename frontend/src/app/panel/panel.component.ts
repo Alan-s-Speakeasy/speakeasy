@@ -3,7 +3,7 @@ import {Router} from "@angular/router";
 import {Subscription} from "rxjs";
 import {AuthService} from "../authentication.service";
 import {Title} from "@angular/platform-browser";
-import {ChatService, UserService, UserSessionDetails} from "../../../openapi";
+import {ChatService, UserService, UserSessionDetails, ChatRoomList} from "../../../openapi";
 import {FrontendDataService} from "../frontend-data.service";
 import {CommonService} from "../common.service";
 import {AlertService} from '../alert';
@@ -19,8 +19,6 @@ export class PanelComponent implements OnInit {
     autoClose: true,
     keepAfterRouteChange: true
   };
-  private chatRoomsSubscription!: Subscription;
-  private chatRoomListSubscription!: Subscription;
   private userDetailsSubscription!: Subscription;
 
   constructor(private router: Router, private frontendDataService: FrontendDataService,
@@ -56,17 +54,9 @@ export class PanelComponent implements OnInit {
           this.router.navigateByUrl('/login').then()
         }
       });
-
-    this.startChatSubscriptions();
+    this.commonService.addNewRoomsAlertEventListener()
   }
 
-  startChatSubscriptions(): void {
-    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
-
-    this.chatRoomListSubscription = this.commonService.Rooms.subscribe(() => {
-    })
-
-  }
 
   openModal(content: any) {
     this.modalService.open(content, { centered: true })
@@ -118,7 +108,6 @@ export class PanelComponent implements OnInit {
 
   ngOnDestroy() {
     this.userDetailsSubscription.unsubscribe();
-    this.chatRoomsSubscription.unsubscribe();
-    this.chatRoomListSubscription.unsubscribe();
+    this.commonService.removeNewRoomsAlertEventListener()
   }
 }

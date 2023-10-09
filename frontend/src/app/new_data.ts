@@ -1,5 +1,10 @@
 /** Frontend variables and mock data */
-import {ChatRoomUserAdminInfo, FeedbackRequest, FeedbackResponse} from "../../openapi";
+import {ChatRoomUserAdminInfo, FeedbackRequest, FeedbackResponse, ChatRoomList} from "../../openapi";
+
+export function convertFromJSON<T>(json: string): T {
+  const data = JSON.parse(json);
+  return Object.assign({}, data) as T;
+}
 
 export interface Message {
   myMessage: boolean,  // true: the message will be shown as my message (green bubble, on the right side);

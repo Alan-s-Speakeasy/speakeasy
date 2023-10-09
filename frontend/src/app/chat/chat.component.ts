@@ -50,26 +50,30 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.alertService.error("You are not logged in!")
       this.router.navigateByUrl('/login').then()
     }
+    // addNewRoomsAlertEventListener will listen to sse and update _Rooms (as well as Rooms and currentRooms)
+    this.commonService.addNewRoomsAlertEventListener()
 
     this.chatroomSubscription = interval(1000)
-      .pipe(exhaustMap(_ => {return this.commonService.getChatRooms()}))
-      .subscribe((response) => {
-        for (let room of response.rooms) {
-          let addRoom = true
-
-          this.paneLogs.forEach((paneLog) => {
-            if (paneLog.roomID == room.uid) {
-              addRoom = false
+      .pipe(exhaustMap(_ => {return this.commonService.currentRooms}))
+      .subscribe(
+        (response) => {
+          if (response) {
+            for (let room of response.rooms) {
+              let addRoom = true
+              this.paneLogs.forEach((paneLog) => {
+                if (paneLog.roomID == room.uid) { addRoom = false }
+              })
+              if (addRoom) {
+                this.addChatRoom(room)
+              }
             }
-          })
-
-          if (addRoom) {
-            this.addChatRoom(room)
           }
-        }
-      },
+        },
       (error) => {console.log("Chat rooms are not retrieved properly.", error);},
     )
+
+
+
   }
 
   // add a chatroom to the UI
@@ -155,6 +159,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Unsubscribe from the Subscription before leaving chat page
     this.chatroomSubscription.unsubscribe()
+    this.commonService.removeNewRoomsAlertEventListener()
   }
 
 }

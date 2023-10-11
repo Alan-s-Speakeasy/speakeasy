@@ -7,8 +7,9 @@ export class ChatCommandsPipe implements PipeTransform {
 
   transform(message: string): string {
     return message
-      .replace("</", "&lt;&#47;")
-      .replace("<", "&lt;")
+      // Here we don't allow any tag in the messages to work on the front-end rendering, such as <pre> </br> and so on.
+      .replace(/</g, "&lt;") // replace all "<"
+      .replace(/<\//g, "&lt;&#47;") // replace all "</"
       .replace(/wd:([qQ][0-9]+)/g, "<a target='_blank' href='https://www.wikidata.org/wiki/$1'>$1</a>")
       .replace(/wdt:([pP][0-9]+)/g, "<a target='_blank' href='https://www.wikidata.org/wiki/Property:$1'>$1</a>")
       .replace(/imdb:(tt[0-9]+)/g, "<a target='_blank' href='https://www.imdb.com/title/$1'>$1</a>")

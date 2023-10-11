@@ -21,8 +21,8 @@
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>
-          <div class="message other-message" style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-
+          <div class="message other-message" style="max-width: 100%; white-space: pre-line">
+            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
             <div *ngIf="!paneLog.spectate">
               <span
                 (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)"
@@ -54,7 +54,9 @@
           <div class="message-data">
             <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
           </div>
-          <div class="message my-message" style="max-width: 100%; white-space: normal"><span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span></div>
+          <div class="message my-message" style="max-width: 100%; white-space: pre-line">
+            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
+          </div>
         </li>
       </ul>
     </div>
@@ -62,7 +64,15 @@
     <div *ngIf="!paneLog.spectate && !paneLog.history">
       <div class="chat-message clearfix">
         <div class="input-group">
-          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." maxlength="1000" [readonly]="!paneLog.active" [formControl]="query">
+          <textarea cdkTextareaAutosize="true"
+                    cdkAutosizeMinRows="1"
+                    cdkAutosizeMaxRows="5"
+                    class="form-control"
+                    placeholder="ask a question..."
+                    maxlength="2000"
+                    [readonly]="!paneLog.active"
+                    [formControl]="query">
+          </textarea>
           <div class="input-group-append">
             <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
           </div>

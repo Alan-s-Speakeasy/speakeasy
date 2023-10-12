@@ -88,8 +88,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,
-      isDevelopment: room.development,
-      isEvaluation: room.evaluation,
+      testingSession: room.testingSession,
+      assistantEvaluation: room.assistantEvaluation,
       testerBotAlias: room.testerBotAlias,
     }
 

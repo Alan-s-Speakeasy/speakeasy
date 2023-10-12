@@ -5,7 +5,9 @@ enum class UserRole {
     HUMAN,
     BOT,
     ADMIN,
-    EVALUATOR;
+    EVALUATOR,
+    ASSISTANT,
+    TESTER;
 
     companion object {
         fun fromInt(value: Int): UserRole = values().find { it.ordinal == value } ?: HUMAN
@@ -19,4 +21,8 @@ enum class UserRole {
     fun isEvaluator() = this == EVALUATOR
 
     fun isAdmin() = this == ADMIN
+
+    fun isAssistant() = this == ASSISTANT
+
+    fun isTester() = this == TESTER
 }

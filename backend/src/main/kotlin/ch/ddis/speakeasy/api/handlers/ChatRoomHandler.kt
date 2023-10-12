@@ -23,8 +23,9 @@ data class ChatRoomInfo(
     val userAliases: List<String>,
     val alias: String?,
     val prompt: String,
-    val development: Boolean,
-    val evaluation: Boolean,
+    val testingSession: Boolean,
+    val automaticEvaluation: Boolean,
+    val assistantEvaluation: Boolean,
     val testerBotAlias: String,
     val markAsNoFeedback: Boolean
 ) {
@@ -37,8 +38,9 @@ data class ChatRoomInfo(
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
-        room.development,
-        room.evaluation,
+        room.testingSession,
+        room.automaticEvaluation,
+        room.assistantEvaluation,
         room.testerBotAlias,
         room.markAsNoFeedback
     )
@@ -408,29 +410,23 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
                 ctx
             )
         }
-        if (request.username == "TesterBot"){
-            val testerBot = ChatRoomManager.getTesterBot()
-            ChatRoomManager.create(
-                userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!),
-//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
-                formRef = "",
-                log = true,
-                prompt = null,
-                endTime = System.currentTimeMillis() + 60 * 1000 * 60,
-                development = true,
-                evaluation = false)
+
+        var username = request.username
+        var chatRoomTime = 10 * 60 * 1000
+        if (username == "TesterBot"){
+            val testerBotRole = UserRole.TESTER
+            val testerBot = ChatRoomManager.getBot(testerBotRole)
+            username = testerBot
+            chatRoomTime = 60 * 60 * 1000
         }
-        else{
-            ChatRoomManager.create(
-                userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!),
-//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
-                formRef = "",
-                log = true,
-                prompt = null,
-                endTime = System.currentTimeMillis() + 10 * 1000 * 60,
-                development = false,
-                evaluation = false)
-        }
+
+        ChatRoomManager.create(
+            userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(username)!!),
+//          formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
+            formRef = "",
+            log = true,
+            prompt = null,
+            endTime = System.currentTimeMillis() + chatRoomTime)
 
         return SuccessStatus("Chatroom created")
 

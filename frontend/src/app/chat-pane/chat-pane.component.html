@@ -1,4 +1,4 @@
-<div class="card chat-app" *ngIf="!(paneLog.isDevelopment || paneLog.isEvaluation)">
+<div class="card chat-app" *ngIf="!(paneLog.testingSession || paneLog.assistantEvaluation)">
   <div class="chat">
 
     <div class="row text-center mx-auto p-0 bg-info text-white" style="position: absolute; top: -1.2em; width: 100%; word-break: break-all"
@@ -88,7 +88,7 @@
 </div>
 
 
-<div class="card chat-app"  *ngIf="paneLog.isDevelopment">
+<div class="card chat-app"  *ngIf="paneLog.testingSession">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">
@@ -154,7 +154,7 @@
   </div>
 </div>
 
-<div class="card chat-app"  *ngIf="paneLog.isEvaluation">
+<div class="card chat-app"  *ngIf="paneLog.assistantEvaluation">
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">

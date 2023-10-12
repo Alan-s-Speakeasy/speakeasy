@@ -30,8 +30,8 @@ export interface PaneLog {
   otherAlias: string,
   spectate: boolean,
   history?: boolean,
-  isDevelopment: boolean,
-  isEvaluation: boolean,
+  testingSession: boolean,
+  assistantEvaluation: boolean,
   testerBotAlias?: string
 }
 

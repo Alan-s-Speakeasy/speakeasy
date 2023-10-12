@@ -135,17 +135,7 @@
         "parameters" : [ {
           "name" : "evaluator",
           "in" : "query",
-          "description" : "Automatic Evaluator Selected",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "assistant",
-          "in" : "query",
-          "description" : "Assistant Evaluator Selected",
+          "description" : "Evaluator Selected",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -1854,12 +1844,6 @@
               "type" : "string"
             }
           },
-          "assistant" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
           "active" : {
             "type" : "array",
             "items" : {
@@ -1907,7 +1891,7 @@
             }
           }
         },
-        "required" : [ "humans", "bots", "admins", "evaluator", "assistant", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
+        "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
       },
       "ChatRequest" : {
         "type" : "object",
@@ -2001,13 +1985,10 @@
           "prompt" : {
             "type" : "string"
           },
-          "testingSession" : {
+          "development" : {
             "type" : "boolean"
           },
-          "automaticEvaluation" : {
-            "type" : "boolean"
-          },
-          "assistantEvaluation" : {
+          "evaluation" : {
             "type" : "boolean"
           },
           "testerBotAlias" : {
@@ -2017,7 +1998,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "testingSession", "automaticEvaluation", "assistantEvaluation", "testerBotAlias", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",
@@ -2382,15 +2363,9 @@
             "items" : {
               "type" : "string"
             }
-          },
-          "assistant" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
           }
         },
-        "required" : [ "humans", "bots", "admins", "evaluator", "assistant" ]
+        "required" : [ "humans", "bots", "admins", "evaluator" ]
       },
       "ChatMessageReaction" : {
         "type" : "object",
@@ -2477,7 +2452,7 @@
       },
       "UserRole" : {
         "type" : "string",
-        "enum" : [ "HUMAN", "BOT", "ADMIN", "EVALUATOR", "ASSISTANT", "TESTER" ]
+        "enum" : [ "HUMAN", "BOT", "ADMIN", "EVALUATOR" ]
       },
       "UserSessionDetails" : {
         "type" : "object",

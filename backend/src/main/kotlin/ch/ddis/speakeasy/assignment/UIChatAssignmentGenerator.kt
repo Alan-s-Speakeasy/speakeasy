@@ -6,6 +6,7 @@ import ch.ddis.speakeasy.chat.ChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.CyclicList
 import ch.ddis.speakeasy.util.UID
 
@@ -19,7 +20,8 @@ object UIChatAssignmentGenerator {
     private var bots = emptyList<User>()
     private var admins = emptyList<User>()
     private var evaluator = emptyList<User>()
-    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
+    private var assistant = emptyList<User>()
+    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
     private var prompts = emptyList<String>()
     private var botsPerHuman = 0
     private var duration = 0
@@ -35,6 +37,7 @@ object UIChatAssignmentGenerator {
         bots = UserManager.list().filter { it.role.isBot() }
         admins = UserManager.list().filter { it.role.isAdmin() }
         evaluator = UserManager.list().filter { it.role.isEvaluator() }
+        assistant = UserManager.list().filter { it.role.isAssistant() }
         botsPerHuman = 3
         duration = 10
         round = 1
@@ -45,7 +48,8 @@ object UIChatAssignmentGenerator {
         bots = emptyList()
         admins = emptyList()
         evaluator = emptyList()
-        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
+        assistant = emptyList()
+        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
         prompts = emptyList()
         botsPerHuman = 0
         duration = 0
@@ -67,9 +71,11 @@ object UIChatAssignmentGenerator {
             bots.map { it.name },
             admins.map { it.name },
             evaluator.map { it.name },
+            assistant.map { it.name },
             humans.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
                 bots.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
-                evaluator.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
+                evaluator.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
+                assistant.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
             selected,
             nextRound,
             prompts,
@@ -139,7 +145,7 @@ object UIChatAssignmentGenerator {
         return Pair(nextRound, nextRound.size / selected.humans.size == botsPerHuman)
     }
 
-    fun startNewRound(evaluatorSelected: Boolean): Long {
+    fun startNewRound(evaluatorSelected: Boolean, assistantSelected: Boolean): Long {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
@@ -151,17 +157,19 @@ object UIChatAssignmentGenerator {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
 
-                if(evaluatorSelected){
-                    val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getTesterBot())!!
+                if(evaluatorSelected || assistantSelected){
+                    var evaluatorRole = UserRole.EVALUATOR
+                    if(assistantSelected){
+                        evaluatorRole = UserRole.ASSISTANT
+                    }
+                    val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getBot(evaluatorRole))!!
                     val chatRoom = ChatRoomManager.create(
                         userIds = listOf(humanId, botId, evaluatorUsername),
                         formRef = a.formName,
                         log = true,
                         prompt = a.prompt,
                         endTime = endTime,
-                        assignment = true,
-                        development = false,
-                        evaluation = true)
+                        assignment = true)
 
                     chatRooms.add(chatRoom)
                 }else{

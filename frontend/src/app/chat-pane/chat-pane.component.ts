@@ -101,7 +101,7 @@ export class ChatPaneComponent implements OnInit {
 
 // when the user wants to start rating
   rating(): void {
-    if (!this.paneLog.isDevelopment) {
+    if (!this.paneLog.testingSession) {
       let questionsAsked = 0
       for (let i = 0; i < this.paneLog.ordinals; i++) {
         if (this.paneLog.messageLog[i].myMessage) {

@@ -34,6 +34,7 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatSliderModule} from "@angular/material/slider";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {RatingPaneHistoryComponent} from "./rating-pane-history/rating-pane-history.component";
+import {MatInputModule} from "@angular/material/input";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -75,7 +76,8 @@ export function initializeApiConfig() {
     MatOptionModule,
     MatCheckboxModule,
     MatSliderModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatInputModule
   ],
   providers: [
     FrontendDataService,

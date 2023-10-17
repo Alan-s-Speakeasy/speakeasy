@@ -145,7 +145,24 @@ object UIChatAssignmentGenerator {
         return Pair(nextRound, nextRound.size / selected.humans.size == botsPerHuman)
     }
 
-    fun startNewRound(evaluatorSelected: Boolean, assistantSelected: Boolean): Long {
+    fun generateNewAutomaticRound(assignment: NewAssignmentObject): Pair<List<GeneratedAssignment>, Boolean> {
+        nextRound = mutableListOf()
+
+        formName = assignment.formName
+        prompts = assignment.prompts
+        selected.bots = assignment.bots
+
+        val cyclicPrompts = CyclicList(prompts.shuffled())
+        val bots = assignment.bots
+
+        for (bot in bots){
+            val evaluatorUsername = ChatRoomManager.getBot(UserRole.EVALUATOR)
+            nextRound.add(GeneratedAssignment(evaluatorUsername, bot, cyclicPrompts.next(), formName))
+        }
+        return Pair(nextRound, true)
+    }
+
+    fun startNewRound(assistantSelected: Boolean): Long {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
@@ -157,14 +174,10 @@ object UIChatAssignmentGenerator {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
 
-                if(evaluatorSelected || assistantSelected){
-                    var evaluatorRole = UserRole.EVALUATOR
-                    if(assistantSelected){
-                        evaluatorRole = UserRole.ASSISTANT
-                    }
-                    val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getBot(evaluatorRole))!!
+                if(assistantSelected){
+                    val assistantUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getBot(UserRole.ASSISTANT))!!
                     val chatRoom = ChatRoomManager.create(
-                        userIds = listOf(humanId, botId, evaluatorUsername),
+                        userIds = listOf(humanId, botId, assistantUsername),
                         formRef = a.formName,
                         log = true,
                         prompt = a.prompt,

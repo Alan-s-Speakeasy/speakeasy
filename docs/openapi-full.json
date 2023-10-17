@@ -133,16 +133,6 @@
         "summary" : "Start the generated assignment round",
         "operationId" : "patchApiAssignmentRound",
         "parameters" : [ {
-          "name" : "evaluator",
-          "in" : "query",
-          "description" : "Automatic Evaluator Selected",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
           "name" : "assistant",
           "in" : "query",
           "description" : "Assistant Evaluator Selected",
@@ -202,7 +192,17 @@
         "tags" : [ "Assignment" ],
         "summary" : "Generate a new assignment round",
         "operationId" : "postApiAssignmentRound",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "evaluator",
+          "in" : "query",
+          "description" : "Automatic Evaluator Selected",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {

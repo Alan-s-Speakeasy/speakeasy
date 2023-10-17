@@ -300,8 +300,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   generateNextRound(): void {
     console.log(this.selectedFormName)
-    this.assignmentService.postApiAssignmentRound({
-      humans: this.humans.filter(h => this.isHumanSelected.get(h)),
+    this.assignmentService.postApiAssignmentRound(this.evaluatorSelected.toString(),{
+      humans: (this.humans.filter(h => this.isHumanSelected.get(h))),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
       prompts: this.prompts,
@@ -310,7 +310,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       formName: this.selectedFormName
     }).subscribe(response => {
       let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
-      // @ts-ignore
       this.nextAssignment = response
       this.notOptimalAssignment = this.nextAssignment.length / selectedHumans.length != this.botsPerUser
       this.generated = true
@@ -322,7 +321,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.patchApiAssignmentRound(this.evaluatorSelected.toString(), this.assistantSelected.toString()).subscribe(() => {
+    this.assignmentService.patchApiAssignmentRound(this.assistantSelected.toString()).subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })

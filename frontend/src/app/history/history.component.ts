@@ -127,8 +127,8 @@ export class HistoryComponent implements OnInit {
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,
-      testingSession: history.state.testingSession,
-      assistantEvaluation: history.state.assistantEvaluation,
+      testingSession: room.testingSession,
+      assistantEvaluation: room.assistantEvaluation,
       history: true
     }
 

@@ -3,7 +3,6 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
 import ch.ddis.speakeasy.feedback.FeedbackManager
-import ch.ddis.speakeasy.user.UserDetails
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -71,6 +70,9 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         tags = ["Assignment"],
+        queryParams = [
+            OpenApiParam("evaluator", String::class, "Automatic Evaluator Selected"),
+        ],
         requestBody = OpenApiRequestBody([OpenApiContent(NewAssignmentObject::class)]),
         responses = [
             OpenApiResponse("200", [OpenApiContent(Array<GeneratedAssignment>::class)]),
@@ -90,20 +92,30 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
             throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
         }
 
-        if (newAssignment.humans.isEmpty() || (newAssignment.bots.isEmpty() && newAssignment.admins.isEmpty())) {
-            throw ErrorStatusException(404, "A number of humans and bots need to be selected.", ctx)
-        }
+        //if (newAssignment.humans.isEmpty() || (newAssignment.bots.isEmpty() && newAssignment.admins.isEmpty())) {
+        //    throw ErrorStatusException(404, "A number of humans and bots need to be selected.", ctx)
+        //}
+
         if (newAssignment.prompts.isEmpty()) {
             throw ErrorStatusException(404, "A number of prompts need to be provided.", ctx)
         }
-
         var assignment = emptyList<GeneratedAssignment>()
-        (1..3).map {
-            val round = UIChatAssignmentGenerator.generateNewRound(newAssignment)
+
+        if(ctx.queryParam("evaluator") == "true"){
+            println("Filter5")
+            val round = UIChatAssignmentGenerator.generateNewAutomaticRound(newAssignment)
             if (round.second) {
                 return round.first
             }
             assignment = round.first
+        }else {
+            (1..3).map {
+                val round = UIChatAssignmentGenerator.generateNewRound(newAssignment)
+                if (round.second) {
+                    return round.first
+                }
+                assignment = round.first
+            }
         }
 
         if (assignment.isEmpty()) {
@@ -127,7 +139,6 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Assignment"],
         queryParams = [
-            OpenApiParam("evaluator", String::class, "Automatic Evaluator Selected"),
             OpenApiParam("assistant", String::class, "Assistant Evaluator Selected")
         ],
         responses = [
@@ -138,17 +149,13 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
     )
     override fun doPatch(ctx: Context): RoundStarted {
 
-        var evaluatorSelected = false
         var assistantSelected = false
 
-        if(ctx.queryParam("evaluator") == "true"){
-            evaluatorSelected = true
-        }
         if(ctx.queryParam("assistant") == "true"){
             assistantSelected = true
         }
 
-        val remainingTime = UIChatAssignmentGenerator.startNewRound(evaluatorSelected, assistantSelected)
+        val remainingTime = UIChatAssignmentGenerator.startNewRound(assistantSelected)
 
         return RoundStarted(remainingTime)
     }

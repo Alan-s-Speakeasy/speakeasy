@@ -89,7 +89,7 @@ export class CommonService {
   }
 
   public alertOnNewChatRoom() {
-    return interval(2000).subscribe((number) => {
+    return interval(10_000).subscribe((number) => {
       let newRooms!: ChatRoomList;
       let oldRooms: String[];
       let currentRooms: String[];

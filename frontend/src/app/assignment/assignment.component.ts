@@ -81,7 +81,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     })
 
     this.fetchGenerator(true)
-    this.generatorSubscription = interval(5000).subscribe(() => {
+    this.generatorSubscription = interval(10_000).subscribe(() => {
       this.fetchGenerator(false)
     })
     this.roundTimer = setInterval(() => {this.countdown()}, 1000)

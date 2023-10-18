@@ -93,7 +93,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
       // Fetch initially and then periodically refetch
       this.fetchFeedback()
-      this.feedbackSubscription = interval(10000).subscribe(() => {
+      this.feedbackSubscription = interval(10_000).subscribe(() => {
         this.fetchFeedback()
       })
     })

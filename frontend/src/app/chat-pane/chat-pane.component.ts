@@ -37,7 +37,7 @@ export class ChatPaneComponent implements OnInit {
     ) { }
 
   ngOnInit(): void {
-    this.chatMessagesSubscription = interval(1000)
+    this.chatMessagesSubscription = interval(2500)
       .pipe(exhaustMap(_ => {
         return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime, undefined)
       })).subscribe((response) => {

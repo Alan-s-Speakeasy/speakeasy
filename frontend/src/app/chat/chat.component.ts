@@ -51,7 +51,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.router.navigateByUrl('/login').then()
     }
 
-    this.chatroomSubscription = interval(1000)
+    this.chatroomSubscription = interval(5000)
       .pipe(exhaustMap(_ => {return this.commonService.getChatRooms()}))
       .subscribe((response) => {
         for (let room of response.rooms) {

@@ -27,7 +27,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
 
-    this.activeRoomsSubscription = interval(1000)
+    this.activeRoomsSubscription = interval(10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsActive()}))
       .subscribe((activechatrooms) => {
         this.activateChatroomDetails = []
@@ -36,7 +36,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         })
       })
 
-    this.allRoomsSubscription = interval(1000)
+    this.allRoomsSubscription = interval(10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsAll()}))
       .subscribe((allchatrooms) => {
         allchatrooms.rooms.forEach(room => {

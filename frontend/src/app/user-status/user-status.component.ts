@@ -80,7 +80,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
-    this.allRoomsSubscription = interval(1000)
+    this.allRoomsSubscription = interval(2500)
       .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsAll()}))
       .subscribe((allchatrooms) => {
         allchatrooms.rooms.forEach(room => {
@@ -97,7 +97,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         })
       })
 
-    this.allGroupsSubscription = interval(1000)
+    this.allGroupsSubscription = interval(10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiGroupList()}))
       .subscribe((allGroups) => {
         while (this.groupList.length > 0) {
@@ -109,7 +109,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         )
       })
 
-    this.userSessionSubscription = interval(1000)
+    this.userSessionSubscription = interval(10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiUserSessions()}))
       .subscribe((usersessions) => {
         while (this.humanDetails.length > 0) {
@@ -134,7 +134,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         })
       })
 
-    this.userListSubscription = interval(1000)
+    this.userListSubscription = interval(10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiUserList()}))
       .subscribe((userlist) => {
         while (this.humanList.length > 0) {

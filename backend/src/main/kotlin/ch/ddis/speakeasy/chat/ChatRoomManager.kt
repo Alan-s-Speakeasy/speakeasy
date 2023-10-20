@@ -17,12 +17,12 @@ object ChatRoomManager {
     private val basePath: File = File("chatlogs/") //TODO make configurable
     private val objectMapper = jacksonObjectMapper()
     private var indexTesterBot = -1
-
+    private val developmentBotUsername: String = "TesterBot"
 
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
-            val users: Map<UserId, String> = objectMapper.readValue(lines[6])
+            val users: MutableMap<UserId, String> = objectMapper.readValue(lines[6])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf()
             val assessedBy: MutableList<Assessor> = mutableListOf()
@@ -97,12 +97,12 @@ object ChatRoomManager {
                evaluation: Boolean = false,
                assignment: Boolean=false): ChatRoom {
 
-        val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
+        val users = userIds.associateWith { SessionAliasGenerator.getRandomName() } as MutableMap<UserId, String>
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
             LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
         } else {
-            ChatRoom(assignment = assignment, formRef = formRef, users = users, prompt = roomPrompt)
+            ChatRoom(assignment = assignment, formRef = formRef, users = users , prompt = roomPrompt)
         }
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
@@ -110,16 +110,17 @@ object ChatRoomManager {
 
 
         if (development) {
-            val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
+            val testerBotID = UserManager.getUserIdFromUsername(this.developmentBotUsername)
             chatRoom.testerBotAlias = users[testerBotID]!!
             chatRoom.development = development
         }
 
         if (evaluation) {
-            val testerBotID = UserManager.getUserIdFromUsername("TesterBot")
+            val testerBotID = UserManager.getUserIdFromUsername(this.developmentBotUsername)
             chatRoom.testerBotAlias = users[testerBotID]!!
             chatRoom.evaluation = evaluation
         }
+
         return chatRoom
     }
 
@@ -133,10 +134,7 @@ object ChatRoomManager {
 
     fun addUser(newUserId: UserId, id: ChatRoomId) {
         val newUSer = newUserId to SessionAliasGenerator.getRandomName()
-        val currentUsers = this.chatrooms[id]?.users
-        if (currentUsers != null) {
-            this.chatrooms[id]?.users = currentUsers.plus(newUSer)
-        }
+        this.chatrooms[id]?.users?.put(newUSer.first, newUSer.second)
     }
 
     fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
@@ -147,8 +145,8 @@ object ChatRoomManager {
         return message.startsWith('@') && message.contains(":")
     }
 
-    fun getRecipientsFromMessage(message: String, room: ChatRoom, userAlias: String): MutableList<String>{
-        val listRecipients = mutableListOf<String>()
+    fun getRecipientsFromMessage(message: String, room: ChatRoom, userAlias: String): MutableSet<String>{
+        val recipientsSet = mutableSetOf<String>()
         val colonIndex = message.indexOf(":")
 
         val userSubstring = message.substring(0, colonIndex).trim()
@@ -157,11 +155,11 @@ object ChatRoomManager {
 
         for (user in userList) {
             if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
-                listRecipients += room.users[UserManager.getUserIdFromUsername(user)]!!
+                recipientsSet += room.users[UserManager.getUserIdFromUsername(user)]!!
             }
         }
-        listRecipients += userAlias
-        return listRecipients
+        recipientsSet += userAlias
+        return recipientsSet
     }
 
     fun getMessageToRecipients(message: String): String {

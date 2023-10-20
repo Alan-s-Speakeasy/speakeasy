@@ -139,7 +139,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
 
         var evaluatorSelected = false
 
-        if(ctx.queryParam("evaluator") == "true"){
+        if(ctx.queryParam("evaluator").toString().lowercase() == "true"){
             evaluatorSelected = true
         }
 

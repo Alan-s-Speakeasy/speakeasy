@@ -288,13 +288,10 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
 
-        var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableList() ?: mutableListOf()
+        var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableSet() ?: mutableSetOf()
 
-        if(recipients.isEmpty() || recipients[0] == ""){
-            val listOfUsers = room.users.values.toList()
-            for(user in listOfUsers){
-                recipients += user
-            }
+        if(recipients.isEmpty() || recipients.first().isBlank()){
+            recipients.addAll(room.users.values)
         }
 
         if(ChatRoomManager.checkMessageRecipients(message)){
@@ -372,6 +369,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
     override val permittedRoles = setOf(RestApiRole.USER)
     override val route = "rooms/request"
+    private val developmentBotUsername: String = "TesterBot"
 
     @OpenApi(
         summary = "Creates a Chatroom with another user.",
@@ -408,7 +406,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
                 ctx
             )
         }
-        if (request.username == "TesterBot"){
+        if (request.username == developmentBotUsername){
             val testerBot = ChatRoomManager.getTesterBot()
             ChatRoomManager.create(
                 userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!),

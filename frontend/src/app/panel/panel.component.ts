@@ -63,6 +63,7 @@ export class PanelComponent implements OnInit {
   }
 
   userLogout(): void {
+    // this.commonService.closeAllSse()
     this.authService.userLogout().subscribe(
       (response) => {
         if (response) {

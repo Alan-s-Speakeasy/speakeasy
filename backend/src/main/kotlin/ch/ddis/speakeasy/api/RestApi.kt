@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.api.handlers.*
+import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.util.Config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -8,7 +9,6 @@ import com.fasterxml.jackson.module.kotlin.kotlinModule
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.ApiBuilder.path
-import io.javalin.http.sse.SseClient
 import io.javalin.http.staticfiles.Location
 import io.javalin.json.JavalinJackson
 import io.javalin.openapi.CookieAuth
@@ -24,7 +24,6 @@ import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.eclipse.jetty.util.thread.QueuedThreadPool
-import java.util.function.Consumer
 
 
 object RestApi {
@@ -73,7 +72,7 @@ object RestApi {
             PatchStartAssignmentHandler(),
             DeleteAssignmentGeneratorHandler(),
 
-            SseAllHandler
+            SseRoomHandler
         )
 
         javalin = Javalin.create {
@@ -181,7 +180,7 @@ object RestApi {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
 
-                        if (handler is SseAllHandler) {
+                        if (handler is SseRoomHandler) {
                             ApiBuilder.sse(handler, *permittedRoles.toTypedArray())
                         }
 

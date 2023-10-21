@@ -36,7 +36,7 @@ export class CommonService {
   private appConfig: AppConfig = new AppConfig()
 
   // SSE EventSource object and eventListener which 1) alters when new rooms come 2) updates _Rooms
-  private readonly eventSource: EventSource
+  private eventSource: EventSource | null = null
   private readonly roomsAlertEventListener: EventListener
 
 
@@ -48,11 +48,12 @@ export class CommonService {
               @Inject(AuthService) private AuthService: AuthService,
               public alertService: AlertService) {
 
-    this.eventSource = new EventSource(
-      `${this.appConfig.basePath}/api/sse`, //  TODO: Is there any way to improve it?
-      {withCredentials: true}) // Each new EventSource create a client in backend
+    // this.eventSource = new EventSource(
+    //   `${this.appConfig.basePath}/api/sse`, //  TODO: Is there any way to improve it?
+    //   {withCredentials: true}) // Each new EventSource create a client in backend
 
     this.roomsAlertEventListener = (ev) => {
+      console.log(ev)
       // console.log("Here is one time call of roomsAlertEventListener")
       let oldRooms: String[];
       let currentRooms: String[];
@@ -84,11 +85,22 @@ export class CommonService {
   }
 
   public addNewRoomsAlertEventListener() {
+    this.eventSource = new EventSource(
+      `${this.appConfig.basePath}/api/sse`, //  TODO: Is there any way to improve it?
+      {withCredentials: true}) // Each new EventSource create a client in backend
+
     this.eventSource.addEventListener('SseRooms', this.roomsAlertEventListener);
   }
   public removeNewRoomsAlertEventListener() {
-    this.eventSource.removeEventListener('SseRooms', this.roomsAlertEventListener);
+    // this.eventSource?.removeEventListener('SseRooms', this.roomsAlertEventListener);
+    this.eventSource?.close()
+    this.eventSource = null
+    console.log("HERE", this.eventSource)
   }
+
+  // public closeAllSse() {
+  //   this.eventSource?.close()
+  // }
 
   get currentRooms(): Observable<ChatRoomList|null>{
     return this._Rooms.pipe(

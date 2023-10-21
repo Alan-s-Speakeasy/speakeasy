@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.feedback.FeedbackManager.DEFAULT_FORM_NAME
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserSession
@@ -103,6 +104,14 @@ object ChatRoomManager {
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
+
+        //add listeners
+        val listeners = SseRoomHandler.getChatListeners(userIds)
+        listeners.forEach {
+            chatRoom.addListener(it)
+        }
+
+
         return chatRoom
     }
 

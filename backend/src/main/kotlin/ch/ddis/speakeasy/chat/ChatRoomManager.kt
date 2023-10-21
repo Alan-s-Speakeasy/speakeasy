@@ -109,16 +109,17 @@ object ChatRoomManager {
         chatrooms[chatRoom.uid] = chatRoom
 
 
-        if (development) {
-            val testerBotID = UserManager.getUserIdFromUsername(this.developmentBotUsername)
-            chatRoom.testerBotAlias = users[testerBotID]!!
-            chatRoom.development = development
-        }
+        if (development || evaluation) {
 
-        if (evaluation) {
-            val testerBotID = UserManager.getUserIdFromUsername(this.developmentBotUsername)
-            chatRoom.testerBotAlias = users[testerBotID]!!
+            val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
+            for(testerBot in testerBots){
+                if(testerBot in users.keys){
+                    chatRoom.testerBotAlias = users[testerBot]!!
+                }
+            }
+            chatRoom.development = development
             chatRoom.evaluation = evaluation
+
         }
 
         return chatRoom
@@ -141,33 +142,34 @@ object ChatRoomManager {
         return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
     }
 
-    fun checkMessageRecipients(message: String): Boolean {
-        return message.startsWith('@') && message.contains(":")
-    }
+    fun processMessageAndRecipients(receivedMessage: String, room: ChatRoom, userAlias: String): Pair<MutableSet<String>, String>? {
 
-    fun getRecipientsFromMessage(message: String, room: ChatRoom, userAlias: String): MutableSet<String>{
-        val recipientsSet = mutableSetOf<String>()
-        val colonIndex = message.indexOf(":")
+            val regex = Regex("@[a-zA-Z0-9_]+")
+            val usernameMatches = regex.findAll(receivedMessage)
+            val usernames = usernameMatches.map { it.value.drop(1) }.toList()
+            val message = receivedMessage.substringAfter(":").trim()
+            val recipientsSet = mutableSetOf<String>()
 
-        val userSubstring = message.substring(0, colonIndex).trim()
-
-        val userList = userSubstring.split(",").map { it.trim().removePrefix("@") }
-
-        for (user in userList) {
-            if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
-                recipientsSet += room.users[UserManager.getUserIdFromUsername(user)]!!
+            if (usernames.isNotEmpty() && message.isNotEmpty()) {
+                for (user in usernames) {
+                    if(user == "Tester"){
+                        val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
+                        for(testerBot in testerBots){
+                            if(testerBot in room.users.keys){
+                                recipientsSet += room.users[testerBot]!!
+                            }
+                        }
+                    }
+                    if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
+                        recipientsSet += room.users[UserManager.getUserIdFromUsername(user)]!!
+                    }
+                }
+                recipientsSet += userAlias
+                return Pair(recipientsSet, message)
             }
-        }
-        recipientsSet += userAlias
-        return recipientsSet
-    }
-
-    fun getMessageToRecipients(message: String): String {
-
-        val colonIndex = message.indexOf(":")
-
-        return message.substring(colonIndex + 1).trim()
-
+            else{
+                return Pair(mutableSetOf(), receivedMessage)
+                }
     }
 
     fun getTesterBot(): String {

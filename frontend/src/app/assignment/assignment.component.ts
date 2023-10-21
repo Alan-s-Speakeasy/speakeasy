@@ -291,7 +291,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       formName: this.selectedFormName
     }).subscribe(response => {
       let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
-      // @ts-ignore
       this.nextAssignment = response
       this.notOptimalAssignment = this.nextAssignment.length / selectedHumans.length != this.botsPerUser
       this.generated = true

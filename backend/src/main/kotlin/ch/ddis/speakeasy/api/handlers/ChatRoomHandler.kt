@@ -294,10 +294,13 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             recipients.addAll(room.users.values)
         }
 
-        if(ChatRoomManager.checkMessageRecipients(message)){
-            recipients = ChatRoomManager.getRecipientsFromMessage(message, room, userAlias)
-            message = ChatRoomManager.getMessageToRecipients(message)
+        val (recipientsList, finalMessage) = ChatRoomManager.processMessageAndRecipients(message, room, userAlias) ?: return SuccessStatus("Message not received")
+
+        if(recipientsList.isNotEmpty()){
+            recipients = recipientsList
         }
+
+        message = finalMessage
 
         room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
 

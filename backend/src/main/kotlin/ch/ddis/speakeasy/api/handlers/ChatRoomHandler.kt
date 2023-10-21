@@ -414,6 +414,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         var username = request.username
         var chatRoomTime = 10 * 60 * 1000
+
         if (username == developmentBotUsername){
             val testerBotRole = UserRole.TESTER
             val testerBot = ChatRoomManager.getBot(testerBotRole)

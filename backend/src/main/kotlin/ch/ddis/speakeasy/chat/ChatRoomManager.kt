@@ -168,8 +168,9 @@ object ChatRoomManager {
 
             if (usernames.isNotEmpty() && message.isNotEmpty()) {
                 for (user in usernames) {
-                    if(user == "Tester"){
-                        val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
+                    if(user == "Tester" || user == "Assistant"){
+                        val botRole = if(user == "Tester") UserRole.TESTER else UserRole.ASSISTANT
+                        val testerBots = UserManager.getUsersIDsFromUserRole(botRole)
                         for(testerBot in testerBots){
                             if(testerBot in room.users.keys){
                                 recipientsSet += room.users[testerBot]!!

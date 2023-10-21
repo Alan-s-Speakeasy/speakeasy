@@ -177,7 +177,7 @@ object UIChatAssignmentGenerator {
                 if(assistantSelected){
                     val assistantUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getBot(UserRole.ASSISTANT))!!
                     val chatRoom = ChatRoomManager.create(
-                        userIds = listOf(humanId, botId, assistantUsername),
+                        userIds = listOf(humanId, assistantUsername, botId),
                         formRef = a.formName,
                         log = true,
                         prompt = a.prompt,

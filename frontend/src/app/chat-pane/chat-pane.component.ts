@@ -184,7 +184,7 @@ export class ChatPaneComponent implements OnInit {
         //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
       },
       (error) => {
-        console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
+        console.log("Room was not successfully closed. ", this.paneLog.roomID);
       }
     );
   }

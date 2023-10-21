@@ -150,7 +150,7 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
 
         var assistantSelected = false
 
-        if(ctx.queryParam("assistant") == "true"){
+        if(ctx.queryParam("assistant").toString().lowercase() == "true"){
             assistantSelected = true
         }
 

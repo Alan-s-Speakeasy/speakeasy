@@ -13,7 +13,7 @@ open class ChatRoom(
     val assignment: Boolean = false,
     val formRef: String,
     val uid: ChatRoomId = UID(),
-    var users: Map<UserId, String>, //UserId --> UserAlias
+    val users: MutableMap<UserId, String>, //UserId --> UserAlias
     val startTime: Long = System.currentTimeMillis(),
     var prompt: String = "",
     private val messages: MutableList<ChatMessage> = mutableListOf(),

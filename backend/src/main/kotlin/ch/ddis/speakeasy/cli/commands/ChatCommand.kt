@@ -189,6 +189,13 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
 
         override fun run() {
 
+            println("Are you sure you want to close all chatrooms? (y/n)")
+            val input = readLine()
+            if (input != "y") {
+                println("Chat rooms are not closed")
+                return
+            }
+
             ChatRoomManager.listAll().forEach {
                 it.deactivate()
             }

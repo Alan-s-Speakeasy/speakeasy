@@ -20,11 +20,10 @@ object ChatRoomManager {
     private var indexAssistantBot = -1
     private var indexEvaluatorBot = -1
 
-
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
-            val users: Map<UserId, String> = objectMapper.readValue(lines[6])
+            val users: MutableMap<UserId, String> = objectMapper.readValue(lines[6])
             val messages: MutableList<ChatMessage> = mutableListOf()
             val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf()
             val assessedBy: MutableList<Assessor> = mutableListOf()
@@ -97,12 +96,12 @@ object ChatRoomManager {
                endTime: Long? = null,
                assignment: Boolean=false): ChatRoom {
 
-        val users = userIds.associateWith { SessionAliasGenerator.getRandomName() }
+        val users = userIds.associateWith { SessionAliasGenerator.getRandomName() } as MutableMap<UserId, String>
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
             LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
         } else {
-            ChatRoom(assignment = assignment, formRef = formRef, users = users, prompt = roomPrompt)
+            ChatRoom(assignment = assignment, formRef = formRef, users = users , prompt = roomPrompt)
         }
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
@@ -111,15 +110,30 @@ object ChatRoomManager {
         for (userId in userIds) {
             val role = UserManager.getUserRoleByUserID(userId)
             if (role == UserRole.TESTER) {
-                chatRoom.testerBotAlias = users[userId]!!
+                val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.TESTER)
+                for(testerBot in testerBots){
+                    if(testerBot in users.keys){
+                        chatRoom.testerBotAlias = users[testerBot]!!
+                    }
+                }
                 chatRoom.testingSession = true
             }
             if (role == UserRole.ASSISTANT) {
-                chatRoom.testerBotAlias = users[userId]!!
+                val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.ASSISTANT)
+                for(testerBot in testerBots){
+                    if(testerBot in users.keys){
+                        chatRoom.testerBotAlias = users[testerBot]!!
+                    }
+                }
                 chatRoom.assistantEvaluation = true
                 }
             if (role == UserRole.EVALUATOR) {
-                chatRoom.testerBotAlias = users[userId]!!
+                val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
+                for(testerBot in testerBots){
+                    if(testerBot in users.keys){
+                        chatRoom.testerBotAlias = users[testerBot]!!
+                    }
+                }
                 chatRoom.automaticEvaluation = true
                 }
             }
@@ -137,43 +151,41 @@ object ChatRoomManager {
 
     fun addUser(newUserId: UserId, id: ChatRoomId) {
         val newUSer = newUserId to SessionAliasGenerator.getRandomName()
-        val currentUsers = this.chatrooms[id]?.users
-        if (currentUsers != null) {
-            this.chatrooms[id]?.users = currentUsers.plus(newUSer)
-        }
+        this.chatrooms[id]?.users?.put(newUSer.first, newUSer.second)
     }
 
     fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
         return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
     }
 
-    fun checkMessageRecipients(message: String): Boolean {
-        return message.startsWith('@') && message.contains(":")
-    }
+    fun processMessageAndRecipients(receivedMessage: String, room: ChatRoom, userAlias: String): Pair<MutableSet<String>, String>? {
 
-    fun getRecipientsFromMessage(message: String, room: ChatRoom, userAlias: String): MutableList<String>{
-        val listRecipients = mutableListOf<String>()
-        val colonIndex = message.indexOf(":")
+            val regex = Regex("@[a-zA-Z0-9_]+")
+            val usernameMatches = regex.findAll(receivedMessage)
+            val usernames = usernameMatches.map { it.value.drop(1) }.toList()
+            val message = receivedMessage.substringAfter(":").trim()
+            val recipientsSet = mutableSetOf<String>()
 
-        val userSubstring = message.substring(0, colonIndex).trim()
-
-        val userList = userSubstring.split(",").map { it.trim().removePrefix("@") }
-
-        for (user in userList) {
-            if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
-                listRecipients += room.users[UserManager.getUserIdFromUsername(user)]!!
+            if (usernames.isNotEmpty() && message.isNotEmpty()) {
+                for (user in usernames) {
+                    if(user == "Tester"){
+                        val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
+                        for(testerBot in testerBots){
+                            if(testerBot in room.users.keys){
+                                recipientsSet += room.users[testerBot]!!
+                            }
+                        }
+                    }
+                    if(UserManager.getUserIdFromUsername(user) in room.users.keys) {
+                        recipientsSet += room.users[UserManager.getUserIdFromUsername(user)]!!
+                    }
+                }
+                recipientsSet += userAlias
+                return Pair(recipientsSet, message)
             }
-        }
-        listRecipients += userAlias
-        return listRecipients
-    }
-
-    fun getMessageToRecipients(message: String): String {
-
-        val colonIndex = message.indexOf(":")
-
-        return message.substring(colonIndex + 1).trim()
-
+            else{
+                return Pair(mutableSetOf(), receivedMessage)
+                }
     }
 
     fun getBot(userRole: UserRole): String {

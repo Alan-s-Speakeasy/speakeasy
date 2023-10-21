@@ -127,11 +127,7 @@ export class HistoryComponent implements OnInit {
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
       prompt: "",
       spectate: false,
-      testingSession: room.testingSession,
-      assistantEvaluation: room.assistantEvaluation,
-      automaticEvaluation: room.automaticEvaluation,
-      history: true,
-      testerBotAlias: room.testerBotAlias,
+      history: true
     }
 
     this.paneLogs.push(paneLog)

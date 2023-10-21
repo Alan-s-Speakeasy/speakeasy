@@ -30,10 +30,7 @@ export interface PaneLog {
   otherAlias: string,
   spectate: boolean,
   history?: boolean,
-  testingSession: boolean,
-  assistantEvaluation: boolean,
-  automaticEvaluation: boolean;
-  testerBotAlias: string
+  testerBotAlias?: string
 }
 
 export interface Ratings {

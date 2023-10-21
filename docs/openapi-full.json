@@ -2001,15 +2001,6 @@
           "prompt" : {
             "type" : "string"
           },
-          "testingSession" : {
-            "type" : "boolean"
-          },
-          "automaticEvaluation" : {
-            "type" : "boolean"
-          },
-          "assistantEvaluation" : {
-            "type" : "boolean"
-          },
           "testerBotAlias" : {
             "type" : "string"
           },
@@ -2017,7 +2008,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "testingSession", "automaticEvaluation", "assistantEvaluation", "testerBotAlias", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "testerBotAlias", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",

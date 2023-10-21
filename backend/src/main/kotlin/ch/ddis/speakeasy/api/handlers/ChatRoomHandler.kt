@@ -23,9 +23,6 @@ data class ChatRoomInfo(
     val userAliases: List<String>,
     val alias: String?,
     val prompt: String,
-    val testingSession: Boolean,
-    val automaticEvaluation: Boolean,
-    val assistantEvaluation: Boolean,
     val testerBotAlias: String,
     val markAsNoFeedback: Boolean
 ) {
@@ -38,9 +35,6 @@ data class ChatRoomInfo(
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
-        room.testingSession,
-        room.automaticEvaluation,
-        room.assistantEvaluation,
         room.testerBotAlias,
         room.markAsNoFeedback
     )

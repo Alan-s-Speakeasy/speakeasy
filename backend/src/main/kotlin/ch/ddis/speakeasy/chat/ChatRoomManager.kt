@@ -50,6 +50,7 @@ object ChatRoomManager {
                 messages = messages,
                 reactions = reactions,
                 assessedBy = assessedBy,
+                testerBotAlias = "",
                 markAsNoFeedback = markAsNoFeedback,
             )
             chatrooms[chatRoom.uid] = chatRoom
@@ -99,7 +100,7 @@ object ChatRoomManager {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() } as MutableMap<UserId, String>
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
-            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
+            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, testerBotAlias = "", prompt = roomPrompt)
         } else {
             ChatRoom(assignment = assignment, formRef = formRef, users = users , prompt = roomPrompt)
         }
@@ -109,34 +110,15 @@ object ChatRoomManager {
 
         for (userId in userIds) {
             val role = UserManager.getUserRoleByUserID(userId)
-            if (role == UserRole.TESTER) {
-                val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.TESTER)
+            if (role == UserRole.TESTER || role == UserRole.ASSISTANT) {
+                val testerBots = UserManager.getUsersIDsFromUserRole(role)
                 for(testerBot in testerBots){
                     if(testerBot in users.keys){
                         chatRoom.testerBotAlias = users[testerBot]!!
                     }
-                }
-                chatRoom.testingSession = true
-            }
-            if (role == UserRole.ASSISTANT) {
-                val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.ASSISTANT)
-                for(testerBot in testerBots){
-                    if(testerBot in users.keys){
-                        chatRoom.testerBotAlias = users[testerBot]!!
-                    }
-                }
-                chatRoom.assistantEvaluation = true
-                }
-            if (role == UserRole.EVALUATOR) {
-                val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
-                for(testerBot in testerBots){
-                    if(testerBot in users.keys){
-                        chatRoom.testerBotAlias = users[testerBot]!!
-                    }
-                }
-                chatRoom.automaticEvaluation = true
                 }
             }
+        }
 
         return chatRoom
     }

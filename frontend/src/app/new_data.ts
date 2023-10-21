@@ -32,7 +32,8 @@ export interface PaneLog {
   history?: boolean,
   testingSession: boolean,
   assistantEvaluation: boolean,
-  testerBotAlias?: string
+  automaticEvaluation: boolean;
+  testerBotAlias: string
 }
 
 export interface Ratings {

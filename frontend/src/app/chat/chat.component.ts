@@ -90,6 +90,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       spectate: false,
       testingSession: room.testingSession,
       assistantEvaluation: room.assistantEvaluation,
+      automaticEvaluation: room.automaticEvaluation,
       testerBotAlias: room.testerBotAlias,
     }
 

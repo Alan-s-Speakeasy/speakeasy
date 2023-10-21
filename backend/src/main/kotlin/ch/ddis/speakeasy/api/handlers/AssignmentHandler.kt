@@ -102,7 +102,6 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
         var assignment = emptyList<GeneratedAssignment>()
 
         if(ctx.queryParam("evaluator") == "true"){
-            println("Filter5")
             val round = UIChatAssignmentGenerator.generateNewAutomaticRound(newAssignment)
             if (round.second) {
                 return round.first

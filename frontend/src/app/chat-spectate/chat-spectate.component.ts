@@ -41,6 +41,8 @@ export class ChatSpectateComponent implements OnInit {
       spectate: true,
       testingSession: history.state.testingSession,
       assistantEvaluation: history.state.assistantEvaluation,
+      automaticEvaluation: history.state.automaticEvaluation,
+      testerBotAlias: history.state.testerBotAlias
     }
   }
 

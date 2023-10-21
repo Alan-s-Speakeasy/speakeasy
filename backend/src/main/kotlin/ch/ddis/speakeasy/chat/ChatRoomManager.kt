@@ -121,7 +121,6 @@ object ChatRoomManager {
             if (role == UserRole.EVALUATOR) {
                 chatRoom.testerBotAlias = users[userId]!!
                 chatRoom.automaticEvaluation = true
-                println("Registered TesterBot for $userId")
                 }
             }
 

@@ -129,7 +129,9 @@ export class HistoryComponent implements OnInit {
       spectate: false,
       testingSession: room.testingSession,
       assistantEvaluation: room.assistantEvaluation,
-      history: true
+      automaticEvaluation: room.automaticEvaluation,
+      history: true,
+      testerBotAlias: room.testerBotAlias,
     }
 
     this.paneLogs.push(paneLog)

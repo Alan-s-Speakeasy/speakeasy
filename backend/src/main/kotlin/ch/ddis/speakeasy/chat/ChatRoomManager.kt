@@ -19,6 +19,9 @@ object ChatRoomManager {
     private var indexTesterBot = -1
     private var indexAssistantBot = -1
     private var indexEvaluatorBot = -1
+    private val constantTester = "tester"
+    private val constantAssistant = "assistant"
+    private val constantUserBot = "bot"
 
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
@@ -150,12 +153,19 @@ object ChatRoomManager {
 
             if (usernames.isNotEmpty() && message.isNotEmpty()) {
                 for (user in usernames) {
-                    if(user == "Tester" || user == "Assistant"){
-                        val botRole = if(user == "Tester") UserRole.TESTER else UserRole.ASSISTANT
+                    if(user == this.constantTester || user == this.constantAssistant){
+                        val botRole = if(user == this.constantTester) UserRole.TESTER else UserRole.ASSISTANT
                         val testerBots = UserManager.getUsersIDsFromUserRole(botRole)
                         for(testerBot in testerBots){
                             if(testerBot in room.users.keys){
                                 recipientsSet += room.users[testerBot]!!
+                            }
+                        }
+                    }
+                    if(user == this.constantUserBot){
+                        for (users in room.users.keys) {
+                            if(UserManager.getUserRoleByUserID(users) == UserRole.BOT){
+                                recipientsSet += room.users[users]!!
                             }
                         }
                     }

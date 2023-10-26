@@ -132,6 +132,7 @@ export class ChatPaneComponent implements OnInit {
         }
       }
     )
+    this.closeRoom()
   }
 
   @ViewChild('scroll') scroll!: ElementRef;

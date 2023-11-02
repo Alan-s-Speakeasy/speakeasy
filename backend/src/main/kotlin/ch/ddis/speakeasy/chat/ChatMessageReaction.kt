@@ -10,4 +10,12 @@ enum class ChatMessageReactionType {
 
 data class ChatMessageReactionContainer(val reaction: ChatMessageReaction) : ChatItemContainer()
 
-data class ChatMessageReaction(val messageOrdinal: Int, val type: ChatMessageReactionType) //TODO we could also explicitly store who reacted
+data class ChatMessageReaction(val messageOrdinal: Int, val type: ChatMessageReactionType) { //TODO we could also explicitly store who reacted
+    companion object {
+        fun toSseChatReaction(chatRoom: ChatRoom, reaction: ChatMessageReaction): SseChatReaction =
+            SseChatReaction(chatRoom.uid.toString(), chatRoom.remainingTime, reaction.messageOrdinal, reaction.type)
+    }
+}
+
+data class SseChatReaction(val roomId:String, val remainingTime: Long,
+                           val messageOrdinal: Int, val type: ChatMessageReactionType)

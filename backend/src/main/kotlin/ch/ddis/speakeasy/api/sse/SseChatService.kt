@@ -1,17 +1,31 @@
 package ch.ddis.speakeasy.api.sse
 
-import ch.ddis.speakeasy.chat.SseChatEventListener
+import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.user.UserId
-import ch.ddis.speakeasy.util.UID
 import io.javalin.http.sse.SseClient
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class SseChatService {
 
     private val workers =  ConcurrentHashMap<String, SseClientWorker>()
+    private val updateSessionExecutor = Executors.newSingleThreadScheduledExecutor()
+    init {
+        // To avoid session expiration when using SSE (the frontend doesn't actively request to update the session)
+        updateSessionExecutor.scheduleAtFixedRate(::updateSessionForActiveWorker, 1, 3, TimeUnit.MINUTES)
+    }
 
-    fun createWorker(client: SseClient) {
-        val worker = SseClientWorker(client, this) // TODO: handle exception
+    private fun updateSessionForActiveWorker() {
+        workers.values.forEach {
+            if (it.isActive) {
+                AccessManager.updateLastAccess(it.sessionToken)
+            }
+        }
+    }
+
+    fun createWorker(client: SseClient){
+        val worker = SseClientWorker(client, this) // TODO: handle exception ...
         workers[worker.workerId] = worker
     }
 

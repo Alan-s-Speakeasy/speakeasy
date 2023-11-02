@@ -15,8 +15,14 @@ data class ChatMessage(
             List<RestChatMessage> = chatMessages.map {
             RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message)
         }
+
+        fun toSseChatMessage(chatRoom: ChatRoom, chatMessage: ChatMessage): SseChatMessage =
+            SseChatMessage(chatRoom.uid.toString(), chatRoom.remainingTime, chatMessage.time,
+                chatMessage.authorAlias, chatMessage.ordinal, chatMessage.message)
     }
 
 }
 
 data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String)
+data class SseChatMessage(val roomId:String, val remainingTime: Long, val timeStamp: Long,
+                          val authorAlias: String, val ordinal: Int, val message: String)

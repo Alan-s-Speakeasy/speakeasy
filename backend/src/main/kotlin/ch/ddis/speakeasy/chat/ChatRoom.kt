@@ -64,6 +64,14 @@ open class ChatRoom(
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         this.messages.add(message)
+        listeners.removeIf { listener -> //check state of listener, update if active, remove if not
+            if (listener.isActive) {
+                listener.onMessage(message, this)
+                false
+            } else {
+                true
+            }
+        }
         return@write //actively return nothing
     }
 
@@ -71,6 +79,14 @@ open class ChatRoom(
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
         this.reactions[reaction.messageOrdinal] = reaction
+        listeners.removeIf { listener -> //check state of listener, update if active, remove if not
+            if (listener.isActive) {
+                listener.onReaction(reaction, this)
+                false
+            } else {
+                true
+            }
+        }
         return@write
     }
 

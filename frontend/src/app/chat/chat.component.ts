@@ -44,14 +44,15 @@ export class ChatComponent implements OnInit, OnDestroy {
       if(response != null){
         this.sessionId = response.sessionId
       }
+      // Note: This block should not be placed outside the subscribe{} (async) block.
+      // Otherwise, it will always redirect the user to /login and then to /panel.
+      if (!this.sessionId) {
+        this.router.navigateByUrl('/login').then( () => this.alertService.error("You are not logged in!") )
+      }
     });
 
-    if (!this.sessionId) {
-      this.alertService.error("You are not logged in!")
-      this.router.navigateByUrl('/login').then()
-    }
-    // addNewRoomsAlertEventListener will listen to sse and update _Rooms (as well as Rooms and currentRooms)
-    this.commonService.addNewRoomsAlertEventListener()
+    // rooms EventListener will listen to sse and update _Rooms (as well as Rooms and currentRooms)
+    this.commonService.openSseAndListenRooms(false)
 
     this.chatroomSubscription = interval(1000)
       .pipe(exhaustMap(_ => {return this.commonService.currentRooms}))
@@ -159,7 +160,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Unsubscribe from the Subscription before leaving chat page
     this.chatroomSubscription.unsubscribe()
-    this.commonService.removeNewRoomsAlertEventListener()
   }
 
 }

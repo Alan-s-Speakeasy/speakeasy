@@ -50,11 +50,11 @@ export class PanelComponent implements OnInit {
       },
       () => {
         if (!this.role || !this.userName) {
-          this.alertService.success("You are not logged in!", this.options)
-          this.router.navigateByUrl('/login').then()
+          this.router.navigateByUrl('/login').then( () =>
+            this.alertService.error("You are not logged in!", this.options) )
         }
       });
-    this.commonService.addNewRoomsAlertEventListener()
+    this.commonService.openSseAndListenRooms()
   }
 
 
@@ -63,7 +63,6 @@ export class PanelComponent implements OnInit {
   }
 
   userLogout(): void {
-    // this.commonService.closeAllSse()
     this.authService.userLogout().subscribe(
       (response) => {
         if (response) {
@@ -109,6 +108,5 @@ export class PanelComponent implements OnInit {
 
   ngOnDestroy() {
     this.userDetailsSubscription.unsubscribe();
-    this.commonService.removeNewRoomsAlertEventListener()
   }
 }

@@ -7,6 +7,7 @@ import {Message, PaneLog} from "../new_data";
 import {ChatMessageReaction, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
 import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {AlertService} from "../alert";
+import {CommonService} from "../common.service";
 
 @Component({
   selector: 'app-chat-pane',
@@ -29,25 +30,31 @@ export class ChatPaneComponent implements OnInit {
   paneLogScroll: boolean = false
   remainingTime: string = ''
   num_to_ask!: number
-  lastGetTime: number = 0
+  // lastGetTime: number = 0
   constructor(
     @Inject(ChatService) private chatService: ChatService,
     @Inject(FeedbackService) private feedbackService: FeedbackService,
+    @Inject(CommonService) private commonService: CommonService,
     public alertService: AlertService
     ) { }
 
   ngOnInit(): void {
     this.chatMessagesSubscription = interval(1000)
       .pipe(exhaustMap(_ => {
-        return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime, undefined)
+        return this.commonService.getStateByRoomId(this.paneLog.roomID)
       })).subscribe((response) => {
-        if (!this.paneLog.spectate) {
-          this.paneLog.prompt = response.info.prompt
-        }
-        if (response.messages.length > 0) {
-          // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
-          this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
-        }
+        console.log(response)
+        if (response == null) { return }
+
+        // if (!this.paneLog.spectate) { // TODO: check prompt here later.
+        //   this.paneLog.prompt = response.info.prompt
+        // }
+
+        // if (response.messages.length > 0) {
+        //   // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
+        //   this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
+        // }
+
         this.num_to_ask = this.numQueries
         this.num_messages = this.paneLog.ordinals
 
@@ -72,22 +79,25 @@ export class ChatPaneComponent implements OnInit {
           this.paneLogScroll = true
         }
 
-        if (response.info.remainingTime < 3600000) {
-          const s = Math.floor(response.info.remainingTime / 1000);
-          const minutes = Math.floor(s / 60);
-          const seconds = s % 60;
-          this.remainingTime = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        } else {
-          this.remainingTime = 'no time limit';
-        }
+        // TODO: The frontend automatically counts down the remaining time and updates it once when an event is received
+        this.remainingTime = 'TODO Later'
+        // if (response.info.remainingTime < 3600000) {
+        //   const s = Math.floor(response.info.remainingTime / 1000);
+        //   const minutes = Math.floor(s / 60);
+        //   const seconds = s % 60;
+        //   this.remainingTime = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        // } else {
+        //   this.remainingTime = 'no time limit';
+        // }
+        //
+        // if (response.info.remainingTime <= 0) { //chat session complete
+        //   this.chatMessagesSubscription.unsubscribe();
+        //   if (this.paneLog.formRef !== '') {
+        //     this.paneLog.ratingOpen = true
+        //   }
+        //   this.paneLog.active = false
+        // }
 
-        if (response.info.remainingTime <= 0) { //chat session complete
-          this.chatMessagesSubscription.unsubscribe();
-          if (this.paneLog.formRef !== '') {
-            this.paneLog.ratingOpen = true
-          }
-          this.paneLog.active = false
-        }
         if (this.paneLogScroll) {
           this.scrollToBottom()
           this.paneLogScroll = false

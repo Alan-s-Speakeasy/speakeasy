@@ -1,9 +1,42 @@
 /** Frontend variables and mock data */
-import {ChatRoomUserAdminInfo, FeedbackRequest, FeedbackResponse, ChatRoomList} from "../../openapi";
+import {
+  ChatRoomUserAdminInfo,
+  FeedbackRequest,
+  FeedbackResponse,
+  ChatRoomList,
+  ChatMessageReactionType
+} from "../../openapi";
 
 export function convertFromJSON<T>(json: string): T {
   const data = JSON.parse(json);
   return Object.assign({}, data) as T;
+}
+
+export enum ChatEventType {
+  ROOMS = "ROOMS",
+  MESSAGE = "MESSAGE",
+  REACTION = "REACTION"
+}
+
+export interface SseChatMessage {
+  roomId: string;
+  remainingTime: number;
+  timeStamp: number;
+  authorAlias: string;
+  ordinal: number;
+  message: string;
+}
+
+export interface SseChatReaction {
+  roomId: string;
+  remainingTime: number;
+  messageOrdinal: number;
+  type: ChatMessageReactionType;
+}
+
+export interface SseRoomState {
+  messages: SseChatMessage[],
+  reactions: SseChatReaction[]
 }
 
 export interface Message {

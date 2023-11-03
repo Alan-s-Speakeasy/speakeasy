@@ -57,7 +57,7 @@ object RestApi {
             GetChatRoomHandler(),
             PostChatMessageHandler(),
             PostChatMessageReactionHandler(),
-            PostNewUserHandler(),
+            PatchNewUserHandler(),
 
             GetFeedbackFormListHandler(),
             GetFeedbackFormHandler(),

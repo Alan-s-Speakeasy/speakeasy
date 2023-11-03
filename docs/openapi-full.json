@@ -890,10 +890,10 @@
       }
     },
     "/api/request/{roomId}" : {
-      "post" : {
+      "patch" : {
         "tags" : [ "Chat" ],
-        "summary" : "Post a new user to a Chatroom.",
-        "operationId" : "postApiRequestByRoomId",
+        "summary" : "Add a user to an existing Chatroom.",
+        "operationId" : "patchApiRequestByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",

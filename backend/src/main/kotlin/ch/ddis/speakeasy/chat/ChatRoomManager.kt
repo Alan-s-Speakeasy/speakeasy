@@ -121,6 +121,11 @@ object ChatRoomManager {
                     }
                 }
             }
+            else if (role == UserRole.EVALUATOR){
+                if (endTime != null) {
+                    chatRoom.endTime = endTime + 1000 * 60 * 60
+                }
+            }
         }
 
         return chatRoom

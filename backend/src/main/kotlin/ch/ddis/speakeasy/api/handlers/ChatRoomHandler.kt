@@ -23,8 +23,6 @@ data class ChatRoomInfo(
     val userAliases: List<String>,
     val alias: String?,
     val prompt: String,
-    val development: Boolean,
-    val evaluation: Boolean,
     val testerBotAlias: String,
     val markAsNoFeedback: Boolean
 ) {
@@ -37,8 +35,6 @@ data class ChatRoomInfo(
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
-        room.development,
-        room.evaluation,
         room.testerBotAlias,
         room.markAsNoFeedback
     )
@@ -283,7 +279,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
-        var message = ctx.body()
+        val message = ctx.body()
         if (message.isBlank()) {
             throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
@@ -300,9 +296,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             recipients = recipientsList
         }
 
-        message = finalMessage
-
-        room.addMessage(ChatMessage(message, userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
+        room.addMessage(ChatMessage(finalMessage, userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
 
         return SuccessStatus("Message received")
 
@@ -409,29 +403,24 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
                 ctx
             )
         }
-        if (request.username == developmentBotUsername){
-            val testerBot = ChatRoomManager.getTesterBot()
-            ChatRoomManager.create(
-                userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(testerBot)!!),
-//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
-                formRef = "",
-                log = true,
-                prompt = null,
-                endTime = System.currentTimeMillis() + 60 * 1000 * 60,
-                development = true,
-                evaluation = false)
+
+        var username = request.username
+        var chatRoomTime = 10 * 60 * 1000
+
+        if (username == developmentBotUsername){
+            val testerBotRole = UserRole.TESTER
+            val testerBot = ChatRoomManager.getBot(testerBotRole)
+            username = testerBot
+            chatRoomTime = 60 * 60 * 1000
         }
-        else{
-            ChatRoomManager.create(
-                userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(request.username)!!),
-//            formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
-                formRef = "",
-                log = true,
-                prompt = null,
-                endTime = System.currentTimeMillis() + 10 * 1000 * 60,
-                development = false,
-                evaluation = false)
-        }
+
+        ChatRoomManager.create(
+            userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(username)!!),
+//          formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
+            formRef = "",
+            log = true,
+            prompt = null,
+            endTime = System.currentTimeMillis() + chatRoomTime)
 
         return SuccessStatus("Chatroom created")
 
@@ -439,15 +428,15 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
 }
 
-class PostNewUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
+class PatchNewUserHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
     override val route = "request/{roomId}"
 
     @OpenApi(
-        summary = "Post a new user to a Chatroom.",
+        summary = "Add a user to an existing Chatroom.",
         path = "/api/request/{roomId}",
         operationId = OpenApiOperation.AUTO_GENERATE,
-        methods = [HttpMethod.POST],
+        methods = [HttpMethod.PATCH],
         requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Chat"],
         pathParams = [
@@ -462,7 +451,7 @@ class PostNewUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doPost(ctx: Context): SuccessStatus {
+    override fun doPatch(ctx: Context): SuccessStatus {
 
         val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
             401,

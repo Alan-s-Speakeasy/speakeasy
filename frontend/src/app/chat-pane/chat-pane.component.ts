@@ -101,7 +101,6 @@ export class ChatPaneComponent implements OnInit {
 
 // when the user wants to start rating
   rating(): void {
-    if (!this.paneLog.isDevelopment) {
       let questionsAsked = 0
       for (let i = 0; i < this.paneLog.ordinals; i++) {
         if (this.paneLog.messageLog[i].myMessage) {
@@ -114,7 +113,6 @@ export class ChatPaneComponent implements OnInit {
       } else {
         this.paneLog.ratingOpen = !this.paneLog.ratingOpen
       }
-    }
   }
   close(): void {
     const responses: FeedbackResponseList = {responses: []};
@@ -134,6 +132,7 @@ export class ChatPaneComponent implements OnInit {
         }
       }
     )
+    this.closeRoom()
   }
 
   @ViewChild('scroll') scroll!: ElementRef;

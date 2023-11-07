@@ -38,16 +38,19 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   isActive = false
   evaluatorSelected = false
+  assistantSelected = false
 
   isHumanSelected: Map<string, boolean> = new Map()
   isBotSelected: Map<string, boolean> = new Map()
   isAdminSelected: Map<string, boolean> = new Map()
   isEvaluatorSelected: Map<string, boolean> = new Map()
+  isAssistantSelected: Map<string, boolean> = new Map()
 
   humans: string[] = []
   bots: string[] = []
   admins: string[] = []
   evaluator: string[] = []
+  assistant: string[] = []
 
   active: string[] = []
 
@@ -125,11 +128,17 @@ export class AssignmentComponent implements OnInit, OnDestroy {
           this.isEvaluatorSelected.set(evaluator, false)
         }
       })
+      response.assistant.forEach(assistant => {
+        if (!this.isAssistantSelected.get(assistant)) {
+          this.isEvaluatorSelected.set(assistant, false)
+        }
+      })
 
       this.humans = Array.from(this.isHumanSelected.keys())
       this.bots = Array.from(this.isBotSelected.keys())
       this.admins = Array.from(this.isAdminSelected.keys())
       this.evaluator = Array.from(this.isEvaluatorSelected.keys())
+      this.assistant = Array.from(this.isAssistantSelected.keys())
       this.active = response.active
       if (initial) {
         this.prompts = response.prompts
@@ -147,6 +156,9 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         })
         response.evaluator.forEach(evaluator => {
           this.isEvaluatorSelected.set(evaluator, response.selected.evaluator.includes(evaluator))
+        })
+        response.assistant.forEach(assistant => {
+          this.isAssistantSelected.set(assistant, response.selected.assistant.includes(assistant))
         })
       }
       this.nextAssignment = response.assignments
@@ -172,6 +184,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.isBotSelected = new Map()
       this.isAdminSelected = new Map()
       this.isEvaluatorSelected = new Map()
+      this.isAssistantSelected = new Map()
       this.active = []
       this.remainingTime = 0
       this.nextAssignment = []
@@ -232,6 +245,10 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.evaluatorSelected = !this.evaluatorSelected
   }
 
+  switchAssistant(): void {
+    this.assistantSelected = !this.assistantSelected
+  }
+
   switchAdmin(admin: string): void {
     let current = this.isAdminSelected.get(admin)
     this.isAdminSelected.set(admin, !current)
@@ -273,7 +290,9 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     let humans = this.humans.filter(h => this.isHumanSelected.get(h))
     let bots = this.bots.filter(b => this.isBotSelected.get(b))
     let admins = this.admins.filter(a => this.isAdminSelected.get(a))
-    return humans.length > 0 &&
+    let evaluator = this.evaluatorSelected
+    let assistant = this.assistantSelected
+    return ((humans.length > 0 && !evaluator) || (!(humans.length> 0 ) && evaluator && !assistant)) &&
       bots.length + admins.length > 0 &&
       this.prompts.length > 0 &&
       this.botsPerUser <= bots.length + admins.length
@@ -281,8 +300,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   generateNextRound(): void {
     console.log(this.selectedFormName)
-    this.assignmentService.postApiAssignmentRound({
-      humans: this.humans.filter(h => this.isHumanSelected.get(h)),
+    this.assignmentService.postApiAssignmentRound(this.evaluatorSelected.toString(),{
+      humans: (this.humans.filter(h => this.isHumanSelected.get(h))),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
       prompts: this.prompts,
@@ -302,7 +321,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   startNextRound(): void {
-    this.assignmentService.patchApiAssignmentRound(this.evaluatorSelected.toString()).subscribe(() => {
+    this.assignmentService.patchApiAssignmentRound(this.assistantSelected.toString()).subscribe(() => {
       this.generated = false
       this.fetchGenerator(false)
     })

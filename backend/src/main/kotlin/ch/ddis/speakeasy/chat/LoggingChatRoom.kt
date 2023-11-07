@@ -21,8 +21,9 @@ class LoggingChatRoom(
     messages: MutableList<ChatMessage> = mutableListOf(),
     reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
     assessedBy: MutableList<Assessor> = mutableListOf(),
+    testerBotAlias: String,
     markAsNoFeedback: Boolean = false,
-) : ChatRoom(assignment, formRef, uid, users, startTime, prompt, messages, reactions, assessedBy, markAsNoFeedback) {
+) : ChatRoom(assignment, formRef, uid, users, startTime, prompt, messages, reactions, assessedBy, testerBotAlias, markAsNoFeedback) {
 
     init {
         if (!basePath.isDirectory) {

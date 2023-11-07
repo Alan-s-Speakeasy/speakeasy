@@ -133,9 +133,9 @@
         "summary" : "Start the generated assignment round",
         "operationId" : "patchApiAssignmentRound",
         "parameters" : [ {
-          "name" : "evaluator",
+          "name" : "assistant",
           "in" : "query",
-          "description" : "Evaluator Selected",
+          "description" : "Assistant Evaluator Selected",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -192,7 +192,17 @@
         "tags" : [ "Assignment" ],
         "summary" : "Generate a new assignment round",
         "operationId" : "postApiAssignmentRound",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "evaluator",
+          "in" : "query",
+          "description" : "Automatic Evaluator Selected",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -880,10 +890,10 @@
       }
     },
     "/api/request/{roomId}" : {
-      "post" : {
+      "patch" : {
         "tags" : [ "Chat" ],
-        "summary" : "Post a new user to a Chatroom.",
-        "operationId" : "postApiRequestByRoomId",
+        "summary" : "Add a user to an existing Chatroom.",
+        "operationId" : "patchApiRequestByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -1844,6 +1854,12 @@
               "type" : "string"
             }
           },
+          "assistant" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "active" : {
             "type" : "array",
             "items" : {
@@ -1891,7 +1907,7 @@
             }
           }
         },
-        "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
+        "required" : [ "humans", "bots", "admins", "evaluator", "assistant", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
       },
       "ChatRequest" : {
         "type" : "object",
@@ -1985,12 +2001,6 @@
           "prompt" : {
             "type" : "string"
           },
-          "development" : {
-            "type" : "boolean"
-          },
-          "evaluation" : {
-            "type" : "boolean"
-          },
           "testerBotAlias" : {
             "type" : "string"
           },
@@ -1998,7 +2008,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "testerBotAlias", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",
@@ -2363,9 +2373,15 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "assistant" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         },
-        "required" : [ "humans", "bots", "admins", "evaluator" ]
+        "required" : [ "humans", "bots", "admins", "evaluator", "assistant" ]
       },
       "ChatMessageReaction" : {
         "type" : "object",
@@ -2452,7 +2468,7 @@
       },
       "UserRole" : {
         "type" : "string",
-        "enum" : [ "HUMAN", "BOT", "ADMIN", "EVALUATOR" ]
+        "enum" : [ "HUMAN", "BOT", "ADMIN", "EVALUATOR", "ASSISTANT", "TESTER" ]
       },
       "UserSessionDetails" : {
         "type" : "object",

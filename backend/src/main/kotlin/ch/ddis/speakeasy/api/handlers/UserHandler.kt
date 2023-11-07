@@ -367,17 +367,16 @@ class GetCurrentUserbyUsername : GetRestHandler<SuccessStatus>, AccessManagedRes
             "Invalid user session",
             ctx
         )
-        val user = UserManager.getUserIdFromUsername(username) ?: return SuccessStatus("The username is incorrect")
 
-        var message = "User found"
+        UserManager.getUserIdFromUsername(username) ?: return SuccessStatus("The username is incorrect")
 
         if(!UserManager.checkIfUserIsActive(username)){
-            message = "The BOT is not active"
+            return SuccessStatus("The BOT is not active")
         }
         if(UserManager.getUserRoleByUserName(username) != UserRole.BOT){
-            message = "The username doesn't belongs to a BOT"
+            return SuccessStatus("The username doesn't belongs to a BOT")
         }
 
-        return SuccessStatus(message)
+        return SuccessStatus("User found")
     }
 }

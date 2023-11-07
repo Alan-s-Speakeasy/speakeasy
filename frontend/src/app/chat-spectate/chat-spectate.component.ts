@@ -38,9 +38,7 @@ export class ChatSpectateComponent implements OnInit {
       myAlias: history.state.userAlias,
       otherAlias: history.state.partnerAlias,
       prompt: "spectating " + history.state.username,
-      spectate: true,
-      isDevelopment: history.state.development,
-      isEvaluation: history.state.evaluation,
+      spectate: true
     }
   }
 

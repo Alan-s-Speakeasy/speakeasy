@@ -84,6 +84,7 @@ export class RatingPaneComponent implements OnInit {
           }
         }
       );
+      this.closeRoom()
     } else {
       this.alertService.warn("Please complete the rating form before submitting!",this.options)
     }
@@ -131,7 +132,7 @@ export class RatingPaneComponent implements OnInit {
         //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
       },
       (error) => {
-        console.log("Messages is not posted successfully to the room: ", this.paneLog.roomID);
+        console.log("Room was not successfully closed.", this.paneLog.roomID);
       }
     );
   }

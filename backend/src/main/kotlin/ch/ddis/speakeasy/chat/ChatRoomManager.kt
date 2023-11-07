@@ -17,7 +17,11 @@ object ChatRoomManager {
     private val basePath: File = File("chatlogs/") //TODO make configurable
     private val objectMapper = jacksonObjectMapper()
     private var indexTesterBot = -1
-    private val developmentBotUsername: String = "TesterBot"
+    private var indexAssistantBot = -1
+    private var indexEvaluatorBot = -1
+    private val constantTester = "tester"
+    private val constantAssistant = "assistant"
+    private val constantUserBot = "bot"
 
     fun init() {
         this.basePath.walk().filter { it.isFile }.forEach { file ->
@@ -49,6 +53,7 @@ object ChatRoomManager {
                 messages = messages,
                 reactions = reactions,
                 assessedBy = assessedBy,
+                testerBotAlias = "",
                 markAsNoFeedback = markAsNoFeedback,
             )
             chatrooms[chatRoom.uid] = chatRoom
@@ -93,14 +98,12 @@ object ChatRoomManager {
                log: Boolean = true,
                prompt: String?,
                endTime: Long? = null,
-               development: Boolean = false,
-               evaluation: Boolean = false,
                assignment: Boolean=false): ChatRoom {
 
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() } as MutableMap<UserId, String>
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
-            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, prompt = roomPrompt)
+            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, testerBotAlias = "", prompt = roomPrompt)
         } else {
             ChatRoom(assignment = assignment, formRef = formRef, users = users , prompt = roomPrompt)
         }
@@ -108,18 +111,21 @@ object ChatRoomManager {
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
 
-
-        if (development || evaluation) {
-
-            val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
-            for(testerBot in testerBots){
-                if(testerBot in users.keys){
-                    chatRoom.testerBotAlias = users[testerBot]!!
+        for (userId in userIds) {
+            val role = UserManager.getUserRoleByUserID(userId)
+            if (role == UserRole.TESTER || role == UserRole.ASSISTANT) {
+                val testerBots = UserManager.getUsersIDsFromUserRole(role)
+                for(testerBot in testerBots){
+                    if(testerBot in users.keys){
+                        chatRoom.testerBotAlias = users[testerBot]!!
+                    }
                 }
             }
-            chatRoom.development = development
-            chatRoom.evaluation = evaluation
-
+            else if (role == UserRole.EVALUATOR){
+                if (endTime != null) {
+                    chatRoom.endTime = endTime + 1000 * 60 * 60
+                }
+            }
         }
 
         return chatRoom
@@ -152,11 +158,19 @@ object ChatRoomManager {
 
             if (usernames.isNotEmpty() && message.isNotEmpty()) {
                 for (user in usernames) {
-                    if(user == "Tester"){
-                        val testerBots = UserManager.getUsersIDsFromUserRole(UserRole.EVALUATOR)
+                    if(user == this.constantTester || user == this.constantAssistant){
+                        val botRole = if(user == this.constantTester) UserRole.TESTER else UserRole.ASSISTANT
+                        val testerBots = UserManager.getUsersIDsFromUserRole(botRole)
                         for(testerBot in testerBots){
                             if(testerBot in room.users.keys){
                                 recipientsSet += room.users[testerBot]!!
+                            }
+                        }
+                    }
+                    if(user == this.constantUserBot){
+                        for (users in room.users.keys) {
+                            if(UserManager.getUserRoleByUserID(users) == UserRole.BOT){
+                                recipientsSet += room.users[users]!!
                             }
                         }
                     }
@@ -172,10 +186,24 @@ object ChatRoomManager {
                 }
     }
 
-    fun getTesterBot(): String {
-        val testerBots = UserManager.listOfActiveUsersByRole(UserRole.EVALUATOR)
-        indexTesterBot = (indexTesterBot + 1) % testerBots.size
-        return testerBots[indexTesterBot].name
+    fun getBot(userRole: UserRole): String {
+
+        val activeBots = UserManager.listOfActiveUsersByRole(userRole)
+        var botToSend = ""
+
+        if (userRole == UserRole.TESTER) {
+            indexTesterBot = (indexTesterBot + 1) % activeBots.size
+            botToSend = activeBots[indexTesterBot].name
+        }
+        else if (userRole == UserRole.EVALUATOR) {
+            indexEvaluatorBot = (indexEvaluatorBot + 1) % activeBots.size
+            botToSend = activeBots[indexEvaluatorBot].name
+        }
+        else if (userRole == UserRole.ASSISTANT) {
+            indexAssistantBot = (indexAssistantBot + 1) % activeBots.size
+            botToSend = activeBots[indexAssistantBot].name
+        }
+        return botToSend
     }
 
     fun markAsNoFeedback(id: ChatRoomId) {

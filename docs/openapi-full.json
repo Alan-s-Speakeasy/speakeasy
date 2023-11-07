@@ -14,36 +14,6 @@
   },
   "paths" : {
     "/api/assignment" : {
-      "get" : {
-        "tags" : [ "Assignment" ],
-        "summary" : "Get the status of the current assignment generator",
-        "operationId" : "getApiAssignment",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
       "delete" : {
         "tags" : [ "Assignment" ],
         "summary" : "Delete the active assignment generator.",
@@ -76,6 +46,36 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "get" : {
+        "tags" : [ "Assignment" ],
+        "summary" : "Get the status of the current assignment generator",
+        "operationId" : "getApiAssignment",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
                 }
               }
             }
@@ -132,7 +132,27 @@
         "tags" : [ "Assignment" ],
         "summary" : "Start the generated assignment round",
         "operationId" : "patchApiAssignmentRound",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "evaluator",
+          "in" : "query",
+          "description" : "Evaluator Selected",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : false
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -859,7 +879,149 @@
         "security" : [ ]
       }
     },
+    "/api/request/{roomId}" : {
+      "post" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Post a new user to a Chatroom.",
+        "operationId" : "postApiRequestByRoomId",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/room/{roomId}" : {
+      "patch" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Closes a Chatroom.",
+        "operationId" : "patchApiRoomByRoomId",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
       "post" : {
         "tags" : [ "Chat" ],
         "summary" : "Post a message to a Chatroom.",
@@ -878,6 +1040,16 @@
           "name" : "session",
           "in" : "query",
           "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "recipients",
+          "in" : "query",
+          "description" : "Recipients of Message",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -1338,6 +1510,57 @@
         "security" : [ ]
       }
     },
+    "/api/user/check" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Returns details for the current session.",
+        "parameters" : [ {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "username",
+          "in" : "query",
+          "description" : "Username",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserSessionDetails"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/user/current" : {
       "get" : {
         "tags" : [ "User" ],
@@ -1615,6 +1838,12 @@
               "type" : "string"
             }
           },
+          "evaluator" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "active" : {
             "type" : "array",
             "items" : {
@@ -1662,7 +1891,7 @@
             }
           }
         },
-        "required" : [ "humans", "bots", "admins", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
+        "required" : [ "humans", "bots", "admins", "evaluator", "active", "selected", "assignments", "prompts", "formName", "botsPerHuman", "duration", "round", "remainingTime", "rooms" ]
       },
       "ChatRequest" : {
         "type" : "object",
@@ -1756,11 +1985,20 @@
           "prompt" : {
             "type" : "string"
           },
+          "development" : {
+            "type" : "boolean"
+          },
+          "evaluation" : {
+            "type" : "boolean"
+          },
+          "testerBotAlias" : {
+            "type" : "string"
+          },
           "markAsNoFeedback" : {
             "type" : "boolean"
           }
         },
-        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "markAsNoFeedback" ]
+        "required" : [ "assignment", "formRef", "uid", "startTime", "remainingTime", "userAliases", "prompt", "development", "evaluation", "testerBotAlias", "markAsNoFeedback" ]
       },
       "ChatRoomList" : {
         "type" : "object",
@@ -2119,9 +2357,15 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "evaluator" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         },
-        "required" : [ "humans", "bots", "admins" ]
+        "required" : [ "humans", "bots", "admins", "evaluator" ]
       },
       "ChatMessageReaction" : {
         "type" : "object",
@@ -2158,9 +2402,18 @@
           },
           "message" : {
             "type" : "string"
+          },
+          "recipients" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "read" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "timeStamp", "authorAlias", "ordinal", "message" ]
+        "required" : [ "timeStamp", "authorAlias", "ordinal", "message", "recipients", "read" ]
       },
       "GroupDetails" : {
         "type" : "object",
@@ -2199,7 +2452,7 @@
       },
       "UserRole" : {
         "type" : "string",
-        "enum" : [ "HUMAN", "BOT", "ADMIN" ]
+        "enum" : [ "HUMAN", "BOT", "ADMIN", "EVALUATOR" ]
       },
       "UserSessionDetails" : {
         "type" : "object",

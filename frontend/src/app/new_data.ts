@@ -7,6 +7,8 @@ export interface Message {
   message: string,  // the content of this message;
   time: number,  // the time stamp of this message;
   type: string,  // the type of this message, ["THUMBS_UP", "THUMBS_DOWN", "STAR", ""];
+  recipients: Array<string>,
+  authorAlias: string,// true: the message is displayed in the chatroom;
 }
 
 export interface MessageLog {
@@ -27,7 +29,10 @@ export interface PaneLog {
   myAlias: string,
   otherAlias: string,
   spectate: boolean,
-  history?: boolean
+  history?: boolean,
+  isDevelopment: boolean,
+  isEvaluation: boolean,
+  testerBotAlias?: string
 }
 
 export interface Ratings {

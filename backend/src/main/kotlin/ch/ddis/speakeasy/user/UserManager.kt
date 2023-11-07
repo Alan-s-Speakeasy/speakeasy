@@ -193,6 +193,52 @@ object UserManager {
             return@transaction user1Groups.intersect(user2Groups).isNotEmpty()
         }
     }
+
+    fun getUserRoleByUserID(userId: UserId): UserRole? = this.lock.read {
+        transaction {
+            val userToGet = User.findById(userId.toUUID())
+            return@transaction userToGet?.role
+        }
+    }
+
+    fun getUserRoleByUserName(username: String): UserRole? = this.lock.read {
+        transaction {
+            val userToGet = User.find { Users.username eq username }.firstOrNull()
+            return@transaction userToGet?.role
+        }
+    }
+
+    fun checkIfUserIsActive(username: String): Boolean{
+        val userSession = AccessManager.listSessions().firstOrNull { it.user.name == username }
+        if (userSession != null) {
+            return true
+        }
+        return false
+    }
+
+    fun listOfActiveUsersByRole(role: UserRole): List<User> = this.lock.read {
+        transaction {
+            val listOfActiveUsers = mutableListOf<User>()
+            AccessManager.listSessions().forEach { session ->
+                if (session.user.role == role) {
+                    listOfActiveUsers.add(session.user)
+                }
+            }
+            return@transaction listOfActiveUsers
+        }
+    }
+
+    fun getUsersIDsFromUserRole(role: UserRole): List<UserId> = this.lock.read {
+        transaction {
+            val listOfActiveUsers = mutableListOf<UserId>()
+            AccessManager.listSessions().forEach { session ->
+                if (session.user.role == role) {
+                    listOfActiveUsers.add(session.user.id.UID())
+                }
+            }
+            return@transaction listOfActiveUsers
+        }
+    }
 }
 
 

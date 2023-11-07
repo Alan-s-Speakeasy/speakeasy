@@ -19,7 +19,10 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
         this.subcommands(
             ListAllChatRoomsCommand(),
             ListActiveChatRoomsCommand(),
-            ShowChatRoomCommand()
+            ShowChatRoomCommand(),
+            ShowUsersInChatCommand(),
+            CloseRoomInChatCommand(),
+            CloseAllRoomInChatCommand()
         )
     }
 
@@ -124,6 +127,80 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                 }
                 println()
             }
+        }
+    }
+
+    inner class ShowUsersInChatCommand : CliktCommand(name = "users", help = "Shows the current users of a chat room") {
+
+        val id: String by option("-i", "--id", help = "The id of the chat room").required()
+
+        override fun run() {
+
+            val uid = try {
+                id.UID()
+            } catch (e: IllegalArgumentException) {
+                println("'$id' is not a valid id")
+                return
+            }
+
+            val room = ChatRoomManager[uid]
+
+            if (room == null) {
+                println("Chatroom with id '$id' not found")
+                return
+            }
+
+            var listUsers = ChatRoomManager.getUsersIDofARoom(uid)
+            println("Users in chatroom $id:")
+            listUsers.forEach { user ->
+                println(UserManager.getUsernameFromId(user))
+            }
+
+        }
+    }
+
+    inner class CloseRoomInChatCommand : CliktCommand(name = "close", help = "Close a chat room") {
+
+        val id: String by option("-i", "--id", help = "The id of the chat room").required()
+
+        override fun run() {
+
+            val uid = try {
+                id.UID()
+            } catch (e: IllegalArgumentException) {
+                println("'$id' is not a valid id")
+                return
+            }
+
+            val room = ChatRoomManager[uid]
+
+            if (room == null) {
+                println("Chatroom with id '$id' not found")
+                return
+            }
+
+            room.deactivate()
+            println("Chatroom $id closed")
+
+        }
+    }
+
+    inner class CloseAllRoomInChatCommand : CliktCommand(name = "closeAll", help = "Close all chat rooms") {
+
+        override fun run() {
+
+            println("Are you sure you want to close all chatrooms? (y/n)")
+            val input = readLine()
+            if (input != "y") {
+                println("Chat rooms are not closed")
+                return
+            }
+
+            ChatRoomManager.listAll().forEach {
+                it.deactivate()
+            }
+            println("All chatrooms closed")
+
         }
     }
 

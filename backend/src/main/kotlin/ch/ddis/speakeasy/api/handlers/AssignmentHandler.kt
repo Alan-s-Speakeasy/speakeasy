@@ -8,8 +8,8 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 
-data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>)
-data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val formName: String, val botsPerHuman: Int, val duration: Int, val round: Int, val remainingTime: Long, val rooms: List<ChatRoomAdminInfo>)
+data class SelectedUsers(var humans: List<String>, var bots: List<String>, var admins: List<String>, var evaluator: List<String>)
+data class AssignmentGeneratorObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val evaluator: List<String>, val active: List<String>, val selected: SelectedUsers, val assignments: List<GeneratedAssignment>, val prompts: List<String>, val formName: String, val botsPerHuman: Int, val duration: Int, val round: Int, val remainingTime: Long, val rooms: List<ChatRoomAdminInfo>)
 data class NewAssignmentObject(val humans: List<String>, val bots: List<String>, val admins: List<String>, val prompts: List<String>, val botsPerHuman: Int, val duration: Int, val formName: String)
 data class GeneratedAssignment(val human: String, val bot: String, val prompt: String, val formName: String)
 data class RoundStarted(val remainingTime: Long)
@@ -124,7 +124,11 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
         path = "/api/assignment/round",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.PATCH],
+        requestBody = OpenApiRequestBody([OpenApiContent(String::class)]),
         tags = ["Assignment"],
+        queryParams = [
+            OpenApiParam("evaluator", String::class, "Evaluator Selected"),
+        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(RoundStarted::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
@@ -132,7 +136,14 @@ class PatchStartAssignmentHandler : PatchRestHandler<RoundStarted>, AccessManage
         ]
     )
     override fun doPatch(ctx: Context): RoundStarted {
-        val remainingTime = UIChatAssignmentGenerator.startNewRound()
+
+        var evaluatorSelected = false
+
+        if(ctx.queryParam("evaluator").toString().lowercase() == "true"){
+            evaluatorSelected = true
+        }
+
+        val remainingTime = UIChatAssignmentGenerator.startNewRound(evaluatorSelected)
 
         return RoundStarted(remainingTime)
     }

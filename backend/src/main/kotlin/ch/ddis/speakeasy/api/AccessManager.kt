@@ -74,6 +74,7 @@ object AccessManager {
         UserRole.HUMAN -> setOf(RestApiRole.ANYONE, RestApiRole.USER, RestApiRole.HUMAN)
         UserRole.BOT -> setOf(RestApiRole.ANYONE, RestApiRole.USER)
         UserRole.ADMIN -> setOf(RestApiRole.ANYONE, RestApiRole.USER, RestApiRole.HUMAN, RestApiRole.ADMIN)
+        UserRole.EVALUATOR -> setOf(RestApiRole.ANYONE, RestApiRole.USER)
     }
 
     fun setUserForSession(sessionToken: String, user: User): UserSession {
@@ -182,4 +183,4 @@ object AccessManager {
     fun listSessions(): List<UserSession> = sessionTokenUserSessionMap.values.toList()
 }
 
-enum class RestApiRole : RouteRole { ANYONE, USER, HUMAN, ADMIN }
+enum class RestApiRole : RouteRole { ANYONE, USER, HUMAN, ADMIN, BOT, EVALUATOR }

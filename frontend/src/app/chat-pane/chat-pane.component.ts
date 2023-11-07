@@ -58,7 +58,9 @@ export class ChatPaneComponent implements OnInit {
             ordinal: api_message.ordinal,
             message: api_message.message,
             time: api_message.timeStamp,
-            type: ""
+            type: "",
+            recipients: api_message.recipients,
+            authorAlias: api_message.authorAlias
           };
           this.paneLog.ordinals = message.ordinal + 1
           this.paneLog.messageLog[message.ordinal] = message
@@ -99,17 +101,19 @@ export class ChatPaneComponent implements OnInit {
 
 // when the user wants to start rating
   rating(): void {
-    let questionsAsked = 0
-    for (let i = 0; i < this.paneLog.ordinals; i++) {
-      if (this.paneLog.messageLog[i].myMessage) {
-        questionsAsked++
+    if (!this.paneLog.isDevelopment) {
+      let questionsAsked = 0
+      for (let i = 0; i < this.paneLog.ordinals; i++) {
+        if (this.paneLog.messageLog[i].myMessage) {
+          questionsAsked++
+        }
       }
-    }
 
-    if (this.paneLog.active && questionsAsked < this.num_to_ask) {
-     this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
-    } else {
-      this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+      if (this.paneLog.active && questionsAsked < this.num_to_ask) {
+        this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
+      } else {
+        this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+      }
     }
   }
   close(): void {
@@ -146,7 +150,7 @@ export class ChatPaneComponent implements OnInit {
   // send a message to the chatroom
   doQuery(query: string): void {
     if (query !== "" && query !== null) {
-      this.chatService.postApiRoomByRoomId(this.paneLog.roomID, undefined, query).subscribe(
+      this.chatService.postApiRoomByRoomId(this.paneLog.roomID, undefined, "", query).subscribe(
         (response) => {
           //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
         },
@@ -172,6 +176,17 @@ export class ChatPaneComponent implements OnInit {
 
   range(i: number) {
     return new Array(i);
+  }
+
+  closeRoom(): void {
+    this.chatService.patchApiRoomByRoomId(this.paneLog.roomID, undefined).subscribe(
+      (response) => {
+        //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
+      },
+      (error) => {
+        console.log("Room was not successfully closed. ", this.paneLog.roomID);
+      }
+    );
   }
 
   ngOnDestroy(): void {

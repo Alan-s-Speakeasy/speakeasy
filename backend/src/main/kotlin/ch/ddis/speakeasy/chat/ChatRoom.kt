@@ -13,12 +13,15 @@ open class ChatRoom(
     val assignment: Boolean = false,
     val formRef: String,
     val uid: ChatRoomId = UID(),
-    val users: Map<UserId, String>, //UserId --> UserAlias
+    val users: MutableMap<UserId, String>, //UserId --> UserAlias
     val startTime: Long = System.currentTimeMillis(),
     var prompt: String = "",
     private val messages: MutableList<ChatMessage> = mutableListOf(),
     private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
     val assessedBy: MutableList<Assessor> = mutableListOf(),
+    var development: Boolean = false,
+    var evaluation: Boolean = false,
+    var testerBotAlias: String = "",
     var markAsNoFeedback: Boolean = false,
 ) {
     internal var endTime: Long? = null
@@ -49,8 +52,9 @@ open class ChatRoom(
     /**
      * @return all [ChatMessage]s since a specified timestamp
      */
-    fun getMessagesSince(since: Long): List<ChatMessage> = this.lock.read {
-        this.messages.filter { it.time >= since }
+    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
+        val currentUser = this.users[userId]
+        this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
     }
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {

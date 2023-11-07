@@ -191,6 +191,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
+
     chatRoomDetails.push(
       {
         assignment: chatRoom.assignment,

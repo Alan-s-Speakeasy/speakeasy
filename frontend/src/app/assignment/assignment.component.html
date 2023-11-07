@@ -119,6 +119,29 @@
           </tr>
           </tbody>
         </table>
+        <br>
+        <table class="table">
+          <thead>
+          <tr>
+            <td>
+              <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
+                <b>EvaluatorBot</b>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let evaluator of evaluator; let firstElement = first">
+            <td *ngIf="firstElement" >
+              <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
+                {{evaluator}}
+                <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
+                <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
+              </mat-checkbox>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="col-6">

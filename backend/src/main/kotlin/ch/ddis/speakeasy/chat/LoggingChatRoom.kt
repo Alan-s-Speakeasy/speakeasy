@@ -13,7 +13,7 @@ class LoggingChatRoom(
     assignment: Boolean = false,
     formRef: String,
     uid: UID = UID(),
-    users: Map<UserId, String>,
+    users: MutableMap<UserId, String>,
     startTime: Long = System.currentTimeMillis(),
     basePath: File,
     endTime: Long? = null,

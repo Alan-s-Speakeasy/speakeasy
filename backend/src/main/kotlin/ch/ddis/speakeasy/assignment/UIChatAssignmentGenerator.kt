@@ -18,7 +18,8 @@ object UIChatAssignmentGenerator {
     private var humans = emptyList<User>()
     private var bots = emptyList<User>()
     private var admins = emptyList<User>()
-    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
+    private var evaluator = emptyList<User>()
+    private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
     private var prompts = emptyList<String>()
     private var botsPerHuman = 0
     private var duration = 0
@@ -33,6 +34,7 @@ object UIChatAssignmentGenerator {
         humans = UserManager.list().filter { it.role.isHuman() }
         bots = UserManager.list().filter { it.role.isBot() }
         admins = UserManager.list().filter { it.role.isAdmin() }
+        evaluator = UserManager.list().filter { it.role.isEvaluator() }
         botsPerHuman = 3
         duration = 10
         round = 1
@@ -42,7 +44,8 @@ object UIChatAssignmentGenerator {
         humans = emptyList()
         bots = emptyList()
         admins = emptyList()
-        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf())
+        evaluator = emptyList()
+        selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
         prompts = emptyList()
         botsPerHuman = 0
         duration = 0
@@ -63,8 +66,10 @@ object UIChatAssignmentGenerator {
             humans.map { it.name },
             bots.map { it.name },
             admins.map { it.name },
+            evaluator.map { it.name },
             humans.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
-                bots.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
+                bots.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name } +
+                evaluator.filter { AccessManager.hasUserIdActiveSessions(it.id.UID()) }.map { it.name },
             selected,
             nextRound,
             prompts,
@@ -134,7 +139,7 @@ object UIChatAssignmentGenerator {
         return Pair(nextRound, nextRound.size / selected.humans.size == botsPerHuman)
     }
 
-    fun startNewRound(): Long {
+    fun startNewRound(evaluatorSelected: Boolean): Long {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 
         nextRound.forEach { a ->
@@ -145,14 +150,30 @@ object UIChatAssignmentGenerator {
             if (AccessManager.hasUserIdActiveSessions(humanId) && AccessManager.hasUserIdActiveSessions(botId)) {
                 humanAssignments.putIfAbsent(a.human, mutableListOf())
                 humanAssignments[a.human]?.add(a.bot)
-                val chatRoom = ChatRoomManager.create(
-                    userIds = listOf(humanId, botId),
-                    formRef = a.formName,
-                    log = true,
-                    prompt = a.prompt,
-                    endTime = endTime,
-                    assignment = true)
-                chatRooms.add(chatRoom)
+
+                if(evaluatorSelected){
+                    val evaluatorUsername = UserManager.getUserIdFromUsername(ChatRoomManager.getTesterBot())!!
+                    val chatRoom = ChatRoomManager.create(
+                        userIds = listOf(humanId, botId, evaluatorUsername),
+                        formRef = a.formName,
+                        log = true,
+                        prompt = a.prompt,
+                        endTime = endTime,
+                        assignment = true,
+                        development = false,
+                        evaluation = true)
+
+                    chatRooms.add(chatRoom)
+                }else{
+                    val chatRoom = ChatRoomManager.create(
+                        userIds = listOf(humanId, botId),
+                        formRef = a.formName,
+                        log = true,
+                        prompt = a.prompt,
+                        endTime = endTime,
+                        assignment = true)
+                    chatRooms.add(chatRoom)
+                }
             }
         }
 

@@ -45,16 +45,19 @@ object RestApi {
             RemoveGroupHandler(),
             ListGroupsHandler(),
             RemoveAllGroupsHandler(),
+            GetCurrentUserbyUsername(),
 
             ListChatRoomsHandler(),
             ListAllChatRoomsHandler(),
             ListAllActiveChatRoomsHandler(),
             ListAssessedChatRoomsHandler(),
             RequestChatRoomHandler(),
+            CloseChatRoomHandler(),
 
             GetChatRoomHandler(),
             PostChatMessageHandler(),
             PostChatMessageReactionHandler(),
+            PostNewUserHandler(),
 
             GetFeedbackFormListHandler(),
             GetFeedbackFormHandler(),

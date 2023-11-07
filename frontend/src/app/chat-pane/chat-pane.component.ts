@@ -39,7 +39,7 @@ export class ChatPaneComponent implements OnInit {
     ) { }
 
   ngOnInit(): void {
-    this.chatMessagesSubscription = interval(1000)
+    this.chatMessagesSubscription = interval(2500)
       .pipe(exhaustMap(_ => {
         return this.commonService.getStateByRoomId(this.paneLog.roomID)
       })).subscribe((response) => {

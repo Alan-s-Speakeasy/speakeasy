@@ -72,9 +72,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         },
       (error) => {console.log("Chat rooms are not retrieved properly.", error);},
     )
-
-
-
   }
 
   // add a chatroom to the UI
@@ -91,7 +88,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       ratings: {},
       myAlias: room.userAliases.find(a => a == room.alias) || "",
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
-      prompt: "",
+      prompt: room.prompt,
       spectate: false
     }
 
@@ -141,6 +138,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.paneLogs.splice(index, 1)
       }
     })
+    // When a room is removed, the backend will not seed a message. We need to process the cached Rooms on the frontend.
+    this.commonService.removeCachedRoom(roomID)
   }
 
   openModal(content: any) {

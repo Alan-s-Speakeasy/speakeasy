@@ -16,12 +16,11 @@ import java.util.concurrent.ConcurrentHashMap
 
 enum class ChatEventType {
     ROOMS,
-    MESSAGE,
-    REACTION;
+    MESSAGES,
+    REACTIONS;
 }
 
-class SseClientWorker(private val client: SseClient,
-                      private val sseChatService: SseChatService): SseChatEventListener {
+class SseClientWorker(private val client: SseClient): ChatEventListener {
 
     val workerId = UUID.randomUUID().toString()
     private val rooms = ConcurrentHashMap<ChatRoomId, ChatRoom>()
@@ -48,7 +47,7 @@ class SseClientWorker(private val client: SseClient,
 
         client.onClose {
             isActive = false
-            sseChatService.removeWorker(this) // This is not necessary, but helps to reduce unnecessary workers saved in the hash table.
+            SseChatService.removeWorker(this) // This is not necessary, but helps to reduce unnecessary workers saved in the hash table.
         }
         this.onOpen()
     }
@@ -65,12 +64,20 @@ class SseClientWorker(private val client: SseClient,
         val rooms = ChatRoomManager.getByUser(userId)
         if (rooms.isEmpty()) { // if no rooms, send an empty ChatRoomList
             this.send(eventType=ChatEventType.ROOMS, data=ChatRoomList(rooms=emptyList()))
-        } else {
-            rooms.forEach { it.addListener(this) } // will trigger onNewRoom => send all existing and related rooms
+            return
         }
-        // TODO: send all existing massages and reactions.
-        //  Currently, the massages are sent one by one.
-        //  If a user refreshes the frontend, the previous massages will be lost
+        rooms.forEach { room ->
+            room.addListener(this) // it triggers onNewRoom => send all existing and related rooms
+
+            // send all existing messages and reactions
+            room.getAllMessages().takeIf { it.isNotEmpty() }?.let {
+                this.send(eventType = ChatEventType.MESSAGES, data = ChatMessage.toSseChatMessages(room, it))
+            }
+            room.getAllReactions().takeIf { it.isNotEmpty() }?.let {
+                this.send(eventType = ChatEventType.REACTIONS, data = ChatMessageReaction.toSseChatReactions(room, it))
+            }
+
+        }
     }
 
     override fun onNewRoom(chatRoom: ChatRoom) { // TODO: When assigning many rooms, backend will send it many times almost simultaneously ...
@@ -79,35 +86,27 @@ class SseClientWorker(private val client: SseClient,
             if (!chatRoom.users.keys.contains(userId)) { return }
             this.rooms[chatRoom.uid] = chatRoom
 
-            // TODO: send all rooms when there is a new room?
-            //  I think the following is the most convenient way to do this, but am not sure it is best practice.
-            //  Messages can be sent one by one because they are monotonically increasing, unlike rooms.
-            //  If we also want to send rooms one by one, it would require a lot of additional logic to detect
-            //  the disappearance and changes of rooms, and so on (e.g., to trigger an event that some room has not
-            //  been active?).
-
-            val rooms = ChatRoomList(
-                ChatRoomManager.getByUser(userId, bot=false).map { ChatRoomInfo(it, userId) }
-            )
-            this.send(eventType=ChatEventType.ROOMS, data=rooms)
+            // send all rooms when there is a new room, because they are not monotonically increasing.
+            val rooms = ChatRoomManager.getByUser(userId, bot=false)
+            this.send(eventType = ChatEventType.ROOMS, data = ChatRoomList(rooms.map { ChatRoomInfo(it, userId) }))
         }
     }
 
     override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) {
         if (!chatRoom.users.keys.contains(userId)) { return }
-        val sseChatMessage = ChatMessage.toSseChatMessage(chatRoom, chatMessage)
+        val sseChatMessages = ChatMessage.toSseChatMessages(chatRoom, listOf(chatMessage))
         this.send(
-            eventType = ChatEventType.MESSAGE,
-            data = sseChatMessage
+            eventType = ChatEventType.MESSAGES,
+            data = sseChatMessages  // a list of a single massage
         )
     }
 
     override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) {
         if (!chatRoom.users.keys.contains(userId)) { return }
-        val sseChatReaction = ChatMessageReaction.toSseChatReaction(chatRoom, chatMessageReaction)
+        val sseChatReactions = ChatMessageReaction.toSseChatReactions(chatRoom, listOf(chatMessageReaction))
         this.send(
-            eventType = ChatEventType.REACTION,
-            data = sseChatReaction
+            eventType = ChatEventType.REACTIONS,
+            data = sseChatReactions  // a list of a single reaction
         )
     }
 

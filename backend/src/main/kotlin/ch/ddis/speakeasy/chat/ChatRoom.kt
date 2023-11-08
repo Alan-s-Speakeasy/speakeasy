@@ -32,14 +32,14 @@ open class ChatRoom(
 
     private val lock: StampedLock = StampedLock()
 
-    private val listeners = mutableListOf<SseChatEventListener>()
+    private val listeners = mutableListOf<ChatEventListener>()
 
     val nextMessageOrdinal: Int
         get() = this.lock.read {
             messages.size
         }
 
-    fun addListener(listener: SseChatEventListener) = this.lock.write {
+    fun addListener(listener: ChatEventListener) = this.lock.write {
         this.listeners.add(listener)
         listener.onNewRoom(this)
     }

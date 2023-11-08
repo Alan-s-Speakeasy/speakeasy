@@ -3,24 +3,23 @@ package ch.ddis.speakeasy.api.sse
 import ch.ddis.speakeasy.api.AccessManagedRestHandler
 import ch.ddis.speakeasy.api.RestApiRole
 import ch.ddis.speakeasy.api.RestHandler
-import ch.ddis.speakeasy.chat.SseChatEventListener
+import ch.ddis.speakeasy.chat.ChatEventListener
 import ch.ddis.speakeasy.user.UserId
 import io.javalin.http.sse.SseClient
 import io.javalin.security.RouteRole
 import java.util.function.Consumer
 
 object SseRoomHandler: Consumer<SseClient> , RestHandler, AccessManagedRestHandler {
-    override val route = "sse"
+    override val route = "rooms"
     override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.HUMAN)  // not accept bots
-    private val sseChatService: SseChatService = SseChatService()
 
-    override fun accept(client: SseClient) { // on open ...
+    override fun accept(client: SseClient) {
         client.keepAlive()
-        sseChatService.createWorker(client)
+        SseChatService.createWorker(client)
     }
 
-    fun getChatListeners(userIds: List<UserId>) : List<SseChatEventListener> {
-        return sseChatService.getWorkersByUserIds(userIds)
+    fun getChatListeners(userIds: List<UserId>) : List<ChatEventListener> {
+        return SseChatService.getWorkersByUserIds(userIds)
     }
 }
 

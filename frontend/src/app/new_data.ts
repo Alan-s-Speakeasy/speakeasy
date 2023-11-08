@@ -9,18 +9,22 @@ import {
 
 export function convertFromJSON<T>(json: string): T {
   const data = JSON.parse(json);
-  return Object.assign({}, data) as T;
+
+  if (Array.isArray(data)) {
+    return data as unknown as T;
+  } else {
+    return Object.assign({}, data) as T;
+  }
 }
 
 export enum ChatEventType {
   ROOMS = "ROOMS",
-  MESSAGE = "MESSAGE",
-  REACTION = "REACTION"
+  MESSAGES = "MESSAGES",
+  REACTIONS = "REACTIONS"
 }
 
 export interface SseChatMessage {
   roomId: string;
-  remainingTime: number;
   timeStamp: number;
   authorAlias: string;
   ordinal: number;
@@ -29,7 +33,6 @@ export interface SseChatMessage {
 
 export interface SseChatReaction {
   roomId: string;
-  remainingTime: number;
   messageOrdinal: number;
   type: ChatMessageReactionType;
 }
@@ -65,7 +68,7 @@ export interface PaneLog {
   myAlias: string,
   otherAlias: string,
   spectate: boolean,
-  history?: boolean
+  history?: boolean,
 }
 
 export interface Ratings {

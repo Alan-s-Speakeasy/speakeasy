@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class SseChatService {
+object SseChatService {
 
     private val workers =  ConcurrentHashMap<String, SseClientWorker>()
     private val updateSessionExecutor = Executors.newSingleThreadScheduledExecutor()
@@ -25,7 +25,7 @@ class SseChatService {
     }
 
     fun createWorker(client: SseClient){
-        val worker = SseClientWorker(client, this) // TODO: handle exception ...
+        val worker = SseClientWorker(client) // TODO: handle exception ...
         workers[worker.workerId] = worker
     }
 

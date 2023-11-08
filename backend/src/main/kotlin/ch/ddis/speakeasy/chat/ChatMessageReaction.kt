@@ -12,10 +12,11 @@ data class ChatMessageReactionContainer(val reaction: ChatMessageReaction) : Cha
 
 data class ChatMessageReaction(val messageOrdinal: Int, val type: ChatMessageReactionType) { //TODO we could also explicitly store who reacted
     companion object {
-        fun toSseChatReaction(chatRoom: ChatRoom, reaction: ChatMessageReaction): SseChatReaction =
-            SseChatReaction(chatRoom.uid.toString(), chatRoom.remainingTime, reaction.messageOrdinal, reaction.type)
+        fun toSseChatReactions(chatRoom: ChatRoom, reactions: List<ChatMessageReaction>):
+            List<SseChatReaction> = reactions.map {
+                SseChatReaction(chatRoom.uid.toString(), it.messageOrdinal, it.type)
+            }
+        }
     }
-}
 
-data class SseChatReaction(val roomId:String, val remainingTime: Long,
-                           val messageOrdinal: Int, val type: ChatMessageReactionType)
+data class SseChatReaction(val roomId:String, val messageOrdinal: Int, val type: ChatMessageReactionType)

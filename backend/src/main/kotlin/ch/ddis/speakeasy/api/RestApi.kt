@@ -19,6 +19,7 @@ import io.javalin.openapi.plugin.OpenApiPluginConfiguration
 import io.javalin.openapi.plugin.SecurityComponentConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
+import io.javalin.plugin.bundled.RouteOverviewUtil.metaInfo
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
@@ -72,7 +73,6 @@ object RestApi {
             PatchStartAssignmentHandler(),
             DeleteAssignmentGeneratorHandler(),
 
-            SseRoomHandler
         )
 
         javalin = Javalin.create {
@@ -154,6 +154,11 @@ object RestApi {
             }
 
         }.routes {
+            path("sse"){
+                path(SseRoomHandler.route) { // "room"
+                    ApiBuilder.sse(SseRoomHandler, *SseRoomHandler.permittedRoles.toTypedArray())
+                }
+            }
             path("api") {
                 apiRestHandlers.forEach { handler ->
                     path(handler.route) {
@@ -179,11 +184,6 @@ object RestApi {
                         if (handler is DeleteRestHandler<*>) {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
-
-                        if (handler is SseRoomHandler) {
-                            ApiBuilder.sse(handler, *permittedRoles.toTypedArray())
-                        }
-
                     }
                 }
             }

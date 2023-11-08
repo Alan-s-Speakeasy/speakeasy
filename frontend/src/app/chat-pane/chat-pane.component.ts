@@ -28,9 +28,11 @@ export class ChatPaneComponent implements OnInit {
 
   num_messages: number = 0
   paneLogScroll: boolean = false
-  remainingTime: string = ''
   num_to_ask!: number
-  // lastGetTime: number = 0
+
+  remainingTime!: number
+  roundTimer: any
+
   constructor(
     @Inject(ChatService) private chatService: ChatService,
     @Inject(FeedbackService) private feedbackService: FeedbackService,
@@ -39,32 +41,27 @@ export class ChatPaneComponent implements OnInit {
     ) { }
 
   ngOnInit(): void {
-    this.chatMessagesSubscription = interval(2500)
-      .pipe(exhaustMap(_ => {
-        return this.commonService.getStateByRoomId(this.paneLog.roomID)
-      })).subscribe((response) => {
-        console.log(response)
+
+    this.num_to_ask = this.numQueries
+    this.num_messages = this.paneLog.ordinals
+    this.remainingTime = this.commonService.getInitialRemainingTimeByRoomId(this.paneLog.roomID) // corrected remainingTime
+    this.roundTimer = setInterval(() => {this.countdown()}, 1000)
+
+    this.chatMessagesSubscription = this.commonService.getChatStatusByRoomId(this.paneLog.roomID)
+      .subscribe((response) => {
         if (response == null) { return }
 
-        // if (!this.paneLog.spectate) { // TODO: check prompt here later.
+        // if (!this.paneLog.spectate) { // TODO: check prompt here later (for spectating and history).
         //   this.paneLog.prompt = response.info.prompt
         // }
 
-        // if (response.messages.length > 0) {
-        //   // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
-        //   this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
-        // }
-
-        this.num_to_ask = this.numQueries
-        this.num_messages = this.paneLog.ordinals
-
-        response.messages.forEach(api_message => {
+        response.messages.forEach(sseMessage => {
           let message: Message;
           message = {
-            myMessage: api_message.authorAlias == this.paneLog.myAlias,
-            ordinal: api_message.ordinal,
-            message: api_message.message,
-            time: api_message.timeStamp,
+            myMessage: sseMessage.authorAlias == this.paneLog.myAlias,
+            ordinal: sseMessage.ordinal,
+            message: sseMessage.message,
+            time: sseMessage.timeStamp,
             type: ""
           };
           this.paneLog.ordinals = message.ordinal + 1
@@ -79,25 +76,6 @@ export class ChatPaneComponent implements OnInit {
           this.paneLogScroll = true
         }
 
-        // TODO: The frontend automatically counts down the remaining time and updates it once when an event is received
-        this.remainingTime = 'TODO Later'
-        // if (response.info.remainingTime < 3600000) {
-        //   const s = Math.floor(response.info.remainingTime / 1000);
-        //   const minutes = Math.floor(s / 60);
-        //   const seconds = s % 60;
-        //   this.remainingTime = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        // } else {
-        //   this.remainingTime = 'no time limit';
-        // }
-        //
-        // if (response.info.remainingTime <= 0) { //chat session complete
-        //   this.chatMessagesSubscription.unsubscribe();
-        //   if (this.paneLog.formRef !== '') {
-        //     this.paneLog.ratingOpen = true
-        //   }
-        //   this.paneLog.active = false
-        // }
-
         if (this.paneLogScroll) {
           this.scrollToBottom()
           this.paneLogScroll = false
@@ -105,6 +83,20 @@ export class ChatPaneComponent implements OnInit {
       },
       (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
     );
+  }
+
+  countdown(): void {
+    if (this.remainingTime > 0) {
+      this.remainingTime -= 1000
+    } else {
+      this.remainingTime = 0
+      this.chatMessagesSubscription.unsubscribe();
+      if (this.paneLog.formRef !== '') {
+        this.paneLog.ratingOpen = true
+      }
+      this.paneLog.active = false
+      clearInterval(this.roundTimer)
+    }
   }
 
 // when the user wants to start rating

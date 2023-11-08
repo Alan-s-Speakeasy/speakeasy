@@ -1,6 +1,6 @@
 package ch.ddis.speakeasy.chat;
 
-interface SseChatEventListener {
+interface ChatEventListener {
     fun onNewRoom(chatRoom: ChatRoom)
     fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom)
     fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom)

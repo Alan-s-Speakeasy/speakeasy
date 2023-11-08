@@ -34,6 +34,10 @@ export class CommonService {
 
   private _roomsStateMap: Map<string, BehaviorSubject<SseRoomState>> = new Map();
 
+  // Recording the time of init of this component helps to correct the remainingTime of each Chatroom
+  // without having to launch a new http or sse request
+  private initTimeStamp: number = Date.now();
+
   // TODO: To get the configured basePath for SSE, I instantiate AppConfig here.
   //  I'm not sure if it's a good practice. Is there any way to improve it?
   private appConfig: AppConfig = new AppConfig()
@@ -43,7 +47,7 @@ export class CommonService {
   private readonly roomsAlertEventListener: EventListener
   private readonly chatMessageEventListener: EventListener
   private readonly chatReactionEventListener: EventListener
-  private readonly SseChatEventUrl: string = `${this.appConfig.basePath}/api/sse`
+  private readonly SseRoomEventUrl: string = `${this.appConfig.basePath}/sse/rooms`
 
 
   /**
@@ -55,7 +59,6 @@ export class CommonService {
               public alertService: AlertService) {
 
     this.roomsAlertEventListener =  (ev) => {
-      // console.log("Here is one time call of roomsAlertEventListener")
       let oldRooms: String[];
       let currentRooms: String[];
       let addedRooms: String[];
@@ -71,67 +74,73 @@ export class CommonService {
       // update this._Rooms as well as this.Rooms
       this._Rooms.next(response);
 
+      // init _roomsStateMap with an empty state for non-existing roomId
+      response.rooms.forEach( room => {
+        if (!this._roomsStateMap.has(room.uid)) {
+          this._roomsStateMap.set(
+            room.uid,
+            new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }))
+        }
+      })
+
+      // reset initTimeStamp so that the remainingTime can be corrected
+      this.initTimeStamp = Date.now()
+
       // check if there is any new room received
-      if (response.rooms) {
+      if (response.rooms && this.roomsWithAlerts) {
         currentRooms = response.rooms.map(({uid}) => uid);
         addedRooms = currentRooms.filter(item => oldRooms && oldRooms.indexOf(item) == -1);
-        // init _roomsStateMap[addedRoomId] with an empty state
-        addedRooms.forEach( roomId =>
-          this._roomsStateMap.set(
-            roomId as string,
-            new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }))
-        )
-
-        if (this.roomsWithAlerts) {
-          if (addedRooms.length > 0) {
-            if (addedRooms.length == 1) {
-              this.alertService.success("A new chat room has become available!", this.options)
-            } else {
-              this.alertService.success(addedRooms.length + " new chat rooms has become available!", this.options)
-            }
+        if (addedRooms.length > 0) {
+          if (addedRooms.length == 1) {
+            this.alertService.success("A new chat room has become available!", this.options)
+          } else {
+            this.alertService.success(addedRooms.length + " new chat rooms has become available!", this.options)
           }
         }
       }
     }
 
     this.chatMessageEventListener =  (ev) => {
-      const sseChatMessage = convertFromJSON<SseChatMessage>((ev as MessageEvent).data)
-      const roomId = sseChatMessage.roomId
-      // TODO: also update remaining time here
-      if (!this._roomsStateMap.has(roomId)) {
-        this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
-        console.warn('This should not happen: No roomId key in _roomsStateMap when adding a message')
+      const sseChatMessages = convertFromJSON<SseChatMessage[]>((ev as MessageEvent).data)
+      for (const msg of sseChatMessages){ // TODO: refactor
+        const roomId = msg.roomId
+        if (!this._roomsStateMap.has(roomId)) {
+          this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
+          console.warn('This should not happen: No roomId key in _roomsStateMap when adding a message')
+        }
+        const stateSubject = this._roomsStateMap.get(roomId)!
+        stateSubject.next({ // TODO: refactor (get rid of one by one adding)
+          ...stateSubject.getValue(),
+          messages: [...stateSubject.getValue().messages, msg]
+        })
       }
-      const stateSubject = this._roomsStateMap.get(roomId)!
-      stateSubject.next({
-        ...stateSubject.getValue(),
-        messages: [...stateSubject.getValue().messages, sseChatMessage]
-      })
     }
 
     this.chatReactionEventListener = (ev) => {
-      const sseChatReaction = convertFromJSON<SseChatReaction>((ev as MessageEvent).data)
-      const roomId = sseChatReaction.roomId
-      if (!this._roomsStateMap.has(roomId)) {
-        this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
-        console.warn('This should not happen: No roomId key in _roomsStateMap when adding a reaction')
+      const sseChatReactions = convertFromJSON<SseChatReaction[]>((ev as MessageEvent).data)
+      for (const rec of sseChatReactions) {
+        const roomId = rec.roomId
+        if (!this._roomsStateMap.has(roomId)) {
+          this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
+          console.warn('This should not happen: No roomId key in _roomsStateMap when adding a reaction')
+        }
+        const stateSubject = this._roomsStateMap.get(roomId)!
+        stateSubject.next({
+          ...stateSubject.getValue(),
+          reactions: [...stateSubject.getValue().reactions, rec]
+        })
       }
-      const stateSubject = this._roomsStateMap.get(roomId)!
-      stateSubject.next({
-        ...stateSubject.getValue(),
-        reactions: [...stateSubject.getValue().reactions, sseChatReaction]
-      })
     }
   }
 
   public openSseAndListenRooms(withAlerts: boolean = true) {
     this.roomsWithAlerts = withAlerts
     if (this.eventSource == null) {
-      this.eventSource = new EventSource( this.SseChatEventUrl,
+      this.eventSource = new EventSource( this.SseRoomEventUrl,
         {withCredentials: true}) // Each new EventSource() creates a new SseClient in backend
       this.eventSource.addEventListener(ChatEventType.ROOMS, this.roomsAlertEventListener);
-      this.eventSource.addEventListener(ChatEventType.MESSAGE, this.chatMessageEventListener);
-      this.eventSource.addEventListener(ChatEventType.REACTION, this.chatReactionEventListener);
+      this.eventSource.addEventListener(ChatEventType.MESSAGES, this.chatMessageEventListener);
+      this.eventSource.addEventListener(ChatEventType.REACTIONS, this.chatReactionEventListener);
     }
   }
 
@@ -149,12 +158,36 @@ export class CommonService {
     );
   }
 
-  public getStateByRoomId(roomId: string): Observable<SseRoomState|null> {
-    if (!this._roomsStateMap.has(roomId)) {
-      console.warn(`Can't find such roomId: ${roomId}`)
-      return of(null)
+  public removeCachedRoom(roomId: string) {
+    this.Rooms.pipe(take(1)).subscribe((oldRooms) => {
+      if (oldRooms === null) {
+        this._Rooms.next(null);
+      } else {
+        const newRooms = { rooms: oldRooms.rooms.filter((r) => r.uid !== roomId) };
+        this._Rooms.next(newRooms);
+      }
+    });
+  }
+
+  public getChatStatusByRoomId(roomId: string): Observable<SseRoomState|null> {
+    const roomState = this._roomsStateMap.get(roomId);
+    if (!roomState) {
+      console.warn(`Can't find such roomId in _roomsStateMap: ${roomId}`);
+      return of(null);
     }
-    return this._roomsStateMap.get(roomId)!.asObservable();
+    return roomState.asObservable();
+  }
+
+  public getInitialRemainingTimeByRoomId(roomId: string): number {
+    let correctedRemainingTime: number = 0
+    this._Rooms.pipe(take(1)).subscribe(response => {
+      const room = response?.rooms.find( (r) => r.uid === roomId )
+      if (room !== undefined) {
+        // corrected = the old remainingTime - how old it is
+        correctedRemainingTime = room.remainingTime - (Date.now() - this.initTimeStamp)
+      }
+    })
+    return correctedRemainingTime > 0 ? correctedRemainingTime : 0;
   }
 
 

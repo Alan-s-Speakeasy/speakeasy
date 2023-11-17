@@ -5,10 +5,8 @@ import {Title} from "@angular/platform-browser";
 import {Router} from "@angular/router";
 import {HttpErrorResponse} from '@angular/common/http';
 import {FrontendDataService} from "../frontend-data.service";
-import {interval} from "rxjs";
-import {ChatRoomList} from "../../../openapi";
-import {take} from "rxjs/operators";
 import {AlertService} from "../alert";
+import {CommonService} from "../common.service";
 
 @Component({
   selector: 'app-login',
@@ -19,6 +17,7 @@ export class LoginComponent implements OnInit {
 
   constructor(private frontendDataService: FrontendDataService,
               private authService: AuthService,
+              @Inject(CommonService) private commonService: CommonService,
               private titleService: Title,
               private router: Router,
               public alertService: AlertService) { };
@@ -30,6 +29,9 @@ export class LoginComponent implements OnInit {
 
 
   ngOnInit(): void {
+    // when a user has been redirected to '/login', close and remove all SSE connections.
+    this.commonService.closeSeeRooms()
+
     this.titleService.setTitle("Login Page")
 
     this.authService.userSessionDetails.subscribe((response)=>{

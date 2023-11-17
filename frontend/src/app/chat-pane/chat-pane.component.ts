@@ -3,10 +3,11 @@
 import {FormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
-import {Message, PaneLog} from "../new_data";
-import {ChatMessageReaction, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
+import {Message, PaneLog, SseRoomState} from "../new_data";
+import {ChatMessageReaction, ChatRoomState, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
 import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {AlertService} from "../alert";
+import {CommonService} from "../common.service";
 
 @Component({
   selector: 'app-chat-pane',
@@ -27,76 +28,109 @@ export class ChatPaneComponent implements OnInit {
 
   num_messages: number = 0
   paneLogScroll: boolean = false
-  remainingTime: string = ''
   num_to_ask!: number
   lastGetTime: number = 0
+
+  remainingTime!: number
+  lastUpdateRemainingTime!: number
+  chatTimer: any
+
   constructor(
     @Inject(ChatService) private chatService: ChatService,
     @Inject(FeedbackService) private feedbackService: FeedbackService,
+    @Inject(CommonService) private commonService: CommonService,
     public alertService: AlertService
     ) { }
 
   ngOnInit(): void {
-    this.chatMessagesSubscription = interval(2500)
-      .pipe(exhaustMap(_ => {
-        return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime, undefined)
-      })).subscribe((response) => {
-        if (!this.paneLog.spectate) {
-          this.paneLog.prompt = response.info.prompt
-        }
-        if (response.messages.length > 0) {
-          // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
-          this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
-        }
-        this.num_to_ask = this.numQueries
-        this.num_messages = this.paneLog.ordinals
+    if (this.paneLog.spectate || this.paneLog.history) {
+      // Handling administrator spectate of a chatroom that is not in the cache,
+      // we are still utilizing a polling mechanism to address this administrator functionality.
+      // If it is viewed as a history, the subscription will only execute once.
+      this.chatMessagesSubscription = interval(2000)
+        .pipe(exhaustMap(_ => {
+          return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime)
+        })).subscribe((response) => {
+            // update the remainingTime in real-time from the backend
+            this.remainingTime = response.info.remainingTime
+            this.handleChatSubscription(response, false)
+          },
+          (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
+        );
+    } else {
+      // For regular chat activities, we employ the SSE mechanism and subscribe to the cache within the commonService.
+      this.num_to_ask = this.numQueries
+      this.num_messages = this.paneLog.ordinals
+      // Due to the SSE mechanism, we are unable to update the remainingTime in real-time from the backend.
+      // So we need to update the remainingTime on the frontend.
+      this.remainingTime = this.commonService.getInitialRemainingTimeByRoomId(this.paneLog.roomID) // corrected remainingTime
+      this.lastUpdateRemainingTime = Date.now()
+      this.chatTimer = setInterval(() => {this.countdown()}, 1000)
+      this.chatMessagesSubscription = this.commonService.getChatStatusByRoomId(this.paneLog.roomID)
+        .subscribe((response) => {
+            if (response == null) { return }
+            this.handleChatSubscription(response, true)
+          },
+          (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
+        );
+    }
+  }
 
-        response.messages.forEach(api_message => {
-          let message: Message;
-          message = {
-            myMessage: api_message.authorAlias == this.paneLog.myAlias,
-            ordinal: api_message.ordinal,
-            message: api_message.message,
-            time: api_message.timeStamp,
-            type: "",
-            recipients: api_message.recipients,
-            authorAlias: api_message.authorAlias
-          };
-          this.paneLog.ordinals = message.ordinal + 1
-          this.paneLog.messageLog[message.ordinal] = message
-        })
+  private handleChatSubscription(response: SseRoomState | ChatRoomState, isSse: boolean) {
+    if (!isSse) {
+      if (this.remainingTime <= 0 || this.paneLog.history) {
+        this.chatMessagesSubscription.unsubscribe()
+      }
+      if (response.messages.length > 0) {
+        // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
+        this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
+      }
+    }
+      response.messages.forEach(api_message => {
+        let message: Message;
+        message = {
+          myMessage: api_message.authorAlias == this.paneLog.myAlias,
+          ordinal: api_message.ordinal,
+          message: api_message.message,
+          time: api_message.timeStamp,
+          type: "",
+          recipients: api_message.recipients,
+          authorAlias: api_message.authorAlias
+        };
+        this.paneLog.ordinals = message.ordinal + 1
+        this.paneLog.messageLog[message.ordinal] = message
+      })
 
-        response.reactions.forEach(reaction => {
-          this.paneLog.messageLog[reaction.messageOrdinal].type = reaction.type
-        })
+    response.reactions.forEach(reaction => {
+      this.paneLog.messageLog[reaction.messageOrdinal].type = reaction.type
+    })
 
-        if (this.num_messages != this.paneLog.ordinals) {
-          this.paneLogScroll = true
-        }
+    if (this.num_messages != this.paneLog.ordinals) {
+      this.paneLogScroll = true
+    }
 
-        if (response.info.remainingTime < 3600000) {
-          const s = Math.floor(response.info.remainingTime / 1000);
-          const minutes = Math.floor(s / 60);
-          const seconds = s % 60;
-          this.remainingTime = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        } else {
-          this.remainingTime = 'no time limit';
-        }
+    if (this.paneLogScroll) {
+      this.scrollToBottom()
+      this.paneLogScroll = false
+    }
+  }
 
-        if (response.info.remainingTime <= 0) { //chat session complete
-          this.chatMessagesSubscription.unsubscribe();
-          if (this.paneLog.formRef !== '') {
-            this.paneLog.ratingOpen = true
-          }
-          this.paneLog.active = false
-        }
-        if (this.paneLogScroll) {
-          this.scrollToBottom()
-          this.paneLogScroll = false
-        }
-      },
-      (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
-    );
+  private countdown(): void {
+    if (this.remainingTime >= 1000) {
+      // When the page or screen loses focus, the browser suspends or slows down some operations, including the
+      // execution of timers. We need to subtract the actual elapsed time instead of using a fixed interval of 1000 ms.
+      const currentTime = Date.now()
+      this.remainingTime -=  currentTime - this.lastUpdateRemainingTime
+      this.lastUpdateRemainingTime = currentTime
+    } else {
+      this.remainingTime = 0
+      this.chatMessagesSubscription.unsubscribe();
+      if (this.paneLog.formRef !== '') {
+        this.paneLog.ratingOpen = true
+      }
+      this.paneLog.active = false
+      clearInterval(this.chatTimer)
+    }
   }
 
 // when the user wants to start rating

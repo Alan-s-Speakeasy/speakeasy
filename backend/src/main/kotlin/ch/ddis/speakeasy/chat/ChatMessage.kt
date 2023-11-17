@@ -18,8 +18,16 @@ data class ChatMessage(
             List<RestChatMessage> = chatMessages.map {
             RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message, it.recipients, it.isRead)
         }
+
+        fun toSseChatMessages(chatRoom: ChatRoom, chatMessages: List<ChatMessage>):
+            List<SseChatMessage> = chatMessages.map {
+                SseChatMessage(chatRoom.uid.toString(), it.time, it.authorAlias, it.ordinal, it.message,
+                    it.recipients)}
     }
 
 }
 
 data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, val recipients: Set<String>, val isRead: Boolean)
+// TODO: what's the meaning of recipients and isRead? It seems isRead is useless, through
+data class SseChatMessage(val roomId:String, val timeStamp: Long, val authorAlias: String, val ordinal: Int,
+                          val message: String, val recipients: Set<String>)

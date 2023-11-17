@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.api.handlers.*
+import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.util.Config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -153,11 +154,14 @@ object RestApi {
             }
 
         }.routes {
-
+            path("sse"){
+                path(SseRoomHandler.route) { // "room"
+                    ApiBuilder.sse(SseRoomHandler, *SseRoomHandler.permittedRoles.toTypedArray())
+                }
+            }
             path("api") {
                 apiRestHandlers.forEach { handler ->
                     path(handler.route) {
-
 
                         val permittedRoles = if (handler is AccessManagedRestHandler) {
                             handler.permittedRoles
@@ -180,7 +184,6 @@ object RestApi {
                         if (handler is DeleteRestHandler<*>) {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
-
                     }
                 }
             }

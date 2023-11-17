@@ -1,5 +1,46 @@
 /** Frontend variables and mock data */
-import {ChatRoomUserAdminInfo, FeedbackRequest, FeedbackResponse} from "../../openapi";
+import {
+  ChatRoomUserAdminInfo,
+  FeedbackRequest,
+  FeedbackResponse,
+  ChatMessageReactionType
+} from "../../openapi";
+
+export function convertFromJSON<T>(json: string): T {
+  const data = JSON.parse(json);
+
+  if (Array.isArray(data)) {
+    return data as unknown as T;
+  } else {
+    return Object.assign({}, data) as T;
+  }
+}
+
+export enum ChatEventType {
+  ROOMS = "ROOMS",
+  MESSAGES = "MESSAGES",
+  REACTIONS = "REACTIONS"
+}
+
+export interface SseChatMessage {
+  roomId: string;
+  timeStamp: number;
+  authorAlias: string;
+  ordinal: number;
+  message: string;
+  recipients: Array<string> // TODO: check if `recipients` is useful in the context of SSE
+}
+
+export interface SseChatReaction {
+  roomId: string;
+  messageOrdinal: number;
+  type: ChatMessageReactionType;
+}
+
+export interface SseRoomState {
+  messages: SseChatMessage[],
+  reactions: SseChatReaction[]
+}
 
 export interface Message {
   myMessage: boolean,  // true: the message will be shown as my message (green bubble, on the right side);
@@ -8,7 +49,7 @@ export interface Message {
   time: number,  // the time stamp of this message;
   type: string,  // the type of this message, ["THUMBS_UP", "THUMBS_DOWN", "STAR", ""];
   recipients: Array<string>,
-  authorAlias: string,// true: the message is displayed in the chatroom;
+  authorAlias: string,// true: the message is displayed in the chatroom; // TODO: the comment here is confusing ?
 }
 
 export interface MessageLog {

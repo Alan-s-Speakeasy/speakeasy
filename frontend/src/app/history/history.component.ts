@@ -14,7 +14,6 @@ import {
 } from "../../../openapi";
 import {AuthService} from "../authentication.service";
 import {AlertService} from "../alert";
-import {Subscription} from "rxjs";
 import {CommonService} from "../common.service";
 
 @Component({
@@ -24,7 +23,6 @@ import {CommonService} from "../common.service";
 })
 export class HistoryComponent implements OnInit {
 
-  private chatRoomsSubscription!: Subscription;
   constructor(private router: Router,
               private frontendDataService: FrontendDataService,
               private titleService: Title,
@@ -50,14 +48,17 @@ export class HistoryComponent implements OnInit {
       if(response != null){
         this.sessionId = response.sessionId
       }
+      // Note: This block should not be placed outside the subscribe{} (async) block.
+      // Otherwise, it will always redirect the user to /login and then to /panel.
+      if (!this.sessionId) {
+        this.alertService.error("You are not logged in!")
+        this.router.navigateByUrl('/panel').then()
+      }
     });
 
-    if (!this.sessionId) {
-      this.alertService.error("You are not logged in!")
-      this.router.navigateByUrl('/panel').then()
-    }
 
-    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
+
+    this.commonService.openSseAndListenRooms()
 
     // get all forms
     this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
@@ -171,10 +172,6 @@ export class HistoryComponent implements OnInit {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
-  }
-
-  ngOnDestroy() {
-    this.chatRoomsSubscription.unsubscribe()
   }
 
 }

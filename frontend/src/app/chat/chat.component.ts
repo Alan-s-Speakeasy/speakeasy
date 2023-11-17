@@ -44,30 +44,32 @@ export class ChatComponent implements OnInit, OnDestroy {
       if(response != null){
         this.sessionId = response.sessionId
       }
+      // Note: This block should not be placed outside the subscribe{} (async) block.
+      // Otherwise, it will always redirect the user to /login and then to /panel.
+      if (!this.sessionId) {
+        this.router.navigateByUrl('/login').then( () => this.alertService.error("You are not logged in!") )
+      }
     });
 
-    if (!this.sessionId) {
-      this.alertService.error("You are not logged in!")
-      this.router.navigateByUrl('/login').then()
-    }
+    // rooms EventListener will listen to sse and update _Rooms (as well as Rooms and currentRooms)
+    this.commonService.openSseAndListenRooms(false)
 
-    this.chatroomSubscription = interval(5000)
-      .pipe(exhaustMap(_ => {return this.commonService.getChatRooms()}))
-      .subscribe((response) => {
-        for (let room of response.rooms) {
-          let addRoom = true
-
-          this.paneLogs.forEach((paneLog) => {
-            if (paneLog.roomID == room.uid) {
-              addRoom = false
+    this.chatroomSubscription = interval(1000)
+      .pipe(exhaustMap(_ => {return this.commonService.currentRooms}))
+      .subscribe(
+        (response) => {
+          if (response) {
+            for (let room of response.rooms) {
+              let addRoom = true
+              this.paneLogs.forEach((paneLog) => {
+                if (paneLog.roomID == room.uid) { addRoom = false }
+              })
+              if (addRoom) {
+                this.addChatRoom(room)
+              }
             }
-          })
-
-          if (addRoom) {
-            this.addChatRoom(room)
           }
-        }
-      },
+        },
       (error) => {console.log("Chat rooms are not retrieved properly.", error);},
     )
   }
@@ -86,9 +88,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       ratings: {},
       myAlias: room.userAliases.find(a => a == room.alias) || "",
       otherAlias: room.userAliases.find(a => a != room.alias) || "",
-      prompt: "",
+      prompt: room.prompt,
       spectate: false,
-      testerBotAlias: room.testerBotAlias,
+      testerBotAlias: room.testerBotAlias
     }
 
     this.paneLogs.unshift(paneLog)
@@ -137,6 +139,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.paneLogs.splice(index, 1)
       }
     })
+    // When a room is removed, the backend will not seed a message. We need to process the cached Rooms on the frontend.
+    this.commonService.removeCachedRoom(roomID)
   }
 
   openModal(content: any) {

@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -68,6 +69,7 @@ object ChatRoomManager {
 
     fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> =
         when (bot) {
+            // TODO: also filter out assessed rooms for bot?
             true -> this.chatrooms.values.filter { it.users.contains(userId)
                     && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60) }.sortedBy { it.startTime }
             false -> this.chatrooms.values.filter { it.users.contains(userId)
@@ -126,6 +128,12 @@ object ChatRoomManager {
                     chatRoom.endTime = endTime + 1000 * 60 * 60
                 }
             }
+        }
+
+        //add listeners
+        val listeners = SseRoomHandler.getChatListeners(userIds)
+        listeners.forEach {
+            chatRoom.addListener(it)
         }
 
         return chatRoom

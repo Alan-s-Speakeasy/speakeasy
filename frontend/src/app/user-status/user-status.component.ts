@@ -390,7 +390,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.userListSubscription.unsubscribe();
-    // TODO: In production environments, forgetting to unsubscribe creates a huge problem for the load.
     this.allRoomsSubscription.unsubscribe();
     this.userSessionSubscription.unsubscribe();
     this.allGroupsSubscription.unsubscribe();

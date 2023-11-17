@@ -5,7 +5,7 @@ import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {PasswordChangeRequest, UserService, UserSessionDetails} from "../../../openapi";
 import {AlertService} from "../alert";
-import {Subscription} from "rxjs";
+import {AuthService} from "../authentication.service";
 
 @Component({
   selector: 'app-password',
@@ -14,10 +14,10 @@ import {Subscription} from "rxjs";
 })
 export class PasswordComponent implements OnInit {
 
-  private chatRoomsSubscription!: Subscription;
   constructor(private router: Router, private commonService: CommonService,
               private titleService: Title,
               @Inject(UserService) private userService: UserService,
+              @Inject(AuthService) private authService: AuthService,
               public alertService: AlertService) { }
 
   passwordForm = new FormGroup({
@@ -29,7 +29,7 @@ export class PasswordComponent implements OnInit {
 
   ngOnInit(): void {
     this.titleService.setTitle("Password Reset")
-    this.chatRoomsSubscription = this.commonService.alertOnNewChatRoom()
+    this.commonService.openSseAndListenRooms()
   }
 
   changePassword(): void {
@@ -55,10 +55,11 @@ export class PasswordComponent implements OnInit {
   }
 
   userLogout(): void {
-    this.alertService.success("Password has been successfully changed. Please re-login with your new password!")
-    this.userService.getApiLogout(undefined,'body',true).subscribe((response)=> {
+    this.authService.userLogout().subscribe((response)=> {
         if (response) {
-          this.router.navigateByUrl('/login').then();
+          this.router.navigateByUrl('/login').then( () =>
+            this.alertService.success("Password has been successfully changed. Please re-login with your new password!")
+          );
         }
         else {
           this.alertService.error("Logout failed. Please try again.")
@@ -68,13 +69,11 @@ export class PasswordComponent implements OnInit {
         this.alertService.error("Logout failed. Please try again.");
       }
     );
+
   }
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
   }
 
-  ngOnDestroy() {
-    this.chatRoomsSubscription.unsubscribe()
-  }
 }

@@ -2,14 +2,16 @@ import {Inject, Injectable} from '@angular/core';
 import {BehaviorSubject, Subscription, observable, Observable, throwError, of, pipe, interval} from "rxjs";
 import {takeUntil,take} from "rxjs/operators";
 import {map, catchError, tap} from 'rxjs/operators';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import {AuthService} from "./authentication.service";
+import { AppConfig } from './app.config';
+
 import {
   FeedbackService,
   ChatService,
   ChatRoomList
 } from "../../openapi";
 import {AlertService} from "./alert";
+import {ChatEventType, convertFromJSON, SseChatMessage, SseChatReaction, SseRoomState} from "./new_data";
 
 
 /**
@@ -27,7 +29,25 @@ export class CommonService {
   //userSession!: UserSessionDetails;
   chatRooms!: ChatRoomList;
   private _Rooms = new BehaviorSubject<ChatRoomList|null>(null);
-  public Rooms = this._Rooms.asObservable();
+  public Rooms = this._Rooms.asObservable(); // only for Sse Rooms now
+  private roomsWithAlerts = true
+
+  private _roomsStateMap: Map<string, BehaviorSubject<SseRoomState>> = new Map();
+
+  // Recording the timestamp of receiving a new sse message, witch helps to correct the remainingTime of each Chatroom
+  // without having to launch a new http or sse request
+  private lastSseReceivedTime: number = 0;
+
+  private appConfig: AppConfig = new AppConfig()
+
+  // SSE EventSource object and eventListener which 1) alters when new rooms come 2) updates _Rooms
+  private eventSource: EventSource | null = null
+  private readonly roomsAlertEventListener: EventListener
+  private readonly chatMessageEventListener: EventListener
+  private readonly chatReactionEventListener: EventListener
+  private readonly SseRoomEventUrl: string = `${this.appConfig.basePath}/sse/rooms`
+
+
   /**
    * Constructor
    */
@@ -35,34 +55,136 @@ export class CommonService {
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(AuthService) private AuthService: AuthService,
               public alertService: AlertService) {
+
+    this.roomsAlertEventListener =  (ev) => {
+      let oldRooms: String[];
+      let currentRooms: String[];
+      let addedRooms: String[];
+      // this.Rooms are not updated yet here
+      this.Rooms.pipe(take(1)).subscribe(
+        (value) => {
+          if (value) {
+            oldRooms = value?.rooms.map(({uid}) => uid); // [roomid, roomid ...]
+          }
+        });
+      // convert data from sse to ChatRoomList
+      const response = convertFromJSON<ChatRoomList>((ev as MessageEvent).data);
+      // update this._Rooms as well as this.Rooms
+      this._Rooms.next(response);
+
+      // init _roomsStateMap with an empty state for non-existing roomId
+      response.rooms.forEach( room => {
+        if (!this._roomsStateMap.has(room.uid)) {
+          this._roomsStateMap.set(
+            room.uid,
+            new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }))
+        }
+      })
+
+      // reset lastSseReceivedTime so that the remainingTime can be corrected
+      this.lastSseReceivedTime = Date.now()
+
+      // check if there is any new room received
+      if (response.rooms && this.roomsWithAlerts) {
+        currentRooms = response.rooms.map(({uid}) => uid);
+        addedRooms = currentRooms.filter(item => oldRooms && oldRooms.indexOf(item) == -1);
+        if (addedRooms.length > 0) {
+          if (addedRooms.length == 1) {
+            this.alertService.success("A new chat room has become available!", this.options)
+          } else {
+            this.alertService.success(addedRooms.length + " new chat rooms has become available!", this.options)
+          }
+        }
+      }
+    }
+
+    this.chatMessageEventListener =  (ev) => {
+      const sseChatMessages = convertFromJSON<SseChatMessage[]>((ev as MessageEvent).data)
+      for (const msg of sseChatMessages){
+        const roomId = msg.roomId
+        if (!this._roomsStateMap.has(roomId)) {
+          // This could happen because there's a delay mechanism in backend for sending rooms.
+          this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
+        }
+        const stateSubject = this._roomsStateMap.get(roomId)!
+        stateSubject.next({
+          ...stateSubject.getValue(),
+          messages: [...stateSubject.getValue().messages, msg]
+        })
+      }
+    }
+
+    this.chatReactionEventListener = (ev) => {
+      const sseChatReactions = convertFromJSON<SseChatReaction[]>((ev as MessageEvent).data)
+      for (const rec of sseChatReactions) {
+        const roomId = rec.roomId
+        if (!this._roomsStateMap.has(roomId)) {
+          this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
+        }
+        const stateSubject = this._roomsStateMap.get(roomId)!
+        stateSubject.next({
+          ...stateSubject.getValue(),
+          reactions: [...stateSubject.getValue().reactions, rec]
+        })
+      }
+    }
   }
 
-  /**
-   *  Check chat rooms every few seconds
-   */
-  public getChatRooms(): Observable<ChatRoomList>{
-    return this.chatService.getApiRooms().pipe(
-      tap((response) => {
-        this._Rooms.next(response);
-      }),
-    );
+  public openSseAndListenRooms(withAlerts: boolean = true) {
+    this.roomsWithAlerts = withAlerts
+    if (this.eventSource == null) {
+      this.eventSource = new EventSource( this.SseRoomEventUrl,
+        {withCredentials: true}) // Each new EventSource() creates a new SseClient in backend
+      this.eventSource.addEventListener(ChatEventType.ROOMS, this.roomsAlertEventListener);
+      this.eventSource.addEventListener(ChatEventType.MESSAGES, this.chatMessageEventListener);
+      this.eventSource.addEventListener(ChatEventType.REACTIONS, this.chatReactionEventListener);
+    }
   }
 
-  /**
-   * Returns the chat rooms as Observable.
-   */
-  get isChatRoomsAvailable(): Observable<boolean> {
-    return this._Rooms.pipe(
-      map(u => u != null),
-      catchError(e => of(false))
-    );
+  public closeSeeRooms() {
+    if (this.eventSource != null) {
+      this.eventSource.close()
+      this.eventSource = null
+    }
   }
 
-  get currentRoomList(): Observable<ChatRoomList|null>{
+  get currentRooms(): Observable<ChatRoomList|null>{
     return this._Rooms.pipe(
       map(u => u),
       catchError(e => of(null))
     );
+  }
+
+  public removeCachedRoom(roomId: string) {
+    this.Rooms.pipe(take(1)).subscribe((oldRooms) => {
+      if (oldRooms === null) {
+        this._Rooms.next(null);
+      } else {
+        const newRooms = { rooms: oldRooms.rooms.filter((r) => r.uid !== roomId) };
+        this._Rooms.next(newRooms);
+      }
+    });
+  }
+
+  public getChatStatusByRoomId(roomId: string): Observable<SseRoomState|null> {
+    const roomState = this._roomsStateMap.get(roomId);
+    if (!roomState) {
+      console.warn(`Can't find such roomId in cached room state: ${roomId}`);
+      return of(null);
+    }
+    return roomState.asObservable();
+  }
+
+  public getInitialRemainingTimeByRoomId(roomId: string): number {
+    let correctedRemainingTime: number = 0
+    this._Rooms.pipe(take(1)).subscribe(response => {
+      const room = response?.rooms.find( (r) => r.uid === roomId )
+      if (room !== undefined) {
+        // corrected = the old remainingTime - how old it is
+        correctedRemainingTime = room.remainingTime - (Date.now() - this.lastSseReceivedTime)
+      }
+    })
+    return correctedRemainingTime > 0 ? correctedRemainingTime : 0;
   }
 
 
@@ -88,37 +210,25 @@ export class CommonService {
       catchError(e => of(false)));
   }
 
-  public alertOnNewChatRoom() {
-    return interval(10_000).subscribe((number) => {
-      let newRooms!: ChatRoomList;
-      let oldRooms: String[];
-      let currentRooms: String[];
-      let addedRooms: String[];
-      this.Rooms.pipe(take(1)).subscribe(
-        (value) => {
-          if (value) {
-            oldRooms = value?.rooms.map(({uid}) => uid);
-          }
-        });
-      this.getChatRooms().pipe(take(1)).subscribe((value) => {
-          newRooms = value;
-          if (value.rooms) {
-            currentRooms = value.rooms.map(({uid}) => uid);
-          }
-        },
-        error => {
-        },
-        () => {
-          addedRooms = currentRooms.filter(item => oldRooms && oldRooms.indexOf(item) == -1);
-          if (addedRooms.length > 0) {
-            if (addedRooms.length == 1) {
-              this.alertService.success("A new chat room has become available!", this.options)
-            } else {
-              this.alertService.success(addedRooms.length + " new chat rooms has become available!", this.options)
-            }
-          }
-        });
-    });
+  /**
+   *  Check chat rooms every few seconds
+   */
+  public getChatRooms(): Observable<ChatRoomList>{
+    return this.chatService.getApiRooms().pipe(
+      tap((response) => {
+        this._Rooms.next(response);
+      }),
+    );
+  }
+
+  /**
+   * Returns the chat rooms as Observable.
+   */
+  get isChatRoomsAvailable(): Observable<boolean> {
+    return this._Rooms.pipe(
+      map(u => u != null),
+      catchError(e => of(false))
+    );
   }
 
 }

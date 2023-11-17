@@ -33,11 +33,17 @@ open class ChatRoom(
 
     private val lock: StampedLock = StampedLock()
 
+    private val listeners = mutableListOf<ChatEventListener>()
+
     val nextMessageOrdinal: Int
         get() = this.lock.read {
             messages.size
         }
 
+    fun addListener(listener: ChatEventListener) = this.lock.write {
+        this.listeners.add(listener)
+        listener.onNewRoom(this)
+    }
 
     fun getAllMessages(): List<ChatMessage> = this.lock.read {
         this.messages.toList()
@@ -52,12 +58,23 @@ open class ChatRoom(
      */
     fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
         val currentUser = this.users[userId]
-        this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
+        // TODO: BUG - Admin cannot spectate chat room messages if we keep `it.recipients.contains(currentUser)`.
+        //  I'm not sure if it is necessary here. I just removed it for now.
+//        this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
+        this.messages.filter { it.time >= since }
     }
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         this.messages.add(message)
+        listeners.removeIf { listener -> //check state of listener, update if active, remove if not
+            if (listener.isActive) {
+                listener.onMessage(message, this)
+                false
+            } else {
+                true
+            }
+        }
         return@write //actively return nothing
     }
 
@@ -65,6 +82,14 @@ open class ChatRoom(
         require(this.active) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
         this.reactions[reaction.messageOrdinal] = reaction
+        listeners.removeIf { listener -> //check state of listener, update if active, remove if not
+            if (listener.isActive) {
+                listener.onReaction(reaction, this)
+                false
+            } else {
+                true
+            }
+        }
         return@write
     }
 

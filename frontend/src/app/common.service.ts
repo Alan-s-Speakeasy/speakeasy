@@ -34,12 +34,10 @@ export class CommonService {
 
   private _roomsStateMap: Map<string, BehaviorSubject<SseRoomState>> = new Map();
 
-  // Recording the time of init of this component helps to correct the remainingTime of each Chatroom
+  // Recording the timestamp of receiving a new sse message, witch helps to correct the remainingTime of each Chatroom
   // without having to launch a new http or sse request
-  private initTimeStamp: number = Date.now();
+  private lastSseReceivedTime: number = 0;
 
-  // TODO: To get the configured basePath for SSE, I instantiate AppConfig here.
-  //  I'm not sure if it's a good practice. Is there any way to improve it?
   private appConfig: AppConfig = new AppConfig()
 
   // SSE EventSource object and eventListener which 1) alters when new rooms come 2) updates _Rooms
@@ -63,7 +61,7 @@ export class CommonService {
       let currentRooms: String[];
       let addedRooms: String[];
       // this.Rooms are not updated yet here
-      this.Rooms.pipe(take(1)).subscribe( // Automatic Unsubscription in Nesting TODO: check other nested subscribe
+      this.Rooms.pipe(take(1)).subscribe(
         (value) => {
           if (value) {
             oldRooms = value?.rooms.map(({uid}) => uid); // [roomid, roomid ...]
@@ -83,8 +81,8 @@ export class CommonService {
         }
       })
 
-      // reset initTimeStamp so that the remainingTime can be corrected
-      this.initTimeStamp = Date.now()
+      // reset lastSseReceivedTime so that the remainingTime can be corrected
+      this.lastSseReceivedTime = Date.now()
 
       // check if there is any new room received
       if (response.rooms && this.roomsWithAlerts) {
@@ -102,14 +100,14 @@ export class CommonService {
 
     this.chatMessageEventListener =  (ev) => {
       const sseChatMessages = convertFromJSON<SseChatMessage[]>((ev as MessageEvent).data)
-      for (const msg of sseChatMessages){ // TODO: refactor
+      for (const msg of sseChatMessages){
         const roomId = msg.roomId
         if (!this._roomsStateMap.has(roomId)) {
+          // This could happen because there's a delay mechanism in backend for sending rooms.
           this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
-          console.warn('This should not happen: No roomId key in _roomsStateMap when adding a message')
         }
         const stateSubject = this._roomsStateMap.get(roomId)!
-        stateSubject.next({ // TODO: refactor (get rid of one by one adding)
+        stateSubject.next({
           ...stateSubject.getValue(),
           messages: [...stateSubject.getValue().messages, msg]
         })
@@ -122,7 +120,6 @@ export class CommonService {
         const roomId = rec.roomId
         if (!this._roomsStateMap.has(roomId)) {
           this._roomsStateMap.set(roomId, new BehaviorSubject<SseRoomState>({ messages: [], reactions: [] }));
-          console.warn('This should not happen: No roomId key in _roomsStateMap when adding a reaction')
         }
         const stateSubject = this._roomsStateMap.get(roomId)!
         stateSubject.next({
@@ -172,7 +169,7 @@ export class CommonService {
   public getChatStatusByRoomId(roomId: string): Observable<SseRoomState|null> {
     const roomState = this._roomsStateMap.get(roomId);
     if (!roomState) {
-      console.warn(`Can't find such roomId in _roomsStateMap: ${roomId}`);
+      console.warn(`Can't find such roomId in cached room state: ${roomId}`);
       return of(null);
     }
     return roomState.asObservable();
@@ -184,7 +181,7 @@ export class CommonService {
       const room = response?.rooms.find( (r) => r.uid === roomId )
       if (room !== undefined) {
         // corrected = the old remainingTime - how old it is
-        correctedRemainingTime = room.remainingTime - (Date.now() - this.initTimeStamp)
+        correctedRemainingTime = room.remainingTime - (Date.now() - this.lastSseReceivedTime)
       }
     })
     return correctedRemainingTime > 0 ? correctedRemainingTime : 0;

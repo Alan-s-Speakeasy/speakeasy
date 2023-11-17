@@ -13,6 +13,7 @@ import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.http.sse.SseClient
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.*
 
 enum class ChatEventType {
     ROOMS,
@@ -32,6 +33,9 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
 
     override var isActive: Boolean = true
         private set
+
+    private val sendingDelayInterval = 500L
+    private var roomSendingJob: Job? = null
 
     init {
         val userSession: UserSession = AccessManager.getUserSessionForSessionToken(client.ctx().sessionToken())
@@ -80,16 +84,28 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
         }
     }
 
-    override fun onNewRoom(chatRoom: ChatRoom) { // TODO: When assigning many rooms, backend will send it many times almost simultaneously ...
+    override fun onNewRoom(chatRoom: ChatRoom) {
         if (!this.rooms.keys.contains(chatRoom.uid)) {
             //sanity check, is the user even part of this room
             if (!chatRoom.users.keys.contains(userId)) { return }
             this.rooms[chatRoom.uid] = chatRoom
 
-            // send all rooms when there is a new room, because they are not monotonically increasing.
-            val rooms = ChatRoomManager.getByUser(userId, bot=false)
-            this.send(eventType = ChatEventType.ROOMS, data = ChatRoomList(rooms.map { ChatRoomInfo(it, userId) }))
+            // onNewRoom is triggered by a single new room. To avoid sending rooms too many times simultaneously when
+            // assigning numerous chat rooms to multiple users, I introduced a delay mechanism here,
+            // which can compress multiple room transmissions occurring in extremely short intervals, and only send
+            // the latest rooms.
+            roomSendingJob?.cancel()
+            roomSendingJob = CoroutineScope(Dispatchers.Default).launch {
+                delay(sendingDelayInterval)
+                sendLatestRooms()
+            }
         }
+    }
+
+    private fun sendLatestRooms() {
+        // send all rooms when there is a new room, because they are not monotonically increasing.
+        val rooms = ChatRoomManager.getByUser(userId, bot=false)
+        this.send(eventType = ChatEventType.ROOMS, data = ChatRoomList(rooms.map { ChatRoomInfo(it, userId) }))
     }
 
     override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) {

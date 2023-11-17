@@ -3,8 +3,8 @@
 import {FormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
-import {Message, PaneLog} from "../new_data";
-import {ChatMessageReaction, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
+import {Message, PaneLog, SseRoomState} from "../new_data";
+import {ChatMessageReaction, ChatRoomState, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
 import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {AlertService} from "../alert";
 import {CommonService} from "../common.service";
@@ -29,9 +29,11 @@ export class ChatPaneComponent implements OnInit {
   num_messages: number = 0
   paneLogScroll: boolean = false
   num_to_ask!: number
+  lastGetTime: number = 0
 
   remainingTime!: number
-  roundTimer: any
+  lastUpdateRemainingTime!: number
+  chatTimer: any
 
   constructor(
     @Inject(ChatService) private chatService: ChatService,
@@ -41,53 +43,84 @@ export class ChatPaneComponent implements OnInit {
     ) { }
 
   ngOnInit(): void {
-
-    this.num_to_ask = this.numQueries
-    this.num_messages = this.paneLog.ordinals
-    this.remainingTime = this.commonService.getInitialRemainingTimeByRoomId(this.paneLog.roomID) // corrected remainingTime
-    this.roundTimer = setInterval(() => {this.countdown()}, 1000)
-
-    this.chatMessagesSubscription = this.commonService.getChatStatusByRoomId(this.paneLog.roomID)
-      .subscribe((response) => {
-        if (response == null) { return }
-
-        // if (!this.paneLog.spectate) { // TODO: check prompt here later (for spectating and history).
-        //   this.paneLog.prompt = response.info.prompt
-        // }
-
-        response.messages.forEach(sseMessage => {
-          let message: Message;
-          message = {
-            myMessage: sseMessage.authorAlias == this.paneLog.myAlias,
-            ordinal: sseMessage.ordinal,
-            message: sseMessage.message,
-            time: sseMessage.timeStamp,
-            type: ""
-          };
-          this.paneLog.ordinals = message.ordinal + 1
-          this.paneLog.messageLog[message.ordinal] = message
-        })
-
-        response.reactions.forEach(reaction => {
-          this.paneLog.messageLog[reaction.messageOrdinal].type = reaction.type
-        })
-
-        if (this.num_messages != this.paneLog.ordinals) {
-          this.paneLogScroll = true
-        }
-
-        if (this.paneLogScroll) {
-          this.scrollToBottom()
-          this.paneLogScroll = false
-        }
-      },
-      (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
-    );
+    if (this.paneLog.spectate || this.paneLog.history) {
+      // Handling administrator spectate of a chatroom that is not in the cache,
+      // we are still utilizing a polling mechanism to address this administrator functionality.
+      // If it is viewed as a history, the subscription will only execute once.
+      this.chatMessagesSubscription = interval(2000)
+        .pipe(exhaustMap(_ => {
+          return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime)
+        })).subscribe((response) => {
+            // update the remainingTime in real-time from the backend
+            this.remainingTime = response.info.remainingTime
+            this.handleChatSubscription(response, false)
+          },
+          (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
+        );
+    } else {
+      // For regular chat activities, we employ the SSE mechanism and subscribe to the cache within the commonService.
+      this.num_to_ask = this.numQueries
+      this.num_messages = this.paneLog.ordinals
+      // Due to the SSE mechanism, we are unable to update the remainingTime in real-time from the backend.
+      // So we need to update the remainingTime on the frontend.
+      this.remainingTime = this.commonService.getInitialRemainingTimeByRoomId(this.paneLog.roomID) // corrected remainingTime
+      this.lastUpdateRemainingTime = Date.now()
+      this.chatTimer = setInterval(() => {this.countdown()}, 1000)
+      this.chatMessagesSubscription = this.commonService.getChatStatusByRoomId(this.paneLog.roomID)
+        .subscribe((response) => {
+            if (response == null) { return }
+            this.handleChatSubscription(response, true)
+          },
+          (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
+        );
+    }
   }
 
-  countdown(): void {
-    if (this.remainingTime > 0) {
-      this.remainingTime -= 1000
+  private handleChatSubscription(response: SseRoomState | ChatRoomState, isSse: boolean) {
+    if (!isSse) {
+      if (this.remainingTime <= 0 || this.paneLog.history) {
+        this.chatMessagesSubscription.unsubscribe()
+      }
+      if (response.messages.length > 0) {
+        // Set new since parameter to the timestamp of the last message (plus 1 to not get last message again)
+        this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
+      }
+    }
+
+    response.messages.forEach(sseMessage => {
+      let message: Message;
+      message = {
+        myMessage: sseMessage.authorAlias == this.paneLog.myAlias,
+        ordinal: sseMessage.ordinal,
+        message: sseMessage.message,
+        time: sseMessage.timeStamp,
+        type: ""
+      };
+      this.paneLog.ordinals = message.ordinal + 1
+      this.paneLog.messageLog[message.ordinal] = message
+    })
+
+    response.reactions.forEach(reaction => {
+      this.paneLog.messageLog[reaction.messageOrdinal].type = reaction.type
+    })
+
+    if (this.num_messages != this.paneLog.ordinals) {
+      this.paneLogScroll = true
+    }
+
+    if (this.paneLogScroll) {
+      this.scrollToBottom()
+      this.paneLogScroll = false
+    }
+  }
+
+  private countdown(): void {
+    if (this.remainingTime >= 1000) {
+      // When the page or screen loses focus, the browser suspends or slows down some operations, including the
+      // execution of timers. We need to subtract the actual elapsed time instead of using a fixed interval of 1000 ms.
+      const currentTime = Date.now()
+      this.remainingTime -=  currentTime - this.lastUpdateRemainingTime
+      this.lastUpdateRemainingTime = currentTime
     } else {
       this.remainingTime = 0
       this.chatMessagesSubscription.unsubscribe();
@@ -95,7 +128,7 @@ export class ChatPaneComponent implements OnInit {
         this.paneLog.ratingOpen = true
       }
       this.paneLog.active = false
-      clearInterval(this.roundTimer)
+      clearInterval(this.chatTimer)
     }
   }
 

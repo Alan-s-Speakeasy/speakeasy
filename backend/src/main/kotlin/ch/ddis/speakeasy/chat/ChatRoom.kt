@@ -40,9 +40,11 @@ open class ChatRoom(
             messages.size
         }
 
-    fun addListener(listener: ChatEventListener) = this.lock.write {
+    fun addListener(listener: ChatEventListener, alert: Boolean = true) = this.lock.write {
         this.listeners.add(listener)
-        listener.onNewRoom(this)
+        if (alert) {
+            listener.onNewRoom(this)
+        }
     }
 
     fun getAllMessages(): List<ChatMessage> = this.lock.read {

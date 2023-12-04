@@ -54,18 +54,13 @@ export class AuthService {
   /**
    * Returns the current login state as Observable.
    */
-  get isInValidSession(): Observable<boolean> {
-    if(this._userSession.getValue() == null){
-      return this.sessionDetails().pipe(
-        map(u => u != null),
-        catchError(e => of(false))
-      );
-    }
+  get isValidSession(): Observable<boolean> {
     return this._userSession.pipe(
       map(u => u != null),
       catchError((e) => of(false))
     );
   }
+
 
 
   /**

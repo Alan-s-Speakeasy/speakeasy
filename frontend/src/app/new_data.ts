@@ -18,8 +18,8 @@ export function convertFromJSON<T>(json: string): T {
 
 export enum ChatEventType {
   ROOMS = "ROOMS",
-  MESSAGES = "MESSAGES",
-  REACTIONS = "REACTIONS"
+  MESSAGE = "MESSAGE",
+  REACTION = "REACTION"
 }
 
 export interface SseChatMessage {

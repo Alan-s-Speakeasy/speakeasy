@@ -19,10 +19,9 @@ data class ChatMessage(
             RestChatMessage(it.time, it.authorAlias, it.ordinal, it.message, it.recipients, it.isRead)
         }
 
-        fun toSseChatMessages(chatRoom: ChatRoom, chatMessages: List<ChatMessage>):
-            List<SseChatMessage> = chatMessages.map {
-                SseChatMessage(chatRoom.uid.toString(), it.time, it.authorAlias, it.ordinal, it.message,
-                    it.recipients)}
+        fun toSseChatMessage(chatRoom: ChatRoom, chatMessage: ChatMessage):
+            SseChatMessage = SseChatMessage(chatRoom.uid.toString(), chatMessage.time, chatMessage.authorAlias,
+                    chatMessage.ordinal, chatMessage.message, chatMessage.recipients)
     }
 
 }

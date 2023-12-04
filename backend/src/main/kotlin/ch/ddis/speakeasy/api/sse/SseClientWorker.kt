@@ -17,8 +17,8 @@ import kotlinx.coroutines.*
 
 enum class ChatEventType {
     ROOMS,
-    MESSAGES,
-    REACTIONS;
+    MESSAGE,
+    REACTION;
 }
 
 class SseClientWorker(private val client: SseClient): ChatEventListener {
@@ -36,6 +36,7 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
 
     private val sendingDelayInterval = 500L
     private var roomSendingJob: Job? = null
+    private val roomsToSend: MutableList<ChatRoom> = mutableListOf()
 
     init {
         val userSession: UserSession = AccessManager.getUserSessionForSessionToken(client.ctx().sessionToken())
@@ -56,32 +57,18 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
         this.onOpen()
     }
 
-    private fun send(eventType: ChatEventType, data: Any) {
-        client.sendEvent(event=eventType.toString(), data=data)
+    private fun onOpen() {
+        // Handling Special Cases: reconnect the worker to the related chat rooms if refreshing web page,
+        // without re-sending them as new rooms
+        val rooms = ChatRoomManager.getByUser(userId)
+        rooms.forEach {
+            if (it.active) {  it.addListener(this, alert=false) } // not trigger `onNewRoom`
+        }
     }
 
-    private fun onOpen() {  // when the sse connection opens successfully
-        // Handling Special Cases: Send all information when opening (refreshing page) to avoid missing information in frontend.
-        // Suppose a worker, w1, disconnects from the SSE connection and reconnects as w2.
-        // At this point, w1 and w2 have the same userId, but w2 is not added to the listeners of the related rooms.
-        // We need to fix w2's listening for these rooms, as well as to send all existing and related rooms to w2.
-        val rooms = ChatRoomManager.getByUser(userId)
-        if (rooms.isEmpty()) { // if no rooms, send an empty ChatRoomList
-            this.send(eventType=ChatEventType.ROOMS, data=ChatRoomList(rooms=emptyList()))
-            return
-        }
-        rooms.forEach { room ->
-            room.addListener(this) // it triggers onNewRoom => send all existing and related rooms
 
-            // send all existing messages and reactions
-            room.getAllMessages().takeIf { it.isNotEmpty() }?.let {
-                this.send(eventType = ChatEventType.MESSAGES, data = ChatMessage.toSseChatMessages(room, it))
-            }
-            room.getAllReactions().takeIf { it.isNotEmpty() }?.let {
-                this.send(eventType = ChatEventType.REACTIONS, data = ChatMessageReaction.toSseChatReactions(room, it))
-            }
-
-        }
+    private fun send(eventType: ChatEventType, data: Any) {
+        client.sendEvent(event=eventType.toString(), data=data)
     }
 
     override fun onNewRoom(chatRoom: ChatRoom) {
@@ -89,11 +76,11 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
             //sanity check, is the user even part of this room
             if (!chatRoom.users.keys.contains(userId)) { return }
             this.rooms[chatRoom.uid] = chatRoom
-
+            roomsToSend.add(chatRoom)
             // onNewRoom is triggered by a single new room. To avoid sending rooms too many times simultaneously when
             // assigning numerous chat rooms to multiple users, I introduced a delay mechanism here,
             // which can compress multiple room transmissions occurring in extremely short intervals, and only send
-            // the latest rooms.
+            // the latest new rooms.
             roomSendingJob?.cancel()
             roomSendingJob = CoroutineScope(Dispatchers.Default).launch {
                 delay(sendingDelayInterval)
@@ -103,26 +90,26 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
     }
 
     private fun sendLatestRooms() {
-        // send all rooms when there is a new room, because they are not monotonically increasing.
-        val rooms = ChatRoomManager.getByUser(userId, bot=false)
-        this.send(eventType = ChatEventType.ROOMS, data = ChatRoomList(rooms.map { ChatRoomInfo(it, userId) }))
+        // send latest new rooms at one shot.
+        this.send(eventType = ChatEventType.ROOMS, data = ChatRoomList(roomsToSend.map { ChatRoomInfo(it, userId) }))
+        roomsToSend.clear()
     }
 
     override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) {
         if (!chatRoom.users.keys.contains(userId)) { return }
-        val sseChatMessages = ChatMessage.toSseChatMessages(chatRoom, listOf(chatMessage))
+        val sseChatMessage = ChatMessage.toSseChatMessage(chatRoom, chatMessage)
         this.send(
-            eventType = ChatEventType.MESSAGES,
-            data = sseChatMessages  // a list of a single massage
+            eventType = ChatEventType.MESSAGE,
+            data = sseChatMessage  // a single massage
         )
     }
 
     override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) {
         if (!chatRoom.users.keys.contains(userId)) { return }
-        val sseChatReactions = ChatMessageReaction.toSseChatReactions(chatRoom, listOf(chatMessageReaction))
+        val sseChatReaction = ChatMessageReaction.toSseChatReaction(chatRoom, chatMessageReaction)
         this.send(
-            eventType = ChatEventType.REACTIONS,
-            data = sseChatReactions  // a list of a single reaction
+            eventType = ChatEventType.REACTION,
+            data = sseChatReaction  // a single reaction
         )
     }
 

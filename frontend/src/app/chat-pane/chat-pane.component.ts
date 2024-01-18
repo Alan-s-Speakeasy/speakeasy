@@ -60,7 +60,6 @@ export class ChatPaneComponent implements OnInit {
     } else {
       // For regular chat activities, we employ the SSE mechanism and subscribe to the cache within the commonService.
       this.num_to_ask = this.numQueries
-      this.num_messages = this.paneLog.ordinals
       // Due to the SSE mechanism, we are unable to update the remainingTime in real-time from the backend.
       // So we need to update the remainingTime on the frontend.
       this.remainingTime = this.commonService.getInitialRemainingTimeByRoomId(this.paneLog.roomID) // corrected remainingTime
@@ -113,6 +112,7 @@ export class ChatPaneComponent implements OnInit {
       this.scrollToBottom()
       this.paneLogScroll = false
     }
+    this.num_messages = this.paneLog.ordinals
   }
 
   private countdown(): void {

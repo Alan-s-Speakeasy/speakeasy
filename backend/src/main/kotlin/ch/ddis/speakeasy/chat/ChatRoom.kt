@@ -1,6 +1,8 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
@@ -59,11 +61,11 @@ open class ChatRoom(
      * @return all [ChatMessage]s since a specified timestamp
      */
     fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
+        val currentUserRole = UserManager.getUserRoleByUserID(userId)
+        if (currentUserRole == UserRole.ADMIN) { return this.messages.filter { it.time >= since } }
+
         val currentUser = this.users[userId]
-        // TODO: BUG - Admin cannot spectate chat room messages if we keep `it.recipients.contains(currentUser)`.
-        //  I'm not sure if it is necessary here. I just removed it for now.
-//        this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
-        this.messages.filter { it.time >= since }
+        return this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
     }
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {

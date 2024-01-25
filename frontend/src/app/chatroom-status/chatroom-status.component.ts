@@ -20,7 +20,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
               @Inject(AdminService) private adminService: AdminService) { }
 
   private activeRoomsSubscription!: Subscription;
-  // private allRoomsSubscription!: Subscription;
 
   activateChatroomDetails: FrontendChatroomDetail[] = []
   allChatroomDetails: FrontendChatroomDetail[] = []
@@ -122,6 +121,5 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.activeRoomsSubscription.unsubscribe()
-    // this.allRoomsSubscription.unsubscribe()
   }
 }

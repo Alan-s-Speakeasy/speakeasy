@@ -5,8 +5,8 @@ import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
 
 import {AdminService, ChatRoomAdminInfo} from "../../../openapi";
-import {interval, Subscription} from "rxjs";
-import {exhaustMap} from "rxjs/operators";
+import {interval, Subscription, timer} from "rxjs";
+import {exhaustMap, take} from "rxjs/operators";
 
 @Component({
   selector: 'app-chatroom-status',
@@ -20,39 +20,69 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
               @Inject(AdminService) private adminService: AdminService) { }
 
   private activeRoomsSubscription!: Subscription;
-  private allRoomsSubscription!: Subscription;
+  // private allRoomsSubscription!: Subscription;
 
   activateChatroomDetails: FrontendChatroomDetail[] = []
   allChatroomDetails: FrontendChatroomDetail[] = []
 
+  ITEM_PER_PAGE = 10
+  currentPageOfActivateRooms: number = 1
+  pageArrayOfActivateRooms: number[] = [1]
+
+  numOfAllRooms: number = 0
+  currentPageOfAllRooms: number = 1
+  pageArrayOfAllRooms: number[] = [1]
+
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
 
-    this.activeRoomsSubscription = interval(10_000)
+    this.activeRoomsSubscription = timer(2500, 10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsActive()}))
       .subscribe((activechatrooms) => {
         this.activateChatroomDetails = []
         activechatrooms.rooms.forEach(room => {
           this.pushChatRoomDetails(this.activateChatroomDetails, room)
         })
+        // update page info
+        const maxPage = Math.ceil(this.activateChatroomDetails.length / this.ITEM_PER_PAGE);
+        if (this.currentPageOfActivateRooms > maxPage) { this.currentPageOfActivateRooms = maxPage }
+        if (activechatrooms.rooms.length > 0 && this.currentPageOfActivateRooms == 0) {
+          this.currentPageOfActivateRooms = 1
+        }
+        this.pageArrayOfActivateRooms = Array.from({ length: maxPage }, (_, i) => i + 1);
       })
 
-    this.allRoomsSubscription = interval(10_000)
-      .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsAll()}))
-      .subscribe((allchatrooms) => {
-        allchatrooms.rooms.forEach(room => {
-          let update = true
-          this.allChatroomDetails.forEach(currentRoom => {
-            if (currentRoom.roomID == room.uid) {
-              update = false
-              currentRoom.remainingTime = room.remainingTime
-            }
-          })
-          if (update) {
-            this.pushChatRoomDetails(this.allChatroomDetails, room)
-          }
-        })
-      })
+    // fetch all rooms once with page=1
+    this.setCurrentPage(1, false)
+  }
+
+  paginate<T>(list: T[], currentPage: number):  T[] {
+    const startIdx = (currentPage - 1) * this.ITEM_PER_PAGE;
+    const endIdx = currentPage * this.ITEM_PER_PAGE;
+    return list.slice(startIdx, endIdx);
+  }
+
+  setCurrentPage(page: number, activateRooms: boolean = false) {
+    if (activateRooms) {
+      this.currentPageOfActivateRooms = page
+    } else {
+      this.currentPageOfAllRooms = page
+      // this.adminService.getApiRoomsAll(this.currentPageOfAllRooms, this.ITEM_PER_PAGE)
+      this.adminService.getApiRoomsAll(this.currentPageOfAllRooms, this.ITEM_PER_PAGE)
+        .pipe(take(1))
+        .subscribe((paginatedRooms) => {
+          this.allChatroomDetails = [];
+          paginatedRooms.rooms.forEach(room => {
+            this.pushChatRoomDetails(this.allChatroomDetails, room);
+          });
+          this.numOfAllRooms = paginatedRooms.numOfAllRooms;
+
+          // Update page info
+          const maxPage = Math.ceil(paginatedRooms.numOfAllRooms / this.ITEM_PER_PAGE);
+          if (this.currentPageOfAllRooms > maxPage) { this.currentPageOfAllRooms = maxPage; }
+          this.pageArrayOfAllRooms = Array.from({ length: maxPage }, (_, i) => i + 1);
+        });
+    }
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
@@ -92,6 +122,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.activeRoomsSubscription.unsubscribe()
-    this.allRoomsSubscription.unsubscribe()
+    // this.allRoomsSubscription.unsubscribe()
   }
 }

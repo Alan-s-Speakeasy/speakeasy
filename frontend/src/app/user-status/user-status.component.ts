@@ -18,7 +18,7 @@ import {
   UserDetails,
   UserSessionDetails
 } from "../../../openapi";
-import {interval, Subscription} from "rxjs";
+import {interval, Subscription, timer} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import { HttpClient } from '@angular/common/http';
 import {FormControl} from "@angular/forms";
@@ -48,6 +48,8 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   private userListSubscription!: Subscription;
   private allGroupsSubscription!: Subscription;
 
+  ITEM_PER_PAGE = 10
+
   humanDetails: FrontendUserDetail[] = []
   adminDetails: FrontendUserDetail[] = []
   botDetails: FrontendUserDetail[] = []
@@ -55,6 +57,30 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   humanList: FrontendUser[] = []
   adminList: FrontendUser[] = []
   botList: FrontendUser[] = []
+
+  allUserDetails = [
+    {name: "Humans", table: "success", details: this.humanDetails},
+    {name: "Bots", table: "warning", details: this.botDetails},
+    {name: "Admins", table: "info", details: this.adminDetails},
+  ]
+  currentPagesOfUserDetails: { [key: string]: number } = {
+    "Humans": 1, "Bots": 1, "Admins": 1
+  };
+  pagesArrayOfUserDetails: { [key: string]: number[] } = {
+    "Humans": [1], "Bots": [1], "Admins": [1]
+  };
+  allUserLists = [
+    {name: "Humans", table: "success", list: this.humanList},
+    {name: "Bots", table: "warning", list: this.botList},
+    {name: "Admins", table: "info", list: this.adminList},
+  ]
+  currentPagesOfUserLists: { [key: string]: number } = {
+    "Humans": 1, "Bots": 1, "Admins": 1
+  };
+  pagesArrayOfUserLists: { [key: string]: number[] } = {
+    "Humans": [1], "Bots": [1], "Admins": [1]
+  };
+
 
   groupList: FrontendGroup[] = []
 
@@ -97,7 +123,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         })
       })
 
-    this.allGroupsSubscription = interval(10_000)
+    this.allGroupsSubscription = timer(2500, 10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiGroupList()}))
       .subscribe((allGroups) => {
         while (this.groupList.length > 0) {
@@ -109,7 +135,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         )
       })
 
-    this.userSessionSubscription = interval(10_000)
+    this.userSessionSubscription = timer(2500, 10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiUserSessions()}))
       .subscribe((usersessions) => {
         while (this.humanDetails.length > 0) {
@@ -132,9 +158,19 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.pushDetail(this.botDetails, usersession)
           }
         })
+
+        // update page info
+        this.allUserDetails.forEach(element => {
+          const maxPage = Math.ceil(element.details.length / this.ITEM_PER_PAGE);
+          if (this.currentPagesOfUserDetails[element.name] > maxPage) {
+            this.currentPagesOfUserDetails[element.name] = maxPage;
+          }
+          this.pagesArrayOfUserDetails[element.name] =
+            Array.from({ length: maxPage }, (_, i) => i + 1);
+        })
       })
 
-    this.userListSubscription = interval(10_000)
+    this.userListSubscription = timer(2500, 10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiUserList()}))
       .subscribe((userlist) => {
         while (this.humanList.length > 0) {
@@ -158,7 +194,34 @@ export class UserStatusComponent implements OnInit, OnDestroy {
           }
           this.existingUsernames.add(user.username)
         })
+
+        // update page info
+        this.allUserLists.forEach(element => {
+          const maxPage = Math.ceil(element.list.length / this.ITEM_PER_PAGE);
+          if (this.currentPagesOfUserLists[element.name] > maxPage) {
+            this.currentPagesOfUserLists[element.name] = maxPage;
+          }
+          this.pagesArrayOfUserLists[element.name] =
+            Array.from({ length: maxPage }, (_, i) => i + 1);
+        })
+
+
       })
+  }
+
+  paginate<T>(list: T[], currentPage: number):  T[] {
+    const startIdx = (currentPage - 1) * this.ITEM_PER_PAGE;
+    const endIdx = currentPage * this.ITEM_PER_PAGE;
+    return list.slice(startIdx, endIdx);
+  }
+
+  setCurrentPage(key: string, page: number, onlineUsers: boolean = false) {
+    if (onlineUsers) {
+      this.currentPagesOfUserDetails[key] = page
+      this.toggleElement = -1
+    } else {
+      this.currentPagesOfUserLists[key] = page
+    }
   }
 
   isValidUsernames(): boolean {
@@ -236,17 +299,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     )
   }
 
-  allUserDetails = [
-    {name: "Humans", table: "success", details: this.humanDetails},
-    {name: "Bots", table: "warning", details: this.botDetails},
-    {name: "Admins", table: "info", details: this.adminDetails},
-  ]
-
-  allUserLists = [
-    {name: "Humans", table: "success", list: this.humanList},
-    {name: "Bots", table: "warning", list: this.botList},
-    {name: "Admins", table: "info", list: this.adminList},
-  ]
 
   getPartners(userInfo: ChatRoomUserAdminInfo[], exclude: string): string[] {
     let res = new Set<string>()

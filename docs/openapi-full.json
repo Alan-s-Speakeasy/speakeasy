@@ -1335,9 +1335,31 @@
     "/api/rooms/all" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Lists all Chatrooms",
+        "summary" : "Lists all Chatrooms with pagination, ordered by descending startTime",
         "operationId" : "getApiRoomsAll",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "page number for pagination. Defaults to 1.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "number of rooms to return per page. If not specified, there is no limit.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1959,6 +1981,10 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "numOfAllRooms" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "rooms" : {
             "type" : "array",
             "items" : {
@@ -1966,7 +1992,7 @@
             }
           }
         },
-        "required" : [ "rooms" ]
+        "required" : [ "numOfAllRooms", "rooms" ]
       },
       "ChatRoomInfo" : {
         "type" : "object",

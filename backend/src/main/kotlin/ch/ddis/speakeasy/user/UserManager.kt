@@ -24,6 +24,10 @@ object UserManager {
                 SchemaUtils.createMissingTablesAndColumns(Users, Groups, GroupUsers)
             }
         }
+//        val users = (6..200).map { "human$it" }
+//        users.forEach {
+//            this.addUser(it, UserRole.HUMAN, PlainPassword(it))
+//        }
     }
 
     fun addUser(username: String, role: UserRole): String {

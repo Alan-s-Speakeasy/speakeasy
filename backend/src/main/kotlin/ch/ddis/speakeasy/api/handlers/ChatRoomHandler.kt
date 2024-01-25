@@ -63,7 +63,7 @@ data class ChatRoomAdminInfo(
 }
 
 data class ChatRoomList(val rooms: List<ChatRoomInfo>)
-data class ChatRoomAdminList(val rooms: List<ChatRoomAdminInfo>)
+data class ChatRoomAdminList(val numOfAllRooms: Int, val rooms: List<ChatRoomAdminInfo>)
 
 class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHandler {
     override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.USER)
@@ -135,19 +135,36 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     override val route = "rooms/all"
 
     @OpenApi(
-        summary = "Lists all Chatrooms",
+        summary = "Lists all Chatrooms with pagination, ordered by descending startTime",
         path = "/api/rooms/all",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Admin"],
+        queryParams = [
+            OpenApiParam("page", Int::class, "page number for pagination. Defaults to 1."),
+            OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
+        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)])
         ]
     )
     override fun doGet(ctx: Context): ChatRoomAdminList {
+        val page = ctx.queryParam("page")?.toIntOrNull() ?: 1
+        val limit = ctx.queryParam("limit")?.toIntOrNull()
+
+        val allRooms: List<ChatRoom> = ChatRoomManager.listAll().sortedByDescending { it.startTime }
+
+        // Apply pagination to allRooms based on page and limit
+        val startIndex = (page - 1) * (limit ?: allRooms.size)
+        val endIndex = startIndex + (limit ?: allRooms.size)
+        val filteredRooms = allRooms.subList(
+            startIndex.coerceAtLeast(0),
+            endIndex.coerceAtMost(allRooms.size))
+
         return ChatRoomAdminList(
-            ChatRoomManager.listAll().map { ChatRoomAdminInfo(it) }
+            numOfAllRooms = allRooms.size,
+            rooms = filteredRooms.map { ChatRoomAdminInfo(it) }
         )
     }
 }
@@ -168,8 +185,10 @@ class ListAllActiveChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessM
         ]
     )
     override fun doGet(ctx: Context): ChatRoomAdminList {
+        val rooms = ChatRoomManager.listActive().map { ChatRoomAdminInfo(it) }
         return ChatRoomAdminList(
-            ChatRoomManager.listActive().map { ChatRoomAdminInfo(it) }
+            rooms.size,
+            rooms
         )
     }
 }

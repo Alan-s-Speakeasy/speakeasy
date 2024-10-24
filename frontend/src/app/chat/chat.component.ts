@@ -1,6 +1,6 @@
 import {PaneLog} from "../new_data";
 import {Router} from "@angular/router";
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import { DOCUMENT } from '@angular/common';
 import {Title} from "@angular/platform-browser";
 import {FrontendDataService} from "../frontend-data.service";
@@ -97,7 +97,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   // request chatroom with a specified user
-  uname = new FormControl("")
+  uname = new UntypedFormControl("")
   requestChatRoom() {
     this.chatService.postApiRoomsRequest({username: this.uname.value} as ChatRequest).subscribe(
       (response) => {
@@ -114,7 +114,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   // post messages to all chatrooms
   @ViewChildren(ChatPaneComponent)
   private paneComponents!: QueryList<ChatPaneComponent>;
-  queryAll = new FormControl("")
+  queryAll = new UntypedFormControl("")
   askALl() {
     // call the doQuery method of each pane component
     this.paneComponents.toArray().forEach((component) => component.doQuery(this.queryAll.value))

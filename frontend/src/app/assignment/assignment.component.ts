@@ -11,7 +11,7 @@ import {
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {HttpClient} from '@angular/common/http';
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {AlertService} from "../alert";
 import {FeedbackForm, FrontendChatroomDetail} from "../new_data";
 
@@ -54,7 +54,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   active: string[] = []
 
-  promptForm = new FormControl("")
+  promptForm = new UntypedFormControl("")
   prompts: string[] = []
 
   formsMap: Map<string, FeedbackRequest[]> = new Map([

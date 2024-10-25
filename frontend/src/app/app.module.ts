@@ -26,15 +26,15 @@ import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {NgApexchartsModule} from "ng-apexcharts";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
-import {MatLegacyFormFieldModule as MatFormFieldModule} from "@angular/material/legacy-form-field";
-import {MatLegacySelectModule as MatSelectModule} from "@angular/material/legacy-select";
-import {MatLegacyOptionModule as MatOptionModule} from "@angular/material/legacy-core";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatSelectModule} from "@angular/material/select";
+import {MatOptionModule} from "@angular/material/core";
 import {AssignmentComponent} from "./assignment/assignment.component";
-import {MatLegacyCheckboxModule as MatCheckboxModule} from "@angular/material/legacy-checkbox";
-import {MatLegacySliderModule as MatSliderModule} from "@angular/material/legacy-slider";
-import {MatLegacyTooltipModule as MatTooltipModule} from "@angular/material/legacy-tooltip";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSliderModule} from "@angular/material/slider";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {RatingPaneHistoryComponent} from "./rating-pane-history/rating-pane-history.component";
-import {MatLegacyInputModule as MatInputModule} from "@angular/material/legacy-input";
+import {MatInputModule} from "@angular/material/input";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();

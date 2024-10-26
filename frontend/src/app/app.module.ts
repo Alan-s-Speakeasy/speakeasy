@@ -9,7 +9,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { PanelComponent } from './panel/panel.component';
 import { PasswordComponent } from './password/password.component';
 import { HistoryComponent } from './history/history.component';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ChatComponent } from './chat/chat.component';
 import { RatingPaneComponent } from './rating-pane/rating-pane.component';
 import { ChatPaneComponent } from './chat-pane/chat-pane.component';
@@ -41,48 +41,42 @@ export function initializeApiConfig() {
   return new Configuration({basePath: appConfig.basePath, withCredentials: true});
 }
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    PanelComponent,
-    PasswordComponent,
-    HistoryComponent,
-    ChatComponent,
-    RatingPaneComponent,
-    RatingPaneHistoryComponent,
-    ChatPaneComponent,
-    UserStatusComponent,
-    ChatroomStatusComponent,
-    ChatCommandsPipe,
-    ChatSpectateComponent,
-    UserFeedbackComponent,
-    AssignmentComponent
-  ],
-  imports: [
-    BrowserModule,
-    ReactiveFormsModule,
-    AppRoutingModule,
-    FormsModule,
-    HttpClientModule,
-    ApiModule,
-    AlertModule,
-    NgbModule,
-    MatButtonToggleModule,
-    NgApexchartsModule,
-    BrowserAnimationsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatCheckboxModule,
-    MatSliderModule,
-    MatTooltipModule,
-    MatInputModule
-  ],
-  providers: [
-    FrontendDataService,
-    { provide: Configuration, useFactory: initializeApiConfig }
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        LoginComponent,
+        PanelComponent,
+        PasswordComponent,
+        HistoryComponent,
+        ChatComponent,
+        RatingPaneComponent,
+        RatingPaneHistoryComponent,
+        ChatPaneComponent,
+        UserStatusComponent,
+        ChatroomStatusComponent,
+        ChatCommandsPipe,
+        ChatSpectateComponent,
+        UserFeedbackComponent,
+        AssignmentComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        ReactiveFormsModule,
+        AppRoutingModule,
+        FormsModule,
+        ApiModule,
+        AlertModule,
+        NgbModule,
+        MatButtonToggleModule,
+        NgApexchartsModule,
+        BrowserAnimationsModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        MatOptionModule,
+        MatCheckboxModule,
+        MatSliderModule,
+        MatTooltipModule,
+        MatInputModule], providers: [
+        FrontendDataService,
+        { provide: Configuration, useFactory: initializeApiConfig },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }

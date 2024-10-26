@@ -10,7 +10,7 @@ import {
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
-import {HttpClient} from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import {UntypedFormControl} from "@angular/forms";
 import {AlertService} from "../alert";
 import {FeedbackForm, FrontendChatroomDetail} from "../new_data";

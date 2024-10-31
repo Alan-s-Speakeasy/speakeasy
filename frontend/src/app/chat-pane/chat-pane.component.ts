@@ -1,6 +1,6 @@
 // This component contains code from https://www.bootdey.com/snippets/view/chat-app
 
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog, SseRoomState} from "../new_data";
@@ -175,7 +175,7 @@ export class ChatPaneComponent implements OnInit {
   }
 
   // the input field of this pane
-  query = new FormControl("")
+  query = new UntypedFormControl("")
   poseQuery(): void {
     this.doQuery(this.query.value)
   }

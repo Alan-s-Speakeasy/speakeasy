@@ -21,7 +21,7 @@ import {
 import {interval, Subscription, timer} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import { HttpClient } from '@angular/common/http';
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {AlertService} from "../alert";
 
@@ -89,10 +89,10 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   existingUsernames:Set<string> = new Set<string>()
 
-  usernameToAdd = new FormControl("")
-  passwordToAdd = new FormControl("")
-  groupNameToAdd = new FormControl("")
-  usersInGroupToAdd = new FormControl("")
+  usernameToAdd = new UntypedFormControl("")
+  passwordToAdd = new UntypedFormControl("")
+  groupNameToAdd = new UntypedFormControl("")
+  usersInGroupToAdd = new UntypedFormControl("")
   validUsersInGroupToAdd: string[] = []
 
   roleToAdd: string = ""

@@ -17,7 +17,8 @@ configurations {
 }
 
 node {
-    version = '16.5.0'
+    // This node version is compatbile with Angular v17
+    version = '20.11.0'
     download = true
     workDir = file("${project.projectDir}/.gradle/nodejs")
     npmWorkDir = file("${project.projectDir}/.gradle/npm")

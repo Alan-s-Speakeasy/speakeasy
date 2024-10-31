@@ -1,6 +1,6 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {Router} from "@angular/router";
-import {FormControl, FormGroup} from "@angular/forms";
+import {UntypedFormControl, UntypedFormGroup} from "@angular/forms";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {PasswordChangeRequest, UserService, UserSessionDetails} from "../../../openapi";
@@ -20,10 +20,10 @@ export class PasswordComponent implements OnInit {
               @Inject(AuthService) private authService: AuthService,
               public alertService: AlertService) { }
 
-  passwordForm = new FormGroup({
-    currentPassword: new FormControl(''),
-    newPassword: new FormControl(''),
-    confirmPassword: new FormControl(''),
+  passwordForm = new UntypedFormGroup({
+    currentPassword: new UntypedFormControl(''),
+    newPassword: new UntypedFormControl(''),
+    confirmPassword: new UntypedFormControl(''),
   })
 
 

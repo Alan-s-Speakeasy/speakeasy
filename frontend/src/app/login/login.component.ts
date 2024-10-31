@@ -1,9 +1,9 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {FormControl, FormGroup} from "@angular/forms";
+import {UntypedFormControl, UntypedFormGroup} from "@angular/forms";
 import {AuthService} from "../authentication.service";
 import {Title} from "@angular/platform-browser";
 import {Router} from "@angular/router";
-import {HttpErrorResponse} from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import {FrontendDataService} from "../frontend-data.service";
 import {AlertService} from "../alert";
 import {CommonService} from "../common.service";
@@ -22,9 +22,9 @@ export class LoginComponent implements OnInit {
               private router: Router,
               public alertService: AlertService) { };
 
-  loginForm = new FormGroup({
-    username: new FormControl(''),
-    password: new FormControl(''),
+  loginForm = new UntypedFormGroup({
+    username: new UntypedFormControl(''),
+    password: new UntypedFormControl(''),
   })
 
 

@@ -86,7 +86,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   pageSizeHumanSelection = 10
 
   ngOnInit(): void {
-    this.titleService.setTitle("User Details")
+    this.titleService.setTitle("Assignments")
 
     this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
       feedbackForms.forms.forEach((form) => {

@@ -42,8 +42,6 @@
   <tbody>
   <tr *ngFor="let user of filteredUsers | slice: (page - 1) * pageSize : page * pageSize">
     <td class="align-middle">
-      <p>{{ (page - 1) * pageSize }}</p>
-      <p>{{ (page - 1) * pageSize + pageSize }}</p>
       <mat-checkbox [checked]="isSelected.get(user) == true" (change)="switchUser(user)" color="primary">
       </mat-checkbox>
     </td>

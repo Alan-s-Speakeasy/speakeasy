@@ -37,6 +37,7 @@ import {RatingPaneHistoryComponent} from "./rating-pane-history/rating-pane-hist
 import {MatInputModule} from "@angular/material/input";
 import {NgbdDatepickerRangePopup} from "./chatroom-status/date-range-selector/date-range-selector.component";
 import {NgOptionComponent, NgSelectComponent} from "@ng-select/ng-select";
+import {UserTableComponent} from "./assignment/user-table/user-table.component";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -58,7 +59,8 @@ export function initializeApiConfig() {
         ChatCommandsPipe,
         ChatSpectateComponent,
         UserFeedbackComponent,
-        AssignmentComponent
+        AssignmentComponent,
+        UserTableComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
     ReactiveFormsModule,

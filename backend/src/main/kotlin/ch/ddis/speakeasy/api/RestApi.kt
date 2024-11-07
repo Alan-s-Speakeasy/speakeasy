@@ -53,6 +53,8 @@ object RestApi {
             ListAllActiveChatRoomsHandler(),
             ListAssessedChatRoomsHandler(),
             RequestChatRoomHandler(),
+            ExportChatRoomsHandler(),
+
             CloseChatRoomHandler(),
 
             GetChatRoomHandler(),

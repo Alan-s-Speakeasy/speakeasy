@@ -4,14 +4,15 @@ import {Title} from "@angular/platform-browser";
 import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
 
-import {AdminService, ChatRoomAdminInfo} from "../../../openapi";
+import {AdminService, ChatRoomAdminInfo, UserDetails} from "../../../openapi";
 import {interval, Subscription, timer} from "rxjs";
 import {exhaustMap, take} from "rxjs/operators";
+import {NgbDate} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: 'app-chatroom-status',
   templateUrl: './chatroom-status.component.html',
-  styleUrls: ['./chatroom-status.component.css']
+  styleUrls: ['./chatroom-status.component.css'],
 })
 export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
@@ -31,6 +32,13 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   numOfAllRooms: number = 0
   currentPageOfAllRooms: number = 1
   pageArrayOfAllRooms: number[] = [1]
+
+  fromDate: NgbDate | null = null;
+  toDate: NgbDate | null = null;
+
+  // Users for the search box
+  allUsers : UserDetails[] = [];
+  selectedUser :UserDetails | null = null;
 
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
@@ -53,6 +61,11 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
     // fetch all rooms once with page=1
     this.setCurrentPage(1, false)
+
+    // Get all users, for the select bar
+    this.adminService.getApiUserList().subscribe((users) => {
+      this.allUsers = users
+    })
   }
 
   paginate<T>(list: T[], currentPage: number):  T[] {
@@ -61,13 +74,23 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     return list.slice(startIdx, endIdx);
   }
 
+  /**
+   * Sets the current page of the chatrooms table, both active rooms and all rooms.
+   *
+   * @param page
+   * @param activateRooms
+   */
   setCurrentPage(page: number, activateRooms: boolean = false) {
     if (activateRooms) {
       this.currentPageOfActivateRooms = page
     } else {
       this.currentPageOfAllRooms = page
-      // this.adminService.getApiRoomsAll(this.currentPageOfAllRooms, this.ITEM_PER_PAGE)
-      this.adminService.getApiRoomsAll(this.currentPageOfAllRooms, this.ITEM_PER_PAGE)
+      console.log(this.allUsers)
+      console.log(this.selectedUser)
+      this.adminService.getApiRoomsAll(this.currentPageOfAllRooms,
+        this.ITEM_PER_PAGE,
+        this.selectedUser?.id,
+      )
         .pipe(take(1))
         .subscribe((paginatedRooms) => {
           this.allChatroomDetails = [];
@@ -78,14 +101,15 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
           // Update page info
           const maxPage = Math.ceil(paginatedRooms.numOfAllRooms / this.ITEM_PER_PAGE);
-          if (this.currentPageOfAllRooms > maxPage) { this.currentPageOfAllRooms = maxPage; }
-          this.pageArrayOfAllRooms = Array.from({ length: maxPage }, (_, i) => i + 1);
+          if (this.currentPageOfAllRooms > maxPage) {
+            this.currentPageOfAllRooms = maxPage;
+          }
+          this.pageArrayOfAllRooms = Array.from({length: maxPage}, (_, i) => i + 1);
         });
     }
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-
     chatRoomDetails.push(
       {
         assignment: chatRoom.assignment,

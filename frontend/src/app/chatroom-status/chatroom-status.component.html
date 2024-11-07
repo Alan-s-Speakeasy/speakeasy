@@ -12,7 +12,7 @@
   </div>
 
   <div class="row p-2">
-    <h4 class="text-center">Activate Chatrooms ({{activateChatroomDetails.length}})</h4>
+    <h4 class="text-center">Active Chatrooms ({{activateChatroomDetails.length}})</h4>
     <table class="table table-striped table-bordered">
       <thead>
       <tr class="table-success">
@@ -60,9 +60,21 @@
 
   <div class="row p-2">
     <h4 class="text-center">All Chatrooms ({{numOfAllRooms}})</h4>
+    <div class="d-flex flex-row justify-content-between pb-2 py-0">
+      <ngbd-datepicker-range-popup
+        (fromDateUpdated)="fromDate = $event"
+        (toDateUpdated)="toDate = $event"
+      />
+      <ng-select [(ngModel)]="selectedUser" (ngModelChange)="setCurrentPage(1)" placeholder="Select user ..." class="w-25">
+        @for (user of allUsers; track user.id) {
+          <ng-option [value]="user">{{user.username}}</ng-option>
+        }
+      </ng-select>
+    </div>
     <table class="table table-striped table-bordered">
       <thead>
       <tr class="table-info">
+        <th scope="col">Selected</th>
         <th scope="col">RoomPrompt</th>
         <th scope="col">RoomID</th>
         <th scope="col">StartTime</th>
@@ -73,6 +85,9 @@
       </thead>
       <tbody>
       <tr class="align-middle" *ngFor="let chatroomDetail of allChatroomDetails">
+        <td class="align-middle">
+          <mat-checkbox color="primary"/>
+        </td>
         <td>{{chatroomDetail.prompt}}</td>
         <td>{{chatroomDetail.roomID}}</td>
         <td>{{chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy'}}</td>

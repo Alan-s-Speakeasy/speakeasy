@@ -143,6 +143,10 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         queryParams = [
             OpenApiParam("page", Int::class, "page number for pagination. Defaults to 1."),
             OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
+            OpenApiParam("users", String::class, "Comma-separated list of user IDs to filter rooms by users. " +
+                    "If not specified, all rooms are returned."),
+            OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX formatted to filter rooms by STARTING time range. " +
+                    "If not specified, all rooms are returned.")
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -152,19 +156,39 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     override fun doGet(ctx: Context): ChatRoomAdminList {
         val page = ctx.queryParam("page")?.toIntOrNull() ?: 1
         val limit = ctx.queryParam("limit")?.toIntOrNull()
+        // Retrieve 'users' and convert to a List<String> or null if missing
+        val usersInvolved = ctx.queryParam("users")?.split(",")?.map { UserId(it.trim()) }
+        // Retrieve 'timeRange' and convert to List<Long> or null if missing
+        val timeRange = ctx.queryParam("timeRange")?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
+        if (timeRange != null && timeRange.size != 2) {
+            throw IllegalArgumentException("timeRange must contain exactly two timestamps.")
+        }
 
+        // Fetch and sort all rooms
         val allRooms: List<ChatRoom> = ChatRoomManager.listAll().sortedByDescending { it.startTime }
 
+        // Filter rooms based on provided parameters.
+        // This typically should be done in a proper database at some point.
+        val filteredRooms = allRooms.filter { room ->
+            // Filter by time range if timeRange is provided
+            (timeRange == null || (room.startTime in timeRange[0]..timeRange[1])) &&
+            // Filter by users if usersInvolved is provided
+            (usersInvolved == null || room.users.keys.intersect(usersInvolved).isNotEmpty())
+        }
+        if (filteredRooms.isEmpty()) {
+            return ChatRoomAdminList(0, emptyList())
+        }
+
         // Apply pagination to allRooms based on page and limit
-        val startIndex = (page - 1) * (limit ?: allRooms.size)
-        val endIndex = startIndex + (limit ?: allRooms.size)
-        val filteredRooms = allRooms.subList(
+        val startIndex = (page - 1) * (limit ?: filteredRooms.size)
+        val endIndex = startIndex + (limit ?: filteredRooms.size)
+        val paginatedRooms = filteredRooms.subList(
             startIndex.coerceAtLeast(0),
-            endIndex.coerceAtMost(allRooms.size))
+            endIndex.coerceAtMost(filteredRooms.size))
 
         return ChatRoomAdminList(
-            numOfAllRooms = allRooms.size,
-            rooms = filteredRooms.map { ChatRoomAdminInfo(it) }
+            numOfAllRooms = filteredRooms.size,
+            rooms = paginatedRooms.map { ChatRoomAdminInfo(it) }
         )
     }
 }
@@ -252,6 +276,36 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
 
         return ChatRoomState(room, since, session.user.id.UID())
 
+    }
+}
+
+class ExportChatRoomsHandler: GetRestHandler<String>, AccessManagedRestHandler {
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+    override val route = "rooms/export"
+
+    @OpenApi(
+        summary = "Export specified chatrooms.",
+        path= "/api/rooms/export",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
+        tags = ["Admin"],
+        queryParams = [
+            OpenApiParam("roomsIds", String::class, "Comma-separated list of roomIds to export", required = true)
+        ],
+
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(ChatRoomState::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ])
+    override fun doGet(ctx: Context):String {
+        // Get list of UID of the chatrooms :
+        val roomIDs = ctx.queryParam("roomsIds")?.split(",")?.map { it.UID() }
+            ?: throw ErrorStatusException(400, "Parameter 'roomsIds' is missing!/ill formatted", ctx)
+        ctx.header("Content-Disposition", "attachment; filename=chatrooms.zip")
+        ctx.contentType("application/zip")
+        ChatRoomManager.exportZippedChatRoomsToStream(roomIDs, ctx.res().outputStream)
+        return "Success"
     }
 }
 

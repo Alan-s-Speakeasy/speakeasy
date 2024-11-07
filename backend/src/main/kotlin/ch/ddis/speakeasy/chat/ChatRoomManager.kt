@@ -9,8 +9,13 @@ import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 import java.util.concurrent.ConcurrentHashMap
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 object ChatRoomManager {
 
@@ -25,6 +30,7 @@ object ChatRoomManager {
     private val constantUserBot = "bot"
 
     fun init() {
+        // Recreates all chatrooms from the log files.
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
             val users: MutableMap<UserId, String> = objectMapper.readValue(lines[6])
@@ -94,6 +100,17 @@ object ChatRoomManager {
         return if (formRef == "") null else formRef
     }
 
+    /**
+     * Handles the creation of a new chatroom.
+     *
+     * @param userIds List of user ids that should be in the chatroom
+     * @param formRef Reference to the form that should be used for the chatroom
+     * @param log If the chatroom should be logged
+     * @param prompt The prompt for the chatroom
+     * @param endTime The end time of the chatroom
+     * @param assignment If the chatroom is an assignment
+     * @return The created chatroom
+     */
     fun create(userIds: List<UserId>,
 //               formRef: String = DEFAULT_FORM_NAME,
                formRef: String,
@@ -220,6 +237,45 @@ object ChatRoomManager {
 
     fun isAssignment(id: ChatRoomId): Boolean {
         return this.chatrooms[id]?.assignment ?: false
+    }
+
+    /**
+     * Exports the selected chatrooms to a zip file.
+     *
+     * @throws IllegalArgumentException if some chatRooms are not LoggingChatRooms
+     * @throws IllegalArgumentException if some chatRooms are not found
+     * @return The path to the zip file, to be downloaded by the user
+     */
+    fun exportZippedChatRoomsToStream(roomsIds : List<UID>, outputStream : OutputStream) : Boolean {
+
+        // Checks if all chatsRooms are ok beforehand, so the thread gets freed as soon as possible
+        // It's a bit unefficient to check twice, but it's (probably?) better than having to cancel the whole zip operation after zipping a few files
+        roomsIds.all {
+            val chatRoom = this.chatrooms[it] ?: throw IllegalArgumentException("ChatRoom not found")
+            if (chatRoom !is LoggingChatRoom) {
+                throw IllegalArgumentException("ChatRoom $it is not a LoggingChatRoom")
+            }
+            val file = File(basePath, "${chatRoom.uid.string}.log")
+            if (!file.exists()) {
+                throw IllegalArgumentException("ChatRoom log file not found *${chatRoom.uid.string}.log*")
+            }
+            true
+        }
+
+        ZipOutputStream(outputStream).use { zipStream ->
+            for (roomId in roomsIds) {
+                val chatRoom = this.chatrooms[roomId] as LoggingChatRoom
+                val file = File(basePath, "${chatRoom.uid.string}.log")
+
+                // Add the file as a new ZipEntry and copy its contents to the ZipOutputStream
+                file.inputStream().use { input ->
+                    zipStream.putNextEntry(ZipEntry("${chatRoom.uid.string}.log"))
+                    input.copyTo(zipStream)
+                    zipStream.closeEntry()
+                }
+            }
+            return true
+        }
     }
 
 }

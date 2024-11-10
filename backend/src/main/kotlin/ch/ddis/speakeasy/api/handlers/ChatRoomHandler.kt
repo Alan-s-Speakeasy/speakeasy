@@ -135,7 +135,7 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     override val route = "rooms/all"
 
     @OpenApi(
-        summary = "Lists all Chatrooms with pagination, ordered by descending startTime",
+        summary = "Lists all Chatrooms with pagination, ordered by descending startTime, filtered by users and time range.",
         path = "/api/rooms/all",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
@@ -145,7 +145,7 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
             OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
             OpenApiParam("users", String::class, "Comma-separated list of user IDs to filter rooms by users. " +
                     "If not specified, all rooms are returned."),
-            OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX formatted to filter rooms by STARTING time range. " +
+            OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
                     "If not specified, all rooms are returned.")
         ],
         responses = [

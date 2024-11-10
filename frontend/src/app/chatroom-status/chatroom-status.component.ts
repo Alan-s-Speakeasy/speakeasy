@@ -33,12 +33,11 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   currentPageOfAllRooms: number = 1
   pageArrayOfAllRooms: number[] = [1]
 
-  fromDate: NgbDate | null = null;
-  toDate: NgbDate | null = null;
+  dateRangeSelected: {from: NgbDate | null, to: NgbDate |null } = {from: null, to: null};
 
   // Users for the search box
   allUsers : UserDetails[] = [];
-  selectedUser :UserDetails | null = null;
+  selectedUsers : UserDetails[] | null = null;
 
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
@@ -74,6 +73,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     return list.slice(startIdx, endIdx);
   }
 
+
   /**
    * Sets the current page of the chatrooms table, both active rooms and all rooms.
    *
@@ -84,13 +84,23 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     if (activateRooms) {
       this.currentPageOfActivateRooms = page
     } else {
+      let timeRange_str = undefined;
+      if (this.dateRangeSelected.to && this.dateRangeSelected.from) {
+        timeRange_str = [this.dateRangeSelected.from, this.dateRangeSelected.to].map(date => {
+          return new Date(date.year, date.month - 1, date.day).getTime();
+        }).join(',');
+      }
+      let selectedUsers_str = undefined
+      if (this.selectedUsers) {
+        selectedUsers_str = this.selectedUsers.map(user => user.id).join(',')
+      }
+      console.log("selectedUsers_str", selectedUsers_str)
       this.currentPageOfAllRooms = page
-      console.log(this.allUsers)
-      console.log(this.selectedUser)
       this.adminService.getApiRoomsAll(this.currentPageOfAllRooms,
         this.ITEM_PER_PAGE,
-        this.selectedUser?.id,
-      )
+        selectedUsers_str,
+        timeRange_str
+        )
         .pipe(take(1))
         .subscribe((paginatedRooms) => {
           this.allChatroomDetails = [];

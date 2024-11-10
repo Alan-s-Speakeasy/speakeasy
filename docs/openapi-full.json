@@ -1377,10 +1377,7 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "object"
-            }
+            "type" : "string"
           }
         } ],
         "responses" : {

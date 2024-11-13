@@ -1335,7 +1335,7 @@
     "/api/rooms/all" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Lists all Chatrooms with pagination, ordered by descending startTime",
+        "summary" : "Lists all Chatrooms with pagination, ordered by descending startTime, filtered by users and time range.",
         "operationId" : "getApiRoomsAll",
         "parameters" : [ {
           "name" : "page",
@@ -1372,7 +1372,7 @@
         }, {
           "name" : "timeRange",
           "in" : "query",
-          "description" : "Comma-separated list of two timestamps UNIX formatted to filter rooms by STARTING time range. If not specified, all rooms are returned.",
+          "description" : "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. If not specified, all rooms are returned.",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -1451,7 +1451,7 @@
     "/api/rooms/export" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Export specified chatrooms.",
+        "summary" : "Export specified chatrooms as JSON",
         "operationId" : "getApiRoomsExport",
         "parameters" : [ {
           "name" : "roomsIds",
@@ -1468,9 +1468,9 @@
           "200" : {
             "description" : "OK",
             "content" : {
-              "application/json" : {
+              "text/plain" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ChatRoomState"
+                  "type" : "string"
                 }
               }
             }

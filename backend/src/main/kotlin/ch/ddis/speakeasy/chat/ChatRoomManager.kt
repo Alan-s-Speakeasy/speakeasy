@@ -240,42 +240,17 @@ object ChatRoomManager {
     }
 
     /**
-     * Exports the selected chatrooms to a zip file.
+     * Exports selected chatrooms to a list of SerializedChatRoom objects.
      *
-     * @throws IllegalArgumentException if some chatRooms are not LoggingChatRooms
-     * @throws IllegalArgumentException if some chatRooms are not found
-     * @return The path to the zip file, to be downloaded by the user
+     * @param chatRoomIds List of chatroom ids to export
+     * @return List of SerializedChatRoom objects
+     * @throws IllegalArgumentException if a chatroom id is not found
      */
-    fun exportZippedChatRoomsToStream(roomsIds : List<UID>, outputStream : OutputStream) : Boolean {
-
-        // Checks if all chatsRooms are ok beforehand, so the thread gets freed as soon as possible
-        // It's a bit unefficient to check twice, but it's (probably?) better than having to cancel the whole zip operation after zipping a few files
-        roomsIds.all {
-            val chatRoom = this.chatrooms[it] ?: throw IllegalArgumentException("ChatRoom not found")
-            if (chatRoom !is LoggingChatRoom) {
-                throw IllegalArgumentException("ChatRoom $it is not a LoggingChatRoom")
-            }
-            val file = File(basePath, "${chatRoom.uid.string}.log")
-            if (!file.exists()) {
-                throw IllegalArgumentException("ChatRoom log file not found *${chatRoom.uid.string}.log*")
-            }
-            true
-        }
-
-        ZipOutputStream(outputStream).use { zipStream ->
-            for (roomId in roomsIds) {
-                val chatRoom = this.chatrooms[roomId] as LoggingChatRoom
-                val file = File(basePath, "${chatRoom.uid.string}.log")
-
-                // Add the file as a new ZipEntry and copy its contents to the ZipOutputStream
-                file.inputStream().use { input ->
-                    zipStream.putNextEntry(ZipEntry("${chatRoom.uid.string}.log"))
-                    input.copyTo(zipStream)
-                    zipStream.closeEntry()
-                }
-            }
-            return true
+    fun exportSerializedChatrooms(chatRoomIds: List<ChatRoomId>): List<SerializedChatRoom> {
+        return chatRoomIds.map {
+            ChatRoom.exportSerialized(this.chatrooms.getOrElse( it) {
+                throw IllegalArgumentException("Chatroom with id $it not found")
+            })
         }
     }
-
 }

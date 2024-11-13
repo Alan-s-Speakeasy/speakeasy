@@ -6,6 +6,7 @@ import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
+import kotlinx.serialization.Serializable
 import java.util.concurrent.locks.StampedLock
 import kotlin.math.max
 
@@ -41,7 +42,25 @@ open class ChatRoom(
         get() = this.lock.read {
             messages.size
         }
-
+    companion object {
+        /**
+         * Serializes a given ChatRoom object into a SerializedChatRoom object.
+         *
+         * @param chatRoom The ChatRoom object to be serialized.
+         * @return A SerializedChatRoom object containing the serialized data of the given ChatRoom.
+         */
+        fun exportSerialized(chatRoom: ChatRoom): SerializedChatRoom {
+            return SerializedChatRoom(
+                chatRoom.assignment,
+                chatRoom.formRef,
+                chatRoom.users.values.toList(),
+                chatRoom.startTime,
+                chatRoom.prompt,
+                ChatMessage.toRestMessages(chatRoom.messages),
+                chatRoom.endTime
+            );
+        }
+    }
     fun addListener(listener: ChatEventListener, alert: Boolean = true) = this.lock.write {
         this.listeners.add(listener)
         if (alert) {
@@ -117,3 +136,21 @@ open class ChatRoom(
         }
     }
 }
+
+
+/**
+ * A serialized data class version of chatroom.
+ *
+ * Used to export a chatroom into a format supposedly ready to be exported to JSON or something else.
+ */
+@Serializable
+data class SerializedChatRoom(
+    val assignment: Boolean,
+    val formRef: String,
+    // Users aliases.
+    val users: List<String>,
+    val startTime: Long,
+    val prompt: String,
+    val messages: List<RestChatMessage>,
+    val endTime: Long?,
+)

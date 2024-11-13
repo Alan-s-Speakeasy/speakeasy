@@ -8,9 +8,11 @@ import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
-import io.javalin.security.RouteRole
 import io.javalin.http.Context
+import io.javalin.json.jsonMapper
+import io.javalin.json.toJsonString
 import io.javalin.openapi.*
+import io.javalin.security.RouteRole
 
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
@@ -279,12 +281,14 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
     }
 }
 
-class ExportChatRoomsHandler: GetRestHandler<String>, AccessManagedRestHandler {
+class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.ADMIN)
     override val route = "rooms/export"
 
+    override val parseAsJson = false
+
     @OpenApi(
-        summary = "Export specified chatrooms.",
+        summary = "Export specified chatrooms as JSON",
         path= "/api/rooms/export",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
@@ -294,18 +298,22 @@ class ExportChatRoomsHandler: GetRestHandler<String>, AccessManagedRestHandler {
         ],
 
         responses = [
-            OpenApiResponse("200", [OpenApiContent(ChatRoomState::class)]),
+            OpenApiResponse("200", [OpenApiContent(String::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ])
-    override fun doGet(ctx: Context):String {
+    override fun doGet(ctx: Context) {
         // Get list of UID of the chatrooms :
         val roomIDs = ctx.queryParam("roomsIds")?.split(",")?.map { it.UID() }
             ?: throw ErrorStatusException(400, "Parameter 'roomsIds' is missing!/ill formatted", ctx)
-        ctx.header("Content-Disposition", "attachment; filename=chatrooms.zip")
-        ctx.contentType("application/zip")
-        ChatRoomManager.exportZippedChatRoomsToStream(roomIDs, ctx.res().outputStream)
-        return "Success"
+        val serializedChatRooms = ChatRoomManager.exportSerializedChatrooms(roomIDs)
+        if (serializedChatRooms.isEmpty()) {
+            throw ErrorStatusException(404, "No chatrooms found with the provided roomIds", ctx)
+        }
+        ctx.header("Content-Type", "application/json")
+        ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.json\"")
+        val jsonOutput = ctx.jsonMapper().toJsonString(serializedChatRooms)
+        ctx.result(jsonOutput)
     }
 }
 

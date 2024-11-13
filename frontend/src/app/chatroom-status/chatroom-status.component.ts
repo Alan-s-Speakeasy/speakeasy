@@ -39,6 +39,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   allUsers : UserDetails[] = [];
   selectedUsers : UserDetails[] | null = null;
 
+  // For exporting chatrooms
+  selectedChatRoomsIdsForExport: Set<string> = new Set<string>();
+
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
 
@@ -94,7 +97,6 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
       if (this.selectedUsers) {
         selectedUsers_str = this.selectedUsers.map(user => user.id).join(',')
       }
-      console.log("selectedUsers_str", selectedUsers_str)
       this.currentPageOfAllRooms = page
       this.adminService.getApiRoomsAll(this.currentPageOfAllRooms,
         this.ITEM_PER_PAGE,
@@ -136,6 +138,38 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
+  }
+
+  /**
+   * Called when a chatroom is selected to be later exported.
+   * Will add the chatroom to the set of selected chatrooms if it is not already in the set.
+   *
+   * @param roomID The room ID of the chatroom to be exported.
+   */
+  toggleSelectedChatRoomForExport(roomID: string) {
+    if (this.selectedChatRoomsIdsForExport.has(roomID)) {
+      this.selectedChatRoomsIdsForExport.delete(roomID);
+    }
+    else {
+      this.selectedChatRoomsIdsForExport.add(roomID);
+    }
+  }
+
+  exportChatrooms() {
+    if (this.selectedChatRoomsIdsForExport.size == 0) {
+      return;
+    }
+    // Get the json file
+    const roomsID_str = Array.from(this.selectedChatRoomsIdsForExport).join(',');
+    this.adminService.getApiRoomsExport(roomsID_str).subscribe((response) => {
+      const blob = new Blob([JSON.stringify(response)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'chatrooms.json';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {

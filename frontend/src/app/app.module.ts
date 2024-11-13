@@ -36,7 +36,6 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {RatingPaneHistoryComponent} from "./rating-pane-history/rating-pane-history.component";
 import {MatInputModule} from "@angular/material/input";
 import {NgbdDatepickerRangePopup} from "./chatroom-status/date-range-selector/date-range-selector.component";
-import {UserSearchboxComponent} from "./user-searchbox/user-searchbox.component";
 import {NgOptionComponent, NgSelectComponent} from "@ng-select/ng-select";
 
 export function initializeApiConfig() {
@@ -77,7 +76,7 @@ export function initializeApiConfig() {
     MatCheckboxModule,
     MatSliderModule,
     MatTooltipModule,
-    MatInputModule, NgbdDatepickerRangePopup, UserSearchboxComponent, NgSelectComponent, NgOptionComponent], providers: [
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

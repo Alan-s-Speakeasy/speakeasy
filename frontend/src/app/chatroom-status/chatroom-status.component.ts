@@ -41,6 +41,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   // For exporting chatrooms
   selectedChatRoomsIdsForExport: Set<string> = new Set<string>();
+  allChatRoomsAreSelectedForExport: boolean = false;
 
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")

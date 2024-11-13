@@ -5,7 +5,7 @@ import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
 
 import {AdminService, ChatRoomAdminInfo, UserDetails} from "../../../openapi";
-import {interval, Subscription, timer} from "rxjs";
+import {Subscription, timer} from "rxjs";
 import {exhaustMap, take} from "rxjs/operators";
 import {NgbDate} from "@ng-bootstrap/ng-bootstrap";
 

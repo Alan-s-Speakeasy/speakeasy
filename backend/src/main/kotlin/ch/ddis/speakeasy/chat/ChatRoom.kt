@@ -58,7 +58,7 @@ open class ChatRoom(
                 chatRoom.prompt,
                 ChatMessage.toRestMessages(chatRoom.messages),
                 chatRoom.endTime
-            );
+            )
         }
     }
     fun addListener(listener: ChatEventListener, alert: Boolean = true) = this.lock.write {

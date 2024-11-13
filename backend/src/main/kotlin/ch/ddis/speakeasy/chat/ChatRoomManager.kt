@@ -9,13 +9,8 @@ import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
 import java.util.concurrent.ConcurrentHashMap
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 object ChatRoomManager {
 

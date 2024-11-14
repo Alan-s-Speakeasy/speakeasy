@@ -54,7 +54,7 @@
               <a class="page-link" style="cursor: pointer; width: 40px; text-align: center;"
                  (click)="setCurrentPage(page, true)">{{ page }}</a>
             </li>
-          </ul>
+            </ul>
         </nav>
       </div>
     </div>
@@ -92,9 +92,11 @@
         <button type="button" class="btn btn-outline-primary" id="dropdown1" ngbDropdownToggle>Export..</button>
         <div ngbDropdownMenu aria-labelledby="dropdown1">
           <button ngbDropdownItem [disabled]="this.selectedChatRoomsIdsForExport.size === 0"
-                  (click)="exportChatrooms()">Selected as JSON
+                  (click)="exportChatrooms('json')">Selected as JSON
           </button>
-          <button ngbDropdownItem [disabled]="true">Selected as CSV</button>
+          <button ngbDropdownItem [disabled]="this.selectedChatRoomsIdsForExport.size === 0"
+                  (click)="exportChatrooms('csv')">Selected as CSV
+          </button>
         </div>
       </div>
   </div>

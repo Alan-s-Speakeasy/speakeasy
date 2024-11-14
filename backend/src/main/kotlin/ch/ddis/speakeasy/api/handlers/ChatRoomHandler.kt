@@ -13,6 +13,9 @@ import io.javalin.json.jsonMapper
 import io.javalin.json.toJsonString
 import io.javalin.openapi.*
 import io.javalin.security.RouteRole
+import java.io.ByteArrayOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
@@ -288,20 +291,27 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
     override val parseAsJson = false
 
     @OpenApi(
-        summary = "Export specified chatrooms as JSON",
-        path= "/api/rooms/export",
+        summary = "Export specified chatrooms as JSON or CSV. In case of CSV, a ZIP file is returned.",
+        path = "/api/rooms/export",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Admin"],
         queryParams = [
-            OpenApiParam("roomsIds", String::class, "Comma-separated list of roomIds to export", required = true)
+            OpenApiParam("roomsIds", String::class, "Comma-separated list of roomIds to export", required = true),
+            OpenApiParam("format", String::class, "Format of the export (json or csv, default JSON)", required = false)
         ],
 
         responses = [
-            OpenApiResponse("200", [OpenApiContent(String::class)]),
+            OpenApiResponse(
+                "200",
+                // NOTE : Although the application type is set to zip, it also works with json files as both are treated by
+                // blobs by openAPI generator.
+                [OpenApiContent(ByteArray::class, "application/zip")],
+            ),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
-        ])
+        ]
+    )
     override fun doGet(ctx: Context) {
         // Get list of UID of the chatrooms :
         val roomIDs = ctx.queryParam("roomsIds")?.split(",")?.map { it.UID() }
@@ -310,10 +320,59 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
         if (serializedChatRooms.isEmpty()) {
             throw ErrorStatusException(404, "No chatrooms found with the provided roomIds", ctx)
         }
+        if (ctx.queryParam("format") == "csv") {
+            exportCSVToContext(ctx, serializedChatRooms)
+            return
+        }
+        exportJsonToContext(ctx, serializedChatRooms)
+    }
+
+    /**
+     * Exports a set of chatrooms as JSON or CSV and directly write it back to the context.
+     *
+     * @param ctx the context of the request
+     * @param serializedChatRooms the list of chatrooms to export
+     * @return the exported chatrooms as a string, in JSON format
+     */
+    private fun exportJsonToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
         ctx.header("Content-Type", "application/json")
         ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.json\"")
-        val jsonOutput = ctx.jsonMapper().toJsonString(serializedChatRooms)
-        ctx.result(jsonOutput)
+        val output = ctx.jsonMapper().toJsonString(serializedChatRooms)
+        ctx.result(output)
+    }
+
+    /**
+     * Creates a ZIP containing the CSV files and writes it back to the context.
+     *
+     * @ctx the context of the request
+     * @serializedChatRooms the list of chatrooms to export
+     * @return the exported chatrooms zipped together.
+     */
+    private fun exportCSVToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
+        // Create a byte array output stream to hold the ZIP data
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        val zipOutputStream = ZipOutputStream(byteArrayOutputStream)
+
+        // Loop through each ChatRoom and create individual CSV entries in the ZIP file
+        serializedChatRooms.forEach { chatRoom ->
+            val csvContent = StringBuilder()
+            // Write it to the CSV content
+            csvContent.append("Timestamp|AuthorAlias|Message")
+            chatRoom.messages.forEach(
+                { message -> csvContent.append("\n${message.timeStamp}|${message.authorAlias}|${message.message}") }
+            )
+            val zipEntry = ZipEntry("${chatRoom.startTime}.csv")
+            zipOutputStream.putNextEntry(zipEntry)
+            zipOutputStream.write(csvContent.toString().toByteArray())
+            zipOutputStream.closeEntry()
+        }
+
+        zipOutputStream.close()
+
+        // Prepare the ZIP for download
+        ctx.header("Content-Type", "application/zip")
+        ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.zip\"")
+        ctx.result(byteArrayOutputStream.toByteArray())
     }
 }
 

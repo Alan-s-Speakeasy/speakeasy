@@ -1451,7 +1451,7 @@
     "/api/rooms/export" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Export specified chatrooms as JSON",
+        "summary" : "Export specified chatrooms as JSON or CSV. In case of CSV, a ZIP file is returned.",
         "operationId" : "getApiRoomsExport",
         "parameters" : [ {
           "name" : "roomsIds",
@@ -1463,14 +1463,25 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "format",
+          "in" : "query",
+          "description" : "Format of the export (json or csv, default CSV)",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
-              "text/plain" : {
+              "application/zip" : {
                 "schema" : {
-                  "type" : "string"
+                  "type" : "string",
+                  "format" : "binary"
                 }
               }
             }

@@ -8,6 +8,7 @@ import {AdminService, ChatRoomAdminInfo, UserDetails} from "../../../openapi";
 import {Subscription, timer} from "rxjs";
 import {exhaustMap, take} from "rxjs/operators";
 import {NgbDate} from "@ng-bootstrap/ng-bootstrap";
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-chatroom-status',
@@ -18,7 +19,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   constructor(private router: Router, private titleService: Title,
               private commonService: CommonService,
-              @Inject(AdminService) private adminService: AdminService) { }
+              @Inject(AdminService) private adminService: AdminService,
+              private http : HttpClient) { }
 
   private activeRoomsSubscription!: Subscription;
 
@@ -156,21 +158,26 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     }
   }
 
-  exportChatrooms() {
-    if (this.selectedChatRoomsIdsForExport.size == 0) {
+  /**
+   * Export the selected chatrooms in the selected format.
+   * @param format The selected format to export the chatrooms in.
+   */
+  exportChatrooms(format : "json" | "csv") {
+    if (this.selectedChatRoomsIdsForExport.size === 0) {
       return;
     }
-    // Get the json file
     const roomsID_str = Array.from(this.selectedChatRoomsIdsForExport).join(',');
-    this.adminService.getApiRoomsExport(roomsID_str).subscribe((response) => {
-      const blob = new Blob([JSON.stringify(response)], { type: 'application/json' });
+    this.adminService.getApiRoomsExport(roomsID_str, format).subscribe((response) => {
+      // If CSV is selected, the CSV files are zipped, so the type is zip
+      const blob = new Blob([response], { type: 'application/' + (format == "csv" ? "zip" : format) });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'chatrooms.json';
+      a.download = `chatrooms.${(format == "csv" ? "zip" : format)}`;
       a.click();
       window.URL.revokeObjectURL(url);
-    });
+    })
+
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {

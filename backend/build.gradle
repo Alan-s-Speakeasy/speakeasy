@@ -110,6 +110,9 @@ dependencies {
     // Serialization stuff
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
 
+    //// CSV handling
+    implementation group: 'com.opencsv', name: 'opencsv', version: '5.5'
+
 }
 
 startScripts {

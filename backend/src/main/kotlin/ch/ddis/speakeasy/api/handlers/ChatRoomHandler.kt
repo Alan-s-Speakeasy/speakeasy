@@ -8,12 +8,14 @@ import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
+import com.opencsv.CSVWriterBuilder
 import io.javalin.http.Context
 import io.javalin.json.jsonMapper
 import io.javalin.json.toJsonString
 import io.javalin.openapi.*
 import io.javalin.security.RouteRole
 import java.io.ByteArrayOutputStream
+import java.io.StringWriter
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -351,24 +353,36 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
     private fun exportCSVToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
         // Create a byte array output stream to hold the ZIP data
         val byteArrayOutputStream = ByteArrayOutputStream()
-        val zipOutputStream = ZipOutputStream(byteArrayOutputStream)
+        ZipOutputStream(byteArrayOutputStream).use { zipOutputStream ->
+            // Loop through each ChatRoom and create individual CSV entries in the ZIP file
+            serializedChatRooms.forEach { chatRoom ->
+                StringWriter().use { tempWriter ->
+                    CSVWriterBuilder(tempWriter).withSeparator('\t').build().use { writer ->
+                        writer.writeNext(
+                            arrayOf(
+                                "Timestamp",
+                                "Author",
+                                "Message"
+                            )
+                        )
+                        chatRoom.messages.forEach { message ->
+                            writer.writeNext(
+                                arrayOf(
+                                    message.timeStamp.toString(),
+                                    message.authorAlias,
+                                    message.message
+                                )
+                            )
+                        }
+                    }
+                    val zipEntry = ZipEntry("${chatRoom.startTime}.csv")
+                    zipOutputStream.putNextEntry(zipEntry)
+                    zipOutputStream.write(tempWriter.toString().toByteArray())
+                    zipOutputStream.closeEntry()
+                }
+            }
 
-        // Loop through each ChatRoom and create individual CSV entries in the ZIP file
-        serializedChatRooms.forEach { chatRoom ->
-            val csvContent = StringBuilder()
-            // Write it to the CSV content
-            csvContent.append("Timestamp|AuthorAlias|Message")
-            chatRoom.messages.forEach(
-                { message -> csvContent.append("\n${message.timeStamp}|${message.authorAlias}|${message.message}") }
-            )
-            val zipEntry = ZipEntry("${chatRoom.startTime}.csv")
-            zipOutputStream.putNextEntry(zipEntry)
-            zipOutputStream.write(csvContent.toString().toByteArray())
-            zipOutputStream.closeEntry()
         }
-
-        zipOutputStream.close()
-
         // Prepare the ZIP for download
         ctx.header("Content-Type", "application/zip")
         ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.zip\"")

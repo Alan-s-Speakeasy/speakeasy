@@ -96,8 +96,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
           return new Date(date.year, date.month - 1, date.day).getTime();
         }).join(',');
       }
-      let selectedUsers_str = undefined
-      if (this.selectedUsers) {
+      let selectedUsers_str = undefined;
+      if (this.selectedUsers != null && this.selectedUsers.length > 0) {
         selectedUsers_str = this.selectedUsers.map(user => user.id).join(',')
       }
       this.currentPageOfAllRooms = page

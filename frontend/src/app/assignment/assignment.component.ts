@@ -10,7 +10,7 @@ import {
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
-import { HttpClient } from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {UntypedFormControl} from "@angular/forms";
 import {AlertService} from "../alert";
 import {FeedbackForm, FrontendChatroomDetail} from "../new_data";
@@ -26,13 +26,15 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     autoClose: true,
     keepAfterRouteChange: true
   };
+
   constructor(private router: Router, private titleService: Title,
               private httpClient: HttpClient,
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(AssignmentService) private assignmentService: AssignmentService,
-              public alertService: AlertService) { }
+              public alertService: AlertService) {
+  }
 
   private generatorSubscription!: Subscription;
 
@@ -46,6 +48,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   isEvaluatorSelected: Map<string, boolean> = new Map()
   isAssistantSelected: Map<string, boolean> = new Map()
 
+  // Lists of users needed for assignements.
+  // It is worth noting that thoses are set up in the storeGeneratorResponse method
   humans: string[] = []
   bots: string[] = []
   admins: string[] = []
@@ -58,7 +62,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   prompts: string[] = []
 
   formsMap: Map<string, FeedbackRequest[]> = new Map([
-    [ "", [] ]   // default value, no feedback form
+    ["", []]   // default value, no feedback form
   ])
   selectedFormName: string = ""
 
@@ -77,22 +81,34 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   chatroomDetails: Map<string, FrontendChatroomDetail> = new Map()
 
+  // Pagination stuff
+  pageSizes: number[] = [5, 10, 15, 20];
+  pageSizeHumanSelection = 10
+
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
     this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
-     feedbackForms.forms.forEach( (form) => {
-       this.formsMap.set(form.formName, form.requests)
-     } )
+      feedbackForms.forms.forEach((form) => {
+        this.formsMap.set(form.formName, form.requests)
+      })
     })
+
 
     this.fetchGenerator(true)
     this.generatorSubscription = interval(10_000).subscribe(() => {
       this.fetchGenerator(false)
     })
-    this.roundTimer = setInterval(() => {this.countdown()}, 1000)
+    this.roundTimer = setInterval(() => {
+      this.countdown()
+    }, 1000)
   }
-
+  /**
+   * Fetches the generator from the backend. If it is the first time the generator is fetched, the response is used to store some data, such as
+   * the selected users, the prompts, the bots per user, the duration, the selected form name, the active users,
+   * the next assignment, the round, the chatroom details and the remaining time.
+   * @param initial whether this is the first time the generator is fetched
+   */
   fetchGenerator(initial: boolean) {
     this.assignmentService.getApiAssignment().subscribe(response => {
       this.storeGeneratorResponse(response, initial)
@@ -105,7 +121,14 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     })
   }
 
+  /**
+   * Store the response from the generator in the frontend
+   * @param response the response from the generator
+   * @param initial whether this is the first time the response is stored
+   */
   storeGeneratorResponse(response: AssignmentGeneratorObject, initial: boolean): void {
+    // Why is this check necessary?
+    // Probably to avoid the case where there are no humans ?
     if (response.humans.length > 0) {
       this.isActive = true
       response.humans.forEach(human => {
@@ -140,6 +163,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.evaluator = Array.from(this.isEvaluatorSelected.keys())
       this.assistant = Array.from(this.isAssistantSelected.keys())
       this.active = response.active
+      // Store the data only if it is the first time the generator is fetched
       if (initial) {
         this.prompts = response.prompts
         this.selectedFormName = response.formName
@@ -292,7 +316,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     let admins = this.admins.filter(a => this.isAdminSelected.get(a))
     let evaluator = this.evaluatorSelected
     let assistant = this.assistantSelected
-    return ((humans.length > 0 && !evaluator) || (!(humans.length> 0 ) && evaluator && !assistant)) &&
+    return ((humans.length > 0 && !evaluator) || (!(humans.length > 0) && evaluator && !assistant)) &&
       bots.length + admins.length > 0 &&
       this.prompts.length > 0 &&
       this.botsPerUser <= bots.length + admins.length
@@ -300,7 +324,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   generateNextRound(): void {
     console.log(this.selectedFormName)
-    this.assignmentService.postApiAssignmentRound(this.evaluatorSelected.toString(),{
+    this.assignmentService.postApiAssignmentRound(this.evaluatorSelected.toString(), {
       humans: (this.humans.filter(h => this.isHumanSelected.get(h))),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),
       admins: this.admins.filter(b => this.isAdminSelected.get(b)),
@@ -361,7 +385,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   watch(chatroomDetail: FrontendChatroomDetail): void {
     let user1 = chatroomDetail.userInfo[0]
     let user2 = chatroomDetail.userInfo[1]
-    this.router.navigateByUrl('/spectate', { state: {
+    this.router.navigateByUrl('/spectate', {
+      state: {
         assignment: chatroomDetail.assignment,
         formRef: chatroomDetail.formRef,
         markAsNoFeedback: chatroomDetail.markAsNoFeedBack,
@@ -370,7 +395,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         userAlias: user1.alias,
         partnerAlias: user2.username,
         backUrl: "assignment"
-      } } ).then()
+      }
+    }).then()
   }
 
   home(): void {

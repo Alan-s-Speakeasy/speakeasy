@@ -4,7 +4,7 @@
 
   <div class="row p-2">
     <div class="col-9">
-      <h3>Assignment Generator</h3>
+      <h3>Assignement creation </h3>
     </div>
     <div class="col-3">
       <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
@@ -12,20 +12,18 @@
   </div>
 
   <div *ngIf="!isActive" class="row col-2 m-2">
-    <button (click)="newGenerator()" type="submit" class="btn btn-primary">Create New</button>
+    <button (click)="newGenerator()" type="submit" class="btn btn-primary">New Generator</button>
   </div>
 
   <div *ngIf="isActive">
-    <div class="row col-2 m-2">
-      <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-danger">Delete Generator</button>
-    </div>
     <br>
+    <h3 class="d-flex justify-content-center">Users matching</h3>
+    <h4 class="mb-3">Feedback form</h4>
     <div class="row align-items-center">
       <mat-form-field class="col-2">
-        <mat-label>Choose Feedback Form</mat-label>
         <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
           <mat-option *ngFor="let form of formsMap | keyvalue" [value]="form.key">
-            {{form.key}}
+            {{ form.key }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -33,12 +31,13 @@
       <div *ngIf=" selectedFormName != '' " class="table-container col-10">
         <table class="table table-striped table-bordered">
           <thead>
-            <tr>
-              <th *ngFor="let question of formsMap.get(selectedFormName)"
-                  [style.font-weight]="'normal'"
-                  [style.font-size.px]="12">
-                {{question.shortname}}</th>
-            </tr>
+          <tr>
+            <th *ngFor="let question of formsMap.get(selectedFormName)"
+                [style.font-weight]="'normal'"
+                [style.font-size.px]="12">
+              {{ question.shortname }}
+            </th>
+          </tr>
           </thead>
         </table>
       </div>
@@ -46,162 +45,139 @@
         <small> [No feedback required] </small>
       </div>
     </div>
-
-    <div class="row p-2">
-      <div class="col-2">
-        <table class="table">
-          <thead>
-          <tr>
-            <td>
-              <mat-checkbox [checked]="areAllSelected(this.isHumanSelected)" (change)="switchAll('human', $event)" color="primary">
-                <b>Humans</b>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let human of humans">
-            <td>
-              <mat-checkbox [checked]="isHumanSelected.get(human) == true" (change)="switchHuman(human)" color="primary">
-                {{human}}
-                <i *ngIf="this.active.includes(human)" style="color: limegreen" class="fa fa-circle"></i>
-                <i *ngIf="!this.active.includes(human)" style="color: red" class="fa fa-circle"></i>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-        <table class="table">
-          <thead>
-          <tr>
-            <td>
-              <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
-                <b>AutomaticEvaluatorBot</b>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let evaluator of evaluator; let firstElement = first">
-            <td *ngIf="firstElement" >
-              <mat-checkbox [checked]="evaluatorSelected == true" (change)="switchEvaluator()" color="primary">
-                {{evaluator}}
-                <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
-                <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="col-2">
-        <table class="table">
-          <thead>
-          <tr>
-            <td>
-              <mat-checkbox [checked]="areAllSelected(this.isBotSelected)" (change)="switchAll('bot', $event)" color="primary">
-                <b>Bots</b>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let bot of bots">
-            <td>
-              <mat-checkbox [checked]="isBotSelected.get(bot) == true" (change)="switchBot(bot)" color="primary">
-                {{bot}}
-                <i *ngIf="this.active.includes(bot)" style="color: limegreen" class="fa fa-circle"></i>
-                <i *ngIf="!this.active.includes(bot)" style="color: red" class="fa fa-circle"></i>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-        <br>
-        <table class="table">
-          <thead>
-          <tr>
-            <td>
-              <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)" (change)="switchAll('admin', $event)" color="primary">
-                <b>Admins as Bots</b>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let admin of admins">
-            <td>
-              <mat-checkbox [checked]="isAdminSelected.get(admin) == true" (change)="switchAdmin(admin)" color="primary">
-                {{admin}}
-                <i *ngIf="this.active.includes(admin)" style="color: limegreen" class="fa fa-circle"></i>
-                <i *ngIf="!this.active.includes(admin)" style="color: red" class="fa fa-circle"></i>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-        <br>
-        <table class="table">
-          <thead>
-          <tr>
-            <td>
-              <mat-checkbox [checked]="assistantSelected == true" (change)="switchAssistant()" color="primary">
-                <b>AssistantBot</b>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let assistant of assistant; let firstElement = first">
-            <td *ngIf="firstElement" >
-              <mat-checkbox [checked]="assistantSelected == true" (change)="switchAssistant()" color="primary">
-                {{assistant}}
-                <i *ngIf="this.active.includes(assistant)" style="color: limegreen" class="fa fa-circle"></i>
-                <i *ngIf="!this.active.includes(assistant)" style="color: red" class="fa fa-circle"></i>
-              </mat-checkbox>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="col-6">
-        <h4>Prompts</h4>
+    <div class="col-12">
+      <h4 class="mb3">Prompts</h4>
+      <div class="col-12">
         <table class="table">
           <tbody>
           <tr *ngFor="let prompt of prompts, let i = index" class="d-flex">
-            <td class="col-11">{{prompt}}</td>
+            <td class="col-11">{{ prompt }}</td>
             <td class="col-1"><i class="fa fa-trash" type="submit" (click)="removePrompt(i)"></i></td>
           </tr>
           </tbody>
         </table>
-
-        <textarea
-          style="height: 70px"
-          type="text" class="form-control" placeholder="Add prompt(s):
-One per line..."
-          [formControl]="promptForm">
-        </textarea>
-        <button (click)="addPrompts()" type="submit" class="btn btn btn-outline-primary">Add</button>
+        <div class="d-flex flex-row">
+          <div>
+          <textarea
+            style="height: 70px"
+            type="text" class="form-control" placeholder="Add prompts here"
+            [formControl]="promptForm">
+          </textarea>
+            <div class="form-text">You can add multiple prompts by separating by linebreaks.</div>
+          </div>
+          <button (click)="addPrompts()" type="submit" class="btn btn btn-outline-primary ms-2 py-1 px-2" style="height: 80%;">Add
+          </button>
+        </div>
       </div>
+    </div>
+    <hr>
 
-      <div class="col-2">
+    <div class="d-flex justify-content-around">
+      <div>
         <h4>Bots Per User</h4>
-        <mat-slider min="1" max="6" step="1" #ngSlider><input matSliderThumb [value]="botsPerUser" (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})" #ngSliderThumb="matSliderThumb" /></mat-slider>
-        {{botsPerUser}}
+        <mat-slider min="1" max="6" step="1" #ngSlider><input matSliderThumb [value]="botsPerUser"
+                                                              (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
+                                                              #ngSliderThumb="matSliderThumb"/></mat-slider>
+        {{ botsPerUser }}
         <br>
-        <h4>Duration</h4>
-        <mat-slider min="1" max="20" step="1" #ngSlider><input matSliderThumb [value]="duration" (input)="setDuration({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})" #ngSliderThumb="matSliderThumb" /></mat-slider>
-        {{duration}}
       </div>
+      <div>
+        <h4>Duration</h4>
+        <mat-slider min="1" max="20" step="1" #ngSlider><input matSliderThumb [value]="duration"
+                                                               (input)="setDuration({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
+                                                               #ngSliderThumb="matSliderThumb"/></mat-slider>
+        {{ duration }}
+      </div>
+    </div>
+    <hr>
+
+    <h3 class="d-flex justify-content-center">Users matching</h3>
+
+    <h4 class="w-100 mx-auto">Humans</h4>
+    <app-user-table
+      [users]="humans"
+      [active]="active"
+      [isSelected]="isHumanSelected"
+      [pageSizes]="pageSizes"
+      [pageSize]="pageSizeHumanSelection"
+      (userSwitched)="switchHuman($event)"
+      (allSwitched)="switchAll('human', $event)">
+    </app-user-table>
+
+    <hr>
+    <h4>Bots</h4>
+    <app-user-table
+      [users]="bots"
+      [active]="active"
+      [isSelected]="isBotSelected"
+      [pageSizes]="pageSizes"
+      [pageSize]="pageSizeHumanSelection"
+      (userSwitched)="switchBot($event)"
+      (allSwitched)="switchAll('bot', $event)">
+    </app-user-table>
+
+    <h4>Extras </h4>
+    <div class="row p-2">
+      <table class="table">
+        <thead>
+        <tr>
+          <td>
+            <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)" (change)="switchAll('admin', $event)"
+                          color="primary">
+              <b>Admins as Bots</b>
+            </mat-checkbox>
+          </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let admin of admins">
+          <td>
+            <mat-checkbox [checked]="isAdminSelected.get(admin) == true" (change)="switchAdmin(admin)"
+                          color="primary">
+              {{ admin }}
+              <i *ngIf="this.active.includes(admin)" style="color: limegreen" class="fa fa-circle"></i>
+              <i *ngIf="!this.active.includes(admin)" style="color: red" class="fa fa-circle"></i>
+            </mat-checkbox>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <br>
+      <table class="table">
+        <thead>
+        <tr>
+          <td>
+            <mat-checkbox [checked]="assistantSelected == true" (change)="switchAssistant()" color="primary">
+              <b>AssistantBot</b>
+            </mat-checkbox>
+          </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let assistant of assistant; let firstElement = first">
+          <td *ngIf="firstElement">
+            <mat-checkbox [checked]="assistantSelected == true" (change)="switchAssistant()" color="primary">
+              {{ assistant }}
+              <i *ngIf="this.active.includes(assistant)" style="color: limegreen" class="fa fa-circle"></i>
+              <i *ngIf="!this.active.includes(assistant)" style="color: red" class="fa fa-circle"></i>
+            </mat-checkbox>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     </div>
 
 
-    <div class="row p-2 justify-content-end">
+    <div class="d-flex flex-row p-2 justify-content-between">
+      <div class=" col-2">
+        <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-danger">
+          Delete
+        </button>
+      </div>
       <div>
-        <button (click)="generateNextRound()" [disabled]="!canStartRound()" type="button" class="btn btn-primary float-end">
-          <div>Generate Round {{round}}</div>
+        <button (click)="generateNextRound()" [disabled]="!canStartRound()" type="button"
+                class="btn btn-primary float-end">
+          <div>Generate Round {{ round }}</div>
         </button>
       </div>
     </div>
@@ -210,7 +186,8 @@ One per line..."
 
     <div *ngIf="nextAssignment.length > 0">
       <h4>Next Round
-        <i *ngIf="notOptimalAssignment" class="fa fa-warning" matTooltip="Not optimal. Try again or change settings."></i>
+        <i *ngIf="notOptimalAssignment" class="fa fa-warning"
+           matTooltip="Not optimal. Try again or change settings."></i>
       </h4>
       <table class="table">
         <thead>
@@ -223,20 +200,22 @@ One per line..."
         </thead>
         <tbody>
         <tr *ngFor="let assignment of nextAssignment">
-          <td class="col-2">{{assignment.human}}</td>
-          <td class="col-2">{{assignment.bot}}</td>
-          <td class="col-5">{{assignment.prompt}}</td>
+          <td class="col-2">{{ assignment.human }}</td>
+          <td class="col-2">{{ assignment.bot }}</td>
+          <td class="col-5">{{ assignment.prompt }}</td>
           <td class="col-2">{{ assignment.formName !== "" ? assignment.formName : "[NOT Required]" }}</td>
           <td class="col-1">
-            <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)" class="col-6 fa fa-warning" matTooltip="At least one user offline. Round cannot be created."></i>
+            <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)"
+               class="col-6 fa fa-warning" matTooltip="At least one user offline. Round cannot be created."></i>
           </td>
         </tr>
         </tbody>
       </table>
       <div class="row p-2 justify-content-end">
         <div class="col-3">
-          <button (click)="startNextRound()" [disabled]="remainingTime > 0 || changeAfterGenerate || !generated" type="button" class="btn btn-primary float-end">
-            <div>Start Round {{round}}</div>
+          <button (click)="startNextRound()" [disabled]="remainingTime > 0 || changeAfterGenerate || !generated"
+                  type="button" class="btn btn-primary float-end">
+            <div>Start Round {{ round }}</div>
           </button>
         </div>
       </div>
@@ -257,14 +236,16 @@ One per line..."
         </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
-            <td class="col-2">{{room.userInfo[0].username}}</td>
-            <td class="col-2">{{room.userInfo[1].username}}</td>
-            <td class="col-4">{{room.prompt}}</td>
-            <td class="col-1">{{room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
-            <td class="col-2">{{remainingTime | date: 'mm:ss'}}</td>
-            <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
-          </tr>
+        <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
+          <td class="col-2">{{ room.userInfo[0].username }}</td>
+          <td class="col-2">{{ room.userInfo[1].username }}</td>
+          <td class="col-4">{{ room.prompt }}</td>
+          <td class="col-1">{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
+          <td class="col-2">{{ remainingTime | date: 'mm:ss' }}</td>
+          <td class="col-1">
+            <button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -281,13 +262,15 @@ One per line..."
         </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
-            <td class="col-2">{{room.userInfo[0].username}}</td>
-            <td class="col-2">{{room.userInfo[1].username}}</td>
-            <td class="col-6">{{room.prompt}}</td>
-            <td class="col-1">{{room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
-            <td class="col-1"><button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button></td>
-          </tr>
+        <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
+          <td class="col-2">{{ room.userInfo[0].username }}</td>
+          <td class="col-2">{{ room.userInfo[1].username }}</td>
+          <td class="col-6">{{ room.prompt }}</td>
+          <td class="col-1">{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
+          <td class="col-1">
+            <button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>

@@ -25,6 +25,7 @@ object ChatRoomManager {
     private val constantUserBot = "bot"
 
     fun init() {
+        // Recreates all chatrooms from the log files.
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
             val users: MutableMap<UserId, String> = objectMapper.readValue(lines[6])
@@ -94,6 +95,17 @@ object ChatRoomManager {
         return if (formRef == "") null else formRef
     }
 
+    /**
+     * Handles the creation of a new chatroom.
+     *
+     * @param userIds List of user ids that should be in the chatroom
+     * @param formRef Reference to the form that should be used for the chatroom
+     * @param log If the chatroom should be logged
+     * @param prompt The prompt for the chatroom
+     * @param endTime The end time of the chatroom
+     * @param assignment If the chatroom is an assignment
+     * @return The created chatroom
+     */
     fun create(userIds: List<UserId>,
 //               formRef: String = DEFAULT_FORM_NAME,
                formRef: String,
@@ -222,4 +234,18 @@ object ChatRoomManager {
         return this.chatrooms[id]?.assignment ?: false
     }
 
+    /**
+     * Exports selected chatrooms to a list of SerializedChatRoom objects.
+     *
+     * @param chatRoomIds List of chatroom ids to export
+     * @return List of SerializedChatRoom objects
+     * @throws IllegalArgumentException if a chatroom id is not found
+     */
+    fun exportSerializedChatrooms(chatRoomIds: List<ChatRoomId>): List<SerializedChatRoom> {
+        return chatRoomIds.map {
+            ChatRoom.exportSerialized(this.chatrooms.getOrElse( it) {
+                throw IllegalArgumentException("Chatroom with id $it not found")
+            })
+        }
+    }
 }

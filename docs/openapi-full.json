@@ -962,10 +962,10 @@
       }
     },
     "/api/room/{roomId}" : {
-      "patch" : {
+      "post" : {
         "tags" : [ "Chat" ],
-        "summary" : "Closes a Chatroom.",
-        "operationId" : "patchApiRoomByRoomId",
+        "summary" : "Post a message to a Chatroom.",
+        "operationId" : "postApiRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -980,6 +980,16 @@
           "name" : "session",
           "in" : "query",
           "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "recipients",
+          "in" : "query",
+          "description" : "Recipients of Message",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -1032,10 +1042,10 @@
         "deprecated" : false,
         "security" : [ ]
       },
-      "post" : {
+      "patch" : {
         "tags" : [ "Chat" ],
-        "summary" : "Post a message to a Chatroom.",
-        "operationId" : "postApiRoomByRoomId",
+        "summary" : "Closes a Chatroom.",
+        "operationId" : "patchApiRoomByRoomId",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -1050,16 +1060,6 @@
           "name" : "session",
           "in" : "query",
           "description" : "Session Token",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "recipients",
-          "in" : "query",
-          "description" : "Recipients of Message",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -1335,7 +1335,7 @@
     "/api/rooms/all" : {
       "get" : {
         "tags" : [ "Admin" ],
-        "summary" : "Lists all Chatrooms with pagination, ordered by descending startTime",
+        "summary" : "Lists all Chatrooms with pagination, ordered by descending startTime, filtered by users and time range.",
         "operationId" : "getApiRoomsAll",
         "parameters" : [ {
           "name" : "page",
@@ -1358,6 +1358,26 @@
           "schema" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }, {
+          "name" : "users",
+          "in" : "query",
+          "description" : "Comma-separated list of user IDs to filter rooms by users. If not specified, all rooms are returned.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "timeRange",
+          "in" : "query",
+          "description" : "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. If not specified, all rooms are returned.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -1415,6 +1435,69 @@
           },
           "401" : {
             "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/rooms/export" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Export specified chatrooms as JSON or CSV. In case of CSV, a ZIP file is returned.",
+        "operationId" : "getApiRoomsExport",
+        "parameters" : [ {
+          "name" : "roomsIds",
+          "in" : "query",
+          "description" : "Comma-separated list of roomIds to export",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "format",
+          "in" : "query",
+          "description" : "Format of the export (json or csv, default CSV)",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/zip" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
             "content" : {
               "application/json" : {
                 "schema" : {

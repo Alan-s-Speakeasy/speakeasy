@@ -15,6 +15,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
     id 'idea'
     id "org.jetbrains.kotlin.kapt" version "$kotlinVersion"
+    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlinVersion"
 }
 
 group 'ch.ddis.speakeasy'
@@ -105,6 +106,12 @@ dependencies {
     ///// Kotlin
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlinVersion
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
+
+    // Serialization stuff
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
+
+    //// CSV handling
+    implementation group: 'com.opencsv', name: 'opencsv', version: '5.5'
 
 }
 

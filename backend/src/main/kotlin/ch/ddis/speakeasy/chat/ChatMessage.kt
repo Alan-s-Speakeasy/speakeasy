@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.user.SessionId
+import kotlinx.serialization.Serializable
 
 data class ChatMessage(
     val message: String,
@@ -26,6 +27,7 @@ data class ChatMessage(
 
 }
 
+@Serializable
 data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, val recipients: Set<String>, val isRead: Boolean)
 // TODO: what's the meaning of recipients and isRead? It seems isRead is useless, through
 data class SseChatMessage(val roomId:String, val timeStamp: Long, val authorAlias: String, val ordinal: Int,

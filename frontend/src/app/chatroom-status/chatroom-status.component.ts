@@ -4,20 +4,23 @@ import {Title} from "@angular/platform-browser";
 import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
 
-import {AdminService, ChatRoomAdminInfo} from "../../../openapi";
-import {interval, Subscription, timer} from "rxjs";
+import {AdminService, ChatRoomAdminInfo, UserDetails} from "../../../openapi";
+import {Subscription, timer} from "rxjs";
 import {exhaustMap, take} from "rxjs/operators";
+import {NgbDate} from "@ng-bootstrap/ng-bootstrap";
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-chatroom-status',
   templateUrl: './chatroom-status.component.html',
-  styleUrls: ['./chatroom-status.component.css']
+  styleUrls: ['./chatroom-status.component.css'],
 })
 export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   constructor(private router: Router, private titleService: Title,
               private commonService: CommonService,
-              @Inject(AdminService) private adminService: AdminService) { }
+              @Inject(AdminService) private adminService: AdminService,
+              private http : HttpClient) { }
 
   private activeRoomsSubscription!: Subscription;
 
@@ -31,6 +34,16 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   numOfAllRooms: number = 0
   currentPageOfAllRooms: number = 1
   pageArrayOfAllRooms: number[] = [1]
+
+  dateRangeSelected: {from: NgbDate | null, to: NgbDate |null } = {from: null, to: null};
+
+  // Users for the search box
+  allUsers : UserDetails[] = [];
+  selectedUsers : UserDetails[] | null = null;
+
+  // For exporting chatrooms
+  selectedChatRoomsIdsForExport: Set<string> = new Set<string>();
+  allChatRoomsAreSelectedForExport: boolean = false;
 
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
@@ -53,6 +66,11 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
     // fetch all rooms once with page=1
     this.setCurrentPage(1, false)
+
+    // Get all users, for the select bar
+    this.adminService.getApiUserList().subscribe((users) => {
+      this.allUsers = users
+    })
   }
 
   paginate<T>(list: T[], currentPage: number):  T[] {
@@ -61,13 +79,33 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     return list.slice(startIdx, endIdx);
   }
 
+
+  /**
+   * Sets the current page of the chatrooms table, both active rooms and all rooms.
+   *
+   * @param page
+   * @param activateRooms
+   */
   setCurrentPage(page: number, activateRooms: boolean = false) {
     if (activateRooms) {
       this.currentPageOfActivateRooms = page
     } else {
+      let timeRange_str = undefined;
+      if (this.dateRangeSelected.to && this.dateRangeSelected.from) {
+        timeRange_str = [this.dateRangeSelected.from, this.dateRangeSelected.to].map(date => {
+          return new Date(date.year, date.month - 1, date.day).getTime();
+        }).join(',');
+      }
+      let selectedUsers_str = undefined;
+      if (this.selectedUsers != null && this.selectedUsers.length > 0) {
+        selectedUsers_str = this.selectedUsers.map(user => user.id).join(',')
+      }
       this.currentPageOfAllRooms = page
-      // this.adminService.getApiRoomsAll(this.currentPageOfAllRooms, this.ITEM_PER_PAGE)
-      this.adminService.getApiRoomsAll(this.currentPageOfAllRooms, this.ITEM_PER_PAGE)
+      this.adminService.getApiRoomsAll(this.currentPageOfAllRooms,
+        this.ITEM_PER_PAGE,
+        selectedUsers_str,
+        timeRange_str
+        )
         .pipe(take(1))
         .subscribe((paginatedRooms) => {
           this.allChatroomDetails = [];
@@ -78,14 +116,15 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
           // Update page info
           const maxPage = Math.ceil(paginatedRooms.numOfAllRooms / this.ITEM_PER_PAGE);
-          if (this.currentPageOfAllRooms > maxPage) { this.currentPageOfAllRooms = maxPage; }
-          this.pageArrayOfAllRooms = Array.from({ length: maxPage }, (_, i) => i + 1);
+          if (this.currentPageOfAllRooms > maxPage) {
+            this.currentPageOfAllRooms = maxPage;
+          }
+          this.pageArrayOfAllRooms = Array.from({length: maxPage}, (_, i) => i + 1);
         });
     }
   }
 
   pushChatRoomDetails(chatRoomDetails: FrontendChatroomDetail[], chatRoom: ChatRoomAdminInfo) {
-
     chatRoomDetails.push(
       {
         assignment: chatRoom.assignment,
@@ -102,6 +141,43 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   home(): void {
     this.router.navigateByUrl('/panel').then()
+  }
+
+  /**
+   * Called when a chatroom is selected to be later exported.
+   * Will add the chatroom to the set of selected chatrooms if it is not already in the set.
+   *
+   * @param roomID The room ID of the chatroom to be exported.
+   */
+  toggleSelectedChatRoomForExport(roomID: string) {
+    if (this.selectedChatRoomsIdsForExport.has(roomID)) {
+      this.selectedChatRoomsIdsForExport.delete(roomID);
+    }
+    else {
+      this.selectedChatRoomsIdsForExport.add(roomID);
+    }
+  }
+
+  /**
+   * Export the selected chatrooms in the selected format.
+   * @param format The selected format to export the chatrooms in.
+   */
+  exportChatrooms(format : "json" | "csv") {
+    if (this.selectedChatRoomsIdsForExport.size === 0) {
+      return;
+    }
+    const roomsID_str = Array.from(this.selectedChatRoomsIdsForExport).join(',');
+    this.adminService.getApiRoomsExport(roomsID_str, format).subscribe((response) => {
+      // If CSV is selected, the CSV files are zipped, so the type is zip
+      const blob = new Blob([response], { type: 'application/' + (format == "csv" ? "zip" : format) });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chatrooms.${(format == "csv" ? "zip" : format)}`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    })
+
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {

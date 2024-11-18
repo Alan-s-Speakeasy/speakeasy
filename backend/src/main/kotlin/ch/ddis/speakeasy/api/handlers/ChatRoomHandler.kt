@@ -8,9 +8,16 @@ import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
-import io.javalin.security.RouteRole
+import com.opencsv.CSVWriterBuilder
 import io.javalin.http.Context
+import io.javalin.json.jsonMapper
+import io.javalin.json.toJsonString
 import io.javalin.openapi.*
+import io.javalin.security.RouteRole
+import java.io.ByteArrayOutputStream
+import java.io.StringWriter
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 data class ChatRoomUserAdminInfo(val alias: String, val username: String)
 
@@ -135,7 +142,7 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     override val route = "rooms/all"
 
     @OpenApi(
-        summary = "Lists all Chatrooms with pagination, ordered by descending startTime",
+        summary = "Lists all Chatrooms with pagination, ordered by descending startTime, filtered by users and time range.",
         path = "/api/rooms/all",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
@@ -143,6 +150,10 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         queryParams = [
             OpenApiParam("page", Int::class, "page number for pagination. Defaults to 1."),
             OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
+            OpenApiParam("users", String::class, "Comma-separated list of user IDs to filter rooms by users. " +
+                    "If not specified, all rooms are returned."),
+            OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
+                    "If not specified, all rooms are returned.")
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -152,19 +163,39 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     override fun doGet(ctx: Context): ChatRoomAdminList {
         val page = ctx.queryParam("page")?.toIntOrNull() ?: 1
         val limit = ctx.queryParam("limit")?.toIntOrNull()
+        // Retrieve 'users' and convert to a List<String> or null if missing
+        val usersInvolved = ctx.queryParam("users")?.split(",")?.map { UserId(it.trim()) }
+        // Retrieve 'timeRange' and convert to List<Long> or null if missing
+        val timeRange = ctx.queryParam("timeRange")?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
+        if (timeRange != null && timeRange.size != 2) {
+            throw IllegalArgumentException("timeRange must contain exactly two timestamps.")
+        }
 
+        // Fetch and sort all rooms
         val allRooms: List<ChatRoom> = ChatRoomManager.listAll().sortedByDescending { it.startTime }
 
+        // Filter rooms based on provided parameters.
+        // This typically should be done in a proper database at some point.
+        val filteredRooms = allRooms.filter { room ->
+            // Filter by time range if timeRange is provided
+            (timeRange == null || (room.startTime in timeRange[0]..timeRange[1])) &&
+            // Filter by users if usersInvolved is provided
+            (usersInvolved == null || room.users.keys.intersect(usersInvolved).isNotEmpty())
+        }
+        if (filteredRooms.isEmpty()) {
+            return ChatRoomAdminList(0, emptyList())
+        }
+
         // Apply pagination to allRooms based on page and limit
-        val startIndex = (page - 1) * (limit ?: allRooms.size)
-        val endIndex = startIndex + (limit ?: allRooms.size)
-        val filteredRooms = allRooms.subList(
+        val startIndex = (page - 1) * (limit ?: filteredRooms.size)
+        val endIndex = startIndex + (limit ?: filteredRooms.size)
+        val paginatedRooms = filteredRooms.subList(
             startIndex.coerceAtLeast(0),
-            endIndex.coerceAtMost(allRooms.size))
+            endIndex.coerceAtMost(filteredRooms.size))
 
         return ChatRoomAdminList(
-            numOfAllRooms = allRooms.size,
-            rooms = filteredRooms.map { ChatRoomAdminInfo(it) }
+            numOfAllRooms = filteredRooms.size,
+            rooms = paginatedRooms.map { ChatRoomAdminInfo(it) }
         )
     }
 }
@@ -252,6 +283,110 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
 
         return ChatRoomState(room, since, session.user.id.UID())
 
+    }
+}
+
+class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+    override val route = "rooms/export"
+
+    override val parseAsJson = false
+
+    @OpenApi(
+        summary = "Export specified chatrooms as JSON or CSV. In case of CSV, a ZIP file is returned.",
+        path = "/api/rooms/export",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
+        tags = ["Admin"],
+        queryParams = [
+            OpenApiParam("roomsIds", String::class, "Comma-separated list of roomIds to export", required = true),
+            OpenApiParam("format", String::class, "Format of the export (json or csv, default JSON)", required = false)
+        ],
+
+        responses = [
+            OpenApiResponse(
+                "200",
+                // NOTE : Although the application type is set to zip, it also works with json files as both are treated by
+                // blobs by openAPI generator.
+                [OpenApiContent(ByteArray::class, "application/zip")],
+            ),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doGet(ctx: Context) {
+        // Get list of UID of the chatrooms :
+        val roomIDs = ctx.queryParam("roomsIds")?.split(",")?.map { it.UID() }
+            ?: throw ErrorStatusException(400, "Parameter 'roomsIds' is missing!/ill formatted", ctx)
+        val serializedChatRooms = ChatRoomManager.exportSerializedChatrooms(roomIDs)
+        if (serializedChatRooms.isEmpty()) {
+            throw ErrorStatusException(404, "No chatrooms found with the provided roomIds", ctx)
+        }
+        if (ctx.queryParam("format") == "csv") {
+            exportCSVToContext(ctx, serializedChatRooms)
+            return
+        }
+        exportJsonToContext(ctx, serializedChatRooms)
+    }
+
+    /**
+     * Exports a set of chatrooms as JSON or CSV and directly write it back to the context.
+     *
+     * @param ctx the context of the request
+     * @param serializedChatRooms the list of chatrooms to export
+     * @return the exported chatrooms as a string, in JSON format
+     */
+    private fun exportJsonToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
+        ctx.header("Content-Type", "application/json")
+        ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.json\"")
+        val output = ctx.jsonMapper().toJsonString(serializedChatRooms)
+        ctx.result(output)
+    }
+
+    /**
+     * Creates a ZIP containing the CSV files and writes it back to the context.
+     *
+     * @ctx the context of the request
+     * @serializedChatRooms the list of chatrooms to export
+     * @return the exported chatrooms zipped together.
+     */
+    private fun exportCSVToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
+        // Create a byte array output stream to hold the ZIP data
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        ZipOutputStream(byteArrayOutputStream).use { zipOutputStream ->
+            // Loop through each ChatRoom and create individual CSV entries in the ZIP file
+            serializedChatRooms.forEach { chatRoom ->
+                StringWriter().use { tempWriter ->
+                    CSVWriterBuilder(tempWriter).withSeparator('\t').build().use { writer ->
+                        writer.writeNext(
+                            arrayOf(
+                                "Timestamp",
+                                "Author",
+                                "Message"
+                            )
+                        )
+                        chatRoom.messages.forEach { message ->
+                            writer.writeNext(
+                                arrayOf(
+                                    message.timeStamp.toString(),
+                                    message.authorAlias,
+                                    message.message
+                                )
+                            )
+                        }
+                    }
+                    val zipEntry = ZipEntry("${chatRoom.startTime}.csv")
+                    zipOutputStream.putNextEntry(zipEntry)
+                    zipOutputStream.write(tempWriter.toString().toByteArray())
+                    zipOutputStream.closeEntry()
+                }
+            }
+
+        }
+        // Prepare the ZIP for download
+        ctx.header("Content-Type", "application/zip")
+        ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.zip\"")
+        ctx.result(byteArrayOutputStream.toByteArray())
     }
 }
 

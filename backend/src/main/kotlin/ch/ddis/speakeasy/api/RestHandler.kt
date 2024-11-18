@@ -12,12 +12,29 @@ interface RestHandler {
 
 }
 
+/**
+ * A RestHandler that can be used to handle GET requests.
+ *
+ * @param T The type of the object that is returned by the handler.
+ */
 interface GetRestHandler<T: Any> : RestHandler {
+    /**
+    * Specifies if the handler already returns json.
+    * Prevents it from being wrapped in a json object.
+     * Straightforware solution, would be better to use a more OO method.
+     */
+    val parseAsJson: Boolean
+        get() = true
 
     fun get(ctx: Context) {
         AccessManager.updateLastAccess(ctx.sessionToken())
         try {
-            ctx.json(doGet(ctx))
+            // Calls the doGet method and returns the result.
+            // If parseAsJson is true, the result is directly returned as json.
+            val result = doGet(ctx)
+            if (parseAsJson) {
+                ctx.json(result)
+            }
         } catch (e: ErrorStatusException) {
             ctx.errorResponse(e)
         } catch (e: Exception) {

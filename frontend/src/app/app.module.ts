@@ -35,6 +35,8 @@ import {MatSliderModule} from "@angular/material/slider";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {RatingPaneHistoryComponent} from "./rating-pane-history/rating-pane-history.component";
 import {MatInputModule} from "@angular/material/input";
+import {NgbdDatepickerRangePopup} from "./chatroom-status/date-range-selector/date-range-selector.component";
+import {NgOptionComponent, NgSelectComponent} from "@ng-select/ng-select";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -59,22 +61,22 @@ export function initializeApiConfig() {
         AssignmentComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
-        ReactiveFormsModule,
-        AppRoutingModule,
-        FormsModule,
-        ApiModule,
-        AlertModule,
-        NgbModule,
-        MatButtonToggleModule,
-        NgApexchartsModule,
-        BrowserAnimationsModule,
-        MatFormFieldModule,
-        MatSelectModule,
-        MatOptionModule,
-        MatCheckboxModule,
-        MatSliderModule,
-        MatTooltipModule,
-        MatInputModule], providers: [
+    ReactiveFormsModule,
+    AppRoutingModule,
+    FormsModule,
+    ApiModule,
+    AlertModule,
+    NgbModule,
+    MatButtonToggleModule,
+    NgApexchartsModule,
+    BrowserAnimationsModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatCheckboxModule,
+    MatSliderModule,
+    MatTooltipModule,
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

@@ -51,3 +51,5 @@ import 'zone.js';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+// This fixes an error, I have not a single clue why but the error said to do this
+import '@angular/localize/init';

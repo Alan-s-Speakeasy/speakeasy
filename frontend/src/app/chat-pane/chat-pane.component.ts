@@ -109,7 +109,9 @@ export class ChatPaneComponent implements OnInit {
     }
 
     if (this.paneLogScroll) {
-      this.scrollToBottom()
+      // Little hack : we need to wait for the DOM to be updated before scrolling.
+      // Sometimes (often) two messages are gotten too quickly, and the DOM is not updated yet.
+      setTimeout(() => this.scrollToBottom(), 40);
       this.paneLogScroll = false
     }
     this.num_messages = this.paneLog.ordinals

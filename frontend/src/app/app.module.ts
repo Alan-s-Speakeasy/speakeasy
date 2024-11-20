@@ -38,6 +38,12 @@ import {MatInputModule} from "@angular/material/input";
 import {NgbdDatepickerRangePopup} from "./chatroom-status/date-range-selector/date-range-selector.component";
 import {NgOptionComponent, NgSelectComponent} from "@ng-select/ng-select";
 import {UserTableComponent} from "./assignment/user-table/user-table.component";
+import {AvatarModule} from "primeng/avatar";
+import {Button} from "primeng/button";
+import {PanelModule} from "primeng/panel";
+import {ScrollPanelModule} from "primeng/scrollpanel";
+import {OverlayPanelModule} from "primeng/overlaypanel";
+import {InputTextModule} from "primeng/inputtext";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -78,7 +84,7 @@ export function initializeApiConfig() {
     MatCheckboxModule,
     MatSliderModule,
     MatTooltipModule,
-    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent], providers: [
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

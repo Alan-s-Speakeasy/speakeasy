@@ -5,7 +5,16 @@ import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog, SseRoomState} from "../new_data";
 import {ChatMessageReaction, ChatRoomState, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
-import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  OnInit,
+  Output,
+  ViewChild
+} from '@angular/core';
 import {AlertService} from "../alert";
 import {CommonService} from "../common.service";
 
@@ -173,7 +182,9 @@ export class ChatPaneComponent implements OnInit {
 
   @ViewChild('scroll') scroll!: ElementRef;
   scrollToBottom(): void {
-    try {this.scroll.nativeElement.scrollTop = this.scroll.nativeElement.scrollHeight;} catch(err) { }
+    try {this.scroll.nativeElement.scrollTop = this.scroll.nativeElement.scrollHeight;} catch(err) {
+      console.error(err)
+    }
   }
 
   // the input field of this pane
@@ -227,5 +238,17 @@ export class ChatPaneComponent implements OnInit {
   ngOnDestroy(): void {
     // Unsubscribe from the chatMessagesSubscription before leaving chat page
     this.chatMessagesSubscription.unsubscribe();
+  }
+
+  /**
+   * Handles the key down event for the input field, so we can send the message when the user presses Enter, and
+   * use Shift+Enter to add a new line.
+   * @param evenAdded primengt
+   */
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault(); // Prevents adding a new line
+      this.poseQuery();       // Calls the function to send the message
+    }
   }
 }

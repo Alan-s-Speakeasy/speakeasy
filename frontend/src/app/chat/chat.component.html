@@ -36,13 +36,8 @@
   <div class="row p-2" style="margin-top: 10px">
     <div class="col-12 col-md-7 p-2" *ngIf="paneLogs.length > 1">
       <div class="input-group">
-        <textarea cdkTextareaAutosize="true"
-                  cdkAutosizeMinRows="1"
-                  cdkAutosizeMaxRows="5"
-                  class="form-control"
-                  placeholder="Send questions to all chat rooms..."
-                  maxlength="2000"
-                  [formControl]="queryAll"></textarea>
+        <input (keyup.enter)="askALl()" type="text" class="form-control" placeholder="Send a question to all opened chatrooms..." maxlength="2000"
+               [formControl]="queryAll">
         <div class="input-group-append">
           <button (click)="askALl()" class="btn btn-outline-primary" type="button">Send</button>
         </div>

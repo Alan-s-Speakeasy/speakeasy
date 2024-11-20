@@ -44,6 +44,7 @@ import {PanelModule} from "primeng/panel";
 import {ScrollPanelModule} from "primeng/scrollpanel";
 import {OverlayPanelModule} from "primeng/overlaypanel";
 import {InputTextModule} from "primeng/inputtext";
+import {CdkCopyToClipboard} from "@angular/cdk/clipboard";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -84,7 +85,7 @@ export function initializeApiConfig() {
     MatCheckboxModule,
     MatSliderModule,
     MatTooltipModule,
-    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule], providers: [
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

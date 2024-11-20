@@ -50,7 +50,7 @@
       <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
         <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage">
           <div class="message-data">
-            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
+            <span class="message-data-time">{{ paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy' }}</span>
           </div>
           <div class="message other-message" style="max-width: 100%; white-space: pre-line">
             <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
@@ -75,6 +75,13 @@
                 [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'STAR' ? 'gold' : 'gray'}"
               >
                 <i class="fa fa-star"></i>
+              </span>
+              <span
+                [cdkCopyToClipboard]="paneLog.messageLog[ordinal].message"
+                class="label label-default position-relative"
+                style="padding-left: 10px;"
+                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto'}">
+                <i class="fa fa-copy"></i>
               </span>
             </div>
 

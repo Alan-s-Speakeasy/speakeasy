@@ -318,7 +318,7 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
         // Get list of UID of the chatrooms :
         val roomIDs = ctx.queryParam("roomsIds")?.split(",")?.map { it.UID() }
             ?: throw ErrorStatusException(400, "Parameter 'roomsIds' is missing!/ill formatted", ctx)
-        val serializedChatRooms = ChatRoomManager.exportSerializedChatrooms(roomIDs)
+        val serializedChatRooms = ChatRoomManager.exportChatrooms(roomIDs)
         if (serializedChatRooms.isEmpty()) {
             throw ErrorStatusException(404, "No chatrooms found with the provided roomIds", ctx)
         }
@@ -336,7 +336,7 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
      * @param serializedChatRooms the list of chatrooms to export
      * @return the exported chatrooms as a string, in JSON format
      */
-    private fun exportJsonToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
+    private fun exportJsonToContext(ctx: Context, serializedChatRooms: List<ExportableChatRoom>): Unit {
         ctx.header("Content-Type", "application/json")
         ctx.header("Content-Disposition", "attachment; filename=\"chatrooms.json\"")
         val output = ctx.jsonMapper().toJsonString(serializedChatRooms)
@@ -350,7 +350,7 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
      * @serializedChatRooms the list of chatrooms to export
      * @return the exported chatrooms zipped together.
      */
-    private fun exportCSVToContext(ctx: Context, serializedChatRooms: List<SerializedChatRoom>): Unit {
+    private fun exportCSVToContext(ctx: Context, serializedChatRooms: List<ExportableChatRoom>): Unit {
         // Create a byte array output stream to hold the ZIP data
         val byteArrayOutputStream = ByteArrayOutputStream()
         ZipOutputStream(byteArrayOutputStream).use { zipOutputStream ->
@@ -361,7 +361,8 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
                         writer.writeNext(
                             arrayOf(
                                 "Timestamp",
-                                "Author",
+                                "AuthorUserName",
+                                "AuthorAlias",
                                 "Message"
                             )
                         )
@@ -369,6 +370,7 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
                             writer.writeNext(
                                 arrayOf(
                                     message.timeStamp.toString(),
+                                    message.authorUserName,
                                     message.authorAlias,
                                     message.message
                                 )
@@ -450,7 +452,8 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             recipients = recipientsList
         }
 
-        room.addMessage(ChatMessage(finalMessage, userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
+        room.addMessage(ChatMessage(finalMessage,
+            session.user.id.UID(), userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
 
         return SuccessStatus("Message received")
 

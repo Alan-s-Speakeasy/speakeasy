@@ -51,7 +51,7 @@
         <table class="table">
           <tbody>
           <tr *ngFor="let prompt of prompts, let i = index" class="d-flex">
-            <td class="col-11">{{ prompt }}</td>
+            <td class="col-11 text-break">{{ prompt }}</td>
             <td class="col-1"><i class="fa fa-trash" type="submit" (click)="removePrompt(i)"></i></td>
           </tr>
           </tbody>
@@ -202,7 +202,7 @@
         <tr *ngFor="let assignment of nextAssignment">
           <td class="col-2">{{ assignment.human }}</td>
           <td class="col-2">{{ assignment.bot }}</td>
-          <td class="col-5">{{ assignment.prompt }}</td>
+          <td class="col-5 text-break">{{ assignment.prompt }}</td>
           <td class="col-2">{{ assignment.formName !== "" ? assignment.formName : "[NOT Required]" }}</td>
           <td class="col-1">
             <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)"
@@ -239,7 +239,7 @@
         <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
           <td class="col-2">{{ room.userInfo[0].username }}</td>
           <td class="col-2">{{ room.userInfo[1].username }}</td>
-          <td class="col-4">{{ room.prompt }}</td>
+          <td class="col-4 text-break">{{ room.prompt }}</td>
           <td class="col-1">{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
           <td class="col-2">{{ remainingTime | date: 'mm:ss' }}</td>
           <td class="col-1">
@@ -265,7 +265,7 @@
         <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
           <td class="col-2">{{ room.userInfo[0].username }}</td>
           <td class="col-2">{{ room.userInfo[1].username }}</td>
-          <td class="col-6">{{ room.prompt }}</td>
+          <td class="col-6 text-break">{{ room.prompt }}</td>
           <td class="col-1">{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
           <td class="col-1">
             <button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button>

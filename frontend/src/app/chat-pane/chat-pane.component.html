@@ -6,22 +6,51 @@
       <small> Assigned by TAs {{paneLog.formRef === '' ? '' : '(assessment required)'}} </small>
     </div>
 
-    <div class="row p-2">
-      <div class="chat-header text-center" style="white-space: break-spaces">
-        <h5>Chat with {{paneLog.otherAlias}} <span *ngIf="paneLog.active && remainingTime" style="color: darkred">
-          ({{remainingTime | date: 'mm:ss'}})</span>
-        </h5>
-        <p><span *ngIf="paneLog.prompt" style="background-color: lightgrey; padding: 2%">{{paneLog.prompt}}</span></p>
+    <div class="bg-light position-relative border-bottom border-secondary" style="width: 100%; height: 50px">
+      <div class="position-absolute top-0 start-0 d-flex flex-row">
+        <div>
+          <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" (click)="op.toggle($event)" />
+          <p-overlayPanel #op [style]="{ width: '450px' }" [showCloseIcon]="false">
+            <div class="d-flex flex-column">
+              <p class="fw-bold pb-1"> Room ID:</p>
+              <p> {{paneLog.roomID}} </p>
+            </div>
+          </p-overlayPanel>
+        </div>
+      </div>
+      <div class="position-absolute top-0 end-0 d-flex flex-row">
+        <div class="my-auto me-1" [ngStyle]="{'color': remainingTime < 120000 ? 'red' : 'black'}">{{remainingTime | date: 'mm:ss'}} </div>
+        <p-button class="" icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="paneLog.formRef == '' ? close() : rating()" severity="danger">
+        </p-button>
+      </div>
+    </div>
+    <div class="bg-light h-auto p-3">
+      <div class="d-flex flex-row mb-1 mx-2 bg-light">
+        <p-avatar
+          label="{{paneLog.otherAlias[0].toUpperCase()}}"
+          styleClass="mr-2"
+          size="xlarge"
+          [style]="{ 'background-color': '#dee9fc', color: '#1a2551' }"
+          shape="circle" />
+        <div class="d-flex flex-column justify-content-center ms-2"> <h5 class="mt-2">{{paneLog.otherAlias}} </h5>
+          <i>Bot</i>
+        </div>
+      </div>
+
+      <div class="mx-2">
+        <div style="overflow-y: scroll; height:70px;" class="custom-scroll">
+          <p class="text-wrap fst-italic">
+            {{paneLog.prompt}}
+          </p>
+        </div>
       </div>
     </div>
 
-    <div class="chat-history" style="overflow-y: scroll; height: 500px" #scroll>
-
+    <div class="chat-history" style="overflow-y: scroll; height: 400px" #scroll>
       <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
-
         <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage">
           <div class="message-data">
-            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
+            <span class="message-data-time">{{ paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy' }}</span>
           </div>
           <div class="message other-message" style="max-width: 100%; white-space: pre-line">
             <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
@@ -47,6 +76,11 @@
               >
                 <i class="fa fa-star"></i>
               </span>
+              <app-copy-button
+                [textToCopy]="paneLog.messageLog[ordinal].message"
+                [isActive]="paneLog.active"
+                [resetTimeout]="2000">
+              </app-copy-button>
             </div>
 
           </div>
@@ -73,24 +107,10 @@
                     placeholder="ask a question..."
                     maxlength="2000"
                     [readonly]="!paneLog.active"
-                    [formControl]="query">
+                    [disabled]="!paneLog.active"
+                    [formControl]="query"
+                    (keydown)="handleKeyDown($event)">
           </textarea>
-          <div class="input-group-append">
-            <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
-          </div>
-          <div class="input-group-append">
-            <ng-container *ngIf="paneLog.formRef === ''; then directlyClose; else assess"></ng-container>
-            <ng-template #directlyClose>
-              <button (click)="close()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
-                Close <i class="fa fa-chevron-circle}}"></i>
-              </button>
-            </ng-template>
-            <ng-template #assess>
-              <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
-                Assess <i class="fa fa-chevron-circle-{{paneLog.ratingOpen ? 'left' : 'right'}}"></i>
-              </button>
-            </ng-template>
-          </div>
         </div>
       </div>
     </div>

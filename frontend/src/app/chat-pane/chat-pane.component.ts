@@ -5,9 +5,20 @@ import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog, SseRoomState} from "../new_data";
 import {ChatMessageReaction, ChatRoomState, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
-import {Component, ElementRef, EventEmitter, Inject, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  OnInit,
+  Output,
+  ViewChild
+} from '@angular/core';
 import {AlertService} from "../alert";
 import {CommonService} from "../common.service";
+import {CdkCopyToClipboard} from "@angular/cdk/clipboard";
+import {NgStyle} from "@angular/common";
 
 @Component({
   selector: 'app-chat-pane',
@@ -109,7 +120,9 @@ export class ChatPaneComponent implements OnInit {
     }
 
     if (this.paneLogScroll) {
-      this.scrollToBottom()
+      // Little hack : we need to wait for the DOM to be updated before scrolling.
+      // Sometimes (often) two messages are received too quickly, and the DOM is not updated yet.
+      setTimeout(() => this.scrollToBottom(), 40);
       this.paneLogScroll = false
     }
     this.num_messages = this.paneLog.ordinals
@@ -171,7 +184,9 @@ export class ChatPaneComponent implements OnInit {
 
   @ViewChild('scroll') scroll!: ElementRef;
   scrollToBottom(): void {
-    try {this.scroll.nativeElement.scrollTop = this.scroll.nativeElement.scrollHeight;} catch(err) { }
+    try {this.scroll.nativeElement.scrollTop = this.scroll.nativeElement.scrollHeight;} catch(err) {
+      console.error(err)
+    }
   }
 
   // the input field of this pane
@@ -225,5 +240,56 @@ export class ChatPaneComponent implements OnInit {
   ngOnDestroy(): void {
     // Unsubscribe from the chatMessagesSubscription before leaving chat page
     this.chatMessagesSubscription.unsubscribe();
+  }
+
+  /**
+   * Handles the key down event for the input field, so we can send the message when the user presses Enter, and
+   * use Shift+Enter to add a new line.
+   * @param evenAdded primengt
+   */
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault(); // Prevents adding a new line
+      this.poseQuery();       // Calls the function to send the message
+    }
+  }
+}
+
+/**
+ * Very simple component that copies the text to the clipboard when clicked.
+ */
+@Component({
+  selector: 'app-copy-button',
+  standalone: true,
+  imports: [
+    CdkCopyToClipboard,
+    NgStyle
+  ],
+  template: `
+    <span
+      [cdkCopyToClipboard]="textToCopy"
+      class="label label-default position-relative"
+      style="padding-left: 10px;"
+      [ngStyle]="{
+        'cursor': isActive ? 'pointer' : 'auto',
+      }"
+      (click)="handleCopy()"
+    >
+      <i [class.fa-copy]="!isCopied" [class.fa-check]="isCopied" class="fa"></i>
+    </span>
+  `
+})
+export class CopyButtonComponent {
+  @Input() textToCopy: string = ''; // The text to be copied
+  @Input() isActive: boolean = true; // Determines if the button is active
+  @Input() resetTimeout: number = 2000; // Time in ms to reset the icon after copying
+
+  isCopied: boolean = false;
+
+  handleCopy(): void {
+    if (!this.isActive || this.isCopied) return;
+
+    this.isCopied = true;
+    setTimeout(() => (this.isCopied = false), this.resetTimeout);
   }
 }

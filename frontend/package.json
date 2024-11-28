@@ -29,6 +29,8 @@
     "bootstrap-icons": "^1.11.3",
     "font-awesome": "^4.7.0",
     "ng-apexcharts": "1.8",
+    "primeicons": "^7.0.0",
+    "primeng": "^17.18.12",
     "rxjs": "~6.6.0",
     "tslib": "^2.2.0",
     "zone.js": "~0.14.10"

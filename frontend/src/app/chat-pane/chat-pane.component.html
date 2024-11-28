@@ -19,7 +19,7 @@
         </div>
       </div>
       <div class="position-absolute top-0 end-0 d-flex flex-row">
-        <div class="my-auto">{{remainingTime | date: 'mm:ss'}} </div>
+        <div class="my-auto me-1" [ngStyle]="{'color': remainingTime < 120000 ? 'red' : 'black'}">{{remainingTime | date: 'mm:ss'}} </div>
         <p-button class="" icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="paneLog.formRef == '' ? close() : rating()" severity="danger">
         </p-button>
       </div>
@@ -38,11 +38,11 @@
       </div>
 
       <div class="mx-2">
-        <p-scrollPanel [style]="{ 'max-height': '100px' }">
+        <div style="overflow-y: scroll; height:70px;" class="custom-scroll">
           <p class="text-wrap fst-italic">
             {{paneLog.prompt}}
           </p>
-        </p-scrollPanel>
+        </div>
       </div>
     </div>
 

@@ -44,19 +44,37 @@ open class ChatRoom(
         }
     companion object {
         /**
-         * Serializes a given ChatRoom object into a SerializedChatRoom object.
+         * Export a given chatRoom.
          *
          * @param chatRoom The ChatRoom object to be serialized.
          * @return A SerializedChatRoom object containing the serialized data of the given ChatRoom.
          */
-        fun exportSerialized(chatRoom: ChatRoom): SerializedChatRoom {
-            return SerializedChatRoom(
+        fun export(chatRoom: ChatRoom): ExportableChatRoom {
+            val usernames = chatRoom.users.keys.map { UserManager.getUsernameFromId(it)!!}
+            val exportedChatMessages = ChatMessage.toExportableMessages(chatRoom.messages)
+            // NOTE : on earlier versions of Speakeasy, the authorUserId was not present in the ChatMessage object.
+            // In that case, ExportableMessage will have an empty string as the author. This is purely for backward compatibility.
+            val updatedExportedMessages = exportedChatMessages.map { message ->
+                if (message.authorUserName != ExportableMessage.UNKNOWN_USERNAME) {
+                    return@map message
+                }
+                val userNameFromAlias = chatRoom.aliasToUserId[message.authorAlias]?.let { userId ->
+                    UserManager.getUsernameFromId(userId)
+                }
+                if (userNameFromAlias != null) {
+                    // Found the username !
+                    message.copy(authorUserName = userNameFromAlias)
+                } else {
+                    message.copy(authorUserName = ExportableMessage.NOT_REGISTED_USERNAME)
+                }
+            }
+            return ExportableChatRoom(
                 chatRoom.assignment,
                 chatRoom.formRef,
-                chatRoom.users.values.toList(),
+                usernames,
                 chatRoom.startTime,
                 chatRoom.prompt,
-                ChatMessage.toRestMessages(chatRoom.messages),
+                updatedExportedMessages,
                 chatRoom.endTime
             )
         }
@@ -144,13 +162,12 @@ open class ChatRoom(
  * Used to export a chatroom into a format supposedly ready to be exported to JSON or something else.
  */
 @Serializable
-data class SerializedChatRoom(
+data class ExportableChatRoom(
     val assignment: Boolean,
     val formRef: String,
-    // Users aliases.
-    val users: List<String>,
+    val usernames: List<String>,
     val startTime: Long,
     val prompt: String,
-    val messages: List<RestChatMessage>,
+    val messages: List<ExportableMessage>,
     val endTime: Long?,
 )

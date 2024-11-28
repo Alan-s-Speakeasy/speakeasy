@@ -40,11 +40,11 @@ data class ChatMessage(
          */
         fun toExportableMessages(chatMessages: List<ChatMessage>): List<ExportableMessage> {
             return chatMessages.map {
-                val username =
                 // Two cases :
-                // 1. FOr backward compatibility, if the authorUserId is invalid, the username is "unknown", as authorUserID
+                // 1. For backward compatibility, if the authorUserId is invalid, the username is "unknown", as authorUserID
                 // is not present in earlier versions of Speakeasy.
-                    // 2. authorUSerID can come from another speakeasy instance, and is therefore not registered in the current instance.
+                // 2. authorUSerID can come from another speakeasy instance, and is therefore not registered in the current instance.
+                val username =
                     if (UID.isInvalid(it.authorUserId)) ExportableMessage.UNKNOWN_USERNAME else UserManager.getUsernameFromId(it.authorUserId)
                         ?: ExportableMessage.NOT_REGISTED_USERNAME
                 ExportableMessage(it.time, username, it.authorAlias, it.ordinal, it.message)

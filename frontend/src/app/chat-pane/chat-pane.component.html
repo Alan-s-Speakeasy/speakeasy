@@ -76,13 +76,11 @@
               >
                 <i class="fa fa-star"></i>
               </span>
-              <span
-                [cdkCopyToClipboard]="paneLog.messageLog[ordinal].message"
-                class="label label-default position-relative"
-                style="padding-left: 10px;"
-                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto'}">
-                <i class="fa fa-copy"></i>
-              </span>
+              <app-copy-button
+                [textToCopy]="paneLog.messageLog[ordinal].message"
+                [isActive]="paneLog.active"
+                [resetTimeout]="2000">
+              </app-copy-button>
             </div>
 
           </div>

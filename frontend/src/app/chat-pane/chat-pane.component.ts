@@ -17,6 +17,8 @@ import {
 } from '@angular/core';
 import {AlertService} from "../alert";
 import {CommonService} from "../common.service";
+import {CdkCopyToClipboard} from "@angular/cdk/clipboard";
+import {NgStyle} from "@angular/common";
 
 @Component({
   selector: 'app-chat-pane',
@@ -250,5 +252,44 @@ export class ChatPaneComponent implements OnInit {
       event.preventDefault(); // Prevents adding a new line
       this.poseQuery();       // Calls the function to send the message
     }
+  }
+}
+
+/**
+ * Very simple component that copies the text to the clipboard when clicked.
+ */
+@Component({
+  selector: 'app-copy-button',
+  standalone: true,
+  imports: [
+    CdkCopyToClipboard,
+    NgStyle
+  ],
+  template: `
+    <span
+      [cdkCopyToClipboard]="textToCopy"
+      class="label label-default position-relative"
+      style="padding-left: 10px;"
+      [ngStyle]="{
+        'cursor': isActive ? 'pointer' : 'auto',
+      }"
+      (click)="handleCopy()"
+    >
+      <i [class.fa-copy]="!isCopied" [class.fa-check]="isCopied" class="fa"></i>
+    </span>
+  `
+})
+export class CopyButtonComponent {
+  @Input() textToCopy: string = ''; // The text to be copied
+  @Input() isActive: boolean = true; // Determines if the button is active
+  @Input() resetTimeout: number = 2000; // Time in ms to reset the icon after copying
+
+  isCopied: boolean = false;
+
+  handleCopy(): void {
+    if (!this.isActive || this.isCopied) return;
+
+    this.isCopied = true;
+    setTimeout(() => (this.isCopied = false), this.resetTimeout);
   }
 }

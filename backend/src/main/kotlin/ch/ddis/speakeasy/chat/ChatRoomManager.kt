@@ -26,6 +26,7 @@ object ChatRoomManager {
 
     fun init() {
         // Recreates all chatrooms from the log files.
+        // This should defintely be encapsulated into a static method of Chatroom/logging room.
         this.basePath.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
             val users: MutableMap<UserId, String> = objectMapper.readValue(lines[6])
@@ -34,6 +35,7 @@ object ChatRoomManager {
             val assessedBy: MutableList<Assessor> = mutableListOf()
             var markAsNoFeedback: Boolean = false
 
+            // Parse .log files in order to populate the chatrooms with messages, reactions, etc.
             for (i in 8 until lines.size) {
                 when (val chatItem: ChatItemContainer = objectMapper.readValue(lines[i])) {
                     is ChatMessage -> messages.add(chatItem)
@@ -235,15 +237,15 @@ object ChatRoomManager {
     }
 
     /**
-     * Exports selected chatrooms to a list of SerializedChatRoom objects.
+     * Exports selected chatrooms to a list of ExportableChatrooms objects.
      *
      * @param chatRoomIds List of chatroom ids to export
      * @return List of SerializedChatRoom objects
      * @throws IllegalArgumentException if a chatroom id is not found
      */
-    fun exportSerializedChatrooms(chatRoomIds: List<ChatRoomId>): List<SerializedChatRoom> {
+    fun exportChatrooms(chatRoomIds: List<ChatRoomId>): List<ExportableChatRoom> {
         return chatRoomIds.map {
-            ChatRoom.exportSerialized(this.chatrooms.getOrElse( it) {
+            ChatRoom.export(this.chatrooms.getOrElse( it) {
                 throw IllegalArgumentException("Chatroom with id $it not found")
             })
         }

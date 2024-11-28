@@ -27,7 +27,7 @@
       <tbody>
       <tr class="align-middle"
           *ngFor="let chatroomDetail of paginate(activateChatroomDetails, currentPageOfActivateRooms)">
-        <td>{{ chatroomDetail.prompt }}</td>
+        <td class="text-break">{{ chatroomDetail.prompt }}</td>
         <td>{{ chatroomDetail.roomID }}</td>
         <td>{{ chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy' }}</td>
         <td>{{ chatroomDetail.remainingTime | date: 'mm:ss' }}</td>
@@ -121,7 +121,7 @@
           />
 
         </td>
-        <td>{{ chatroomDetail.prompt }}</td>
+        <td class="text-break">{{ chatroomDetail.prompt }}</td>
         <td>{{ chatroomDetail.roomID }}</td>
         <td>{{ chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy' }}</td>
         <td *ngIf="chatroomDetail.remainingTime > 0">Ongoing</td>

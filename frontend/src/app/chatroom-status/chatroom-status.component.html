@@ -73,18 +73,14 @@
           <ngbd-datepicker-range-popup
             (dateRangeSelected)="dateRangeSelected = $event; setCurrentPage(1)"
           />
-          <div class="d-flex flex-row">
-            <div class="pe-4 my-auto">
-              <i>Including</i>
+          <div class="d-flex flex-row mt-2">
+            <div class="pe-4">
+              <i>Involving : </i>
             </div>
-            <ng-select [(ngModel)]="selectedUsers" (ngModelChange)="setCurrentPage(1)"
-                       [multiple]="true"
-                       [items]="allUsers"
-                       bindLabel="username"
-                       [closeOnSelect]="false"
-                       placeholder="Filter by user ..."
-                       class="mt-1 w-75">
-            </ng-select>
+
+            <app-users-involved-selected [allUsers]="allUsers"
+                                         (onUsersSelected)="selectedUserConditions = $event; setCurrentPage(1)"
+            />
           </div>
         </div>
       </div>
@@ -159,5 +155,4 @@
       </div>
     </div>
   </div>
-
 </div>

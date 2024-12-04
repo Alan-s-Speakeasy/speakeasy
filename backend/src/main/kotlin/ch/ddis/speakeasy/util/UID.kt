@@ -26,7 +26,7 @@ data class UID(val string: String) {
         /**
          * Invalid UID. Used e.g for default values.
          */
-        val INVALID : UID = UID("00000000-0000-0000-0000-000000000000")
+        val INVALID : UID = UID("")
 
         /**
          * Checks if a given UID is invalid. An UID is invalid here if it is equal to the INVALID UID, this function does

@@ -9,6 +9,7 @@ import {Subscription, timer} from "rxjs";
 import {exhaustMap, take} from "rxjs/operators";
 import {NgbDate} from "@ng-bootstrap/ng-bootstrap";
 import { HttpClient } from '@angular/common/http';
+import {UserCondition} from "./users-involved-selected/users-involved-selected.component";
 
 @Component({
   selector: 'app-chatroom-status',
@@ -40,6 +41,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   // Users for the search box
   allUsers : UserDetails[] = [];
   selectedUsers : UserDetails[] | null = null;
+  selectedUserConditions : UserCondition[] = [];
 
   // For exporting chatrooms
   selectedChatRoomsIdsForExport: Set<string> = new Set<string>();
@@ -96,15 +98,15 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
           return new Date(date.year, date.month - 1, date.day).getTime();
         }).join(',');
       }
-      let selectedUsers_str = undefined;
-      if (this.selectedUsers != null && this.selectedUsers.length > 0) {
-        selectedUsers_str = this.selectedUsers.map(user => user.id).join(',')
-      }
+
+      // Perfoms a cartesian product of the selected users to get all possible tuples from the user conditions.
+      let selectedUsersTuples_str = this.selectedUserConditions.flatMap(condition => condition.cartesianProductToIdStr());
       this.currentPageOfAllRooms = page
-      this.adminService.getApiRoomsAll(this.currentPageOfAllRooms,
+      this.adminService.getApiRoomsAll(
+        this.currentPageOfAllRooms,
         this.ITEM_PER_PAGE,
-        selectedUsers_str,
-        timeRange_str
+        timeRange_str,
+        selectedUsersTuples_str
         )
         .pipe(take(1))
         .subscribe((paginatedRooms) => {

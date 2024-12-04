@@ -1,0 +1,40 @@
+
+<div class="">
+  <div *ngFor="let condition of conditions; let i = index"
+       class="d-flex flex-row align-content-center mb-2">
+    <div class="col-md-5">
+      <ng-select
+                (change)="onConditionChanged(i, $event, true)"
+                 [multiple]="true"
+                 [items]="allUsers"
+                 bindLabel="username"
+                 [closeOnSelect]="false"
+                 placeholder="Filter by user ..."
+                 class="mt-1 w-100">
+      </ng-select>
+    </div>
+    <div>
+      WITH
+    </div>
+    <div class="col-md-5">
+      <ng-select
+        (change)="onConditionChanged(i, $event, false)"
+        [multiple]="true"
+        [items]="allUsers"
+        bindLabel="username"
+        [closeOnSelect]="false"
+        placeholder="Filter by user ..."
+        class="mt-1 w-100 mw-100">
+      </ng-select>
+    </div>
+  <div class="col-md-2">
+    <button type="button" class="btn btn-danger" (click)="removeCondition(i)">
+      <i class="fa fa-trash" aria-hidden="true"></i>
+    </button>
+  </div>
+  </div>
+  <div class="mt-3">
+    <button type="button" class="btn btn-primary" (click)="addCondition()">Add Condition</button>
+    <button type="button" class="btn btn-success" (click)="submitConditions()">Submit</button>
+  </div>
+</div>

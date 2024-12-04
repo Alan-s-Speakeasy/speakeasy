@@ -150,10 +150,17 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         queryParams = [
             OpenApiParam("page", Int::class, "page number for pagination. Defaults to 1."),
             OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
-            OpenApiParam("users", String::class, "Comma-separated list of user IDs to filter rooms by users. " +
-                    "If not specified, all rooms are returned."),
             OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
-                    "If not specified, all rooms are returned.")
+                    "If not specified, all rooms are returned."),
+            OpenApiParam(
+                name = "userTuples",
+                type = Array<String>::class,
+                description = "List of tuple in the format 'userId1,userId2' passed as repeated query parameters." +
+                        "This parameter contains the list of 2 tuples users that should be present in the chatroom. " +
+                        "If not specified, all rooms are returned." +
+                        "If one userId is blank, it is considered as a wildcard",
+                required = false
+            )
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -163,13 +170,13 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
     override fun doGet(ctx: Context): ChatRoomAdminList {
         val page = ctx.queryParam("page")?.toIntOrNull() ?: 1
         val limit = ctx.queryParam("limit")?.toIntOrNull()
-        // Retrieve 'users' and convert to a List<String> or null if missing
-        val usersInvolved = ctx.queryParam("users")?.split(",")?.map { UserId(it.trim()) }
         // Retrieve 'timeRange' and convert to List<Long> or null if missing
         val timeRange = ctx.queryParam("timeRange")?.split(",")?.mapNotNull { it.trim().toLongOrNull() }
         if (timeRange != null && timeRange.size != 2) {
             throw IllegalArgumentException("timeRange must contain exactly two timestamps.")
         }
+        // If one id string is empty, UserId will be of type Invalid. This is used as a wildcard (all chatrooms with the other user, regardless of the other user)
+        val userTuples = ctx.queryParams("userTuples").map { it.split(",").map { UserId(it.trim()) } }
 
         // Fetch and sort all rooms
         val allRooms: List<ChatRoom> = ChatRoomManager.listAll().sortedByDescending { it.startTime }
@@ -179,8 +186,10 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         val filteredRooms = allRooms.filter { room ->
             // Filter by time range if timeRange is provided
             (timeRange == null || (room.startTime in timeRange[0]..timeRange[1])) &&
-            // Filter by users if usersInvolved is provided
-            (usersInvolved == null || room.users.keys.intersect(usersInvolved).isNotEmpty())
+            // Equivalent to usertuple[i] \subseteq room.users. If none of userIds are invalid, this is equivalent to
+            // check subset equality. (an "invalidID" here Is used a wildcard)
+            // This should be a proper SQL/else command instead of doing O(nm) stuff, but whatever.
+            (userTuples.isEmpty() || userTuples.any { tuple -> tuple.all { userId -> UserId.isInvalid(userId) || room.users.containsKey(userId) } })
         }
         if (filteredRooms.isEmpty()) {
             return ChatRoomAdminList(0, emptyList())
@@ -292,6 +301,7 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
 
     override val parseAsJson = false
 
+
     @OpenApi(
         summary = "Export specified chatrooms as JSON or CSV. In case of CSV, a ZIP file is returned.",
         path = "/api/rooms/export",
@@ -300,7 +310,7 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
         tags = ["Admin"],
         queryParams = [
             OpenApiParam("roomsIds", String::class, "Comma-separated list of roomIds to export", required = true),
-            OpenApiParam("format", String::class, "Format of the export (json or csv, default JSON)", required = false)
+            OpenApiParam("format", String::class, "Format of the export (json or csv, default JSON)", required = false),
         ],
 
         responses = [

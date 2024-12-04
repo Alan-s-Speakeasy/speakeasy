@@ -1360,16 +1360,6 @@
             "format" : "int32"
           }
         }, {
-          "name" : "users",
-          "in" : "query",
-          "description" : "Comma-separated list of user IDs to filter rooms by users. If not specified, all rooms are returned.",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
           "name" : "timeRange",
           "in" : "query",
           "description" : "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. If not specified, all rooms are returned.",
@@ -1378,6 +1368,19 @@
           "allowEmptyValue" : false,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "userTuples",
+          "in" : "query",
+          "description" : "List of tuple in the format 'userId1,userId2' passed as repeated query parameters.This parameter contains the list of 2 tuples users that should be present in the chatroom. If not specified, all rooms are returned.If one userId is blank, it is considered as a wildcard",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
@@ -1466,7 +1469,7 @@
         }, {
           "name" : "format",
           "in" : "query",
-          "description" : "Format of the export (json or csv, default CSV)",
+          "description" : "Format of the export (json or csv, default JSON)",
           "required" : false,
           "deprecated" : false,
           "allowEmptyValue" : false,

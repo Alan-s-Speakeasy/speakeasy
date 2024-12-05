@@ -81,6 +81,15 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     return list.slice(startIdx, endIdx);
   }
 
+  /**
+   * Rests filters of allChat table
+   */
+  resetFiltersAllChat() {
+    this.dateRangeSelected = {from: null, to: null};
+    this.selectedUserConditions = [];
+    this.setCurrentPage(1, false);
+  }
+
 
   /**
    * Sets the current page of the chatrooms table, both active rooms and all rooms.

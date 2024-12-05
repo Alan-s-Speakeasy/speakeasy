@@ -11,3 +11,6 @@
 .message img {
   max-width: 200px;
 }
+.increase-popover-width {
+  max-width: 1000px;
+}

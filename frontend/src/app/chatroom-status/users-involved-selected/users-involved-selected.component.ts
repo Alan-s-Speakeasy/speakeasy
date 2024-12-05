@@ -1,5 +1,5 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, FormsModule} from '@angular/forms';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {NgForOf} from "@angular/common";
 import {UserDetails} from "../../../../openapi";
 import {NgSelectComponent} from "@ng-select/ng-select";
@@ -45,32 +45,39 @@ export class UserCondition {
   templateUrl: './users-involved-selected.component.html',
   styleUrls: ['./users-involved-selected.component.css']
 })
-export class UsersInvolvedSelectedComponent {
+export class UsersInvolvedSelectedComponent implements OnInit{
   @Input() allUsers: UserDetails[] = [];
+  // NOTE : this needs to be an input because everytime the popover is closed the component gets destroyed.
+  // By adding an input here, we can keep the state of the date range selector.
+  userConditions: UserCondition[] = [];
+  @Input() initUserConditions: UserCondition[] = [];
   @Output() onUsersSelected = new EventEmitter<UserCondition[]>();
-
-  conditions: Array<UserCondition> = [new UserCondition()];
 
   // Add a new condition
   addCondition() {
-    this.conditions.push(new UserCondition());
+    this.userConditions.push(new UserCondition());
   }
 
   onConditionChanged(conditionIndex : number, event: UserDetails[], isA: boolean) {
-    this.conditions[conditionIndex].usersA = isA ? event : this.conditions[conditionIndex].usersA;
-    this.conditions[conditionIndex].usersB = isA ? this.conditions[conditionIndex].usersB : event;
-    this.onUsersSelected.emit(this.conditions);
+    this.userConditions[conditionIndex].usersA = isA ? event : this.userConditions[conditionIndex].usersA;
+    this.userConditions[conditionIndex].usersB = isA ? this.userConditions[conditionIndex].usersB : event;
+    this.onUsersSelected.emit(this.userConditions);
   }
 
 
   // Remove a condition by index
   removeCondition(index: number) {
-    this.conditions.splice(index, 1);
+    this.userConditions.splice(index, 1);
+    this.onUsersSelected.emit(this.userConditions);
   }
 
   // Submit the data
   submitConditions() {
-    this.onUsersSelected.emit(this.conditions);
+    this.onUsersSelected.emit(this.userConditions);
     // Process the conditions array as needed
+  }
+
+  ngOnInit(): void {
+    this.userConditions = this.initUserConditions;
   }
 }

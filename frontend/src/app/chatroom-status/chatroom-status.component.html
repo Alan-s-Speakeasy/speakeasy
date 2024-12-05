@@ -65,25 +65,7 @@
   <div class="row">
     <h4 class="text-center">All Chatrooms ({{ numOfAllRooms }})</h4>
     <div class="bg-light p-2 d-flex flex-row justify-content-between ">
-      <div class="d-flex flex-row">
-        <div class="my-auto pe-4">
-          <i class="fas fa-filter fa-lg"></i> :
-        </div>
-        <div>
-          <ngbd-datepicker-range-popup
-            (dateRangeSelected)="dateRangeSelected = $event; setCurrentPage(1)"
-          />
-          <div class="d-flex flex-row mt-2">
-            <div class="pe-4">
-              <i>Involving : </i>
-            </div>
-
-            <app-users-involved-selected [allUsers]="allUsers"
-                                         (onUsersSelected)="selectedUserConditions = $event; setCurrentPage(1)"
-            />
-          </div>
-        </div>
-      </div>
+        <button type="button" class="btn btn-outline-danger" (click)="resetFiltersAllChat()">Clear filters</button>
       <div ngbDropdown class="d-inline-block">
         <button type="button" class="btn btn-outline-primary" id="dropdown1" ngbDropdownToggle>Export..</button>
         <div ngbDropdownMenu aria-labelledby="dropdown1">
@@ -99,32 +81,74 @@
   <table class="table table-striped table-bordered">
       <thead>
       <tr class="table-info">
-        <th scope="col">Selected</th>
-        <th scope="col">RoomPrompt</th>
-        <th scope="col">RoomID</th>
-        <th scope="col">StartTime</th>
+        <th scope="col" class="" style="width: 1%">Selected</th>
+        <th scope="col" class="col-1">
+          <div class="d-flex flex-direction-column">
+            StartTime
+            <ng-template #popoverContent>
+              <div>
+                <ngbd-datepicker-range-popup
+                  (onDateRangeSelected)="dateRangeSelected = $event; setCurrentPage(1)"
+                  [toDate]="dateRangeSelected.to"
+                  [fromDate]="dateRangeSelected.from"
+                />
+              </div>
+            </ng-template>
+            <span
+              type="button"
+              [ngbPopover]="popoverContent"
+              [autoClose]="'outside'"
+              popoverTitle=""
+              placement="bottom">
+              <i class="fa fa-filter"></i>
+            </span>
+          </div>
+        </th>
+
+        <th scope="col" class="col-2">
+          <div class="d-flex flex-direction-column justify-content-between">
+            Members
+            <ng-template #popoverContentUsers >
+              <div>
+                <app-users-involved-selected [allUsers]="allUsers" [initUserConditions]="selectedUserConditions"
+                                             (onUsersSelected)="selectedUserConditions = $event; setCurrentPage(1);"
+                />
+              </div>
+            </ng-template>
+            <span
+              type="button"
+              [ngbPopover]="popoverContentUsers"
+              [autoClose]="'outside'"
+              popoverTitle=""
+              popoverClass="increase-popover-width"
+              placement="bottom">
+              <i class="fa fa-filter"></i>
+            </span>
+          </div>
+        </th>
+        <th scope="col" class="col-4">RoomPrompt</th>
+        <th scope="col" class="col-2">RoomID</th>
         <th scope="col">Status</th>
-        <th scope="col">Members</th>
         <th scope="col">Watch</th>
       </tr>
       </thead>
       <tbody>
       <tr class="align-middle" *ngFor="let chatroomDetail of allChatroomDetails">
-        <td class="align-middle">
+        <td class="align-middle col-1">
           <mat-checkbox
             (change)="toggleSelectedChatRoomForExport(chatroomDetail.roomID)"
             [checked]="this.selectedChatRoomsIdsForExport.has(chatroomDetail.roomID)"
           />
 
         </td>
+        <td>{{ chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy' }}</td>
+        <td>
+          <div *ngFor="let user of chatroomDetail.userInfo">{{ user.username }}</div>
+        </td>
         <td class="text-break">{{ chatroomDetail.prompt }}</td>
         <td>{{ chatroomDetail.roomID }}</td>
-        <td>{{ chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy' }}</td>
         <td *ngIf="chatroomDetail.remainingTime > 0">Ongoing</td>
         <td *ngIf="chatroomDetail.remainingTime <= 0">Closed</td>
-        <td>
-          <span *ngFor="let user of chatroomDetail.userInfo">{{ user.username }} <br> </span>
-        </td>
         <td>
           <button type="button" class="btn btn-secondary float-end" (click)="watch(chatroomDetail)">Watch</button>
         </td>

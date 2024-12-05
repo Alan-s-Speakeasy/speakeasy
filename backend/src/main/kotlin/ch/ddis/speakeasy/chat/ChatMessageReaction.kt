@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.chat
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import kotlinx.serialization.Serializable
 
 enum class ChatMessageReactionType {
     THUMBS_UP,
@@ -10,6 +11,7 @@ enum class ChatMessageReactionType {
 
 data class ChatMessageReactionContainer(val reaction: ChatMessageReaction) : ChatItemContainer()
 
+@Serializable
 data class ChatMessageReaction(val messageOrdinal: Int, val type: ChatMessageReactionType) { //TODO we could also explicitly store who reacted
     companion object {
         fun toSseChatReaction(chatRoom: ChatRoom, reaction: ChatMessageReaction):

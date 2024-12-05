@@ -367,25 +367,8 @@ class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
             // Loop through each ChatRoom and create individual CSV entries in the ZIP file
             serializedChatRooms.forEach { chatRoom ->
                 StringWriter().use { tempWriter ->
-                    CSVWriterBuilder(tempWriter).withSeparator('\t').build().use { writer ->
-                        writer.writeNext(
-                            arrayOf(
-                                "Timestamp",
-                                "AuthorUserName",
-                                "AuthorAlias",
-                                "Message"
-                            )
-                        )
-                        chatRoom.messages.forEach { message ->
-                            writer.writeNext(
-                                arrayOf(
-                                    message.timeStamp.toString(),
-                                    message.authorUserName,
-                                    message.authorAlias,
-                                    message.message
-                                )
-                            )
-                        }
+                    CSVWriterBuilder(tempWriter).withSeparator('\t').build().use { csvWriter ->
+                        ExportableChatRoom.writeToCSV(csvWriter, chatRoom)
                     }
                     val zipEntry = ZipEntry("${chatRoom.startTime}.csv")
                     zipOutputStream.putNextEntry(zipEntry)

@@ -19,6 +19,7 @@ import {AlertService} from "../alert";
 import {CommonService} from "../common.service";
 import {CdkCopyToClipboard} from "@angular/cdk/clipboard";
 import {NgStyle} from "@angular/common";
+import {NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: 'app-chat-pane',
@@ -263,7 +264,8 @@ export class ChatPaneComponent implements OnInit {
   standalone: true,
   imports: [
     CdkCopyToClipboard,
-    NgStyle
+    NgStyle,
+    NgbTooltip
   ],
   template: `
     <span
@@ -274,6 +276,7 @@ export class ChatPaneComponent implements OnInit {
         'cursor': isActive ? 'pointer' : 'auto',
       }"
       (click)="handleCopy()"
+      ngbTooltip="{{ isCopied ? 'Copied!' : 'Copy' }}"
     >
       <i [class.fa-copy]="!isCopied" [class.fa-check]="isCopied" class="fa"></i>
     </span>

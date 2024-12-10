@@ -6,6 +6,7 @@ import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
+import com.opencsv.ICSVWriter
 import kotlinx.serialization.Serializable
 import java.util.concurrent.locks.StampedLock
 import kotlin.math.max
@@ -51,7 +52,14 @@ open class ChatRoom(
          */
         fun export(chatRoom: ChatRoom): ExportableChatRoom {
             val usernames = chatRoom.users.keys.map { UserManager.getUsernameFromId(it)!!}
-            val exportedChatMessages = ChatMessage.toExportableMessages(chatRoom.messages)
+            var exportedChatMessages = ChatMessage.toExportableMessages(chatRoom.messages)
+            // Merge the messages with the reactions (as of now, they are stored in separate lists)
+            exportedChatMessages = exportedChatMessages.map { message ->
+                message.copy(
+                    reaction = chatRoom.reactions[message.ordinal]?.type
+                )
+            }
+
             // NOTE : on earlier versions of Speakeasy, the authorUserId was not present in the ChatMessage object.
             // In that case, ExportableMessage will have an empty string as the author. This is purely for backward compatibility.
             val updatedExportedMessages = exportedChatMessages.map { message ->
@@ -170,4 +178,38 @@ data class ExportableChatRoom(
     val prompt: String,
     val messages: List<ExportableMessage>,
     val endTime: Long?,
-)
+) {
+
+    companion object {
+        /**
+         * Writes a list of ExportableChatRoom objects to an already opened writer object, used for exporting chatrooms.
+         *
+         * @param write The ICSVWriter object to write to.
+         * @param chatRooms The list of ExportableChatRoom objects to write to the CSV file.
+         *
+         * @return Unit
+         */
+        fun writeToCSV(writer: ICSVWriter, chatRoom: ExportableChatRoom) {
+            writer.writeNext(
+                arrayOf(
+                    "Timestamp",
+                    "AuthorUserName",
+                    "AuthorAlias",
+                    "Message",
+                    "Reaction"
+                )
+            )
+            chatRoom.messages.forEach { message ->
+                writer.writeNext(
+                    arrayOf(
+                        message.timeStamp.toString(),
+                        message.authorUserName,
+                        message.authorAlias,
+                        message.message,
+                        message.reaction?.name ?: ""
+                    )
+                )
+            }
+        }
+    }
+}

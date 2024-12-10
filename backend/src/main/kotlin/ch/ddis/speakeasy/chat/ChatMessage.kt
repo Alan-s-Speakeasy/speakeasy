@@ -63,7 +63,17 @@ data class ChatMessage(
 }
 
 @Serializable
-data class ExportableMessage(val timeStamp: Long, val authorUserName: String, val authorAlias: String, val ordinal: Int, val message: String) {
+data class ExportableMessage(
+    val timeStamp: Long,
+    val authorUserName: String,
+    val authorAlias: String,
+    val ordinal: Int,
+    val message: String,
+    // NOTE : as of now, reactions are NOT stored along with messages.
+    // This field is optional if the reactions are not known at instantiation, but can
+    // Be set up later on.
+    var reaction: ChatMessageReactionType? = null // Optional field with default value
+) {
     companion object {
         const val NOT_REGISTED_USERNAME = "not_registered"
         const val UNKNOWN_USERNAME = "unknown"

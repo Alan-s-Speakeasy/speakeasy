@@ -1,0 +1,44 @@
+
+<div class="col-10">
+  <div *ngFor="let condition of this.userConditions; let i = index"
+       class="d-flex align-items-center justify-content-between mb-2 col-12"
+       style="width: 400px">
+    <div class="col-md-5">
+      <ng-select
+        [(ngModel)]="initUserConditions[i].usersA"
+        (change)="onConditionChanged(i, $event, true)"
+        [multiple]="true"
+        [items]="allUsers"
+        bindLabel="username"
+        [closeOnSelect]="false"
+        placeholder="Filter by user ..."
+        class="mt-1">
+      </ng-select>
+    </div>
+    <span class="px-2 align-middle text-center">
+      WITH
+    </span>
+    <div class="col-md-5">
+      <ng-select
+        [(ngModel)]="initUserConditions[i].usersB"
+        (change)="onConditionChanged(i, $event, false)"
+        [multiple]="true"
+        [items]="allUsers"
+        bindLabel="username"
+        [closeOnSelect]="false"
+        placeholder="Filter by user ..."
+        class="mt-1 w-100 mw-100">
+      </ng-select>
+    </div>
+    <div class="col-md-2 pb-1 d-flex justify-content-center">
+      <span type="button" class="btn btn-outline-danger" (click)="removeCondition(i)">
+        <i class="fa fa-trash" aria-hidden="true"></i>
+      </span>
+    </div>
+  </div>
+  <div class="mt-3">
+    <span type="button" (click)="addCondition()">
+      <i class="fa fa-plus"></i>
+    </span>
+  </div>
+</div>

@@ -40,20 +40,23 @@ export class NgbdDatepickerRangePopup {
   formatter = inject(NgbDateParserFormatter);
 
   hoveredDate: NgbDate | null = null;
-  fromDate: NgbDate | null = this.calendar.getToday();
-  toDate: NgbDate | null = this.calendar.getNext(this.calendar.getToday(), 'd', 10);
-   @Output() dateRangeSelected = new EventEmitter<{from: NgbDate | null, to: NgbDate | null }>();
+  // NOTE : this needs to be an input because everytime the popover is closed the component gets destroyed.
+  // By adding an input here, we can keep the state of the date range selector.
+  @Input() fromDate: NgbDate | null = this.calendar.getToday();
+  @Input() toDate: NgbDate | null = this.calendar.getNext(this.calendar.getToday(), 'd', 10);
+  @Output() onDateRangeSelected = new EventEmitter<{from: NgbDate | null, to: NgbDate | null }>();
+
 
   onDateSelection(date: NgbDate) {
     if (!this.fromDate && !this.toDate) {
       this.fromDate = date;
     } else if (this.fromDate && !this.toDate && date && date.after(this.fromDate)) {
       this.toDate = date;
-      this.dateRangeSelected.emit({from: this.fromDate, to: this.toDate})
+      this.onDateRangeSelected.emit({from: this.fromDate, to: this.toDate})
     } else {
       this.toDate = null;
       this.fromDate = date;
-      this.dateRangeSelected.emit({from: this.fromDate, to: this.toDate})
+      this.onDateRangeSelected.emit({from: this.fromDate, to: this.toDate})
     }
   }
 

@@ -46,6 +46,9 @@ import {OverlayPanelModule} from "primeng/overlaypanel";
 import {InputTextModule} from "primeng/inputtext";
 import {CdkCopyToClipboard} from "@angular/cdk/clipboard";
 import {TooltipModule} from "primeng/tooltip";
+import {
+  UsersInvolvedSelectedComponent
+} from "./chatroom-status/users-involved-selected/users-involved-selected.component";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -86,7 +89,7 @@ export function initializeApiConfig() {
     MatCheckboxModule,
     MatSliderModule,
     MatTooltipModule,
-    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent], providers: [
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

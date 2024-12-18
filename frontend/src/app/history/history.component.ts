@@ -8,8 +8,8 @@ import {
   ChatRoomInfo,
   ChatService,
   FeedbackResponse,
-  FeedbackResponseAverageItem,
-  FeedbackService,
+  FeedbackResponseStatsItem,
+  FeedbackService, FeedBackStatsOfRequest,
   UserService
 } from "../../../openapi";
 import {AuthService} from "../authentication.service";
@@ -37,8 +37,8 @@ export class HistoryComponent implements OnInit {
 
   ratingFormsMap: Map<string, FeedbackForm> = new Map();
   nonOptionIdsMap: Map<string, string[]> = new Map(); // formName -> ids of text questions
-  averageFeedbackRequestedMap: Map<string, FeedbackResponseAverageItem> = new Map();
-  averageFeedbackAssignedMap: Map<string, FeedbackResponseAverageItem> = new Map();
+  averageFeedbackRequestedMap: Map<string, FeedbackResponseStatsItem> = new Map();
+  averageFeedbackAssignedMap: Map<string, FeedbackResponseStatsItem> = new Map();
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
 
@@ -134,12 +134,12 @@ export class HistoryComponent implements OnInit {
     this.paneLogs.push(paneLog)
   }
 
-  idToText(response: FeedbackResponse, formName: string): string { // todo: fix infinite calls!
-    let text = response.value
+  idToText(response: FeedBackStatsOfRequest, formName: string): string { // todo: fix infinite calls!
+    let text = response.average
     this.ratingFormsMap.get(formName)!.requests.forEach(r => {
       if (r.id == response.id) {
         r.options.forEach(o => {
-          if (o.value.toString() == response.value) {
+          if (o.value.toString() == response.average) {
             text = o.name
           }
         })
@@ -164,8 +164,8 @@ export class HistoryComponent implements OnInit {
     )
   }
 
-  filterOptionResponses(formName: string, item: FeedbackResponseAverageItem) {
-    return item.responses.filter(response =>
+  filterOptionResponses(formName: string, item: FeedbackResponseStatsItem) {
+    return item.statsOfResponsePerRequest.filter(response =>
       !this.nonOptionIdsMap.get(formName)!.includes(response.id)
     )
   }

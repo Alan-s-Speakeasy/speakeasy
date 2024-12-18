@@ -7,8 +7,8 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {
-  AdminService, FeedbackRequest, FeedbackResponse,
-  FeedbackService
+  AdminService, FeedbackRequest, FeedbackResponse, FeedbackResponseStatsItem,
+  FeedbackService, FeedBackStatsOfRequest
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import { HttpClient } from '@angular/common/http';
@@ -82,11 +82,11 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   selectedChartData: Map<string, number>[] = []
   allChartData: Map<string, number>[] = []
 
+  // Contains the ids of the questions that are not option questions (eg, text questions)
   nonOptionQuestionIds: string[] = []
 
   page = 1;
   pageSize = 10;
-  pageSizes = [5, 10, 15, 20];
 
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
@@ -128,7 +128,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
         this.averageFeedback.push(
           {
             username: average.username,
-            responses: average.responses
+            responses: average.statsOfResponsePerRequest
           }
         )
         this.usernames.push(average.username)
@@ -382,10 +382,27 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   idToText(response: FeedbackResponse): string {
     let text = response.value
+    // Round up the rating to the nearest integer
+    const roundedResponseValue = Math.round(parseFloat(response.value)).toString()
     this.ratingRequests.forEach(r => {
       if (r.id == response.id) {
         r.options.forEach(o => {
-          if (o.value.toString() == response.value) {
+          if (o.value.toString() == roundedResponseValue) {
+            text = o.name
+          }
+        })
+      }
+    })
+    return text
+  }
+
+  mapValueToFeedbackRequestText(response: FeedBackStatsOfRequest): string {
+    let text = response.average
+    const roundedAverage = Math.round(parseFloat(response.average)).toString()
+    this.ratingRequests.forEach(r => {
+      if (r.id == response.id) {
+        r.options.forEach(o => {
+          if (o.value.toString() == roundedAverage) {
             text = o.name
           }
         })

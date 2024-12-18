@@ -2186,6 +2186,23 @@
         },
         "required" : [ "name", "usernames" ]
       },
+      "FeedBackStatsOfRequest" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "average" : {
+            "type" : "string"
+          },
+          "variance" : {
+            "type" : "number",
+            "format" : "float"
+          }
+        },
+        "required" : [ "id", "average", "variance" ]
+      },
       "FeedbackAnswerOption" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2267,26 +2284,6 @@
         },
         "required" : [ "id", "value" ]
       },
-      "FeedbackResponseAverageItem" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "username" : {
-            "type" : "string"
-          },
-          "count" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "responses" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponse"
-            }
-          }
-        },
-        "required" : [ "username", "count", "responses" ]
-      },
       "FeedbackResponseAverageMapList" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2294,13 +2291,13 @@
           "assigned" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
+              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
             }
           },
           "requested" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
+              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
             }
           }
         },
@@ -2359,6 +2356,26 @@
           }
         },
         "required" : [ "assigned", "requested" ]
+      },
+      "FeedbackResponseStatsItem" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "statsOfResponsePerRequest" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedBackStatsOfRequest"
+            }
+          }
+        },
+        "required" : [ "username", "count", "statsOfResponsePerRequest" ]
       },
       "GeneratedAssignment" : {
         "type" : "object",

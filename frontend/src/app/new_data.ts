@@ -3,7 +3,7 @@ import {
   ChatRoomUserAdminInfo,
   FeedbackRequest,
   FeedbackResponse,
-  ChatMessageReactionType
+  ChatMessageReactionType, FeedBackStatsOfRequest
 } from "../../openapi";
 
 export function convertFromJSON<T>(json: string): T {
@@ -129,5 +129,5 @@ export interface FrontendUserFeedback {
 
 export interface FrontendAverageFeedback {
   username: string,
-  responses: FeedbackResponse[]
+  responses: FeedBackStatsOfRequest[]
 }

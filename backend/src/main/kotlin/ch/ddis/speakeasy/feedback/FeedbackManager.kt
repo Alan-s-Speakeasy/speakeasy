@@ -10,7 +10,6 @@ import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
@@ -160,7 +159,7 @@ object FeedbackManager {
                     val responseId = row["responseid"]
                     val responseValue = row["responsevalue"]
                     if ((room != null)
-                        && ChatRoomManager.isAssignment(room.UID()) == assignment
+                        // && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
                         && (partner != null)
                         && (responseId != null)
@@ -194,10 +193,12 @@ object FeedbackManager {
     /**
      * Do the equivalent of this SQL query:
      * ```sql
-     * SELECT recipient, COUNT(*), AVG(responseValue) FROM feedback WHERE author = author GROUP BY recipient
+     * SELECT recipient, question_id, COUNT(*) AS total_feedbacks, AVG(value) AS average_value
+     * FROM feedback WHERE author = 'author'
+     * GROUP BY recipient, question_id
      *```
      * In other word, it gets all feedback entries the author filled in a chatrom with any other user, compute its average
-     * and count and return the average feedback for each other user.
+     * and count and return the average for each question (=request) of the said feedback.
      *
      * @param author The author of the feedback
      * @param assignment If true, only return feedback that were filled in an assignment chatroom
@@ -205,7 +206,7 @@ object FeedbackManager {
      *
      * @return List of FeedbackResponseAverageItem with the average feedback for each user, as stated above.
      */
-    fun readFeedbackHistoryPerUser(author: Boolean, assignment: Boolean = false, formName: String): List<FeedbackResponseAverageItem> {
+    fun aggregateFeedbackStatisticsPerUser(author: Boolean, assignment: Boolean = false, formName: String): List<FeedbackResponseStatsItem> {
         val allFeedbackResponses = readFeedbackHistory(assignment = assignment, formName = formName)
         val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
         val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
@@ -222,7 +223,7 @@ object FeedbackManager {
             it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
         return responsesPerUser.map {
-            FeedbackResponseAverageItem(it.key, feedbackCountPerUser[it.key] ?: 0, computeFeedbackAverage(it.value, formName))
+            FeedbackResponseStatsItem(it.key, feedbackCountPerUser[it.key] ?: 0, computeStatsPerRequestOfFeedback(it.value, formName))
         }
     }
 
@@ -232,26 +233,33 @@ object FeedbackManager {
      * @param responses List of feedback responses
      * @param formName Name of the feedback form
      *
-     * @return List of feedback responses with the average value for each response id
+     * @return List of feedback responses with the average value for each response id. The average value is a float stringed.
      */
-    fun computeFeedbackAverage(responses: List<FeedbackResponse>, formName: String): List<FeedbackResponse> {
+    fun computeStatsPerRequestOfFeedback(responses: List<FeedbackResponse>, formName: String): List<FeedBackStatsOfRequest> {
+        // Get the "questions" of the form (called requests here)
         val requests = this.forms.find { it.formName == formName }!!.requests
-        val averages = requests.associateTo(mutableMapOf()) { it.id to 0 }
-        val count = requests.associateTo(mutableMapOf()) { it.id to 0 }
+        val averagesPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0f }
+        val variancesPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0f }
 
-        responses.forEach { fr ->
-            val value = fr.value.toIntOrNull() ?: 0
-            averages[fr.id] = value + averages[fr.id]!!
-            if (value != 0) {
-                count[fr.id] = count[fr.id]!! + 1
+        // One pass variance and average computation
+        for (request in requests) {
+            val responsesOfRequest = responses.filter { it.id == request.id && it.value.isNotBlank() }
+            val n = responsesOfRequest.size;
+            var S1 = 0f;
+            var S2 = 0f;
+            for (response in responsesOfRequest) {
+                S1 += response.value.toFloat()
+                S2 += response.value.toFloat() * response.value.toFloat()
             }
+            averagesPerRequest[request.id] = S1 / n
+            variancesPerRequest[request.id] = (S2 - S1 * S1 / n) / (n - 1)
         }
-
-        averages.forEach {
-            if (count[it.key]!! > 0) {
-                averages[it.key] = it.value / count[it.key]!!
-            }
+        return requests.map {
+            FeedBackStatsOfRequest(
+                it.id,
+                averagesPerRequest[it.id]!!.toString(),
+                variance = variancesPerRequest[it.id]!!
+            )
         }
-        return averages.map { FeedbackResponse(it.key, it.value.toString()) }
     }
 }

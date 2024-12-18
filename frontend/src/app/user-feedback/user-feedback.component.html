@@ -89,7 +89,7 @@
       <tr class="align-middle" role="button" (click)="toggleElement = toggleElement == i ? -1 : i">
         <td class="px-0">{{entry.username}}</td>
         <ng-container *ngFor="let response of entry.responses">
-          <td class="px-0" *ngIf="!nonOptionQuestionIds.includes(response.id)">{{idToText(response)}}</td>
+          <td class="px-0" *ngIf="!nonOptionQuestionIds.includes(response.id)">{{mapValueToFeedbackRequestText(response)}} ( μ = {{response.average}} - σ² = {{response.variance}}) </td>
         </ng-container>
       </tr>
       <tr *ngIf="toggleElement == i">

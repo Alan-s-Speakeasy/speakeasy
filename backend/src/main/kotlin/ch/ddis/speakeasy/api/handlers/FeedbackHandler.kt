@@ -10,6 +10,8 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 
+// I really wonder the point of all of this when most of these are mapppings.
+
 data class FeedbackAnswerOption(val name: String, val value: Int)
 data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>)
 data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest>)
@@ -18,8 +20,9 @@ data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseItem>, val requested: MutableList<FeedbackResponseItem>)
-data class FeedbackResponseAverageItem(val username: String, val count: Int, val responses: List<FeedbackResponse>)
-data class FeedbackResponseAverageMapList(val assigned: List<FeedbackResponseAverageItem>, val requested: List<FeedbackResponseAverageItem>)
+data class FeedBackStatsOfRequest(val id : String, val average : String, val variance : Float)
+data class FeedbackResponseStatsItem(val username: String, val count: Int, val statsOfResponsePerRequest: List<FeedBackStatsOfRequest>)
+data class FeedbackResponseAverageMapList(val assigned: List<FeedbackResponseStatsItem>, val requested: List<FeedbackResponseStatsItem>)
 
 class GetFeedbackFormListHandler : GetRestHandler<FeedbackFormList>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
@@ -251,6 +254,8 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
     }
 }
 
+// NOTE : despite its name, this is also available to regular users.
+// The difference is that normal user can only access their own feedback average
 class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMapList>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.ADMIN, RestApiRole.USER)
@@ -296,8 +301,8 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
 
-        val feedbackResponsesPerUserAssigned = FeedbackManager.readFeedbackHistoryPerUser(author, assignment = true, formName = formName)
-        val feedbackResponsesPerUserRequested = FeedbackManager.readFeedbackHistoryPerUser(author, assignment = false, formName = formName)
+        val feedbackResponsesPerUserAssigned = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assignment = true, formName = formName)
+        val feedbackResponsesPerUserRequested = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assignment = false, formName = formName)
 
         // Return all averages to admin
         if (session.user.role == UserRole.ADMIN) {

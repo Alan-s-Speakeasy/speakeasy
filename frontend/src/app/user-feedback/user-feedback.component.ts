@@ -84,6 +84,10 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   nonOptionQuestionIds: string[] = []
 
+  page = 1;
+  pageSize = 10;
+  pageSizes = [5, 10, 15, 20];
+
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback")
 

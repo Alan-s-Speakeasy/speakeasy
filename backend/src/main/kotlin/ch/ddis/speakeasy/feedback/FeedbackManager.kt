@@ -83,6 +83,11 @@ object FeedbackManager {
 
     private val writerLock = StampedLock()
 
+    /**
+     * Returns a matching FeedbackForm object for the given formName.
+     *
+     * @throws NullPointerException if the formName is not found.
+     */
     fun readFeedbackFrom(formName: String): FeedbackForm {
         return forms.find { it.formName ==  formName}!!  // throw NullPointerException
     }
@@ -154,7 +159,6 @@ object FeedbackManager {
                     val partner = row["partner"]
                     val responseId = row["responseid"]
                     val responseValue = row["responsevalue"]
-
                     if ((room != null)
                         && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
@@ -187,6 +191,20 @@ object FeedbackManager {
         return responseList
     }
 
+    /**
+     * Do the equivalent of this SQL query:
+     * ```sql
+     * SELECT recipient, COUNT(*), AVG(responseValue) FROM feedback WHERE author = author GROUP BY recipient
+     *```
+     * In other word, it gets all feedback entries the author filled in a chatrom with any other user, compute its average
+     * and count and return the average feedback for each other user.
+     *
+     * @param author The author of the feedback
+     * @param assignment If true, only return feedback that were filled in an assignment chatroom
+     * @param formName The name of the feedback form
+     *
+     * @return List of FeedbackResponseAverageItem with the average feedback for each user, as stated above.
+     */
     fun readFeedbackHistoryPerUser(author: Boolean, assignment: Boolean = false, formName: String): List<FeedbackResponseAverageItem> {
         val allFeedbackResponses = readFeedbackHistory(assignment = assignment, formName = formName)
         val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
@@ -208,6 +226,14 @@ object FeedbackManager {
         }
     }
 
+    /**
+     * Given a list of feedback responses from a given formName, compute the average for each response id.
+     *
+     * @param responses List of feedback responses
+     * @param formName Name of the feedback form
+     *
+     * @return List of feedback responses with the average value for each response id
+     */
     fun computeFeedbackAverage(responses: List<FeedbackResponse>, formName: String): List<FeedbackResponse> {
         val requests = this.forms.find { it.formName == formName }!!.requests
         val averages = requests.associateTo(mutableMapOf()) { it.id to 0 }

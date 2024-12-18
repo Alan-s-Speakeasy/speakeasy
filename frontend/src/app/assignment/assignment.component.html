@@ -74,7 +74,7 @@
 
     <div class="d-flex justify-content-around">
       <div>
-        <h4>Bots Per User</h4>
+        <h4>Bots per users</h4>
         <mat-slider min="1" max="6" step="1" #ngSlider><input matSliderThumb [value]="botsPerUser"
                                                               (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
                                                               #ngSliderThumb="matSliderThumb"/></mat-slider>
@@ -84,8 +84,8 @@
       <div>
         <h4>Duration</h4>
         <mat-slider min="1" max="20" step="1" #ngSlider><input matSliderThumb [value]="duration"
-                                                               (input)="setDuration({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
-                                                               #ngSliderThumb="matSliderThumb"/></mat-slider>
+                                                               (input)="setDuration({source: ngSliderThumb2, parent: ngSlider, value: ngSliderThumb2.value})"
+                                                               #ngSliderThumb2="matSliderThumb"/></mat-slider>
         {{ duration }}
       </div>
     </div>

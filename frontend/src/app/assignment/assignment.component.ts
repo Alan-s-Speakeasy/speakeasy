@@ -69,6 +69,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   botsPerUser = 3
   duration = 10
 
+  // True if a change has been made after the generation
   changeAfterGenerate = false
   generated = false
 

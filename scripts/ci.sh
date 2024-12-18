@@ -73,7 +73,6 @@ log "Running Gradle tasks..."
 # gradlew uses exec to run java, thus swallowing the whole stdin
 bash ./gradlew clean openApiGenerate packageFrontend distTar < /dev/null
 
-echo "salope"
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
     log "Gradle tasks failed with exit code $EXIT_CODE. Exiting script."

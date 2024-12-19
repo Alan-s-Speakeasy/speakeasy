@@ -11,7 +11,7 @@ import {
   FeedbackService, FeedBackStatsOfRequest
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
-import { HttpClient } from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {AlertService} from "../alert";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {
@@ -38,6 +38,8 @@ export type ChartOptions = {
   title: ApexTitleSubtitle;
 };
 
+const COLORS_BARS = ['#ff9933', '#0066ff', '#33cc33', '#cc33ff', '#ff3333'];
+
 @Component({
   selector: 'app-user-feedback',
   templateUrl: './user-feedback.component.html',
@@ -48,17 +50,20 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     autoClose: true,
     keepAfterRouteChange: true
   };
+
   constructor(private router: Router, private titleService: Title,
               private httpClient: HttpClient,
               private commonService: CommonService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(AdminService) private adminService: AdminService,
               public alertService: AlertService,
-              private modalService: NgbModal) { }
+              private modalService: NgbModal) {
+  }
 
   private feedbackSubscription!: Subscription;
 
   ratingRequests!: Array<FeedbackRequest>;
+  // This should be a map, but it is essentially username -> average feedback
   averageFeedback: FrontendAverageFeedback[] = []
   userFeedback: FrontendUserFeedback[] = []
   chooseAssignments: boolean = true
@@ -68,6 +73,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   formNameOptions: string[] = []
 
   // TODO: TypeError: Cannot read properties of undefined (reading '0')
+  // Username -> (requestID -> answer?)[].
   chartDataPerUsername: Map<string, Map<string, number>[]> = new Map<string, Map<string, number>[]>()
   @ViewChild("chart") chart: ChartComponent | undefined;
   allChartOptions: Partial<ChartOptions>[] | any[] = [];
@@ -79,7 +85,12 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   usernames: string[] = []
   selectedUsernames: string[] = []
   appliedSelectedUsernames: string[] = []
+  // The data for the selected feedback id (as a string, for some ""historical"" reasons...)
   selectedChartData: Map<string, number>[] = []
+  // Contains the data for the selected users
+  // Format : questionId (as string for ""historical"" reasons) -> username -> [values for each question]
+  selectedUsernamesChartData: Map<string, Map<string, Array<number>>> = new Map<string, Map<string, Array<number>>>()
+  // The data for the users. Can for example display the average.
   allChartData: Map<string, number>[] = []
 
   // Contains the ids of the questions that are not option questions (eg, text questions)
@@ -92,7 +103,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     this.titleService.setTitle("Evaluation Feedback")
 
     this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
-      this.formNameOptions = feedbackForms.forms.map( form => form.formName )
+      this.formNameOptions = feedbackForms.forms.map(form => form.formName)
       this.selectedFormName = this.formNameOptions[0] // use the first one as default form
 
       // Fetch initially and then periodically refetch
@@ -105,9 +116,9 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   fetchFeedback(): void {
-    this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName,undefined).subscribe((feedbackForm) => {
+    this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
         this.ratingRequests = feedbackForm.requests;
-        feedbackForm.requests.forEach( (request) => {
+        feedbackForm.requests.forEach((request) => {
           // record text questions
           if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {
             this.nonOptionQuestionIds.push(request.id)
@@ -153,7 +164,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
         if (this.ratingRequests) {
           let username = this.authorPerspective ? response.author : response.recipient
           response.responses.forEach(r => {
-            if (!this.nonOptionQuestionIds.includes(r.id)){
+            if (!this.nonOptionQuestionIds.includes(r.id)) {
               let current = this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].get(r.value) || 0
               this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].set(r.value, current + 1)
             }
@@ -167,7 +178,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   generateEmptyChartBuckets(): Map<string, number>[] {
     let res: Map<string, number>[] = []
     this.ratingRequests.forEach(f => {
-      if (!this.nonOptionQuestionIds.includes(f.id)){
+      if (!this.nonOptionQuestionIds.includes(f.id)) {
         let x = new Map()
         f.options.forEach(o => x.set(o.value.toString(), 0))
         res.push(x)
@@ -191,7 +202,12 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     return res
   }
 
-  getChartData(usernames: string[], id: string) : number[] {
+  /**
+   * Given a list of usernames and an id of a question, return this.selectedCHartData[id] or allChartData if the list is not empty,
+   * @param usernames
+   * @param id
+   */
+  getChartData(usernames: string[], id: string): number[] {
     if (usernames.length > 0) {
       return Array.from(this.selectedChartData[parseInt(id) - 1].values())
     } else {
@@ -222,32 +238,34 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     this.applyFilter()
   }
 
-  updateUsernameAndCharts() : void {
+  updateUsernameAndCharts(): void {
     this.selectedChartData = this.generateEmptyChartBuckets()
     this.allChartData = this.generateEmptyChartBuckets()
 
     let totalSelected: number[] = new Array(this.selectedChartData.length).fill(0)
     let totalAll: number[] = new Array(this.allChartData.length).fill(0)
 
-    this.chartDataPerUsername.forEach((v, username) => {
-      if (this.appliedSelectedUsernames.includes(username)) {
-        for (let category = 0; category < this.selectedChartData.length; category++) {
-          this.selectedChartData[category].forEach((value, name) => {
-            let newValue = value + v[category]!.get(name)!
-            this.selectedChartData[category].set(name, newValue)
-            totalSelected[category] += v[category]!.get(name)!
+    // THis thing is black magic
+    this.chartDataPerUsername.forEach((responses, username) => {
+      if (this.isSelected(username)) {
+        for (let request = 0; request < this.selectedChartData.length; request++) {
+          this.selectedChartData[request].forEach((value, name) => {
+            let newValue = value + responses[request]!.get(name)!
+            this.selectedChartData[request].set(name, newValue)
+            totalSelected[request] += responses[request]!.get(name)!
           })
         }
       }
       for (let category = 0; category < this.allChartData.length; category++) {
         this.allChartData[category].forEach((value, name) => {
-          let newValue = value + v[category]!.get(name)!
+          let newValue = value + responses[category]!.get(name)!
           this.allChartData[category].set(name, newValue)
-          totalAll[category] += v[category]!.get(name)!
+          totalAll[category] += responses[category]!.get(name)!
         })
       }
     })
 
+    // Category are requests, or questions
     for (let category = 0; category < this.selectedChartData.length; category++) {
       this.selectedChartData[category].forEach((value, name) => {
         this.selectedChartData[category].set(name, value / totalSelected[category])
@@ -273,11 +291,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
           name: "All users",
           data: this.getChartData([], f.id),
         }]
-        if (this.appliedSelectedUsernames.length != 0) {
-          series.push({
-            name: "Selected users",
-            data: this.getChartData(this.appliedSelectedUsernames, f.id)
-          })
+        if (this.appliedSelectedUsernames.length > 0) {
+          for (let username of this.appliedSelectedUsernames) {
+            series.push({
+              name: username,
+              data: this.getChartData([username], f.id)
+            })
+          }
         }
         this.allChartOptions?.push(
           {
@@ -346,26 +366,28 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       if (!this.nonOptionQuestionIds.includes(f.id)) {
         let series = [{
           name: "All users",
-          data: this.getChartData([], f.id)
+          data: this.getChartData([], f.id),
+          color: "#3954ea",
         }]
-        if (this.appliedSelectedUsernames.length != 0) {
+        for (let index = 0; index < this.appliedSelectedUsernames.length; index++) {
+          let username = this.appliedSelectedUsernames[index];
           series.push({
-            name: "Selected users",
-            data: this.getChartData(this.appliedSelectedUsernames, f.id)
-          })
+            name: username,
+            data: this.getChartData([username], f.id),
+            // Increment color for each user
+            color: COLORS_BARS[index % COLORS_BARS.length]
+          });
         }
-        this.allChartOptions[parseInt(f.id) - 1].series = series
+        this.allChartOptions[parseInt(f.id) - 1].series = series;
       }
     })
   }
 
 
-
   openImpression(content: any, impression: FeedbackResponse): void {
     this.impressionToRead = impression.value
-    this.modalService.open(content, { centered: true })
+    this.modalService.open(content, {centered: true})
   }
-
 
 
   toggleDirection(value: string): void {

@@ -359,57 +359,14 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     })
   }
 
-  getFeedbacks(username: string): FrontendUserFeedback[] {
-    if (this.authorPerspective) {
-      return this.userFeedback.filter(f => f.author == username)
-    } else {
-      return this.userFeedback.filter(f => f.recipient == username)
-    }
-  }
 
-  getAverageFeedback(): FrontendAverageFeedback[] {
-    if (this.appliedSelectedUsernames.length != 0) {
-      return this.averageFeedback.filter(f => this.appliedSelectedUsernames.includes(f.username))
-    } else {
-      return this.averageFeedback
-    }
-  }
 
   openImpression(content: any, impression: FeedbackResponse): void {
     this.impressionToRead = impression.value
     this.modalService.open(content, { centered: true })
   }
 
-  idToText(response: FeedbackResponse): string {
-    let text = response.value
-    // Round up the rating to the nearest integer
-    const roundedResponseValue = Math.round(parseFloat(response.value)).toString()
-    this.ratingRequests.forEach(r => {
-      if (r.id == response.id) {
-        r.options.forEach(o => {
-          if (o.value.toString() == roundedResponseValue) {
-            text = o.name
-          }
-        })
-      }
-    })
-    return text
-  }
 
-  mapValueToFeedbackRequestText(response: FeedBackStatsOfRequest): string {
-    let text = response.average
-    const roundedAverage = Math.round(parseFloat(response.average)).toString()
-    this.ratingRequests.forEach(r => {
-      if (r.id == response.id) {
-        r.options.forEach(o => {
-          if (o.value.toString() == roundedAverage) {
-            text = o.name
-          }
-        })
-      }
-    })
-    return text
-  }
 
   toggleDirection(value: string): void {
     this.authorPerspective = value == "author"

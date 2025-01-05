@@ -129,5 +129,6 @@ export interface FrontendUserFeedback {
 
 export interface FrontendAverageFeedback {
   username: string,
+  // For each request, contains the average feedback value
   responses: FeedBackStatsOfRequest[]
 }

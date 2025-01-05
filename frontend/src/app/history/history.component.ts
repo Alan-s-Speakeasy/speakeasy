@@ -137,7 +137,7 @@ export class HistoryComponent implements OnInit {
   idToText(response: FeedBackStatsOfRequest, formName: string): string { // todo: fix infinite calls!
     let text = response.average
     this.ratingFormsMap.get(formName)!.requests.forEach(r => {
-      if (r.id == response.id) {
+      if (r.id == response.requestID) {
         r.options.forEach(o => {
           if (o.value.toString() == response.average) {
             text = o.name
@@ -166,7 +166,7 @@ export class HistoryComponent implements OnInit {
 
   filterOptionResponses(formName: string, item: FeedbackResponseStatsItem) {
     return item.statsOfResponsePerRequest.filter(response =>
-      !this.nonOptionIdsMap.get(formName)!.includes(response.id)
+      !this.nonOptionIdsMap.get(formName)!.includes(response.requestID)
     )
   }
 

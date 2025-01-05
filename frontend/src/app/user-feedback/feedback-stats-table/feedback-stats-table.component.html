@@ -33,14 +33,16 @@
               <i class="fa fa-search"></i>
           </span>
       </th>
-      <ng-container *ngFor="let question of this.ratingRequests">
-        <th class="" *ngIf="!nonOptionQuestionIds?.includes(question.id)">
+      <ng-container *ngFor="let request of this.ratingRequests">
+        <th class="" *ngIf="!nonOptionQuestionIds?.includes(request.id)">
           <div class="d-flex flex-row justify-content-between">
-            {{question.shortname}}
-            <span type="button" (click)="sortTable(question.id)" class="btn btn-link p-0 text-black">
-              <i *ngIf="sortColumn === question.id && sortDirection === 'asc'" class="fas fa-sort-up"></i>
-              <i *ngIf="sortColumn === question.id && sortDirection === 'desc'" class="fas fa-sort-down"></i>
-              <i *ngIf="sortColumn !== question.id" class="fas fa-sort"></i>
+            <span [ngbTooltip]="'σ² = '+ getStatOfRequest(request.id).variance">
+              {{request.shortname}} (μ ={{getStatOfRequest(request.id).average}})
+            </span>
+            <span type="button" (click)="sortTable(request.id)" class="btn btn-link p-0 text-black">
+              <i *ngIf="sortColumn === request.id && sortDirection === 'asc'" class="fas fa-sort-up"></i>
+              <i *ngIf="sortColumn === request.id && sortDirection === 'desc'" class="fas fa-sort-down"></i>
+              <i *ngIf="sortColumn !== request.id" class="fas fa-sort"></i>
             </span>
           </div>
         </th>
@@ -64,9 +66,9 @@
       <td class="px-0">{{ entry.username }}</td>
       <ng-container *ngFor="let response of entry.responses">
         <td class="px-0"
-            *ngIf="!nonOptionQuestionIds?.includes(response.id)">
+            *ngIf="!nonOptionQuestionIds?.includes(response.requestID)">
           <span [ngbTooltip]="'μ = ' + response.average + '- σ² = ' + response.variance">
-            {{ mapValueToFeedbackRequestText(response) }} <i> ({{ parseFloat(response.average).toFixed(1) }}) </i>
+            {{ mapValueToFeedbackRequestText(response) }}
           </span>
         </td>
       </ng-container>

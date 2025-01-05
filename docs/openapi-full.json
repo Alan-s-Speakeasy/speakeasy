@@ -386,7 +386,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/FeedbackResponseAverageMapList"
+                  "$ref" : "#/components/schemas/FeedbackResponseStatsMapList"
                 }
               }
             }
@@ -2190,7 +2190,7 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "id" : {
+          "requestID" : {
             "type" : "string"
           },
           "average" : {
@@ -2201,7 +2201,7 @@
             "format" : "float"
           }
         },
-        "required" : [ "id", "average", "variance" ]
+        "required" : [ "requestID", "average", "variance" ]
       },
       "FeedbackAnswerOption" : {
         "type" : "object",
@@ -2284,25 +2284,6 @@
         },
         "required" : [ "id", "value" ]
       },
-      "FeedbackResponseAverageMapList" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "assigned" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
-            }
-          },
-          "requested" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
-            }
-          }
-        },
-        "required" : [ "assigned", "requested" ]
-      },
       "FeedbackResponseItem" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2376,6 +2357,31 @@
           }
         },
         "required" : [ "username", "count", "statsOfResponsePerRequest" ]
+      },
+      "FeedbackResponseStatsMapList" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "assigned" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
+            }
+          },
+          "requested" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
+            }
+          },
+          "statsOfAllRequest" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedBackStatsOfRequest"
+            }
+          }
+        },
+        "required" : [ "assigned", "requested", "statsOfAllRequest" ]
       },
       "GeneratedAssignment" : {
         "type" : "object",

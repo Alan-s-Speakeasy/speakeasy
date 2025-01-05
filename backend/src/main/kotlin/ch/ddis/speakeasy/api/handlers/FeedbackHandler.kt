@@ -20,9 +20,14 @@ data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseItem>, val requested: MutableList<FeedbackResponseItem>)
-data class FeedBackStatsOfRequest(val id : String, val average : String, val variance : Float)
+// NOTE : a request is a question in the feedback form
+data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float)
 data class FeedbackResponseStatsItem(val username: String, val count: Int, val statsOfResponsePerRequest: List<FeedBackStatsOfRequest>)
-data class FeedbackResponseAverageMapList(val assigned: List<FeedbackResponseStatsItem>, val requested: List<FeedbackResponseStatsItem>)
+data class FeedbackResponseStatsMapList(
+    val assigned: List<FeedbackResponseStatsItem>,
+    val requested: List<FeedbackResponseStatsItem>,
+    val statsOfAllRequest: List<FeedBackStatsOfRequest> = listOf()
+)
 
 class GetFeedbackFormListHandler : GetRestHandler<FeedbackFormList>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
@@ -256,7 +261,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
 
 // NOTE : despite its name, this is also available to regular users.
 // The difference is that normal user can only access their own feedback average
-class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMapList>, AccessManagedRestHandler {
+class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapList>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.ADMIN, RestApiRole.USER)
 
@@ -275,11 +280,11 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
             OpenApiParam("author", Boolean::class, "author or recipient")
         ],
         responses = [
-            OpenApiResponse("200", [OpenApiContent(FeedbackResponseAverageMapList::class)]),
+            OpenApiResponse("200", [OpenApiContent(FeedbackResponseStatsMapList::class)]),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doGet(ctx: Context): FeedbackResponseAverageMapList {
+    override fun doGet(ctx: Context): FeedbackResponseStatsMapList {
 
         val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
             401,
@@ -304,11 +309,14 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
         val feedbackResponsesPerUserAssigned = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assignment = true, formName = formName)
         val feedbackResponsesPerUserRequested = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assignment = false, formName = formName)
 
+        val statsOfAllRequest = FeedbackManager.aggregateFeedbackStatisticsGlobal(formName)
+
         // Return all averages to admin
         if (session.user.role == UserRole.ADMIN) {
-            return FeedbackResponseAverageMapList(
+            return FeedbackResponseStatsMapList(
                 assigned = feedbackResponsesPerUserAssigned,
-                requested = feedbackResponsesPerUserRequested
+                requested = feedbackResponsesPerUserRequested,
+                statsOfAllRequest = statsOfAllRequest
             )
         }
         // Return only the user's average to human
@@ -318,10 +326,12 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseAverageMap
             val averageForUserRequested = feedbackResponsesPerUserRequested
                 .find { it.username == session.user.name }
 
-            return FeedbackResponseAverageMapList(
+            return FeedbackResponseStatsMapList(
                 assigned = listOfNotNull(averageForUserAssigned),
                 requested = listOfNotNull(averageForUserRequested)
             )
         }
     }
+
+
 }

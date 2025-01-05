@@ -120,7 +120,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                         row {
                             cell("AVERAGE")
                             FeedbackManager.computeStatsPerRequestOfFeedback(responses.flatMap { it.responses }, formName).forEach {
-                                cell(getFeedbackNameForValue(header, it.id, it.average))
+                                cell(getFeedbackNameForValue(header, it.requestID, it.average))
                             }
                         }
                     }
@@ -145,7 +145,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 parts.add(response.username)
                 parts.add(response.count.toString())
                 response.statsOfResponsePerRequest.forEach {
-                    parts.add(getFeedbackNameForValue(header, it.id, it.average, csv = true))
+                    parts.add(getFeedbackNameForValue(header, it.requestID, it.average, csv = true))
                 }
                 fileWriter.println(parts.joinToString(","))
             }
@@ -181,7 +181,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                                 cell(response.username)
                                 cell(response.count)
                                 response.statsOfResponsePerRequest.forEach {
-                                    cell(getFeedbackNameForValue(header, it.id, it.average))
+                                    cell(getFeedbackNameForValue(header, it.requestID, it.average))
                                 }
                             }
                         }
@@ -202,7 +202,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             fileWriter.println(header.requests.joinToString(",") { it.shortname })
             val parts: MutableList<String> = mutableListOf()
             FeedbackManager.computeStatsPerRequestOfFeedback(responses.flatMap { it.responses }, formName).forEach {
-                parts.add(getFeedbackNameForValue(header, it.id, it.average, csv = true))
+                parts.add(getFeedbackNameForValue(header, it.requestID, it.average, csv = true))
             }
             fileWriter.println(parts.joinToString(","))
         }
@@ -232,7 +232,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                     body {
                         row {
                             FeedbackManager.computeStatsPerRequestOfFeedback(responses.flatMap { it.responses }, formName).forEach {
-                                cell(getFeedbackNameForValue(header, it.id, it.average))
+                                cell(getFeedbackNameForValue(header, it.requestID, it.average))
                             }
                         }
                     }

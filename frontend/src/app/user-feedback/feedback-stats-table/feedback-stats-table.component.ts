@@ -2,7 +2,7 @@ import {Component, EventEmitter, Input, Output, TemplateRef} from '@angular/core
 import {FeedbackRequest, FeedbackResponse, FeedBackStatsOfRequest} from "../../../../openapi";
 import {FrontendAverageFeedback, FrontendUserFeedback} from "../../new_data";
 import {NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
-import {NgForOf, NgIf, SlicePipe} from "@angular/common";
+import {NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
 import {MatCheckbox} from "@angular/material/checkbox";
 
 @Component({
@@ -15,7 +15,8 @@ import {MatCheckbox} from "@angular/material/checkbox";
     NgForOf,
     NgIf,
     MatCheckbox,
-    NgbTooltip
+    NgbTooltip,
+    NgStyle
   ],
   templateUrl: './feedback-stats-table.component.html',
   styleUrl: './feedback-stats-table.component.css'
@@ -34,6 +35,7 @@ export class FeedbackStatsTableComponent {
   @Input() nonOptionQuestionIds: string[] | undefined;
   @Input() userFeedback: FrontendUserFeedback[] = []
   @Input() averageFeedback: FrontendAverageFeedback[] = [];
+  @Input() statsOfAllRequests!: Array<FeedBackStatsOfRequest>;
   @Input() appliedSelectedUsernames: string[] = []
 
   @Input() openImpression!: (content: any, impression: FeedbackResponse) => void;
@@ -46,12 +48,15 @@ export class FeedbackStatsTableComponent {
   // Output lambda each checked username
   @Output() onRowSelected  = new EventEmitter<string>();
 
+  getStatOfRequest(requestID: string): FeedBackStatsOfRequest {
+    return this.statsOfAllRequests.find(s => s.requestID == requestID)!
+  }
 
   mapValueToFeedbackRequestText(response: FeedBackStatsOfRequest): string {
     let text = response.average
     const roundedAverage = Math.round(parseFloat(response.average)).toString()
     this.ratingRequests.forEach(r => {
-      if (r.id == response.id) {
+      if (r.id == response.requestID) {
         r.options.forEach(o => {
           if (o.value.toString() == roundedAverage) {
             text = o.name
@@ -113,8 +118,8 @@ export class FeedbackStatsTableComponent {
 
     // sort the table
     this.averageFeedback.sort((a, b) => {
-      const a_question_average = a.responses.find(r => r.id == id)!.average
-      const b_question_average = b.responses.find(r => r.id == id)!.average
+      const a_question_average = a.responses.find(r => r.requestID == id)!.average
+      const b_question_average = b.responses.find(r => r.requestID == id)!.average
       if (this.sortDirection == 'asc') {
         return parseFloat(a_question_average) - parseFloat(b_question_average)
       } else {

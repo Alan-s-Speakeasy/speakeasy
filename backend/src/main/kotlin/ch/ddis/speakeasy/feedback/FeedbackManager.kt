@@ -222,9 +222,27 @@ object FeedbackManager {
             }
             it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
-        return responsesPerUser.map {
-            FeedbackResponseStatsItem(it.key, feedbackCountPerUser[it.key] ?: 0, computeStatsPerRequestOfFeedback(it.value, formName))
+        // get the list of _all_ feedback responses and compute the average and variance from that.
+        val globalStats = computeStatsPerRequestOfFeedback(allFeedbackResponses.flatMap { it.responses }, formName)
+        return responsesPerUser.map { (username, responses) ->
+            FeedbackResponseStatsItem(
+                username,
+                feedbackCountPerUser[username] ?: 0,
+                computeStatsPerRequestOfFeedback(responses, formName)
+            )
         }
+    }
+
+    /**
+     * Compute some stats of the feedback requests (=questions) for all feedback responses of the given formName.
+     *
+     * @param formName The name of the feedback form
+     *
+     * @return List of FeedBackStatsOfRequest with the average and variance of each request.
+     */
+    fun aggregateFeedbackStatisticsGlobal(formName: String): List<FeedBackStatsOfRequest> {
+        val allFeedbackResponses = readFeedbackHistory(formName = formName)
+        return computeStatsPerRequestOfFeedback(allFeedbackResponses.flatMap { it.responses }, formName)
     }
 
     /**
@@ -262,4 +280,5 @@ object FeedbackManager {
             )
         }
     }
+
 }

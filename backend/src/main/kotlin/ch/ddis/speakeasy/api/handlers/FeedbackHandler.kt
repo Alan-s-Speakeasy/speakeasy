@@ -21,7 +21,7 @@ data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseItem>, val requested: MutableList<FeedbackResponseItem>)
 // NOTE : a request is a question in the feedback form
-data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float)
+data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float, val count : Int)
 data class FeedbackResponseStatsItem(val username: String, val count: Int, val statsOfResponsePerRequest: List<FeedBackStatsOfRequest>)
 data class FeedbackResponseStatsMapList(
     val assigned: List<FeedbackResponseStatsItem>,

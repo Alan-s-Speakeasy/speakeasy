@@ -14,6 +14,36 @@
   },
   "paths" : {
     "/api/assignment" : {
+      "get" : {
+        "tags" : [ "Assignment" ],
+        "summary" : "Get the status of the current assignment generator",
+        "operationId" : "getApiAssignment",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
       "delete" : {
         "tags" : [ "Assignment" ],
         "summary" : "Delete the active assignment generator.",
@@ -46,36 +76,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "get" : {
-        "tags" : [ "Assignment" ],
-        "summary" : "Get the status of the current assignment generator",
-        "operationId" : "getApiAssignment",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
                 }
               }
             }
@@ -2199,9 +2199,13 @@
           "variance" : {
             "type" : "number",
             "format" : "float"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
-        "required" : [ "requestID", "average", "variance" ]
+        "required" : [ "requestID", "average", "variance", "count" ]
       },
       "FeedbackAnswerOption" : {
         "type" : "object",

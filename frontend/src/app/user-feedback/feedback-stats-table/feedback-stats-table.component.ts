@@ -152,4 +152,16 @@ export class FeedbackStatsTableComponent {
         backUrl: "feedback"
       } } ).then()
   }
+
+  isControversial(response_i: FeedBackStatsOfRequest, requestStats : FeedBackStatsOfRequest): boolean {
+    // NOTE : There are better, more statistically robust ways of comparing variances of a subpopulation (like Levene's test ?)
+    // As I don't have any data to test things on it, and I'm not sure about the sample size, I'm using a simple method here of
+    // just comparing the variances.
+
+    // To take into account the number of responses the ratio is weighted by the number of responses.
+    // This prevents the situation where a few responses with a large variance can skew the result.
+    const ALPHA = 1
+    const SD_i = Math.sqrt(response_i.variance) * response_i.count / (response_i.count + ALPHA)
+    return Math.sqrt(requestStats.variance) / SD_i > 1.1
+  }
 }

@@ -258,6 +258,7 @@ object FeedbackManager {
         val requests = this.forms.find { it.formName == formName }!!.requests
         val averagesPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0f }
         val variancesPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0f }
+        val countPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0 }
 
         // One pass variance and average computation
         for (request in requests) {
@@ -271,12 +272,14 @@ object FeedbackManager {
             }
             averagesPerRequest[request.id] = S1 / n
             variancesPerRequest[request.id] = (S2 - S1 * S1 / n) / (n - 1)
+            countPerRequest[request.id] = n
         }
         return requests.map {
             FeedBackStatsOfRequest(
                 it.id,
                 averagesPerRequest[it.id]!!.toString(),
-                variance = variancesPerRequest[it.id]!!
+                variance = variancesPerRequest[it.id]!!,
+                count = countPerRequest[it.id]!!
             )
         }
     }

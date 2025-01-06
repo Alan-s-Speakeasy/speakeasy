@@ -62,15 +62,18 @@
         <mat-checkbox [checked]="selectedUsernames.includes(entry.username)" (change)="onRowSelected.emit(entry.username)" color="primary"/>
       </td>
       <td>
-        {{ getFeedbacks(entry.username).length }}
+        {{ entry.responses[0].count }}
       </td>
       <td class="px-0">{{ entry.username }}</td>
       <ng-container *ngFor="let response of entry.responses">
-        <td class="px-0"
+        <td class="px-1"
             *ngIf="!nonOptionQuestionIds?.includes(response.requestID)">
+          {{ response.average }} -
           <span [ngbTooltip]="'μ = ' + response.average + '- σ² = ' + response.variance">
-            {{ mapValueToFeedbackRequestText(response) }}
+            <i>{{ mapValueToFeedbackRequestText(response) }} </i>
           </span>
+          <span class="fa fa-warning" *ngIf="isControversial(response, getStatOfRequest(response.requestID))"
+                [ngbTooltip]="'This bot is controversial, meaning that user generally disagree on its ratings.'"></span>
         </td>
       </ng-container>
     </tr>

@@ -9,7 +9,7 @@ import {FrontendAverageFeedback, FrontendChatroomDetail, FrontendUserFeedback} f
 import {NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
 import {NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
 import {MatCheckbox} from "@angular/material/checkbox";
-import {FormBuilder} from "@angular/forms";
+import {FormBuilder, FormsModule} from "@angular/forms";
 import {Router} from "@angular/router";
 
 @Component({
@@ -23,7 +23,8 @@ import {Router} from "@angular/router";
     NgIf,
     MatCheckbox,
     NgbTooltip,
-    NgStyle
+    NgStyle,
+    FormsModule
   ],
   templateUrl: './feedback-stats-table.component.html',
   styleUrl: './feedback-stats-table.component.css'
@@ -36,6 +37,7 @@ export class FeedbackStatsTableComponent {
 
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' | '' = '';
+  usernameFilter: string = '';
 
 
   @Input() authorPerspective: boolean | undefined;
@@ -88,10 +90,24 @@ export class FeedbackStatsTableComponent {
 
 
   getAverageFeedback(): FrontendAverageFeedback[] {
+    let averageFeedbackProcessed = this.averageFeedback.filter(f => f.username.includes(this.usernameFilter))
+    // sort the table
+    if (this.sortColumn != '') {
+       averageFeedbackProcessed.sort((a, b) => {
+        const a_question_average = a.responses.find(r => r.requestID == this.sortColumn)!.average
+        const b_question_average = b.responses.find(r => r.requestID == this.sortColumn)!.average
+        if (this.sortDirection == 'asc') {
+          return parseFloat(a_question_average) - parseFloat(b_question_average)
+        } else {
+          return parseFloat(b_question_average) - parseFloat(a_question_average)
+        }
+      })
+    }
+
     if (this.appliedSelectedUsernames.length != 0) {
-      return this.averageFeedback.filter(f => this.appliedSelectedUsernames.includes(f.username))
+      return averageFeedbackProcessed .filter(f => this.appliedSelectedUsernames.includes(f.username))
     } else {
-      return this.averageFeedback
+      return averageFeedbackProcessed
     }
   }
 
@@ -113,8 +129,8 @@ export class FeedbackStatsTableComponent {
   }
 
 
-  sortTable(id: string) {
-    if (this.sortColumn == id) {
+  setSorting(columnID: string) {
+    if (this.sortColumn == columnID) {
       // if '' -> asc, if asc -> desc, if desc -> ''
       if (this.sortDirection == 'desc') {
         this.sortColumn = '';
@@ -123,21 +139,9 @@ export class FeedbackStatsTableComponent {
       }
       this.sortDirection = this.sortDirection == '' ? 'asc' : 'desc';
     } else {
-      this.sortColumn = id;
+      this.sortColumn = columnID;
       this.sortDirection = 'asc';
     }
-
-    // sort the table
-    this.averageFeedback.sort((a, b) => {
-      const a_question_average = a.responses.find(r => r.requestID == id)!.average
-      const b_question_average = b.responses.find(r => r.requestID == id)!.average
-      if (this.sortDirection == 'asc') {
-        return parseFloat(a_question_average) - parseFloat(b_question_average)
-      } else {
-        return parseFloat(b_question_average) - parseFloat(a_question_average)
-      }
-    })
-
   }
 
   watch(roomID:string): void {

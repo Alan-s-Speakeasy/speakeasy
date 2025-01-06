@@ -20,6 +20,7 @@
               type="text"
               class="form-control"
               placeholder="Search username"
+              [(ngModel)]="usernameFilter"
             />
           </div>
         </ng-template>
@@ -39,7 +40,7 @@
             <span [ngbTooltip]="'σ² = '+ getStatOfRequest(request.id).variance">
               {{request.shortname}} (μ ={{getStatOfRequest(request.id).average}})
             </span>
-            <span type="button" (click)="sortTable(request.id)" class="btn btn-link p-0 text-black">
+            <span type="button" (click)="setSorting(request.id)" class="btn btn-link p-0 text-black">
               <i *ngIf="sortColumn === request.id && sortDirection === 'asc'" class="fas fa-sort-up"></i>
               <i *ngIf="sortColumn === request.id && sortDirection === 'desc'" class="fas fa-sort-down"></i>
               <i *ngIf="sortColumn !== request.id" class="fas fa-sort"></i>

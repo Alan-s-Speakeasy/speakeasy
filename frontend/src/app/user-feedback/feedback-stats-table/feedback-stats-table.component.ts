@@ -161,7 +161,14 @@ export class FeedbackStatsTableComponent {
     // To take into account the number of responses the ratio is weighted by the number of responses.
     // This prevents the situation where a few responses with a large variance can skew the result.
     const ALPHA = 1
-    const SD_i = Math.sqrt(response_i.variance) * response_i.count / (response_i.count + ALPHA)
-    return Math.sqrt(requestStats.variance) / SD_i > 1.1
+    const var_i = response_i.variance * response_i.count / (response_i.count + ALPHA)
+    const var_global = requestStats.variance
+
+    // Follows a weird rule of thumb, reference : https://library.virginia.edu/data/articles/a-rule-thumb-unequal-variances
+    // This can definitely change if needed/required.
+    const TRESHOLD_VARIANCE_RATIO = 3
+    const s_max = Math.max(var_i, var_global)
+    const s_min = Math.min(var_i, var_global)
+    return s_max / s_min > TRESHOLD_VARIANCE_RATIO
   }
 }

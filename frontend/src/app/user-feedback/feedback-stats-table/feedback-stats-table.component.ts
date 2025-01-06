@@ -1,9 +1,11 @@
 import {Component, EventEmitter, Input, Output, TemplateRef} from '@angular/core';
-import {FeedbackRequest, FeedbackResponse, FeedBackStatsOfRequest} from "../../../../openapi";
-import {FrontendAverageFeedback, FrontendUserFeedback} from "../../new_data";
+import {AdminService, FeedbackRequest, FeedbackResponse, FeedBackStatsOfRequest} from "../../../../openapi";
+import {FrontendAverageFeedback, FrontendChatroomDetail, FrontendUserFeedback} from "../../new_data";
 import {NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
 import {NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
 import {MatCheckbox} from "@angular/material/checkbox";
+import {FormBuilder} from "@angular/forms";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-feedback-stats-table',
@@ -47,6 +49,8 @@ export class FeedbackStatsTableComponent {
   @Input() selectedUsernames: string[] = []
   // Output lambda each checked username
   @Output() onRowSelected  = new EventEmitter<string>();
+
+  constructor(private fb: FormBuilder, private router: Router, private adminService: AdminService) {}
 
   getStatOfRequest(requestID: string): FeedBackStatsOfRequest {
     return this.statsOfAllRequests.find(s => s.requestID == requestID)!
@@ -129,5 +133,10 @@ export class FeedbackStatsTableComponent {
 
   }
 
-  protected readonly parseFloat = parseFloat;
+  watch(roomID:string): void {
+    this.router.navigateByUrl('/spectate', { state: {
+        roomID:roomID,
+        backUrl: "feedback"
+      } } ).then()
+  }
 }

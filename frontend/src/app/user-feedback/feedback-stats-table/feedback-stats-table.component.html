@@ -102,7 +102,9 @@
             </ng-container>
             <td>
               <span>
-                <span type="button" [ngbTooltip]="'Watch this chat'">
+                <span type="button" [ngbTooltip]="'Watch this chat'"
+                      (click)="watch(userFeedback.roomId)"
+                >
                   <i class="fa fa-eye"></i>
                 </span>
               </span>

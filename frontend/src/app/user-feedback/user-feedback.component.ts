@@ -107,64 +107,59 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     });
   }
 
-  fetchFeedback(): void {
-    this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
-        this.ratingRequests = feedbackForm.requests;
-        feedbackForm.requests.forEach((request) => {
-          // record text questions
-          if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {
-            this.nonOptionQuestionIds.push(request.id);
-          }
-        });
-      },
-      (error) => {
-        console.log("Ratings form for this chat room is not retrieved properly.", error);
-      }
-    );
-
-    this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName, this.authorPerspective).subscribe((r) => {
-      this.averageFeedback = [];
-      this.usernames = [];
-      let responses = this.chooseAssignments ? r.assigned : r.requested;
-      responses.forEach(average => {
-        this.averageFeedback.push(
-          {
-            username: average.username,
-            responses: average.statsOfResponsePerRequest
-          }
-        );
-        this.usernames.push(average.username);
-      });
-      this.usernames.sort((a, b) => a.localeCompare(b));
-      this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username));
-      this.statsOfAllRequest = r.statsOfAllRequest;
-    });
-
-    this.adminService.getApiFeedbackhistoryFormByFormName(this.selectedFormName).subscribe((r) => {
-      this.userFeedback = [];
-      this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername();
-      let responses = this.chooseAssignments ? r.assigned : r.requested;
-      responses.forEach(response => {
-        this.userFeedback.push(
-          {
-            author: response.author,
-            recipient: response.recipient,
-            roomId: response.room,
-            responses: response.responses
-          }
-        );
-        if (this.ratingRequests) {
-          let username = this.authorPerspective ? response.author : response.recipient;
-          response.responses.forEach(r => {
-            if (!this.nonOptionQuestionIds.includes(r.id)) {
-              let current = this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].get(r.value) || 0;
-              this.chartDataPerUsername.get(username)![parseInt(r.id) - 1].set(r.value, current + 1);
+    fetchFeedback(): void {
+      this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
+          this.ratingRequests = feedbackForm.requests;
+          feedbackForm.requests.forEach((request) => {
+            if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {
+              this.nonOptionQuestionIds.push(request.id);
             }
           });
+
+          this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName, this.authorPerspective).subscribe((r) => {
+            this.averageFeedback = [];
+            this.usernames = [];
+            let responses = this.chooseAssignments ? r.assigned : r.requested;
+            responses.forEach(average => {
+              this.averageFeedback.push({
+                username: average.username,
+                responses: average.statsOfResponsePerRequest
+              });
+              this.usernames.push(average.username);
+            });
+            this.usernames.sort((a, b) => a.localeCompare(b));
+            this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username));
+            this.statsOfAllRequest = r.statsOfAllRequest;
+
+            this.adminService.getApiFeedbackhistoryFormByFormName(this.selectedFormName).subscribe((r) => {
+              this.userFeedback = [];
+              this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername();
+              let responses = this.chooseAssignments ? r.assigned : r.requested;
+              responses.forEach(response => {
+                this.userFeedback.push({
+                  author: response.author,
+                  recipient: response.recipient,
+                  roomId: response.room,
+                  responses: response.responses
+                });
+                if (this.ratingRequests) {
+                  let username = this.authorPerspective ? response.author : response.recipient;
+                  response.responses.forEach(resp => {
+                    if (!this.nonOptionQuestionIds.includes(resp.id)) {
+                      let current = this.chartDataPerUsername.get(username)![parseInt(resp.id) - 1].get(resp.value) || 0;
+                      this.chartDataPerUsername.get(username)![parseInt(resp.id) - 1].set(resp.value, current + 1);
+                    }
+                  });
+                }
+              });
+              this.updateUsernameAndCharts(); // Update charts AFTER all data is fetched
+            });
+          });
+        },
+        (error) => {
+          console.log("Ratings form for this chat room is not retrieved properly.", error);
         }
-      });
-      this.updateUsernameAndCharts();
-    });
+      );
   }
 
   generateEmptyChartBuckets(): Map<string, number>[] {

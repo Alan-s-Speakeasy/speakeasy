@@ -112,9 +112,6 @@ dependencies {
 
     //// CSV handling
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5'
-
-    /// Stats stuff
-    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
 }
 
 startScripts {

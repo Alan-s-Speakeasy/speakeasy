@@ -159,7 +159,7 @@ object FeedbackManager {
                     val responseId = row["responseid"]
                     val responseValue = row["responsevalue"]
                     if ((room != null)
-                        // && ChatRoomManager.isAssignment(room.UID()) == assignment
+                        && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
                         && (partner != null)
                         && (responseId != null)

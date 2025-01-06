@@ -1,5 +1,10 @@
 import {Component, EventEmitter, Input, Output, TemplateRef} from '@angular/core';
-import {AdminService, FeedbackRequest, FeedbackResponse, FeedBackStatsOfRequest} from "../../../../openapi";
+import {
+  AdminService,
+  FeedbackRequest,
+  FeedbackResponse,
+  FeedBackStatsOfRequest
+} from "../../../../openapi";
 import {FrontendAverageFeedback, FrontendChatroomDetail, FrontendUserFeedback} from "../../new_data";
 import {NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
 import {NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
@@ -50,7 +55,9 @@ export class FeedbackStatsTableComponent {
   // Output lambda each checked username
   @Output() onRowSelected  = new EventEmitter<string>();
 
-  constructor(private fb: FormBuilder, private router: Router, private adminService: AdminService) {}
+  constructor(private fb: FormBuilder, private router: Router, private adminService: AdminService,
+  ) {
+  }
 
   getStatOfRequest(requestID: string): FeedBackStatsOfRequest {
     return this.statsOfAllRequests.find(s => s.requestID == requestID)!
@@ -134,8 +141,10 @@ export class FeedbackStatsTableComponent {
   }
 
   watch(roomID:string): void {
+    // Pass some infos to the spectate component
     this.router.navigateByUrl('/spectate', { state: {
-        roomID:roomID,
+        roomID: roomID,
+        isViewedAsHistory:true,
         backUrl: "feedback"
       } } ).then()
   }

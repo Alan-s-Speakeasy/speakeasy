@@ -69,8 +69,8 @@ export interface PaneLog {
   prompt: string,
   myAlias: string,
   otherAlias: string,
-  spectate: boolean,
-  history?: boolean,
+  spectate: boolean, // true: the chatroom is in spectate mode, the chatroom can be still ongoing.
+  history?: boolean, // true: the chatroom is in history mode, no new messages will be added
   testerBotAlias?: string
 }
 

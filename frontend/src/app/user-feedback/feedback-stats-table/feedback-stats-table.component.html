@@ -64,7 +64,7 @@
       <td>
         {{ entry.responses[0].count }}
       </td>
-      <td class="px-0">{{ entry.username }}</td>
+      <td class="ps-1">{{ entry.username }}</td>
       <ng-container *ngFor="let response of entry.responses">
         <td class="px-1"
             *ngIf="!nonOptionQuestionIds?.includes(response.requestID)">

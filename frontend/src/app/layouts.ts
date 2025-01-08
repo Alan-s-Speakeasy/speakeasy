@@ -41,7 +41,7 @@ export class MinimalLayoutComponent {}
       <!-- Sidebar component -->
       <app-side-navbar></app-side-navbar>
       <!-- Main content area -->
-      <div class="flex-grow-1">
+      <div class="flex-grow-1 container">
         <alert></alert>
         <router-outlet></router-outlet>
       </div>

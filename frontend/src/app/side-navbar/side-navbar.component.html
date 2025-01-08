@@ -1,0 +1,35 @@
+<div class="d-flex flex-column flex-shrink-0 p-3 min-vh-100 h-100 position-fixed fixed-top" style="width: 280px; background-color: #efefef">
+  <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto
+   text-decoration-none text-black ">
+    <img ngSrc="/assets/logo.svg" alt="Logo" width="100" height="100" class="me-2">
+    <span class="fs-4">Speakeasy</span>
+  </a>
+  <hr>
+  <ul class="nav nav-pills flex-column mb-auto">
+    <li *ngFor="let item of this.links" class="nav-item">
+      <a [routerLink]="item.url" role="button" class="nav-link text-black" [routerLinkActive]="['bg-secondary-subtle']" >
+        <i class="me-2" [ngClass]="item.icon + ' fs-5'"></i>
+        {{ item.name }}
+      </a>
+    </li>
+  </ul>
+  <hr>
+  <div class="dropdown">
+    <div ngbDropdown placement="top-end" class="d-inline-block d-flex align-items-center  text-decoration-none ">
+      <div class="w-100" role="button"
+           ngbDropdownToggle aria-expanded="false">
+        <p-avatar
+          label="{{this.userName[0].toUpperCase()}}"
+          styleClass="me-2"
+          size="normal"
+          [style]="{ 'background-color': 'rgba(222,246,252,0.36)', color: '#1a2551' }"
+          shape="circle" />
+        <strong>{{ this.userName }}</strong>
+      </div>
+      <div ngbDropdownMenu aria-labelledby="dropdownBasic2" class="dropdown-menu dropdown-menu-dark text-small shadow">
+        <button ngbDropdownItem>Change password</button>
+        <button ngbDropdownItem class="text-danger" (click)="userLogout()"> Log out</button>
+      </div>
+    </div>
+  </div>
+</div>

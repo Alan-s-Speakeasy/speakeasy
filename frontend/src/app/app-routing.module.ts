@@ -10,20 +10,36 @@ import {ChatroomStatusComponent} from "./chatroom-status/chatroom-status.compone
 import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
 import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
 import {AssignmentComponent} from "./assignment/assignment.component";
+import {MainLayoutComponent, MinimalLayoutComponent} from "./layouts";
 
 const routes: Routes = [
-  {path: '', redirectTo: 'login', pathMatch: 'full'},
-  {path: 'login', component: LoginComponent},
-  {path: 'panel', component: PanelComponent},
-  {path: 'history', component: HistoryComponent},
-  {path: 'password', component: PasswordComponent},
-  {path: 'chat', component: ChatComponent},
-  {path: 'userStatus', component: UserStatusComponent},
-  {path: 'chatroomStatus', component: ChatroomStatusComponent},
-  {path: 'spectate', component: ChatSpectateComponent},
-  {path: 'feedback', component: UserFeedbackComponent},
-  {path: 'assignment', component: AssignmentComponent},
-]
+  // MinimalLayout (NO sidebar)
+  {
+    path: '',
+    component: MinimalLayoutComponent,
+    children: [
+      { path: '', redirectTo: 'login', pathMatch: 'full' },
+      { path: 'login', component: LoginComponent },
+    ],
+  },
+
+  // MainLayout (WITH sidebar)
+  {
+    path: '',
+    component: MainLayoutComponent,
+    children: [
+      { path: 'panel', component: PanelComponent },
+      { path: 'history', component: HistoryComponent },
+      { path: 'password', component: PasswordComponent },
+      { path: 'chat', component: ChatComponent },
+      { path: 'userStatus', component: UserStatusComponent },
+      { path: 'chatroomStatus', component: ChatroomStatusComponent },
+      { path: 'spectate', component: ChatSpectateComponent },
+      { path: 'feedback', component: UserFeedbackComponent },
+      { path: 'assignment', component: AssignmentComponent },
+    ],
+  },
+];
 
 @NgModule({
   declarations: [],

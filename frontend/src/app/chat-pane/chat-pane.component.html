@@ -92,6 +92,31 @@
           </div>
           <div class="message my-message" style="max-width: 100%; white-space: pre-line">
             <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
+            <div *ngIf="!paneLog.spectate">
+              <span
+                class="label label-default pe-none" style="padding-left: 10px"
+                [ngStyle]="{'color': paneLog.messageLog[ordinal].type == 'THUMBS_UP' ? '#3597E6' : '#b2b2bd'}"
+              >
+                <i class="fa fa-thumbs-up"></i>
+              </span>
+              <span
+                class="label label-default pe-none" style="padding-left: 10px"
+                [ngStyle]="{'color': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN' ? '#E64D3D' : '#b2b2bd'}"
+              >
+                <i class="fa fa-thumbs-down"></i>
+              </span>
+              <span
+                class="label label-default pe-none" style="padding-left: 10px"
+                [ngStyle]="{'color': paneLog.messageLog[ordinal].type == 'STAR' ? 'gold' : '#b2b2bd'}"
+              >
+                <i class="fa fa-star"></i>
+              </span>
+              <app-copy-button
+                [textToCopy]="paneLog.messageLog[ordinal].message"
+                [isActive]="paneLog.active"
+                [resetTimeout]="2000">
+              </app-copy-button>
+            </div>
           </div>
         </li>
       </ul>

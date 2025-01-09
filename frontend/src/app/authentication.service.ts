@@ -61,8 +61,6 @@ export class AuthService {
     );
   }
 
-
-
   /**
    * Returns the current session as Observable.
    */
@@ -83,9 +81,10 @@ export class AuthService {
       catchError(e => of(null)),
       tap(() => {
         this._userSession.next(null);
-        console.log(`User was logged out.`);
       }),
     );
   }
+
+
 
 }

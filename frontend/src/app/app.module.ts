@@ -50,6 +50,7 @@ import {
   UsersInvolvedSelectedComponent
 } from "./chatroom-status/users-involved-selected/users-involved-selected.component";
 import {FeedbackStatsTableComponent} from "./user-feedback/feedback-stats-table/feedback-stats-table.component";
+import {NgOptimizedImage} from "@angular/common";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
@@ -75,22 +76,22 @@ export function initializeApiConfig() {
         UserTableComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
-        ReactiveFormsModule,
-        AppRoutingModule,
-        FormsModule,
-        ApiModule,
-        AlertModule,
-        NgbModule,
-        MatButtonToggleModule,
-        NgApexchartsModule,
-        BrowserAnimationsModule,
-        MatFormFieldModule,
-        MatSelectModule,
-        MatOptionModule,
-        MatCheckboxModule,
-        MatSliderModule,
-        MatTooltipModule,
-        MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent, FeedbackStatsTableComponent], providers: [
+    ReactiveFormsModule,
+    AppRoutingModule,
+    FormsModule,
+    ApiModule,
+    AlertModule,
+    NgbModule,
+    MatButtonToggleModule,
+    NgApexchartsModule,
+    BrowserAnimationsModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatCheckboxModule,
+    MatSliderModule,
+    MatTooltipModule,
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent, NgOptimizedImage, FeedbackStatsTableComponent], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

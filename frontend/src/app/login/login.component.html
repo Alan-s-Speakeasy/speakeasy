@@ -1,32 +1,22 @@
+<div class="d-flex justify-content-center align-items-center vh-100">
+  <div class="text-center">
+    <form class="" [formGroup]="loginForm">
+      <img class="mb-4" ngSrc="../assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">
+      <div class="form-floating mb-3">
+        <input type="text" class="form-control" placeholder="Username" id="username" name="username" formControlName="username">
+        <label for="username">Username</label>
+      </div>
+      <div class="form-floating mb-3">
+        <input type="password" class="form-control" placeholder="Password" id="password" name="password" formControlName="password">
+        <label for="password">Password</label>
+      </div>
 
-<div class="container mt-3">
-  <br>
-
-  <div class="row">
-    <div class="col-6 offset-3">
-
-      <h3 class="text-center">ATAI HS2023</h3>
-      <form class="container text-center" [formGroup]="loginForm">
-        <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Username" id="username" name="username" formControlName="username">
-        </div>
-
-        <div class="input-group mb-3">
-          <input type="password" class="form-control" placeholder="Password" id="password" name="password" formControlName="password">
-        </div>
-
-        <button (click)="userLogin()" type="submit" class="btn btn-primary" style="width:50%;">Submit</button>
-      </form>
-
-    </div>
+      <button (click)="userLogin()" type="submit" class="btn btn-primary" style="width:50%;">Log in</button>
+    </form>
+      <div class="text-center fixed-bottom">
+        <p>University of Zurich<br>
+          Department of Informatics<br>
+          Advanced Topics in Artificial Intelligence (ATAI)</p>
+      </div>
   </div>
-
 </div>
-
-<div class="text-center fixed-bottom">
-  <p >University of Zurich<br>
-    Department of Informatics<br>
-    Advanced Topics in Artificial Intelligence (ATAI)</p>
-</div>
-
-

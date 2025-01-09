@@ -32,7 +32,7 @@ export class LoginComponent implements OnInit {
     // when a user has been redirected to '/login', close and remove all SSE connections.
     this.commonService.closeSeeRooms()
 
-    this.titleService.setTitle("Login Page")
+    this.titleService.setTitle("Login")
 
     this.authService.userSessionDetails.subscribe((response)=>{
         if(response != null){

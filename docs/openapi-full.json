@@ -14,6 +14,36 @@
   },
   "paths" : {
     "/api/assignment" : {
+      "get" : {
+        "tags" : [ "Assignment" ],
+        "summary" : "Get the status of the current assignment generator",
+        "operationId" : "getApiAssignment",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
       "delete" : {
         "tags" : [ "Assignment" ],
         "summary" : "Delete the active assignment generator.",
@@ -46,36 +76,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "get" : {
-        "tags" : [ "Assignment" ],
-        "summary" : "Get the status of the current assignment generator",
-        "operationId" : "getApiAssignment",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AssignmentGeneratorObject"
                 }
               }
             }
@@ -386,7 +386,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/FeedbackResponseAverageMapList"
+                  "$ref" : "#/components/schemas/FeedbackResponseStatsMapList"
                 }
               }
             }
@@ -2186,6 +2186,27 @@
         },
         "required" : [ "name", "usernames" ]
       },
+      "FeedBackStatsOfRequest" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "requestID" : {
+            "type" : "string"
+          },
+          "average" : {
+            "type" : "string"
+          },
+          "variance" : {
+            "type" : "number",
+            "format" : "float"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "requestID", "average", "variance", "count" ]
+      },
       "FeedbackAnswerOption" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2267,45 +2288,6 @@
         },
         "required" : [ "id", "value" ]
       },
-      "FeedbackResponseAverageItem" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "username" : {
-            "type" : "string"
-          },
-          "count" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "responses" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponse"
-            }
-          }
-        },
-        "required" : [ "username", "count", "responses" ]
-      },
-      "FeedbackResponseAverageMapList" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "assigned" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
-            }
-          },
-          "requested" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FeedbackResponseAverageItem"
-            }
-          }
-        },
-        "required" : [ "assigned", "requested" ]
-      },
       "FeedbackResponseItem" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2359,6 +2341,51 @@
           }
         },
         "required" : [ "assigned", "requested" ]
+      },
+      "FeedbackResponseStatsItem" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "statsOfResponsePerRequest" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedBackStatsOfRequest"
+            }
+          }
+        },
+        "required" : [ "username", "count", "statsOfResponsePerRequest" ]
+      },
+      "FeedbackResponseStatsMapList" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "assigned" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
+            }
+          },
+          "requested" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedbackResponseStatsItem"
+            }
+          },
+          "statsOfAllRequest" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeedBackStatsOfRequest"
+            }
+          }
+        },
+        "required" : [ "assigned", "requested", "statsOfAllRequest" ]
       },
       "GeneratedAssignment" : {
         "type" : "object",

@@ -20,7 +20,7 @@
       </div>
       <div class="position-absolute top-0 end-0 d-flex flex-row">
         <div class="my-auto me-1" [ngStyle]="{'color': remainingTime < 120000 ? 'red' : 'black'}">{{remainingTime | date: 'mm:ss'}} </div>
-        <p-button class="" icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="paneLog.formRef == '' ? close() : rating()" severity="danger">
+        <p-button [disabled]="paneLog.history || paneLog.spectate" class="" icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="paneLog.formRef == '' ? close() : rating()" severity="danger">
         </p-button>
       </div>
     </div>

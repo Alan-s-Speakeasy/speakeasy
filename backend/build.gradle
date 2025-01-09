@@ -112,7 +112,6 @@ dependencies {
 
     //// CSV handling
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5'
-
 }
 
 startScripts {

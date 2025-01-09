@@ -25,6 +25,7 @@ export class ChatSpectateComponent implements OnInit {
 
     this.backUrl = history.state.backUrl;
     this.roomID = history.state.roomID;
+    const isViewedAsHistory = history.state.isViewedAsHistory;
     this.paneLog = {
       assignment: history.state.assignment,
       formRef: history.state.formRef,
@@ -38,7 +39,9 @@ export class ChatSpectateComponent implements OnInit {
       myAlias: history.state.userAlias,
       otherAlias: history.state.partnerAlias,
       prompt: "spectating " + history.state.username,
-      spectate: true
+      // When history mode is enabled, only one polling is made to get teh chats as the chats are closed.
+      spectate: !isViewedAsHistory,
+      history: isViewedAsHistory
     }
   }
 

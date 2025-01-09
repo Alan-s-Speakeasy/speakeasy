@@ -49,6 +49,7 @@ import {TooltipModule} from "primeng/tooltip";
 import {
   UsersInvolvedSelectedComponent
 } from "./chatroom-status/users-involved-selected/users-involved-selected.component";
+import {FeedbackStatsTableComponent} from "./user-feedback/feedback-stats-table/feedback-stats-table.component";
 import {NgOptimizedImage} from "@angular/common";
 import {SideNavbarComponent} from "./side-navbar/side-navbar.component";
 
@@ -91,7 +92,7 @@ export function initializeApiConfig() {
     MatCheckboxModule,
     MatSliderModule,
     MatTooltipModule,
-    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent, NgOptimizedImage, SideNavbarComponent], providers: [
+    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent, NgOptimizedImage, FeedbackStatsTableComponent, SideNavbarComponent], providers: [
         FrontendDataService,
         { provide: Configuration, useFactory: initializeApiConfig },
         provideHttpClient(withInterceptorsFromDi())

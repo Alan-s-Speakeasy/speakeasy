@@ -1,7 +1,7 @@
 package ch.ddis.speakeasy.cli.commands
 
 import ch.ddis.speakeasy.api.handlers.FeedbackForm
-import ch.ddis.speakeasy.api.handlers.FeedbackResponseAverageItem
+import ch.ddis.speakeasy.api.handlers.FeedbackResponseStatsItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserManager
@@ -119,8 +119,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                         }
                         row {
                             cell("AVERAGE")
-                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, formName).forEach {
-                                cell(getFeedbackNameForValue(header, it.id, it.value))
+                            FeedbackManager.computeStatsPerRequestOfFeedback(responses.flatMap { it.responses }, formName).forEach {
+                                cell(getFeedbackNameForValue(header, it.requestID, it.average))
                             }
                         }
                     }
@@ -131,7 +131,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
     fun printAllEvaluations(
         header: FeedbackForm,
-        allResponses: List<FeedbackResponseAverageItem>,
+        allResponses: List<FeedbackResponseStatsItem>,
         output: String?,
         author: Boolean,
         formName: String
@@ -144,8 +144,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 val parts: MutableList<String> = mutableListOf()
                 parts.add(response.username)
                 parts.add(response.count.toString())
-                FeedbackManager.computeFeedbackAverage(response.responses, formName).forEach {
-                    parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
+                response.statsOfResponsePerRequest.forEach {
+                    parts.add(getFeedbackNameForValue(header, it.requestID, it.average, csv = true))
                 }
                 fileWriter.println(parts.joinToString(","))
             }
@@ -180,8 +180,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                             row {
                                 cell(response.username)
                                 cell(response.count)
-                                FeedbackManager.computeFeedbackAverage(response.responses, formName).forEach {
-                                    cell(getFeedbackNameForValue(header, it.id, it.value))
+                                response.statsOfResponsePerRequest.forEach {
+                                    cell(getFeedbackNameForValue(header, it.requestID, it.average))
                                 }
                             }
                         }
@@ -201,8 +201,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             val fileWriter = createOutputFile(output)
             fileWriter.println(header.requests.joinToString(",") { it.shortname })
             val parts: MutableList<String> = mutableListOf()
-            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, formName).forEach {
-                parts.add(getFeedbackNameForValue(header, it.id, it.value, csv = true))
+            FeedbackManager.computeStatsPerRequestOfFeedback(responses.flatMap { it.responses }, formName).forEach {
+                parts.add(getFeedbackNameForValue(header, it.requestID, it.average, csv = true))
             }
             fileWriter.println(parts.joinToString(","))
         }
@@ -231,8 +231,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                     }
                     body {
                         row {
-                            FeedbackManager.computeFeedbackAverage(responses.flatMap { it.responses }, formName).forEach {
-                                cell(getFeedbackNameForValue(header, it.id, it.value))
+                            FeedbackManager.computeStatsPerRequestOfFeedback(responses.flatMap { it.responses }, formName).forEach {
+                                cell(getFeedbackNameForValue(header, it.requestID, it.average))
                             }
                         }
                     }
@@ -358,7 +358,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             }
 
             val header = FeedbackManager.readFeedbackFrom(formName)
-            val responsesPerUser = FeedbackManager.readFeedbackHistoryPerUser(author, assigned, formName)
+            val responsesPerUser = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assigned, formName)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")

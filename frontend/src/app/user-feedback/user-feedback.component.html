@@ -4,54 +4,71 @@
 
   <div class="row p-2">
     <div class="col-9">
-      <h3>Evaluation Feedback Overview</h3>
+      <h3>Feedbacks</h3>
     </div>
     <div class="col-3">
       <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
     </div>
   </div>
 
-  <mat-form-field class="m-2">
-    <mat-label>Choose Feedback Form</mat-label>
-    <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
-      <mat-option *ngFor="let formName of formNameOptions" [value]="formName">
-        {{formName}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
 
-
-  <div class="row p-2 justify-content-between">
-    <div class="col-6">
-      <h5>Filter <span [style.color]="authorPerspective ? '#5F9EA0' : '#9370DB'">[{{authorPerspective ? "Authors" : "Recipients"}}]</span>
-        and <span [style.color]="chooseAssignments ? '#4682B4' : '#008080'">[{{chooseAssignments ? "Assignments by TAs" : "Requests by Students"}}]</span>
-      </h5>
-      <div class="row">
-        <div class="col-4" *ngFor="let username of usernames">
-          <mat-checkbox [checked]="isSelected(username) == true" (change)="switch(username)" color="primary">
-            <span>{{username}}</span>
-          </mat-checkbox>
-        </div>
-      </div>
-      <button type="button" class="btn btn-secondary float-end m-1" (click)="applyFilter()">Apply</button>
-      <button type="button" class="btn btn-outline-secondary float-end m-1" (click)="resetSelected()">Reset</button>
+  <div class="d-flex flex-row p-2 border ">
+    <div class="h5 w-auto mx-4 my-auto">
+      From :
     </div>
-    <div class="col-2">
-      <mat-button-toggle-group class="border-0 float-end" (change)="toggleDirection($event.value)">
-        <mat-button-toggle checked value="author"><b>Author</b></mat-button-toggle>
-        <mat-button-toggle value="recipient"><b>Recipient</b></mat-button-toggle>
+    <div>
+    <mat-form-field class="my-auto">
+      <mat-label> Feedback Form</mat-label>
+      <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
+        <mat-option *ngFor="let formName of formNameOptions" [value]="formName">
+          {{ formName }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    </div>
+    <div class="h5 align-middle my-auto mx-4">
+      show
+    </div>
+    <div class="col-2 my-auto border rounded w-auto">
+      <mat-button-toggle-group class="border-0 float-end " (change)="toggleDirection($event.value)">
+        <mat-button-toggle checked value="author">
+          <b style='color: #5F9EA0'>[Author]</b>
+        </mat-button-toggle>
+        <mat-button-toggle value="recipient"><b style="color: #9370DB">[Recipient]</b></mat-button-toggle>
       </mat-button-toggle-group>
     </div>
-    <div class="col-2">
+    <div class="h5 mx-4 my-auto">
+      in
+    </div>
+    <div class="col-2 my-auto border rounded w-auto">
       <mat-button-toggle-group class="border-0 float-end" (change)="toggleAssignments($event.value)">
-        <mat-button-toggle checked value="assigned"><b>Assignments</b></mat-button-toggle>
-        <mat-button-toggle value="requested"><b>Requests</b></mat-button-toggle>
+        <mat-button-toggle checked value="assigned"><b style="color: #4682B4">[Assignments]</b></mat-button-toggle>
+        <mat-button-toggle value="requested"><b style="color: #008080">[Requests]</b></mat-button-toggle>
       </mat-button-toggle-group>
     </div>
   </div>
 
+  <app-feedback-stats-table [ratingRequests]="this.ratingRequests"
+                            [authorPerspective]="authorPerspective"
+                            [nonOptionQuestionIds]="nonOptionQuestionIds"
+                            [averageFeedback]="averageFeedback"
+                            [userFeedback]="userFeedback"
+                            [statsOfAllRequests]="statsOfAllRequest"
+                            (onRowSelected)="switch($event)"
+                            [selectedUsernames]="selectedUsernames"
+                            [openImpression]="openImpression"
+                            [readImpression]="readImpression">
+  </app-feedback-stats-table>
 
-  <div class="row mt-5 mb-5">
+  <div class="mb-5">
+    <button type="button" class="btn btn-primary float-end m-1" (click)="applyFilter()"
+            [disabled]="this.selectedUsernames.length == 0">Plot selected
+    </button>
+    <button type="button" class="btn btn-outline-secondary float-end m-1" (click)="resetSelected()">Reset</button>
+  </div>
+
+
+  <div class="row mt-5 mb-5 h-100">
     <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
       <apx-chart
         [series]="chartOptions.series"
@@ -67,73 +84,16 @@
     </div>
   </div>
 
-  <div class="row">
-    <h3>Detailed Evaluation Feedback</h3>
-  </div>
 
-  <span>Average Evaluation per User. Click to expand</span>
-
-  <div class="row p-2">
-    <table class="table small">
-      <thead>
-      <tr *ngIf="this.ratingRequests">
-        <th class="px-0">{{authorPerspective ? "Author" : "Recipient"}}</th>
-        <ng-container *ngFor="let question of this.ratingRequests">
-          <th class="px-0" *ngIf="!nonOptionQuestionIds.includes(question.id)">{{question.shortname}}</th>
-        </ng-container>
-      </tr>
-      </thead>
-      <tbody *ngFor="let entry of getAverageFeedback(); let i = index">
-      <tr class="align-middle" role="button" (click)="toggleElement = toggleElement == i ? -1 : i">
-        <td class="px-0">{{entry.username}}</td>
-        <ng-container *ngFor="let response of entry.responses">
-          <td class="px-0" *ngIf="!nonOptionQuestionIds.includes(response.id)">{{idToText(response)}}</td>
-        </ng-container>
-      </tr>
-      <tr *ngIf="toggleElement == i">
-        <td [colSpan]="entry.responses.length">
-          <table class="table table-sm small">
-            <thead>
-            <tr class="table-secondary">
-              <th>{{authorPerspective ? "Recipient" : "Author"}}</th>
-              <th *ngFor="let question of this.ratingRequests">{{question.shortname}}</th>
-            </tr>
-            </thead>
-            <tbody *ngFor="let userFeedback of getFeedbacks(entry.username)">
-            <tr class="table-secondary">
-              <td class="p-2">{{this.authorPerspective ? userFeedback.recipient : userFeedback.author}}</td>
-              <ng-container *ngFor="let response of userFeedback.responses">
-                <ng-container
-                  *ngIf="!nonOptionQuestionIds.includes(response.id); then optionQuestion; else nonOptionQuestion">
-                </ng-container>
-                <ng-template #optionQuestion>
-                  <td class="p-2">{{idToText(response)}}</td>
-                </ng-template>
-                <ng-template #nonOptionQuestion>
-                  <td>
-                    <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, response)"><i>&nbsp;Read</i></p>
-                  </td>
-                </ng-template>
-              </ng-container>
-
-            </tr>
-            </tbody>
-          </table>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<ng-template #readImpression let-modal>
-  <div class="modal-header">
-    <h4 class="modal-title">Impression</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
-      <span aria-hidden="true">×</span>
-    </button>
-  </div>
-  <div class="modal-body" style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word">
-    <p>{{this.impressionToRead}}</p>
-  </div>
-</ng-template>
+  <ng-template #readImpression let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title">Impression</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+        <span aria-hidden="true">×</span>
+      </button>
+    </div>
+    <div class="modal-body"
+         style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word">
+      <p>{{ this.impressionToRead }}</p>
+    </div>
+  </ng-template>

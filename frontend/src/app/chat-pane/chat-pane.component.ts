@@ -65,6 +65,13 @@ export class ChatPaneComponent implements OnInit {
         })).subscribe((response) => {
             // update the remainingTime in real-time from the backend
             this.remainingTime = response.info.remainingTime
+            // The aliases can be undefined in the panelLog given as input, so we retrieve them here
+          if (this.paneLog.myAlias === undefined) {
+            this.paneLog.myAlias = response.info.userAliases[0]
+          }
+          if (this.paneLog.otherAlias === undefined) {
+            this.paneLog.otherAlias = response.info.userAliases[1]
+          }
             this.handleChatSubscription(response, false)
           },
           (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},

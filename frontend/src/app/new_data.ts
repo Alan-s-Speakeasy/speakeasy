@@ -3,7 +3,7 @@ import {
   ChatRoomUserAdminInfo,
   FeedbackRequest,
   FeedbackResponse,
-  ChatMessageReactionType
+  ChatMessageReactionType, FeedBackStatsOfRequest
 } from "../../openapi";
 
 export function convertFromJSON<T>(json: string): T {
@@ -69,8 +69,8 @@ export interface PaneLog {
   prompt: string,
   myAlias: string,
   otherAlias: string,
-  spectate: boolean,
-  history?: boolean,
+  spectate: boolean, // true: the chatroom is in spectate mode, the chatroom can be still ongoing.
+  history?: boolean, // true: the chatroom is in history mode, no new messages will be added
   testerBotAlias?: string
 }
 
@@ -129,5 +129,6 @@ export interface FrontendUserFeedback {
 
 export interface FrontendAverageFeedback {
   username: string,
-  responses: FeedbackResponse[]
+  // For each request, contains the average feedback value
+  responses: FeedBackStatsOfRequest[]
 }

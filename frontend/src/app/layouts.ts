@@ -39,9 +39,11 @@ export class MinimalLayoutComponent {}
   template: `
     <div class="d-flex" style="min-height: 100vh;">
       <!-- Sidebar component -->
-      <app-side-navbar></app-side-navbar>
+      <div class="">
+        <app-side-navbar></app-side-navbar>
+      </div>
       <!-- Main content area -->
-      <div class="flex-grow-1 container">
+      <div class="flex-grow-1 container" style="margin-left: 280px">
         <alert></alert>
         <router-outlet></router-outlet>
       </div>

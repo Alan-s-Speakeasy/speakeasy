@@ -27,7 +27,7 @@
         <strong>{{ this.userName }}</strong>
       </div>
       <div ngbDropdownMenu aria-labelledby="dropdownBasic2" class="dropdown-menu dropdown-menu-dark text-small shadow">
-        <button ngbDropdownItem>Change password</button>
+        <button ngbDropdownItem (click)="this.router.navigateByUrl('/password').then()">Change password</button>
         <button ngbDropdownItem class="text-danger" (click)="userLogout()"> Log out</button>
       </div>
     </div>

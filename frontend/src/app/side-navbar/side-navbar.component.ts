@@ -35,7 +35,7 @@ export class SideNavbarComponent implements OnInit{
   private userDetailsSubscription!: Subscription;
 
   constructor(@Inject(AuthService) private authService: AuthService,
-              @Inject(Router) private router: Router,
+              @Inject(Router) protected router: Router,
               @Inject(AlertService) private alertService: AlertService,
   ) {
   }

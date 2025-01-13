@@ -3,9 +3,11 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
+import com.opencsv.CSVWriterBuilder
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -306,8 +308,16 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapLi
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
 
-        val feedbackResponsesPerUserAssigned = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assignment = true, formName = formName)
-        val feedbackResponsesPerUserRequested = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assignment = false, formName = formName)
+        val feedbackResponsesPerUserAssigned = FeedbackManager.aggregateFeedbackStatisticsPerUser(
+            author = author,
+            assignment = true,
+            formName = formName
+        )
+        val feedbackResponsesPerUserRequested = FeedbackManager.aggregateFeedbackStatisticsPerUser(
+            author = author,
+            assignment = false,
+            formName = formName
+        )
 
         val statsOfAllRequest = FeedbackManager.aggregateFeedbackStatisticsGlobal(formName)
 
@@ -333,5 +343,93 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapLi
         }
     }
 
-
 }
+
+class ExportFeedbackHandler : GetRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route: String = "feedbackaverageexport/{formName}"
+
+    @OpenApi(
+        summary = "Exports the feedback responses to a CSV file",
+        path = "/api/feedbackaverageexport/{formName}",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
+        tags = ["Admin", "Feedback"],
+        pathParams = [
+            OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
+        ],
+        queryParams = [
+            OpenApiParam("usernames", String::class, "Comma separated list of usernames to export", required = true),
+            OpenApiParam("author", Boolean::class, "author or recipient")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doGet(ctx: Context): SuccessStatus {
+        AccessManager.updateLastAccess(ctx.sessionToken())
+        if (ctx.queryParam("usernames") == null) {
+            throw ErrorStatusException(400, "Parameter 'usernames' is missing!'", ctx)
+        }
+        val userIds = (ctx.queryParam("usernames") ?: "").split(",").map { username ->
+            val userId = UserManager.getUserIdFromUsername(username.trim())
+                ?: throw IllegalArgumentException("Username '$username' does not map to a UserId.")
+            userId
+        }.toSet()
+        val author = ctx.queryParam("author")?.toBooleanStrictOrNull() ?: true
+        val formName = (ctx.pathParamMap().getOrElse("formName") {
+            throw ErrorStatusException(400, "Parameter 'formName' is missing!'", ctx)
+        })
+
+        val feedbackResponsesPerUserAssigned = FeedbackManager.aggregateFeedbackStatisticsPerUser(
+            userIds = userIds,
+            author = author,
+            assignment = true,
+            formName = formName
+        )
+        val feedbackResponsesPerUserRequested = FeedbackManager.aggregateFeedbackStatisticsPerUser(
+            author = author,
+            assignment = false,
+            formName = formName
+        )
+        // Get content of requests
+        val requestIdToShortName = FeedbackManager.readFeedbackFrom(formName).requests.associateBy({ it.id }, { it.shortname })
+        ctx.outputStream().use { outputStream ->
+            // Structure of the csv file : username, assignment, N, request1, request2, ...
+            val writer = CSVWriterBuilder(outputStream.writer()).build()
+            // Header
+            val header = mutableListOf("username", "assignment")
+            for (requestId in requestIdToShortName.keys) {
+                header.add(requestIdToShortName[requestId] ?: "unknown")
+            }
+            writer.writeNext(header.toTypedArray())
+            userIds.forEach { userId ->
+                val user = UserManager.getUsernameFromId(userId) ?: return@forEach
+                val assigned = feedbackResponsesPerUserAssigned.find { it.username == user }
+                val requested = feedbackResponsesPerUserRequested.find { it.username == user }
+                val requestIdToAverageAssigned = assigned?.statsOfResponsePerRequest?.associateBy({ it.requestID }, { it.average })
+                val requestIdToAverageRequested = requested?.statsOfResponsePerRequest?.associateBy({ it.requestID }, { it.average })
+
+                // Write in turn the assigned and requested feedbacks
+                var row = mutableListOf(user, "true")
+                for (requestId in requestIdToShortName.keys) {
+                    row.add(requestIdToAverageAssigned?.get(requestId) ?: "")
+                }
+                writer.writeNext(row.toTypedArray())
+                row = mutableListOf(user, "true")
+                for (requestId in requestIdToShortName.keys) {
+                    row.add(requestIdToAverageRequested?.get(requestId) ?: "")
+                }
+                writer.writeNext(row.toTypedArray())
+            }
+            writer.flush()
+        }
+        ctx.header("Content-Type", "text/csv")
+        ctx.header("Content-Disposition", "attachment; filename=\"feedbacks.csv\"")
+        return SuccessStatus("Feedback exported caca")
+    }
+}
+

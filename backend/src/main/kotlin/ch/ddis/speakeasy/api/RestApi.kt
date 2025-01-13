@@ -66,6 +66,7 @@ object RestApi {
             GetFeedbackFormHandler(),
             PostFeedbackHandler(),
             GetFeedbackHistoryHandler(),
+            ExportFeedbackHandler(),
 
             GetAdminFeedbackHistoryHandler(),
             GetAdminFeedbackAverageHandler(),

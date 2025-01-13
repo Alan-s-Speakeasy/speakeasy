@@ -140,7 +140,16 @@ object FeedbackManager {
         return FeedbackResponseList(responses)
     }
 
-    fun readFeedbackHistory(assignment: Boolean = false, formName: String): MutableList<FeedbackResponseItem> = this.lock.read {
+    /**
+     * Read all the feedback from a single CSV file.
+     *
+     * @param userIDs The list of userIDs to get the feedback for. If empty, get all the feedback.
+     * @param assignment If true, only return feedback that were filled in an assignment chatroom
+     * @param formName The name of the feedback form
+     *
+     * @return List of FeedbackResponseItem with the feedback responses.
+     */
+    fun readFeedbackHistory(userIDs: Set<UserId> = emptySet<UserId>(), assignment: Boolean = false, formName: String): MutableList<FeedbackResponseItem> = this.lock.read {
         var response: FeedbackResponse
         val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
         val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
@@ -161,6 +170,7 @@ object FeedbackManager {
                     if ((room != null)
                         && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
+                        && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
                         && (partner != null)
                         && (responseId != null)
                         && (responseValue != null)) {
@@ -197,17 +207,25 @@ object FeedbackManager {
      * FROM feedback WHERE author = 'author'
      * GROUP BY recipient, question_id
      *```
-     * In other word, it gets all feedback entries the author filled in a chatrom with any other user, compute its average
+     * Optionally, one can filter the statistics by selecting the usernames to get the statistics for. If empty, get all the statistics.
+     *
+     * In other word, it gets all feedback entries the author filled in a chatroom with any other user, compute its average
      * and count and return the average for each question (=request) of the said feedback.
      *
+     * @param userIds The list of usernames to get the statistics for. If empty, get all the statistics.
      * @param author The author of the feedback
      * @param assignment If true, only return feedback that were filled in an assignment chatroom
      * @param formName The name of the feedback form
      *
      * @return List of FeedbackResponseAverageItem with the average feedback for each user, as stated above.
      */
-    fun aggregateFeedbackStatisticsPerUser(author: Boolean, assignment: Boolean = false, formName: String): List<FeedbackResponseStatsItem> {
-        val allFeedbackResponses = readFeedbackHistory(assignment = assignment, formName = formName)
+    fun aggregateFeedbackStatisticsPerUser(
+        userIds: Set<UserId> = emptySet<UserId>(),
+        author: Boolean,
+        assignment: Boolean = false,
+        formName: String
+    ): List<FeedbackResponseStatsItem> {
+        val allFeedbackResponses = readFeedbackHistory(userIDs = userIds, assignment = assignment, formName = formName)
         val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
         val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
 
@@ -234,7 +252,8 @@ object FeedbackManager {
     }
 
     /**
-     * Compute some stats of the feedback requests (=questions) for all feedback responses of the given formName.
+     * Compute statistics of a whole feedback request, or question. In other words, compute the average and variance across all the
+     * feedback responses of each request (question) of the feedback form.
      *
      * @param formName The name of the feedback form
      *

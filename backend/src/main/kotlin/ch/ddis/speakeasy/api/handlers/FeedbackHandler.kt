@@ -345,7 +345,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapLi
 
 }
 
-class ExportFeedbackHandler : GetRestHandler<SuccessStatus>, AccessManagedRestHandler {
+class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.ADMIN)
 
@@ -365,11 +365,14 @@ class ExportFeedbackHandler : GetRestHandler<SuccessStatus>, AccessManagedRestHa
             OpenApiParam("author", Boolean::class, "author or recipient")
         ],
         responses = [
-            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse(
+                "200",
+                [OpenApiContent(ByteArray::class, "text/csv")],
+            ),
             OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
         ]
     )
-    override fun doGet(ctx: Context): SuccessStatus {
+    override fun doGet(ctx: Context) {
         AccessManager.updateLastAccess(ctx.sessionToken())
         if (ctx.queryParam("usernames") == null) {
             throw ErrorStatusException(400, "Parameter 'usernames' is missing!'", ctx)
@@ -419,7 +422,7 @@ class ExportFeedbackHandler : GetRestHandler<SuccessStatus>, AccessManagedRestHa
                     row.add(requestIdToAverageAssigned?.get(requestId) ?: "")
                 }
                 writer.writeNext(row.toTypedArray())
-                row = mutableListOf(user, "true")
+                row = mutableListOf(user, "false")
                 for (requestId in requestIdToShortName.keys) {
                     row.add(requestIdToAverageRequested?.get(requestId) ?: "")
                 }
@@ -429,7 +432,6 @@ class ExportFeedbackHandler : GetRestHandler<SuccessStatus>, AccessManagedRestHa
         }
         ctx.header("Content-Type", "text/csv")
         ctx.header("Content-Disposition", "attachment; filename=\"feedbacks.csv\"")
-        return SuccessStatus("Feedback exported caca")
     }
 }
 

@@ -17,14 +17,14 @@
       From :
     </div>
     <div>
-    <mat-form-field class="my-auto">
-      <mat-label> Feedback Form</mat-label>
-      <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
-        <mat-option *ngFor="let formName of formNameOptions" [value]="formName">
-          {{ formName }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field class="mt-3">
+        <mat-label> Feedback Form</mat-label>
+        <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
+          <mat-option *ngFor="let formName of formNameOptions" [value]="formName">
+            {{ formName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
     <div class="h5 align-middle my-auto mx-4">
       show
@@ -48,52 +48,75 @@
     </div>
   </div>
 
-  <app-feedback-stats-table [ratingRequests]="this.ratingRequests"
-                            [authorPerspective]="authorPerspective"
-                            [nonOptionQuestionIds]="nonOptionQuestionIds"
-                            [averageFeedback]="averageFeedback"
-                            [userFeedback]="userFeedback"
-                            [statsOfAllRequests]="statsOfAllRequest"
-                            (onRowSelected)="switch($event)"
-                            [selectedUsernames]="selectedUsernames"
-                            [openImpression]="openImpression"
-                            [readImpression]="readImpression">
-  </app-feedback-stats-table>
+  <div class="px-1">
+    <div class="row mt-3">
+      <div class="bg-light p-2 d-flex flex-row justify-content-end ">
+        <div class="">
+          <div ngbDropdown class="d-inline-block">
+            <button type="button" class="btn btn-outline-primary" id="dropdown1"
+                    [disabled]="this.selectedUsernames.length === 0" ngbDropdownToggle>Export..
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdown1">
+              <button ngbDropdownItem [disabled]="this.selectedUsernames.length === 0"
+                      (click)="exportFeedback()">Selected as CSV
+              </button>
+            </div>
+          </div>
 
-  <div class="mb-5">
-    <button type="button" class="btn btn-primary float-end m-1" (click)="applyFilter()"
-            [disabled]="this.selectedUsernames.length == 0">Plot selected
-    </button>
-    <button type="button" class="btn btn-outline-secondary float-end m-1" (click)="resetSelected()">Reset</button>
-  </div>
+        </div>
+        <div
+          [ngbTooltip]="selectedUsernames.length > 7 ? 'Please plot at most 7 users' : ''"
+        >
+          <button type="button" class="btn btn-primary ms-1"
+                  (click)="applyFilter()"
+                  [disabled]="selectedUsernames.length == 0 || selectedUsernames.length > 7"
+          >
+            Plot selected
+          </button>
+        </div>
+      </div>
 
-
-  <div class="row mt-5 mb-5 h-100">
-    <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
-      <apx-chart
-        [series]="chartOptions.series"
-        [legend]="chartOptions.legend"
-        [colors]="chartOptions.colors"
-        [chart]="chartOptions.chart"
-        [dataLabels]="chartOptions.dataLabels"
-        [plotOptions]="chartOptions.plotOptions"
-        [yaxis]="chartOptions.yaxis"
-        [xaxis]="chartOptions.xaxis"
-        [title]="chartOptions.title"
-      ></apx-chart>
+      <app-feedback-stats-table [ratingRequests]="this.ratingRequests"
+                                [authorPerspective]="authorPerspective"
+                                [nonOptionQuestionIds]="nonOptionQuestionIds"
+                                [averageFeedback]="averageFeedback"
+                                [userFeedback]="userFeedback"
+                                [statsOfAllRequests]="statsOfAllRequest"
+                                (onRowSelected)="switch($event)"
+                                (onAllSelected)="switchAll()"
+                                [selectedUsernames]="selectedUsernames"
+                                [openImpression]="openImpression"
+                                [readImpression]="readImpression">
+      </app-feedback-stats-table>
     </div>
-  </div>
 
 
-  <ng-template #readImpression let-modal>
-    <div class="modal-header">
-      <h4 class="modal-title">Impression</h4>
-      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
-        <span aria-hidden="true">×</span>
-      </button>
+    <div class="row mt-5 mb-5 h-100">
+      <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
+        <apx-chart
+          [series]="chartOptions.series"
+          [legend]="chartOptions.legend"
+          [colors]="chartOptions.colors"
+          [chart]="chartOptions.chart"
+          [dataLabels]="chartOptions.dataLabels"
+          [plotOptions]="chartOptions.plotOptions"
+          [yaxis]="chartOptions.yaxis"
+          [xaxis]="chartOptions.xaxis"
+          [title]="chartOptions.title"
+        ></apx-chart>
+      </div>
     </div>
-    <div class="modal-body"
-         style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word">
-      <p>{{ this.impressionToRead }}</p>
-    </div>
-  </ng-template>
+
+
+    <ng-template #readImpression let-modal>
+      <div class="modal-header">
+        <h4 class="modal-title">Impression</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body"
+           style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word">
+        <p>{{ this.impressionToRead }}</p>
+      </div>
+    </ng-template>

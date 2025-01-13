@@ -406,6 +406,69 @@
         "security" : [ ]
       }
     },
+    "/api/feedbackaverageexport/{formName}" : {
+      "get" : {
+        "tags" : [ "Admin", "Feedback" ],
+        "summary" : "Exports the feedback responses to a CSV file",
+        "operationId" : "getApiFeedbackaverageexportByFormName",
+        "parameters" : [ {
+          "name" : "formName",
+          "in" : "path",
+          "description" : "Name of the feedback form",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "usernames",
+          "in" : "query",
+          "description" : "Comma separated list of usernames to export",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "author",
+          "in" : "query",
+          "description" : "author or recipient",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/csv" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/feedbackform/{formName}" : {
       "get" : {
         "tags" : [ "Feedback" ],

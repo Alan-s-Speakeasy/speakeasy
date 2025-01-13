@@ -1,10 +1,11 @@
-<div class="row p-2">
+<div class="row">
   <table class="table table-striped table-bordered">
     <thead>
     <tr *ngIf="this.ratingRequests">
       <th scope="col" style="width : 1%">
       </th>
       <th scope="col" style="width : 1%">
+        <mat-checkbox [checked]="selectedUsernames.length === getAverageFeedback().length" (change)="onAllSelected.emit()" color="primary"/>
       </th>
       <th scope="col" style="width : 5%">
         <span [ngbTooltip]="'Number of ratings'">

@@ -14,8 +14,13 @@ data class Config(
     val dataPath: String = "data"
     ){
 
-    init {
-        File(dataPath).mkdirs()
+    /**
+     * Create a new Config object with the provided dataPath.
+     * @param dataPath the new dataPath
+     */
+    fun withDataPath(dataPath: String): Config {
+        // I don't know a better way to do that in Kotlin sorry
+        return Config(httpPort, httpsPort, enableSsl, keystorePath, keystorePassword, dataPath)
     }
 
     companion object{

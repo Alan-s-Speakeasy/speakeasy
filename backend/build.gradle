@@ -21,7 +21,7 @@ plugins {
 group 'ch.ddis.speakeasy'
 version '0.1'
 
-mainClassName = 'ch.ddis.speakeasy.Main'
+mainClassName = 'ch.ddis.speakeasy.MainKt'
 applicationDefaultJvmArgs = ["-Xms4G", "-Xmx16G"]
 
 repositories {

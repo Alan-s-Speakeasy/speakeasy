@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.File
 import java.util.*
 import java.util.concurrent.locks.StampedLock
 
@@ -18,10 +19,21 @@ object UserManager {
     private val lock: StampedLock = StampedLock()
 
     fun init(config: Config) {
+        // Check if the sql exists
+        if (File("${config.dataPath}/users.db").exists().not()) {
+            System.err.println("WARNING : No user database found, a new one will be created.")
+        }
+
         this.lock.write {
             Database.connect("jdbc:sqlite:${config.dataPath}/users.db", driver = "org.sqlite.JDBC")
             transaction {
                 SchemaUtils.createMissingTablesAndColumns(Users, Groups, GroupUsers)
+            }
+            transaction {
+                // Check if DB is empty
+                if (Users.selectAll().empty()) {
+                    System.err.println("WARNING : The user database is empty !")
+                }
             }
         }
     }

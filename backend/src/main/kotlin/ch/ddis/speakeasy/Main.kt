@@ -41,7 +41,7 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
         }
         println("config: $config")
         if (dataPath != null) {
-            println("Using data path: ${dataPath!!.absolutePath}")
+            println("Using data path: ${Path(dataPath!!.absolutePath).normalize()}")
             config = config.withDataPath(dataPath!!.absolutePath)
         }
 

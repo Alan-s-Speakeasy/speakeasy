@@ -9,6 +9,7 @@
 
 # Args :
 # --force-deploy : Force the deployment even if there are no new changes
+# Any other args/anything passed after -- will be transferred to speakeasy
 
 
 # Configuration
@@ -17,28 +18,34 @@ LOG_FILE="$HOME/logs/deploy.log"
 TMUX_SESSION="speakeasy"
 BRANCH="main"
 
-# Niflty stolen from https://serverfault.com/questions/103501/how-can-i-fully-log-all-bash-scripts-actions
+# Nifty stolen from https://serverfault.com/questions/103501/how-can-i-fully-log-all-bash-scripts-actions
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3
-exec 1> "$LOG_FILE" 2>&1
+exec 1>> "$LOG_FILE" 2>&1
 
 # Flags
 FORCE_DEPLOY=false
+other_args=()
 
-# Parse positional arguments
 while [[ $# -gt 0 ]]; do
-  case $1 in
+  case "$1" in
     --force-deploy)
       FORCE_DEPLOY=true
-      shift # Remove flag from arguments
+      shift
+      ;;
+    --)
+      shift
+      other_args=("$@")
+      break
       ;;
     *)
-      echo "Unknown option: $1"
-      exit 1
+      other_args+=("$1")
+      shift
       ;;
   esac
 done
 
+echo "Forwarding these extra arguments: ${other_args[@]}"
 # Ensure logs directory exists
 mkdir -p "$HOME/logs"
 
@@ -88,5 +95,7 @@ tar -xf "$REPO_DIR/backend/build/distributions/backend-0.1.tar" -C "$REPO_DIR/ba
 # Step 3: Restart the application in tmux
 log "Restarting application in tmux session: $TMUX_SESSION..."
 tmux kill-session -t "$TMUX_SESSION" 2>/dev/null
-tmux new-session -d -s "$TMUX_SESSION" "$REPO_DIR/backend/build/distributions/backend-0.1/bin/backend"
+tmux new-session -d -s "$TMUX_SESSION"
+# Using send-keys so the session is not killed upon error, so that any erro can be investigated in the session. 
+tmux send-keys -t "$TMUX_SESSION" "$REPO_DIR/backend/build/distributions/backend-0.1/bin/backend ${other_args[@]}" Enter
 log "Application restarted successfully."

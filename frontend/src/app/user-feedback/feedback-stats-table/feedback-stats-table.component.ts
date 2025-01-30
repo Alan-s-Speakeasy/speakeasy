@@ -43,7 +43,9 @@ export class FeedbackStatsTableComponent {
   @Input() authorPerspective: boolean | undefined;
   @Input() nonOptionQuestionIds: string[] | undefined;
   @Input() userFeedback: FrontendUserFeedback[] = []
+  // For each username, contains the statistics of each request per username
   @Input() averageFeedback: FrontendAverageFeedback[] = [];
+  // Stats of all requests merged
   @Input() statsOfAllRequests!: Array<FeedBackStatsOfRequest>;
   @Input() appliedSelectedUsernames: string[] = []
 
@@ -56,6 +58,8 @@ export class FeedbackStatsTableComponent {
   @Input() selectedUsernames: string[] = []
   // Output lambda each checked username
   @Output() onRowSelected  = new EventEmitter<string>();
+  // Output lambda all checked usernames
+  @Output() onAllSelected  = new EventEmitter<string>();
 
   constructor(private fb: FormBuilder, private router: Router, private adminService: AdminService,
   ) {
@@ -166,7 +170,7 @@ export class FeedbackStatsTableComponent {
 
     // Follows a weird rule of thumb, reference : https://library.virginia.edu/data/articles/a-rule-thumb-unequal-variances
     // This can definitely change if needed/required.
-    const TRESHOLD_VARIANCE_RATIO = 3
+    const TRESHOLD_VARIANCE_RATIO = 1.5
     const s_max = Math.max(var_i, var_global)
     const s_min = Math.min(var_i, var_global)
     return s_max / s_min > TRESHOLD_VARIANCE_RATIO

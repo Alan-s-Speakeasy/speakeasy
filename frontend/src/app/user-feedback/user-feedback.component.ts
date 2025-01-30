@@ -82,7 +82,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   usernames: string[] = []
   selectedUsernames: string[] = []
-  appliedSelectedUsernames: string[] = []
+  // The usernames plotted. Sometimes, we want to plot only a subset of the selected usernames as the chart can get too crowded
+  plottedUsernames: string[] = []
   selectedChartData: Map<string, number>[] = []
   selectedUsernamesChartData: Map<string, Map<string, Array<number>>> = new Map<string, Map<string, Array<number>>>()
   allChartData: Map<string, number>[] = []
@@ -162,6 +163,27 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       );
   }
 
+  /**
+   * Export the selected lines (Selected usernames) as a CSV format by calling the backend API
+   */
+  exportFeedback(): void {
+    if (this.selectedUsernames.length == 0) {
+      this.alertService.error("Please select at least one user to export.", this.options);
+      return;
+    }
+    const usernames_str = this.selectedUsernames.join(",");
+    this.feedbackService.getApiFeedbackaverageexportByFormName(this.selectedFormName, usernames_str, this.authorPerspective)
+      .subscribe((response) => {
+      const blob = new Blob([response], {type: 'text/csv'});
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'feedback.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
   generateEmptyChartBuckets(): Map<string, number>[] {
     let res: Map<string, number>[] = [];
     this.ratingRequests.forEach(f => {
@@ -227,8 +249,16 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     }
   }
 
+  switchAll(): void {
+    this.selectedUsernames = this.selectedUsernames.length == this.usernames.length ? [] : [...this.usernames];
+  }
+
   applyFilter(): void {
-    this.appliedSelectedUsernames = [...this.selectedUsernames]; // Create a copy
+    this.plottedUsernames = [...this.selectedUsernames]; // Create a copy
+    // Limit the number of selected usernames to 4
+    if (this.plottedUsernames.length > 4) {
+      this.plottedUsernames = this.plottedUsernames.slice(0, 4);
+    }
     this.updateUsernameAndCharts();
   }
 
@@ -272,8 +302,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
           name: "All users",
           data: this.getChartData([], f.id),
         }];
-        if (this.appliedSelectedUsernames.length > 0) {
-          this.appliedSelectedUsernames.forEach(username => {
+        if (this.plottedUsernames.length > 0) {
+          this.plottedUsernames.forEach(username => {
             series.push({
               name: username,
               data: this.getChartData([username], f.id)
@@ -352,8 +382,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
           color: "#3954ea",
         }];
 
-        for (let index = 0; index < this.appliedSelectedUsernames.length; index++) {
-          let username = this.appliedSelectedUsernames[index];
+        for (let index = 0; index < this.plottedUsernames.length; index++) {
+          let username = this.plottedUsernames[index];
           chartOptions.series.push({
             name: username,
             data: this.getChartData([username], f.id),

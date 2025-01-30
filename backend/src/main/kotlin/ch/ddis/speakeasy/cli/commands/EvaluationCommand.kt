@@ -271,7 +271,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             }
 
             val header = FeedbackManager.readFeedbackFrom(formName)
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName)
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName = formName)
             val userResponses = allFeedbackResponses.filter { it.author == user.name }
 
             if (userResponses.isEmpty()) {
@@ -313,7 +313,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             }
 
             val header = FeedbackManager.readFeedbackFrom(formName)
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName)
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName = formName)
             val userResponses = allFeedbackResponses.filter { it.recipient == user.name }
 
             if (userResponses.isEmpty()) {
@@ -358,7 +358,11 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             }
 
             val header = FeedbackManager.readFeedbackFrom(formName)
-            val responsesPerUser = FeedbackManager.aggregateFeedbackStatisticsPerUser(author, assigned, formName)
+            val responsesPerUser = FeedbackManager.aggregateFeedbackStatisticsPerUser(
+                author = author,
+                assignment = assigned,
+                formName = formName
+            )
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")
@@ -388,7 +392,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
             val header = FeedbackManager.readFeedbackFrom(formName)
-            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName)
+            val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName = formName)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"
             println("filtered evaluations for chat rooms $supplement:")

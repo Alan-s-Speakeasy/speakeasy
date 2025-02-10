@@ -40,8 +40,9 @@ object FeedbackManager {
         this.formsPath = File(File(config.dataPath), "feedbackforms/")
         this.formsPath
             .walk()
-            .filter { it.isFile }
+            .filter { it.isFile  && it.extension == "json" }
             .forEach { file ->
+                println("Reading feedback form from ${file.name}")
                 val feedbackForm: FeedbackForm = kMapper.readValue(file)
                 if (this.forms.none{ it.formName == feedbackForm.formName }) {
                     this.forms.add(feedbackForm)
@@ -153,8 +154,9 @@ object FeedbackManager {
         var response: FeedbackResponse
         val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
         val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
-
-        if (this.feedbackFiles[formName] == null) { return responseList } // no such form -> return empty list
+        if (this.feedbackFiles[formName] == null) {
+            return responseList
+        } // no such form -> return empty list
 
         //read all CSV lines with the given userid
 
@@ -170,7 +172,7 @@ object FeedbackManager {
                     if ((room != null)
                         && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
-                        && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
+                        // && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
                         && (partner != null)
                         && (responseId != null)
                         && (responseValue != null)) {

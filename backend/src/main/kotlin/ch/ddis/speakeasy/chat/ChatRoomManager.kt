@@ -5,6 +5,7 @@ import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.user.UserSession
+import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 object ChatRoomManager {
 
     private val chatrooms = ConcurrentHashMap<ChatRoomId, ChatRoom>()
-    private val basePath: File = File("chatlogs/") //TODO make configurable
+    private lateinit var chatsFolder: File
     private val objectMapper = jacksonObjectMapper()
     private var indexTesterBot = -1
     private var indexAssistantBot = -1
@@ -24,10 +25,19 @@ object ChatRoomManager {
     private val constantAssistant = "assistant"
     private val constantUserBot = "bot"
 
-    fun init() {
+    fun init(config : Config) {
         // Recreates all chatrooms from the log files.
         // This should defintely be encapsulated into a static method of Chatroom/logging room.
-        this.basePath.walk().filter { it.isFile }.forEach { file ->
+        this.chatsFolder = File(config.dataPath, "chatlogs")
+        if (!this.chatsFolder.exists() || this.chatsFolder.listFiles()?.isEmpty() != false) {
+            println("WARNING: No chatlogs found. No chatrooms will be loaded. " +
+                    "The chatlogs files need to be loaded into datapath/chatlogs directory !")
+        }
+        if (!this.chatsFolder.exists()) {
+            this.chatsFolder.mkdirs()
+        }
+        print ("Loading chatrooms from ${this.chatsFolder.normalize().absolutePath} ... ")
+        this.chatsFolder.walk().filter { it.isFile }.forEach { file ->
             val lines = file.readLines(Charsets.UTF_8)
             val users: MutableMap<UserId, String> = objectMapper.readValue(lines[6])
             val messages: MutableList<ChatMessage> = mutableListOf()
@@ -52,7 +62,7 @@ object ChatRoomManager {
                 startTime = lines[3].toLong(),
                 endTime = lines[4].toLongOrNull() ?: lines[3].toLong(),
                 prompt = lines[5],
-                basePath = basePath,
+                basePath = chatsFolder,
                 users = users,
                 messages = messages,
                 reactions = reactions,
@@ -61,6 +71,8 @@ object ChatRoomManager {
                 markAsNoFeedback = markAsNoFeedback,
             )
             chatrooms[chatRoom.uid] = chatRoom
+        }.also {
+            println("Loaded ${chatrooms.size} chatrooms.")
         }
     }
 
@@ -119,7 +131,7 @@ object ChatRoomManager {
         val users = userIds.associateWith { SessionAliasGenerator.getRandomName() } as MutableMap<UserId, String>
         val roomPrompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         val chatRoom = if (log) {
-            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = basePath, endTime = endTime, testerBotAlias = "", prompt = roomPrompt)
+            LoggingChatRoom(assignment = assignment, formRef = formRef, users = users, basePath = chatsFolder, endTime = endTime, testerBotAlias = "", prompt = roomPrompt)
         } else {
             ChatRoom(assignment = assignment, formRef = formRef, users = users , prompt = roomPrompt)
         }

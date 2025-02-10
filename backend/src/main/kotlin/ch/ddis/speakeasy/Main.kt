@@ -55,7 +55,7 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
         UserManager.init(config)
         AccessManager.init()
         FeedbackManager.init(config)
-        ChatRoomManager.init()
+        ChatRoomManager.init(config)
 
         println("Starting api")
         RestApi.init(config)

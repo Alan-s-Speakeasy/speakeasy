@@ -1,7 +1,7 @@
 <div class="d-flex flex-column flex-shrink-0 p-3 min-vh-100 h-100 position-fixed fixed-top" style="width: 280px; background-color: #efefef">
   <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto
    text-decoration-none text-black ">
-    <img ngSrc="/assets/logo.svg" alt="Logo" width="100" height="100" class="me-2">
+    <img ngSrc="/assets/logo.svg" alt="Logo" width="100" height="100" class="me-2" priority>
     <span class="fs-4">Speakeasy</span>
   </a>
   <hr>
@@ -14,7 +14,7 @@
     </li>
   </ul>
   <hr>
-  <div class="dropdown">
+  <div class="dropdown" *ngIf="this.userName">
     <div ngbDropdown placement="top-end" class="d-inline-block d-flex align-items-center  text-decoration-none ">
       <div class="w-100" role="button"
            ngbDropdownToggle aria-expanded="false">
@@ -33,3 +33,5 @@
     </div>
   </div>
 </div>
+
+

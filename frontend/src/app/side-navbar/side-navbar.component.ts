@@ -3,7 +3,7 @@ import {AuthService} from "../authentication.service";
 import {UserSessionDetails} from "../../../openapi";
 import {Subscription} from "rxjs";
 import {Router, RouterLink, RouterLinkActive} from "@angular/router";
-import {NgClass, NgForOf, NgOptimizedImage, NgStyle} from "@angular/common";
+import {NgClass, NgForOf, NgIf, NgOptimizedImage, NgStyle} from "@angular/common";
 import {NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle} from "@ng-bootstrap/ng-bootstrap";
 import {AvatarModule} from "primeng/avatar";
 import {AlertService} from "../alert";
@@ -22,7 +22,8 @@ import {AlertService} from "../alert";
     NgbDropdownToggle,
     AvatarModule,
     NgStyle,
-    NgClass
+    NgClass,
+    NgIf
   ],
   templateUrl: './side-navbar.component.html',
   styleUrl: './side-navbar.component.css'
@@ -81,6 +82,7 @@ export class SideNavbarComponent implements OnInit{
       error => {
       },
       () => {
+
       });
   }
 

@@ -92,7 +92,7 @@
     <div class="col-12 col-xl-4 p-2" *ngFor="let element of allUserLists">
       <div class="row">
         <h4 class="text-center col-10">All {{element.name}} ({{element.list.length}})</h4>
-        <i class="fa fa-plus btn col-2" (click)="openUserAddModal(addUserModalData, element.name)"></i>
+        <span type="button" class="fa fa-plus col-2" (click)="openUserAddModal(addUserModalData, element.name)"></span>
       </div>
       <table class="table table-striped table-bordered">
         <thead>
@@ -109,7 +109,7 @@
             <span>{{frontendUser.username}}</span> <br>
             <span style="font-size: small">{{frontendUser.userID}}</span>
           </td>
-          <td style="text-align: center; vertical-align: middle" class="p-0 m-0"><i class="fa fa-trash btn" (click)="openRemoveUserModal(removeUserModalData, frontendUser.username)"></i></td>
+          <td style="text-align: center; vertical-align: middle" class="p-0 m-0"><span type="button" class="fa fa-trash mx-3" (click)="openRemoveUserModal(removeUserModalData, frontendUser.username)"></span></td>
         </tr>
         </tbody>
       </table>
@@ -139,7 +139,7 @@
   <div class="row p-2">
     <h4 class="text-end col-7">All Groups ({{groupList.length}})  </h4>
     <span class="col-5">
-      <i class="fa fa-plus btn float-start" (click)="openGroupAddModal(addGroupModalData)"></i>
+      <span type="button" class="fa fa-plus float-start" (click)="openGroupAddModal(addGroupModalData)"></span>
     </span>
 
     <table class="table table-striped table-bordered">

@@ -53,7 +53,7 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
         }
 
         UserManager.init(config)
-        AccessManager.init()
+        AccessManager.init(config)
         FeedbackManager.init(config)
         ChatRoomManager.init(config)
 

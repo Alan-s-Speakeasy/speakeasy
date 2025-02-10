@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.user.*
+import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.sessionToken
 import ch.ddis.speakeasy.util.write
@@ -21,15 +22,8 @@ object AccessManager {
     private val userIdUserSessionMap = ConcurrentHashMap<UserId, ArrayList<UserSession>>(1000)
     private val sessionTokenLastAccessMap = ConcurrentHashMap<String, Long>(1000)
 
-    private val sessionFile = File("data/sessions.csv")//TODO see where we actually want to store this
-    private val sessionWriter = PrintWriter(
-        FileWriter(
-            sessionFile,
-            Charsets.UTF_8,
-            true
-        ),
-        true
-    )
+    private lateinit var sessionFile: File
+    private lateinit var sessionWriter: PrintWriter
     private val cleanupTimer = Timer()
 
     const val SESSION_COOKIE_NAME = "SESSIONID"
@@ -47,11 +41,22 @@ object AccessManager {
         }
     }
 
-    fun init() {
+    fun init(config : Config) {
+
+        sessionFile = File(config.dataPath, "sessions.csv")
 
         if (!sessionFile.exists() || sessionFile.length() == 0L) {
             sessionFile.writeText("timestamp,sessionid,sessiontoken,userid,username,sessionalias\n", Charsets.UTF_8)
         }
+
+        this.sessionWriter = PrintWriter(
+            FileWriter(
+                sessionFile,
+                Charsets.UTF_8,
+                true
+            ),
+            true,
+        )
 
         val expiredSessionCleanupTimer = 10
         cleanupTimer.scheduleAtFixedRate(timerTask {

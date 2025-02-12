@@ -84,9 +84,7 @@
                                 [statsOfAllRequests]="statsOfAllRequest"
                                 (onRowSelected)="switch($event)"
                                 (onAllSelected)="switchAll()"
-                                [selectedUsernames]="selectedUsernames"
-                                [openImpression]="openImpression"
-                                [readImpression]="readImpression">
+                                [selectedUsernames]="selectedUsernames">
       </app-feedback-stats-table>
     </div>
 
@@ -108,15 +106,3 @@
     </div>
 
 
-    <ng-template #readImpression let-modal>
-      <div class="modal-header">
-        <h4 class="modal-title">Impression</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-      <div class="modal-body"
-           style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word">
-        <p>{{ this.impressionToRead }}</p>
-      </div>
-    </ng-template>

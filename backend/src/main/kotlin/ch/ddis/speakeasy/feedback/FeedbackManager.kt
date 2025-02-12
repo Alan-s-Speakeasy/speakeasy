@@ -243,7 +243,6 @@ object FeedbackManager {
             it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
         // get the list of _all_ feedback responses and compute the average and variance from that.
-        val globalStats = computeStatsPerRequestOfFeedback(allFeedbackResponses.flatMap { it.responses }, formName)
         return responsesPerUser.map { (username, responses) ->
             FeedbackResponseStatsItem(
                 username,
@@ -267,7 +266,10 @@ object FeedbackManager {
     }
 
     /**
-     * Given a list of feedback responses from a given formName, compute the average for each response id.
+     * Given a list of feedback responses from a given formName, compute the average and variance of all the responses
+     * for each request (question) of the feedback form.
+     *
+     * Ignore any request (question) that is a textual question.
      *
      * @param responses List of feedback responses
      * @param formName Name of the feedback form
@@ -283,6 +285,10 @@ object FeedbackManager {
 
         // One pass variance and average computation
         for (request in requests) {
+            if (request.options.isEmpty()) {
+                // Special case : This is a textual question
+                continue
+            }
             val responsesOfRequest = responses.filter { it.id == request.id && it.value.isNotBlank() }
             val n = responsesOfRequest.size;
             var S1 = 0f;

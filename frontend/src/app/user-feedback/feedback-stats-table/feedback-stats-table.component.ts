@@ -6,7 +6,7 @@ import {
   FeedBackStatsOfRequest
 } from "../../../../openapi";
 import {FrontendAverageFeedback, FrontendChatroomDetail, FrontendUserFeedback} from "../../new_data";
-import {NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
+import {NgbModal, NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
 import {NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
 import {MatCheckbox} from "@angular/material/checkbox";
 import {FormBuilder, FormsModule} from "@angular/forms";
@@ -39,6 +39,8 @@ export class FeedbackStatsTableComponent {
   sortDirection: 'asc' | 'desc' | '' = '';
   usernameFilter: string = '';
 
+  impressionToRead: string = '';
+
 
   @Input() authorPerspective: boolean | undefined;
   @Input() nonOptionQuestionIds: string[] | undefined;
@@ -49,7 +51,6 @@ export class FeedbackStatsTableComponent {
   @Input() statsOfAllRequests!: Array<FeedBackStatsOfRequest>;
   @Input() appliedSelectedUsernames: string[] = []
 
-  @Input() openImpression!: (content: any, impression: FeedbackResponse) => void;
   @Input() readImpression: TemplateRef<any> | undefined;
   @Output() page_2Change = new EventEmitter<number>();
   @Input() ratingRequests!: Array<FeedbackRequest>;
@@ -61,7 +62,10 @@ export class FeedbackStatsTableComponent {
   // Output lambda all checked usernames
   @Output() onAllSelected  = new EventEmitter<string>();
 
-  constructor(private fb: FormBuilder, private router: Router, private adminService: AdminService,
+  constructor(private fb: FormBuilder,
+              private router: Router,
+              private adminService: AdminService,
+              private modalService: NgbModal
   ) {
   }
 
@@ -175,4 +179,10 @@ export class FeedbackStatsTableComponent {
     const s_min = Math.min(var_i, var_global)
     return s_max / s_min > TRESHOLD_VARIANCE_RATIO
   }
+
+  openImpression(content: any, impression: FeedbackResponse): void {
+    this.impressionToRead = impression.value;
+    this.modalService.open(content, {centered: true});
+  }
+
 }

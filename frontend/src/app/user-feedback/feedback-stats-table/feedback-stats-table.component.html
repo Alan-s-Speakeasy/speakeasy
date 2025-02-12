@@ -38,8 +38,8 @@
       <ng-container *ngFor="let request of this.ratingRequests">
         <th class="" *ngIf="!nonOptionQuestionIds?.includes(request.id)">
           <div class="d-flex flex-row justify-content-between">
-            <span [ngbTooltip]="'σ² = '+ getStatOfRequest(request.id).variance">
-              {{request.shortname}} (μ ={{getStatOfRequest(request.id).average}})
+            <span [ngbTooltip]="'σ² = '+ getStatOfRequest(request.id).variance.toFixed(3) + ' μ = ' + getStatOfRequest(request.id).average.substring(0, 4)">
+              {{request.shortname}}
             </span>
             <span type="button" (click)="setSorting(request.id)" class="btn btn-link p-0 text-black">
               <i *ngIf="sortColumn === request.id && sortDirection === 'asc'" class="fas fa-sort-up"></i>
@@ -69,8 +69,8 @@
       <ng-container *ngFor="let response of entry.responses">
         <td class="px-1"
             *ngIf="!nonOptionQuestionIds?.includes(response.requestID)">
-          {{ response.average }} -
-          <span [ngbTooltip]="'μ = ' + response.average + '- σ² = ' + response.variance">
+          {{ response.average.substring(0, 4) }} -
+          <span [ngbTooltip]="'μ = ' + response.average.substring(0, 4) + '- σ² = ' + response.variance.toFixed(3)">
             <i>{{ mapValueToFeedbackRequestText(response) }} </i>
           </span>
           <span class="fa fa-warning" *ngIf="isControversial(response, getStatOfRequest(response.requestID))"
@@ -100,8 +100,8 @@
               </ng-template>
               <ng-template #nonOptionQuestion>
                 <td>
-                  <p class="fa fa-book btn col-1" (click)="openImpression(readImpression, response)"><i>&nbsp;Read</i>
-                  </p>
+                  <span class="fa fa-book col-1" (click)="openImpression(readImpression, response)" type="button">
+                  </span>
                 </td>
               </ng-template>
             </ng-container>
@@ -130,3 +130,17 @@
     ></ngb-pagination>
   </div>
 </div>
+
+
+<ng-template #readImpression let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Impression</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body"
+       style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word">
+    <p>{{ this.impressionToRead }}</p>
+  </div>
+</ng-template>

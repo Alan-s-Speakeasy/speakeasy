@@ -1,4 +1,4 @@
-import {Component, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, inject, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {
   FrontendAverageFeedback,
   FrontendUserFeedback

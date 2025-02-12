@@ -185,4 +185,5 @@ export class FeedbackStatsTableComponent {
     this.modalService.open(content, {centered: true});
   }
 
+  protected readonly isNaN = isNaN;
 }

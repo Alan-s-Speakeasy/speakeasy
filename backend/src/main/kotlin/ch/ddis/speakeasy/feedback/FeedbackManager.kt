@@ -172,7 +172,7 @@ object FeedbackManager {
                     if ((room != null)
                         && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
-                        // && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
+                        && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
                         && (partner != null)
                         && (responseId != null)
                         && (responseValue != null)) {

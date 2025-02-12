@@ -69,10 +69,10 @@
       <ng-container *ngFor="let response of entry.responses">
         <td class="px-1"
             *ngIf="!nonOptionQuestionIds?.includes(response.requestID)">
-          {{ response.average.substring(0, 4) }} -
-          <span [ngbTooltip]="'μ = ' + response.average.substring(0, 4) + '- σ² = ' + response.variance.toFixed(3)">
-            <i>{{ mapValueToFeedbackRequestText(response) }} </i>
+          <span [ngbTooltip]=" mapValueToFeedbackRequestText(response) +  ' - σ² = ' + isNaN(response.variance) ? 'N/A' : response.variance.toFixed(3) + ' μ = ' + response.average.substring(0, 4)">
+          {{ response.average.substring(0, 4) }}
           </span>
+
           <span class="fa fa-warning" *ngIf="isControversial(response, getStatOfRequest(response.requestID))"
                 [ngbTooltip]="'This bot is controversial, meaning that user generally disagree on its ratings.'"></span>
         </td>

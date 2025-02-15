@@ -7,7 +7,7 @@ import {
 } from "../../../../openapi";
 import {FrontendAverageFeedback, FrontendChatroomDetail, FrontendUserFeedback} from "../../new_data";
 import {NgbModal, NgbPagination, NgbPopover, NgbTooltip} from "@ng-bootstrap/ng-bootstrap";
-import {NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
+import {NgClass, NgForOf, NgIf, NgStyle, SlicePipe} from "@angular/common";
 import {MatCheckbox} from "@angular/material/checkbox";
 import {FormBuilder, FormsModule} from "@angular/forms";
 import {Router} from "@angular/router";
@@ -24,7 +24,8 @@ import {Router} from "@angular/router";
     MatCheckbox,
     NgbTooltip,
     NgStyle,
-    FormsModule
+    FormsModule,
+    NgClass
   ],
   templateUrl: './feedback-stats-table.component.html',
   styleUrl: './feedback-stats-table.component.css'

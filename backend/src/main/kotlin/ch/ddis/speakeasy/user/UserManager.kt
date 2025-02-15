@@ -90,6 +90,18 @@ object UserManager {
         }
     }
 
+    /**
+     * Checks if a user with the given id already exists.
+     *
+     * @param userId The id of the user to check.
+     *
+     * @return True if a user with the given id exists, false otherwise.
+     */
+    fun checkUserIdExists(userId : UserId): Boolean =
+        transaction {
+            return@transaction User.findById(userId.toUUID()) != null
+    }
+
     fun getMatchingUser(username: String, password: PlainPassword): User? = this.lock.read {
         transaction {
             val queryRes =  User.find { Users.username eq username }

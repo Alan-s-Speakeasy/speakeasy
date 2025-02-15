@@ -156,7 +156,7 @@ object FeedbackManager {
         val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
         if (this.feedbackFiles[formName] == null) {
             return responseList
-        } // no such form -> return empty list
+        } // no such form -> return empty list TODO : This should raise an exception
 
         //read all CSV lines with the given userid
 
@@ -172,8 +172,10 @@ object FeedbackManager {
                     if ((room != null)
                         && ChatRoomManager.isAssignment(room.UID()) == assignment
                         && (user != null)
-                        && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
                         && (partner != null)
+                        && (userIDs.isEmpty() || userIDs.contains(UserId(user)))
+                        && (UserManager.checkUserIdExists(UserId(user)))
+                        && (UserManager.checkUserIdExists(UserId(partner)))
                         && (responseId != null)
                         && (responseValue != null)) {
                         response = FeedbackResponse(responseId, responseValue)

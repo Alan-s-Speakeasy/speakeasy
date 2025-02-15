@@ -405,12 +405,14 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     // Unselect all usernames when changing the direction
     this.selectedUsernames = [];
     this.authorPerspective = value == "author";
+    this.averageFeedback = [];
     this.fetchFeedback();
   }
 
   toggleAssignments(value: string): void {
     this.selectedUsernames = [];
     this.chooseAssignments = value == "assigned";
+    this.averageFeedback = [];
     this.fetchFeedback();
   }
 

@@ -185,7 +185,7 @@ export class FeedbackStatsTableComponent {
     return (s_max / s_min) > TRESHOLD_VARIANCE_RATIO
 */
     // This should be a parameter of the UI
-    return var_i > 2
+    return var_i > 3
   }
 
   openImpression(content: any, impression: FeedbackResponse): void {

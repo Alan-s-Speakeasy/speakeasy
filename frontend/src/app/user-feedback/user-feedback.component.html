@@ -64,16 +64,6 @@
           </div>
 
         </div>
-        <div
-          [ngbTooltip]="selectedUsernames.length > 7 ? 'Please plot at most 7 users' : ''"
-        >
-          <button type="button" class="btn btn-primary ms-1"
-                  (click)="applyFilter()"
-                  [disabled]="selectedUsernames.length == 0 || selectedUsernames.length > 7"
-          >
-            Plot selected
-          </button>
-        </div>
       </div>
 
       <app-feedback-stats-table [ratingRequests]="this.ratingRequests"
@@ -89,20 +79,30 @@
     </div>
 
 
-    <div class="row mt-5 mb-5 h-100">
-      <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
-        <apx-chart
-          [series]="chartOptions.series"
-          [legend]="chartOptions.legend"
-          [colors]="chartOptions.colors"
-          [chart]="chartOptions.chart"
-          [dataLabels]="chartOptions.dataLabels"
-          [plotOptions]="chartOptions.plotOptions"
-          [yaxis]="chartOptions.yaxis"
-          [xaxis]="chartOptions.xaxis"
-          [title]="chartOptions.title"
-        ></apx-chart>
+    <div *ngIf="selectedUsernames.length <= 4; else errorMessage">
+      <div class="row mt-5 mb-5 h-100">
+        <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
+          <apx-chart
+            [series]="chartOptions.series"
+            [legend]="chartOptions.legend"
+            [colors]="chartOptions.colors"
+            [chart]="chartOptions.chart"
+            [dataLabels]="chartOptions.dataLabels"
+            [plotOptions]="chartOptions.plotOptions"
+            [yaxis]="chartOptions.yaxis"
+            [xaxis]="chartOptions.xaxis"
+            [title]="chartOptions.title"
+          ></apx-chart>
+        </div>
       </div>
     </div>
 
-
+    <ng-template #errorMessage>
+      <div class="row mt-5 mb-5">
+        <div class="col-12">
+          <div class="alert alert-warning text-center" role="alert">
+            More than 4 users cannot be plotted.
+          </div>
+        </div>
+      </div>
+    </ng-template>

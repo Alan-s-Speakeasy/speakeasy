@@ -247,10 +247,12 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     } else {
       this.selectedUsernames.push(username);
     }
+    this.applyFilter();
   }
 
   switchAll(): void {
     this.selectedUsernames = this.selectedUsernames.length == this.usernames.length ? [] : [...this.usernames];
+    this.applyFilter()
   }
 
   applyFilter(): void {

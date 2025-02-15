@@ -28,13 +28,22 @@ but should not modify its content manually.
 
 In order to run the whole Speakeasy project, simply click and run `speakeasy/backend/src/main/kotlin/ch/ddis/speakeasy/Main.kt`.
 
-Please note that you should NOT use the command `./gradlew run` to run this project for now because 
-it would block the interactive Speakeasy CLI.
+Note that using `./gradlew run` to run this project for now would block the interactive Speakeasy CLI. 
+
+### Data source
+
+You can specify data folder by using the flag `--datapath` when running speakeasy. 
+
+### For production/staging 
+
+Please refer to `scripts/deploy.sh`. This script is meant to be run with cron and periodically checks this git repositiry for any new commit. Upon detecting any, speakeasy is updated to its newest version and restarted in a tmux shell. 
+
+You can override the git checking with the flag `--force-deploy`.
 
 
 ## User Management
 
-User information is stored in a database, located in `speakeasy/data/users.db`, 
+User information is stored in a database, located in `data/users.db`, 
 and managed by `SQLite` and `JetBrains/Exposed`. 
 Each user has four properties in this database: *username*, *password*, *role*, and *id*, 
 as well as some information about "user groups". The available roles are *ADMIN*, *HUMAN*, and *BOT*.

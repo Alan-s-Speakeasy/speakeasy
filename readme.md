@@ -36,7 +36,7 @@ You can specify data folder by using the flag `--datapath` when running speakeas
 
 ### For production/staging 
 
-Please refer to `scripts/deploy.sh`. This script is meant to be run with cron and periodically checks this git repositiry for any new commit. Upon detecting any, speakeasy is updated to its newest version and restarted in a tmux shell. 
+Please refer to `scripts/deploy.sh`. This script is meant to be run with cron and periodically checks this git repository for any new commit. Upon detecting any, speakeasy is updated to its newest version and restarted in a tmux shell. 
 
 You can override the git checking with the flag `--force-deploy`.
 

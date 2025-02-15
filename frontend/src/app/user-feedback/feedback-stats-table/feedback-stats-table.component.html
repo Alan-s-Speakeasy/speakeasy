@@ -69,7 +69,7 @@
       <ng-container *ngFor="let response of entry.responses">
         <td class="px-1"
             *ngIf="!nonOptionQuestionIds?.includes(response.requestID)">
-          <span [ngbTooltip]=" mapValueToFeedbackRequestText(response) +  ' - σ² = ' + isNaN(response.variance) ? 'N/A' : response.variance.toFixed(3) + ' μ = ' + response.average.substring(0, 4)">
+          <span [ngbTooltip]="mapValueToFeedbackRequestText(response) + ' - σ² = ' + (isNaN(response.variance) ? '0.0' : response.variance.toFixed(3))">
           {{ response.average.substring(0, 4) }}
           </span>
 

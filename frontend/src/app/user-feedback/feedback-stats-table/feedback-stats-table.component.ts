@@ -168,16 +168,23 @@ export class FeedbackStatsTableComponent {
 
     // To take into account the number of responses the ratio is weighted by the number of responses.
     // This prevents the situation where a few responses with a large variance can skew the result.
-    const ALPHA = 1
+    if (response_i.count < 3) {
+      return false
+    }
+    const ALPHA = 5
     const var_i = response_i.variance * response_i.count / (response_i.count + ALPHA)
     const var_global = requestStats.variance
 
+/*
     // Follows a weird rule of thumb, reference : https://library.virginia.edu/data/articles/a-rule-thumb-unequal-variances
     // This can definitely change if needed/required.
-    const TRESHOLD_VARIANCE_RATIO = 1.5
+    const TRESHOLD_VARIANCE_RATIO = 3
     const s_max = Math.max(var_i, var_global)
     const s_min = Math.min(var_i, var_global)
-    return s_max / s_min > TRESHOLD_VARIANCE_RATIO
+    return (s_max / s_min) > TRESHOLD_VARIANCE_RATIO
+*/
+    // This should be a parameter of the UI
+    return var_i > 2
   }
 
   openImpression(content: any, impression: FeedbackResponse): void {

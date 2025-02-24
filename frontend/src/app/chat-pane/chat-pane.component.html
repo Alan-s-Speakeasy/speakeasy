@@ -6,11 +6,11 @@
       <small> Assigned by TAs {{paneLog.formRef === '' ? '' : '(assessment required)'}} </small>
     </div>
 
-    <div class="bg-light position-relative border-bottom border-secondary" style="width: 100%; height: 50px">
+    <div class="bg-light position-relative border-bottom border-secondary" style="width: 100%; height: 40px">
       <div class="position-absolute top-0 start-0 d-flex flex-row">
         <div>
           <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" (click)="op.toggle($event)" />
-          <p-overlayPanel #op [style]="{ width: '450px' }" [showCloseIcon]="false">
+          <p-overlayPanel #op [style]="{ width: '350px' }" [showCloseIcon]="false">
             <div class="d-flex flex-column">
               <p class="fw-bold pb-1"> Room ID:</p>
               <p> {{paneLog.roomID}} </p>
@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <div class="chat-history" style="overflow-y: scroll; height: 400px" #scroll>
+    <div class="chat-history" style="overflow-y: scroll; height:400px" #scroll>
       <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
         <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage">
           <div class="message-data">

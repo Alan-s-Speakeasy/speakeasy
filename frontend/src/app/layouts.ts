@@ -43,7 +43,7 @@ export class MinimalLayoutComponent {}
         <app-side-navbar></app-side-navbar>
       </div>
       <!-- Main content area -->
-      <div class="flex-grow-1 container" style="margin-left: 280px">
+      <div class="p-1" style="margin-left: 280px; width: calc(100% - 280px)">
         <alert></alert>
         <router-outlet></router-outlet>
       </div>

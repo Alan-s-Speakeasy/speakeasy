@@ -64,24 +64,14 @@
       </tr>
       </tbody>
     </table>
-    <!-- Pagination Controls (Online)-->
-    <div class="row">
-      <div class="col-12">
-        <nav aria-label="Page navigation" class="align-items-center justify-content-between">
-          <div class="pagination-info" style="white-space: nowrap; padding: 5px; background-color: #f0f0f0; border-radius: 5px; flex-shrink: 0;">
-              <span class="text-muted" style="font-size: 14px;">
-                Page {{currentPagesOfUserDetails[element.name]}} / {{pagesArrayOfUserDetails[element.name].length}}
-              </span>
-          </div>
-          <ul class="pagination d-flex overflow-auto">
-            <li class="page-item" *ngFor="let page of pagesArrayOfUserDetails[element.name]">
-              <a class="page-link" style="cursor: pointer; width: 40px; text-align: center;"
-                 (click)="setCurrentPage(element.name, page, true)">{{ page }}</a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
+
+    <ngb-pagination
+      [collectionSize]="pagesArrayOfUserDetails[element.name].length * ITEM_PER_PAGE"
+      [pageSize]="ITEM_PER_PAGE"
+      [maxSize]="5"
+      [boundaryLinks]="true"
+      (pageChange)="setCurrentPage(element.name, $event, true)">
+    </ngb-pagination>
 
   </div>
 
@@ -113,24 +103,15 @@
         </tr>
         </tbody>
       </table>
-      <!-- Pagination Controls (List)-->
-      <div class="row">
-        <div class="col-12">
-          <nav aria-label="Page navigation" class="align-items-center justify-content-between">
-            <div class="pagination-info" style="white-space: nowrap; padding: 5px; background-color: #f0f0f0; border-radius: 5px; flex-shrink: 0;">
-              <span class="text-muted" style="font-size: 14px;">
-                Page {{currentPagesOfUserLists[element.name]}} / {{pagesArrayOfUserLists[element.name].length}}
-              </span>
-            </div>
-            <ul class="pagination d-flex overflow-auto">
-              <li class="page-item" *ngFor="let page of pagesArrayOfUserLists[element.name]">
-                <a class="page-link" style="cursor: pointer; width: 40px; text-align: center;"
-                   (click)="setCurrentPage(element.name, page, false)">{{ page }}</a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </div>
+
+      <ngb-pagination
+        [collectionSize]="pagesArrayOfUserLists[element.name].length * ITEM_PER_PAGE"
+        [pageSize]="ITEM_PER_PAGE"
+        [maxSize]="5"
+        [boundaryLinks]="true"
+        (pageChange)="setCurrentPage(element.name, $event, false)">
+      </ngb-pagination>
+
     </div>
   </div>
 

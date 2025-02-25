@@ -44,7 +44,9 @@ export class MinimalLayoutComponent {}
       </div>
       <!-- Main content area -->
       <div class="p-1" style="margin-left: 280px; width: calc(100% - 280px)">
-        <alert></alert>
+        <div class="position-fixed fixed-top">
+          <alert></alert>
+        </div>
         <router-outlet></router-outlet>
       </div>
     </div>

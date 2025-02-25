@@ -1,11 +1,10 @@
-
 <div class="container-fluid h-100 d-flex flex-column">
   <h3 class="mt-3">Chats</h3>
   <!-- Main content area for chat logs -->
   <div class="overflow-x-auto d-flex my-0"
        style="flex-wrap: nowrap; gap:10px; min-width: 100%; max-width: 100%;">
     <div *ngIf="paneLogs.length === 0" class="d-flex justify-content-center align-items-center w-100">
-      <div class="text-center">
+      <div class="text-center ">
         <h4>No Chats Yet!</h4>
         <p>Looks like you haven't started any chats. Why not begin a conversation?</p>
       </div>
@@ -30,12 +29,13 @@
               class="btn btn-light"
               [ngStyle]="{'text-decoration': paneLog.active ? 'none' : 'line-through'}"
       >
-        {{paneLog.otherAlias}}
+        {{ paneLog.otherAlias }}
       </button>
 
       <ng-template #popoverContent>
         <div class="input-group">
-          <input (keyup.enter)="requestChatRoom()" type="text" class="form-control" placeholder="Request chat with..." maxlength="100" [formControl]="uname">
+          <input (keyup.enter)="requestChatRoom()" type="text" class="form-control" placeholder="Request chat with..."
+                 maxlength="100" [formControl]="uname">
           <div class="input-group-append">
             <button (click)="requestChatRoom()" class="btn btn-outline-success" type="button">Request</button>
           </div>
@@ -53,17 +53,23 @@
       </span>
     </div>
     <div class="input-group">
-      <input
-        [readonly]="paneLogs.length === 0"
-        type="text" class="form-control"
-             placeholder="Broadcast message to all chatrooms"
-            (keyup.enter)="askALl()"
-            [formControl]="queryAll"
-      >
+        <textarea cdkTextareaAutosize="true"
+                  cdkAutosizeMinRows="1"
+                  cdkAutosizeMaxRows="5"
+                  class="form-control"
+                  placeholder="Broadcast a question to all chatrooms..."
+                  maxlength="2000"
+                  [readonly]="paneLogs.length === 0 || !hasActiveRooms()"
+                  [disabled]="paneLogs.length === 0 || !hasActiveRooms()"
+                  [formControl]="queryAll"
+                  [ngbTooltip]="(paneLogs.length === 0 || !hasActiveRooms()) ? 'No chatrooms available' : ''"
+                  (keyup.enter)="askALl()">
+        </textarea>
       <div class="input-group-append">
         <button class="btn btn-primary" type="button"
-                [disabled]="paneLogs.length === 0"
-        (click)="askALl()">Send</button>
+                [disabled]="paneLogs.length === 0 || !hasActiveRooms()"
+                (click)="askALl()">Send
+        </button>
       </div>
     </div>
   </div>

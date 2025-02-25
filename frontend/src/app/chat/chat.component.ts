@@ -118,6 +118,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Check if there are inactive chatrooms
+  hasActiveRooms(): boolean {
+    return this.paneLogs.some(paneLog => paneLog.active)
+  }
+
   // post messages to all chatrooms
   @ViewChildren(ChatPaneComponent)
   private paneComponents!: QueryList<ChatPaneComponent>;

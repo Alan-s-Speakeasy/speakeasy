@@ -253,7 +253,7 @@ export class ChatPaneComponent implements OnInit {
   /**
    * Handles the key down event for the input field, so we can send the message when the user presses Enter, and
    * use Shift+Enter to add a new line.
-   * @param evenAdded primengt
+   * @param event
    */
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {

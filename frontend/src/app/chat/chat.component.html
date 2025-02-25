@@ -1,55 +1,75 @@
-<div class="container mt-3">
-
-  <br>
-  <div class="row p-2">
-    <div class="col-12 col-lg-3">
-      <h3>Chats</h3>
-    </div>
-    <div class="col-10 col-lg-7">
-      <div class="btn-group" role="group">
-        <span *ngFor="let paneLog of paneLogs, let i = index, let n = count">
-          <button (click)="scrollTo('chat' + paneLog.roomID)" type="button" class="btn btn-outline-primary" style="margin-right: 5px">Chat-{{n - i}}</button>
-          <button (click)="scrollTo('rating' + paneLog.roomID)" type="button" class="btn btn-outline-success" style="margin-right: 10px" *ngIf="paneLog.ratingOpen">
-            Rating-{{n - i}}</button>
-        </span>
+<div class="container-fluid h-100 d-flex flex-column">
+  <h3 class="mt-3">Chats</h3>
+  <!-- Main content area for chat logs -->
+  <div class="overflow-x-auto d-flex my-0"
+       style="flex-wrap: nowrap; gap:10px; min-width: 100%; max-width: 100%;">
+    <div *ngIf="paneLogs.length === 0" class="d-flex justify-content-center align-items-center w-100">
+      <div class="text-center ">
+        <h4>No Chats Yet!</h4>
+        <p>Looks like you haven't started any chats. Why not begin a conversation?</p>
       </div>
     </div>
-    <div class="col-2">
-      <button type="button" class="btn btn-secondary float-end" (click)="openModal(modalData)">Home</button>
+    <div *ngFor="let paneLog of paneLogs" id="chat{{paneLog.roomID}}" style="min-width: 380px; max-width: 380px;">
+      <app-chat-pane
+        (removeRoom)="removeRoom(paneLog.roomID)"
+        [numQueries]="numQueries"
+        [paneLog]="paneLog"
+        id="chat{{paneLog.roomID}}">
+      </app-chat-pane>
     </div>
   </div>
 
-  <div class="row p-2" style="overflow: scroll">
-    <div class="row-fluid">
-    <div *ngFor="let paneLog of paneLogs" style="display: inline">
-      <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" style="margin-right: 5px">
-        <app-chat-pane (removeRoom)="removeRoom(paneLog.roomID)"
-                       [numQueries]="numQueries" [paneLog]="paneLog" id="chat{{paneLog.roomID}}"></app-chat-pane>
-      </div>
-      <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2" *ngIf="paneLog.ratingOpen" style="margin-right: 10px">
-        <app-rating-pane (removeRoom)="removeRoom(paneLog.roomID)" [paneLog]="paneLog" id="rating{{paneLog.roomID}}"></app-rating-pane>
-      </div>
-    </div>
-    </div>
-  </div>
 
-  <div class="row p-2" style="margin-top: 10px">
-    <div class="col-12 col-md-7 p-2" *ngIf="paneLogs.length > 1">
-      <div class="input-group">
-        <input (keyup.enter)="askALl()" type="text" class="form-control" placeholder="Send a question to all opened chatrooms..." maxlength="2000"
-               [formControl]="queryAll">
-        <div class="input-group-append">
-          <button (click)="askALl()" class="btn btn-outline-primary" type="button">Send</button>
-        </div>
-      </div>
-    </div>
+  <!-- Global broadcast message field -->
+  <div class="" style="margin-top: auto; padding: 10px; background: #f8f9fa; border-top: 1px solid #ccc;">
+    <div class="d-flex overflow-auto mb-2" style="gap: 10px;">
+      <button *ngFor="let paneLog of paneLogs, let i = index"
+              (click)="scrollTo(paneLog.roomID); selectedRoomID = paneLog.roomID"
+              [ngClass]="{'bg-secondary text-white': selectedRoomID === paneLog.roomID}"
+              class="btn btn-light"
+              [ngStyle]="{'text-decoration': paneLog.active ? 'none' : 'line-through'}"
+      >
+        {{ paneLog.otherAlias }}
+      </button>
 
-    <div class="col-12 col-md-5 p-2">
-      <div class="input-group">
-        <input (keyup.enter)="requestChatRoom()" type="text" class="form-control" placeholder="request chat with ..." maxlength="100" [formControl]="uname">
-        <div class="input-group-append">
-          <button (click)="requestChatRoom()" class="btn btn-outline-success" type="button">Request</button>
+      <ng-template #popoverContent>
+        <div class="input-group">
+          <input (keyup.enter)="requestChatRoom()" type="text" class="form-control" placeholder="Request chat with..."
+                 maxlength="100" [formControl]="uname">
+          <div class="input-group-append">
+            <button (click)="requestChatRoom()" class="btn btn-outline-success" type="button">Request</button>
+          </div>
         </div>
+      </ng-template>
+      <span
+        type="button"
+        [ngbPopover]="popoverContent"
+        [autoClose]="'outside'"
+        popoverTitle=""
+        placement="top"
+        class="btn btn-primary"
+      >
+        <i class="fa fa-plus"></i>
+      </span>
+    </div>
+    <div class="input-group">
+        <textarea cdkTextareaAutosize="true"
+                  cdkAutosizeMinRows="1"
+                  cdkAutosizeMaxRows="5"
+                  class="form-control"
+                  placeholder="Broadcast a question to all chatrooms..."
+                  maxlength="2000"
+                  [readonly]="paneLogs.length === 0 || !hasActiveRooms()"
+                  [disabled]="paneLogs.length === 0 || !hasActiveRooms()"
+                  [formControl]="queryAll"
+                  [ngbTooltip]="(paneLogs.length === 0 || !hasActiveRooms()) ? 'No chatrooms available' : ''"
+                  (keyup.enter)="askALl()">
+        </textarea>
+      <div class="input-group-append">
+        <button class="btn btn-primary" type="button"
+                [disabled]="paneLogs.length === 0 || !hasActiveRooms()"
+                (click)="askALl()">Send
+        </button>
       </div>
     </div>
   </div>

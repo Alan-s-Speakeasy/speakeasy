@@ -37,6 +37,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   paneLogs: PaneLog[] = [] // the list of PaneLog instances
   numQueries = 5  // the number of queries recommended to ask
+  selectedRoomID = "" // the room ID of the selected chat room
 
   ngOnInit(): void {
     this.titleService.setTitle("Chat Page")
@@ -59,6 +60,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       .subscribe(
         (response) => {
           if (response) {
+            if (response.rooms.length > 0 && this.selectedRoomID == "") {
+              this.selectedRoomID = response.rooms[response.rooms.length - 1].uid
+            }
             for (let room of response.rooms) {
               let addRoom = true
               this.paneLogs.forEach((paneLog) => {
@@ -76,6 +80,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // add a chatroom to the UI
   addChatRoom(room: ChatRoomInfo): void {
+    if (this.selectedRoomID == "") {
+      this.selectedRoomID = room.uid
+    }
     let paneLog: PaneLog = {
       assignment: room.assignment,
       formRef: room.formRef,
@@ -111,6 +118,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Check if there are inactive chatrooms
+  hasActiveRooms(): boolean {
+    return this.paneLogs.some(paneLog => paneLog.active)
+  }
+
   // post messages to all chatrooms
   @ViewChildren(ChatPaneComponent)
   private paneComponents!: QueryList<ChatPaneComponent>;
@@ -124,9 +136,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // navigate to the selected chat/rating pane
   scrollTo(id: string) {
-    let pane = document.querySelector('#' + id)
+    let pane = document.querySelector('#chat' + id)
     if (pane) {
-      pane.scrollIntoView({ block: 'center', inline: 'center'})
+      pane.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
     } else {
       console.log("failed to find ", id)
     }

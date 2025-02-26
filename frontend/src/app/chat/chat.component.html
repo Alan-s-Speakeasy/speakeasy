@@ -10,12 +10,17 @@
       </div>
     </div>
     <div *ngFor="let paneLog of paneLogs" id="chat{{paneLog.roomID}}" style="min-width: 380px; max-width: 380px;">
-      <app-chat-pane
-        (removeRoom)="removeRoom(paneLog.roomID)"
-        [numQueries]="numQueries"
-        [paneLog]="paneLog"
-        id="chat{{paneLog.roomID}}">
-      </app-chat-pane>
+      <div class="d-flex flex-row">
+        <app-chat-pane
+          (removeRoom)="removeRoom(paneLog.roomID)"
+          [numQueries]="numQueries"
+          [paneLog]="paneLog"
+          id="chat{{paneLog.roomID}}">
+        </app-chat-pane>
+        <div class="col-12 col-md-12 col-lg-6 col-xl-4 p-2 w-100" *ngIf="paneLog.ratingOpen" style="margin-right: 10px">
+          <app-rating-pane (removeRoom)="removeRoom(paneLog.roomID)" [paneLog]="paneLog" id="rating{{paneLog.roomID}}"></app-rating-pane>
+        </div>
+      </div>
     </div>
   </div>
 

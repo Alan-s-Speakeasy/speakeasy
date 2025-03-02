@@ -428,7 +428,6 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
                 }
                 writer.writeNext(row.toTypedArray())
             }
-            writer.flush()
         }
         ctx.header("Content-Type", "text/csv")
         ctx.header("Content-Disposition", "attachment; filename=\"feedbacks.csv\"")

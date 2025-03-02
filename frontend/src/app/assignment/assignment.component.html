@@ -1,278 +1,352 @@
-<div class="container mt-3">
-
-  <br>
-
-  <div class="row p-2">
-    <div class="col-9">
-      <h3>Assignment creation </h3>
+<div class="container mt-4">
+  <!-- Header Section -->
+  <div class="row mb-4">
+    <div class="col-md-9">
+      <h2>Evaluation Rounds Configuration</h2>
     </div>
-    <div class="col-3">
-      <button type="button" class="btn btn-secondary float-end" (click)="home()">Home</button>
+    <div class="col-md-3 text-end">
+      <button type="button" class="btn btn-secondary" (click)="home()">Home</button>
     </div>
   </div>
 
-  <div *ngIf="!isActive" class="row col-2 m-2">
-    <button (click)="newGenerator()" type="submit" class="btn btn-primary">New Generator</button>
-  </div>
-
-  <div *ngIf="isActive">
-    <br>
-    <h3 class="d-flex justify-content-center">Settings</h3>
-    <h4 class="mb-3">Feedback form</h4>
-    <div class="row align-items-center">
-      <mat-form-field class="col-2">
-        <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
-          <mat-option *ngFor="let form of formsMap | keyvalue" [value]="form.key">
-            {{ form.key }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <div *ngIf=" selectedFormName != '' " class="table-container col-10">
-        <table class="table table-striped table-bordered">
-          <thead>
-          <tr>
-            <th *ngFor="let question of formsMap.get(selectedFormName)"
-                [style.font-weight]="'normal'"
-                [style.font-size.px]="12">
-              {{ question.shortname }}
-            </th>
-          </tr>
-          </thead>
-        </table>
-      </div>
-      <div *ngIf=" selectedFormName == '' " class="col-10">
-        <small> [No feedback required] </small>
+  <!-- Empty State -->
+  <div *ngIf="!isActive" class="text-center py-5 my-5">
+    <div class="card p-5 shadow-sm border-0">
+      <h3 class="text-secondary mb-4">No rounds configured yet.</h3>
+      <div>
+        <button (click)="newGenerator()" type="submit" class="btn btn-primary px-4">Generate new</button>
       </div>
     </div>
-    <div class="col-12">
-      <h4 class="mb3">Prompts</h4>
-      <div class="col-12">
-        <table class="table">
-          <tbody>
-          <tr *ngFor="let prompt of prompts, let i = index" class="d-flex">
-            <td class="col-11 text-break">{{ prompt }}</td>
-            <td class="col-1"><i class="fa fa-trash" type="submit" (click)="removePrompt(i)"></i></td>
-          </tr>
-          </tbody>
-        </table>
-        <div class="d-flex flex-row">
-          <div>
-          <textarea
-            style="height: 70px"
-            type="text" class="form-control" placeholder="Add prompts here"
-            [formControl]="promptForm">
-          </textarea>
+  </div>
+
+  <!-- Active Configuration Section -->
+  <div *ngIf="isActive" class="card shadow-sm mb-4">
+    <div class="card-body">
+      <!-- Feedback Form Section -->
+      <div class="mb-4">
+        <h4 class="card-title border-bottom pb-2">Feedback Form</h4>
+        <div class="row align-items-center">
+          <div class="col-md-2">
+            <mat-form-field class="w-100">
+              <mat-select (selectionChange)="toggleFormName($event.value)" [(value)]="selectedFormName">
+                <mat-option *ngFor="let form of formsMap | keyvalue" [value]="form.key">
+                  {{ form.key }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-md-10">
+            <div *ngIf="selectedFormName != ''" class="table-responsive">
+              <table class="table table-sm table-bordered">
+                <thead>
+                <tr>
+                  <th *ngFor="let question of formsMap.get(selectedFormName)"
+                      class="text-nowrap"
+                      [style.font-weight]="'normal'"
+                      [style.font-size.px]="12">
+                    {{ question.shortname }}
+                  </th>
+                </tr>
+                </thead>
+              </table>
+            </div>
+            <div *ngIf="selectedFormName == ''">
+              <small class="text-muted">[No feedback required]</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompts Section -->
+      <div class="mb-4">
+        <h4 class="card-title border-bottom pb-2">Prompts</h4>
+        <div class="table-responsive mb-3">
+          <table class="table table-hover">
+            <tbody>
+            <tr *ngFor="let prompt of prompts, let i = index">
+              <td class="text-break w-100">{{ prompt }}</td>
+              <td class="text-end"><i class="fa fa-trash text-danger" type="submit" (click)="removePrompt(i)"></i></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="row">
+          <div class="col-md-11">
+            <textarea style="height: 70px" type="text" class="form-control"
+                      placeholder="Add prompts here" [formControl]="promptForm"></textarea>
             <div class="form-text">You can add multiple prompts by separating by linebreaks.</div>
           </div>
-          <button (click)="addPrompts()" type="submit" class="btn btn btn-outline-primary ms-2 py-1 px-2" style="height: 80%;">Add
-          </button>
+          <div class="col-md-1 d-flex align-items-center">
+            <button (click)="addPrompts()" type="submit" class="btn btn-outline-primary">Add</button>
+          </div>
         </div>
       </div>
-    </div>
-    <hr>
 
-    <div class="d-flex justify-content-around">
-      <div>
-        <h4>Bots per users</h4>
-        <mat-slider min="1" max="6" step="1" #ngSlider><input matSliderThumb [value]="botsPerUser"
-                                                              (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
-                                                              #ngSliderThumb="matSliderThumb"/></mat-slider>
-        {{ botsPerUser }}
-        <br>
-      </div>
-      <div>
-        <h4>Duration</h4>
-        <mat-slider min="1" max="20" step="1" #ngSlider><input matSliderThumb [value]="duration"
-                                                               (input)="setDuration({source: ngSliderThumb2, parent: ngSlider, value: ngSliderThumb2.value})"
-                                                               #ngSliderThumb2="matSliderThumb"/></mat-slider>
-        {{ duration }}
-      </div>
-    </div>
-    <hr>
+      <hr>
 
-    <h3 class="d-flex justify-content-center">Matchmaking</h3>
-
-    <h4 class="w-100 mx-auto">Humans</h4>
-    <app-user-table
-      [users]="humans"
-      [active]="active"
-      [isSelected]="isHumanSelected"
-      [pageSizes]="pageSizes"
-      [pageSize]="pageSizeHumanSelection"
-      (userSwitched)="switchHuman($event)"
-      (allSwitched)="switchAll('human', $event)">
-    </app-user-table>
-
-    <hr>
-    <h4>Bots</h4>
-    <app-user-table
-      [users]="bots"
-      [active]="active"
-      [isSelected]="isBotSelected"
-      [pageSizes]="pageSizes"
-      [pageSize]="pageSizeHumanSelection"
-      (userSwitched)="switchBot($event)"
-      (allSwitched)="switchAll('bot', $event)">
-    </app-user-table>
-
-    <h4>Extras </h4>
-    <div class="row p-2">
-      <table class="table">
-        <thead>
-        <tr>
-          <td>
-            <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)" (change)="switchAll('admin', $event)"
-                          color="primary">
-              <b>Admins as Bots</b>
-            </mat-checkbox>
-          </td>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let admin of admins">
-          <td>
-            <mat-checkbox [checked]="isAdminSelected.get(admin) == true" (change)="switchAdmin(admin)"
-                          color="primary">
-              {{ admin }}
-              <i *ngIf="this.active.includes(admin)" style="color: limegreen" class="fa fa-circle"></i>
-              <i *ngIf="!this.active.includes(admin)" style="color: red" class="fa fa-circle"></i>
-            </mat-checkbox>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-      <br>
-      <table class="table">
-        <thead>
-        <tr>
-          <td>
-            <mat-checkbox [checked]="assistantSelected == true" (change)="switchAssistant()" color="primary">
-              <b>AssistantBot</b>
-            </mat-checkbox>
-          </td>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let assistant of assistant; let firstElement = first">
-          <td *ngIf="firstElement">
-            <mat-checkbox [checked]="assistantSelected == true" (change)="switchAssistant()" color="primary">
-              {{ assistant }}
-              <i *ngIf="this.active.includes(assistant)" style="color: limegreen" class="fa fa-circle"></i>
-              <i *ngIf="!this.active.includes(assistant)" style="color: red" class="fa fa-circle"></i>
-            </mat-checkbox>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
-
-    <div class="d-flex flex-row p-2 justify-content-between">
-      <div class=" col-2">
-        <button *ngIf="isActive" (click)="removeGenerator()" type="submit" class="btn btn-outline-danger">
-          Delete
-        </button>
-      </div>
-      <div>
-        <button (click)="generateNextRound()" [disabled]="!canStartRound()" type="button"
-                class="btn btn-primary float-end">
-          <div>Generate Round {{ round }}</div>
-        </button>
-      </div>
-    </div>
-
-    <br>
-
-    <div *ngIf="nextAssignment.length > 0">
-      <h4>Next Round
-        <i *ngIf="notOptimalAssignment" class="fa fa-warning"
-           matTooltip="Not optimal. Try again or change settings."></i>
-      </h4>
-      <table class="table">
-        <thead>
-        <tr>
-          <td class="col-2">Human</td>
-          <td class="col-2">Bot</td>
-          <td class="col-5">Prompt</td>
-          <td class="col-2">Form</td>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let assignment of nextAssignment">
-          <td class="col-2">{{ assignment.human }}</td>
-          <td class="col-2">{{ assignment.bot }}</td>
-          <td class="col-5 text-break">{{ assignment.prompt }}</td>
-          <td class="col-2">{{ assignment.formName !== "" ? assignment.formName : "[NOT Required]" }}</td>
-          <td class="col-1">
-            <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)"
-               class="col-6 fa fa-warning" matTooltip="At least one user offline. Round cannot be created."></i>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-      <div class="row p-2 justify-content-end">
-        <div class="col-3">
-          <button (click)="startNextRound()" [disabled]="remainingTime > 0 || changeAfterGenerate || !generated"
-                  type="button" class="btn btn-primary float-end">
-            <div>Start Round {{ round }}</div>
-          </button>
+      <!-- Configuration Controls -->
+      <div class="row mb-4">
+        <div class="col-md-6 text-center">
+          <div class="card p-3">
+            <h5>Bots per user</h5>
+            <div class="d-flex align-items-center">
+              <mat-slider min="1" max="6" step="1" #ngSlider class="flex-grow-1 me-3">
+                <input matSliderThumb [value]="botsPerUser"
+                       (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
+                       #ngSliderThumb="matSliderThumb"/>
+              </mat-slider>
+              <input type="number" class="form-control" style="width: 60px" min="1" max="6"
+                     [value]="botsPerUser"
+                     (change)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: $event})">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 text-center">
+          <div class="card p-3">
+            <h5>Duration (minutes) </h5>
+            <div class="d-flex align-items-center">
+              <mat-slider min="1" max="20" step="1" #ngSlider class="flex-grow-1 me-3">
+                <input matSliderThumb [value]="duration"
+                       (input)="setDuration({source: ngSliderThumb2, parent: ngSlider, value: ngSliderThumb2.value})"
+                       #ngSliderThumb2="matSliderThumb"/>
+              </mat-slider>
+              <input type="number" class="form-control" style="width: 60px" min="1" max="20"
+                     [value]="duration"
+                     (change)="setDuration({source: ngSliderThumb2, parent: ngSlider, value: $event})">
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <br>
+      <!-- Matchmaking Section -->
+      <div class="mb-4">
+        <h3 class="text-center mb-4">Matchmaking</h3>
 
-    <div *ngIf="chatroomDetails.size > 0">
-      <h4>Active Round</h4>
-      <table class="table">
-        <thead>
-        <tr class="d-flex">
-          <td class="col-2">Human</td>
-          <td class="col-2">Bot</td>
-          <td class="col-4">Prompt</td>
-          <td class="col-1">Form</td>
-          <td class="col-2">Remaining Time</td>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let room of getChatrooms(true)" class="d-flex">
-          <td class="col-2">{{ room.userInfo[0].username }}</td>
-          <td class="col-2">{{ room.userInfo[1].username }}</td>
-          <td class="col-4 text-break">{{ room.prompt }}</td>
-          <td class="col-1">{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
-          <td class="col-2">{{ remainingTime | date: 'mm:ss' }}</td>
-          <td class="col-1">
-            <button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Humans</h5>
+          </div>
+          <div class="card-body">
+            <app-user-table
+              [users]="humans"
+              [active]="active"
+              [isSelected]="isHumanSelected"
+              [pageSizes]="pageSizes"
+              [pageSize]="pageSizeHumanSelection"
+              (userSwitched)="switchHuman($event)"
+              (allSwitched)="switchAll('human', $event)">
+            </app-user-table>
+          </div>
+        </div>
 
-    <div *ngIf="chatroomDetails.size > 0">
-      <h4>Past Rounds</h4>
-      <table class="table">
-        <thead>
-        <tr class="d-flex">
-          <td class="col-2">Human</td>
-          <td class="col-2">Bot</td>
-          <td class="col-6">Prompt</td>
-          <td class="col-1">Form</td>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let room of getChatrooms(false)" class="d-flex">
-          <td class="col-2">{{ room.userInfo[0].username }}</td>
-          <td class="col-2">{{ room.userInfo[1].username }}</td>
-          <td class="col-6 text-break">{{ room.prompt }}</td>
-          <td class="col-1">{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
-          <td class="col-1">
-            <button type="button" class="btn btn-outline-secondary" (click)="watch(room)">Watch</button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Bots</h5>
+          </div>
+          <div class="card-body">
+            <app-user-table
+              [users]="bots"
+              [active]="active"
+              [isSelected]="isBotSelected"
+              [pageSizes]="pageSizes"
+              [pageSize]="pageSizeHumanSelection"
+              (userSwitched)="switchBot($event)"
+              (allSwitched)="switchAll('bot', $event)">
+            </app-user-table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extras Section -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">Admins as Bots</h5>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                <tr>
+                  <td>
+                    <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)"
+                                  (change)="switchAll('admin', $event)"
+                                  color="primary">
+                      <b>Select All</b>
+                    </mat-checkbox>
+                  </td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let admin of admins">
+                  <td>
+                    <mat-checkbox [checked]="isAdminSelected.get(admin) == true"
+                                  (change)="switchAdmin(admin)"
+                                  color="primary">
+                      {{ admin }}
+                      <i *ngIf="this.active.includes(admin)"
+                         class="fa fa-circle text-success ms-2"></i>
+                      <i *ngIf="!this.active.includes(admin)"
+                         class="fa fa-circle text-danger ms-2"></i>
+                    </mat-checkbox>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">AssistantBot</h5>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <tbody>
+                <tr *ngFor="let assistant of assistant; let firstElement = first">
+                  <td *ngIf="firstElement">
+                    <mat-checkbox [checked]="assistantSelected == true"
+                                  (change)="switchAssistant()"
+                                  color="primary">
+                      {{ assistant }}
+                      <i *ngIf="this.active.includes(assistant)"
+                         class="fa fa-circle text-success ms-2"></i>
+                      <i *ngIf="!this.active.includes(assistant)"
+                         class="fa fa-circle text-danger ms-2"></i>
+                    </mat-checkbox>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="d-flex justify-content-between mb-4">
+        <button *ngIf="isActive" (click)="removeGenerator()" type="submit"
+                class="btn btn-outline-danger">Delete</button>
+        <button (click)="generateNextRound()" [disabled]="!canStartRound()"
+                type="button" class="btn btn-primary">
+          Generate Round {{ round }}
+        </button>
+      </div>
+
+      <!-- Next Round Section -->
+      <div *ngIf="nextAssignment.length > 0" class="card mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            Next Round
+            <i *ngIf="notOptimalAssignment" class="fa fa-warning text-warning ms-2"
+               matTooltip="Not optimal. Try again or change settings."></i>
+          </h5>
+          <button (click)="startNextRound()"
+                  [disabled]="remainingTime > 0 || changeAfterGenerate || !generated"
+                  type="button" class="btn btn-primary">
+            Start Round {{ round }}
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+              <tr>
+                <th class="col-2">Human</th>
+                <th class="col-2">Bot</th>
+                <th class="col-5">Prompt</th>
+                <th class="col-2">Form</th>
+                <th class="col-1"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let assignment of nextAssignment">
+                <td>{{ assignment.human }}</td>
+                <td>{{ assignment.bot }}</td>
+                <td class="text-break">{{ assignment.prompt }}</td>
+                <td>{{ assignment.formName !== "" ? assignment.formName : "[NOT Required]" }}</td>
+                <td>
+                  <i *ngIf="!active.includes(assignment.human) || !active.includes(assignment.bot)"
+                     class="fa fa-warning text-warning"
+                     matTooltip="At least one user offline. Round cannot be created."></i>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Round Section -->
+      <div *ngIf="chatroomDetails.size > 0" class="card mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Active Round</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th style="width: 18%">Human</th>
+                <th style="width: 18%">Bot</th>
+                <th style="width: 35%">Prompt</th>
+                <th style="width: 12%">Form</th>
+                <th style="width: 12%">Remaining Time</th>
+                <th style="width: 5%"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let room of getChatrooms(true)">
+                <td>{{ room.userInfo[0].username }}</td>
+                <td>{{ room.userInfo[1].username }}</td>
+                <td class="text-break">{{ room.prompt }}</td>
+                <td>{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
+                <td>{{ remainingTime | date: 'mm:ss' }}</td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                          (click)="watch(room)">Watch</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Past Rounds Section -->
+      <div *ngIf="chatroomDetails.size > 0" class="card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Past Rounds</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th style="width: 18%">Human</th>
+                <th style="width: 18%">Bot</th>
+                <th style="width: 49%">Prompt</th>
+                <th style="width: 10%">Form</th>
+                <th style="width: 5%"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let room of getChatrooms(false)">
+                <td>{{ room.userInfo[0].username }}</td>
+                <td>{{ room.userInfo[1].username }}</td>
+                <td class="text-break">{{ room.prompt }}</td>
+                <td>{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                          (click)="watch(room)">Watch</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

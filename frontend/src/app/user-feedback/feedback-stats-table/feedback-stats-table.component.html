@@ -41,7 +41,7 @@
         <ng-container *ngFor="let request of ratingRequests">
           <th class="" *ngIf="!nonOptionQuestionIds?.includes(request.id)">
             <div class="d-flex flex-row justify-content-between">
-                <span [ngbTooltip]="'σ² = '+ getStatOfRequest(request.id).variance.toFixed(3) + ' μ = ' + getStatOfRequest(request.id).average.substring(0, 4)">
+                <span [ngbTooltip]="'σ² = '+ isNaN(getStatOfRequest(request.id).variance) ? 'N/A' : getStatOfRequest(request.id).variance.toFixed(3)">
                   {{request.shortname}}
                 </span>
               <span type="button" (click)="setSorting(request.id)" class="btn btn-link p-0 text-black">

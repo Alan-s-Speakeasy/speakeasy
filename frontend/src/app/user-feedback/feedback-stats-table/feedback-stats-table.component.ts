@@ -76,11 +76,11 @@ export class FeedbackStatsTableComponent {
 
   mapValueToFeedbackRequestText(response: FeedBackStatsOfRequest): string {
     let text = response.average
-    const roundedAverage = Math.round(parseFloat(response.average)).toString()
+    const roundedAverage = Math.round(parseFloat(response.average))
     this.ratingRequests.forEach(r => {
       if (r.id == response.requestID) {
         r.options.forEach(o => {
-          if (o.value.toString() == roundedAverage) {
+          if (o.value === roundedAverage) {
             text = o.name
           }
         })

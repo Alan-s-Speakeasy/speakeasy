@@ -147,8 +147,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
                   let username = this.authorPerspective ? response.author : response.recipient;
                   response.responses.forEach(resp => {
                     if (!this.nonOptionQuestionIds.includes(resp.id)) {
-                      let current = this.chartDataPerUsername.get(username)![parseInt(resp.id) - 1].get(resp.value) || 0;
-                      this.chartDataPerUsername.get(username)![parseInt(resp.id) - 1].set(resp.value, current + 1);
+                      let current = this.chartDataPerUsername.get(username)![parseInt(resp.id)].get(resp.value) || 0;
+                      this.chartDataPerUsername.get(username)![parseInt(resp.id)].set(resp.value, current + 1);
                     }
                   });
                 }
@@ -212,7 +212,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   getChartData(usernames: string[], id: string): number[] {
-    const questionIndex = parseInt(id) - 1;
+    const questionIndex = parseInt(id);
     const allUsersData = Array.from(this.allChartData[questionIndex].values());
 
     if (usernames.length > 0) {
@@ -377,7 +377,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   updateCharts(): void {
     this.ratingRequests.forEach(f => {
       if (!this.nonOptionQuestionIds.includes(f.id)) {
-        const chartOptions = this.allChartOptions[parseInt(f.id) - 1];
+        const chartOptions = this.allChartOptions[parseInt(f.id)];
         chartOptions.series = [{
           name: "All users",
           data: this.getChartData([], f.id),

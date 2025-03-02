@@ -103,7 +103,7 @@
         </tr>
         </tbody>
       </table>
-
+      <div class="overflow-x-auto d-flex justify-content-center">
       <ngb-pagination
         [collectionSize]="pagesArrayOfUserLists[element.name].length * ITEM_PER_PAGE"
         [pageSize]="ITEM_PER_PAGE"
@@ -111,7 +111,7 @@
         [boundaryLinks]="true"
         (pageChange)="setCurrentPage(element.name, $event, false)">
       </ngb-pagination>
-
+      </div>
     </div>
   </div>
 

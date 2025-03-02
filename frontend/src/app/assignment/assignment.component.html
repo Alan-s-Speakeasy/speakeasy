@@ -159,7 +159,7 @@
 
       <!-- Extras Section -->
       <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="card h-100">
             <div class="card-header bg-light">
               <h5 class="mb-0">Admins as Bots</h5>
@@ -196,7 +196,29 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">AutomaticEvaluatorBot</h5>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <tbody>
+                <tr *ngFor="let evaluator of evaluator; let firstElement = first">
+                  <td *ngIf="firstElement" >
+                    <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator()" color="primary">
+                      {{evaluator}}
+                      <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
+                      <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
+                    </mat-checkbox>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
           <div class="card h-100">
             <div class="card-header bg-light">
               <h5 class="mb-0">AssistantBot</h5>
@@ -206,7 +228,7 @@
                 <tbody>
                 <tr *ngFor="let assistant of assistant; let firstElement = first">
                   <td *ngIf="firstElement">
-                    <mat-checkbox [checked]="assistantSelected == true"
+                    <mat-checkbox [checked]="assistantSelected"
                                   (change)="switchAssistant()"
                                   color="primary">
                       {{ assistant }}

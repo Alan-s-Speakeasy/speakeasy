@@ -48,10 +48,10 @@ export class SideNavbarComponent implements OnInit{
   links_admin = [
     {name: 'Home', url: '/panel', icon: 'pi pi-home'},
     {name: 'Chat', url: '/chat', icon: 'pi pi-comments'},
-    {name: 'Users', url: '/userStatus', icon: 'pi pi-users'},
-    {name: 'Chatrooms', url: '/chatroomStatus', icon: 'pi pi-list'},
-    {name: 'Feedbacks', url: '/feedback', icon: 'pi pi-comment'},
     {name: 'Assignments', url: '/assignment', icon: 'pi pi-check-square'},
+    {name: 'Feedbacks', url: '/feedback', icon: 'pi pi-comment'},
+    {name: 'Chatrooms', url: '/chatroomStatus', icon: 'pi pi-list'},
+    {name: 'Users', url: '/userStatus', icon: 'pi pi-users'},
   ]
     links_user = [
     {name: 'Home', url: '/panel', icon: 'pi pi-home'},

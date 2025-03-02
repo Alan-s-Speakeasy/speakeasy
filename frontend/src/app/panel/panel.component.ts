@@ -1,13 +1,14 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {Router} from "@angular/router";
-import {Subscription} from "rxjs";
+import {interval, Subscription, timer} from "rxjs";
 import {AuthService} from "../authentication.service";
 import {Title} from "@angular/platform-browser";
-import {ChatService, UserService, UserSessionDetails, ChatRoomList} from "../../../openapi";
+import {ChatService, UserService, UserSessionDetails, ChatRoomList, CountUsersResponse} from "../../../openapi";
 import {FrontendDataService} from "../frontend-data.service";
 import {CommonService} from "../common.service";
 import {AlertService} from '../alert';
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {exhaustMap} from "rxjs/operators";
 
 @Component({
   selector: 'app-panel',
@@ -20,6 +21,7 @@ export class PanelComponent implements OnInit {
     keepAfterRouteChange: true
   };
   private userDetailsSubscription!: Subscription;
+  private userCountSubscription!: Subscription;
 
   constructor(private router: Router, private frontendDataService: FrontendDataService,
               private titleService: Title,
@@ -35,11 +37,13 @@ export class PanelComponent implements OnInit {
   role!: string
   session!: UserSessionDetails
 
+  countUsers: CountUsersResponse = { countUsers: 0, countBots: 0, countHumans: 0, countBotsOnline: 0, countHumansOnline: 0 }
+
+
   ngOnInit(): void {
     this.titleService.setTitle("Panel Page")
 
     this.userDetailsSubscription = this.authService.userSessionDetails.subscribe((response) => {
-
         if (response != null) {
           this.userName = response.userDetails.username
           this.role = response.userDetails.role
@@ -54,6 +58,22 @@ export class PanelComponent implements OnInit {
             this.alertService.error("You are not logged in!", this.options) )
         }
       });
+
+    this.userCountSubscription = timer(0, 5000).pipe(
+      exhaustMap(() => this.userService.getApiUserCount())
+    ).subscribe(
+      response => {
+        if (response) {
+          console.log(response);
+          this.countUsers = response;
+          console.log(this.countUsers);
+        }
+      },
+      error => {
+        this.alertService.error("Failed to get the user count. Please try again.", this.options);
+      }
+    );
+
     this.commonService.openSseAndListenRooms()
   }
 
@@ -108,5 +128,6 @@ export class PanelComponent implements OnInit {
 
   ngOnDestroy() {
     this.userDetailsSubscription.unsubscribe();
+    this.userCountSubscription.unsubscribe();
   }
 }

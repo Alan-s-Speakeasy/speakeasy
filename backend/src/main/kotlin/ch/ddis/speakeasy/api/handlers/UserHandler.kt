@@ -1,7 +1,6 @@
 package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
-import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
 import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.sessionToken
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
@@ -25,6 +24,29 @@ class ListUsersHandler : GetRestHandler<List<UserDetails>>, AccessManagedRestHan
     override val permittedRoles = setOf(RestApiRole.ADMIN)
 
     override val route = "user/list"
+}
+
+data class CountUsersResponse(val countUsers: Int, val countBots: Int, val countHumans: Int, val countBotsOnline : Int, val countHumansOnline : Int)
+
+class CountUsersHandler : GetRestHandler<CountUsersResponse>, AccessManagedRestHandler {
+    override val permittedRoles = setOf(RestApiRole.USER)
+    override val route: String = "user/count"
+
+    @OpenApi(
+        summary = "Counts all humans and bots.",
+        path = "/api/user/count",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        tags = ["User"],
+        responses = [OpenApiResponse("200", [OpenApiContent(CountUsersResponse::class)])],
+    )
+    override fun doGet(ctx: Context): CountUsersResponse {
+        val n_users = UserManager.list().count()
+        val n_bots = UserManager.countUsersWithRole(UserRole.BOT)
+        val n_humans = UserManager.countUsersWithRole(UserRole.HUMAN) + UserManager.countUsersWithRole(UserRole.ADMIN)
+        val n_bots_online = AccessManager.listSessions().count { it.user.role == UserRole.BOT }
+        val n_humans_online = AccessManager.listSessions().count { it.user.role == UserRole.HUMAN || it.user.role == UserRole.ADMIN }
+        return CountUsersResponse(n_users, n_bots, n_humans, n_bots_online, n_humans_online)
+    }
 }
 
 class ListUserSessionsHandler : GetRestHandler<List<UserSessionDetails>>, AccessManagedRestHandler {

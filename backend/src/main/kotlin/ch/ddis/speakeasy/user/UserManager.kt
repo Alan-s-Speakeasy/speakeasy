@@ -148,6 +148,31 @@ object UserManager {
         }
     }
 
+    /**
+     * Lists all users with given role
+     *
+     * @param role The role to filter by
+     * @return List of users with the given role
+     */
+    fun listUsersWithRole(role: UserRole): List<User> = this.lock.read {
+        transaction {
+            User.find { Users.role eq role }.toList()
+        }
+    }
+
+    /**
+     * Counts all users with given role.
+     *
+     * @param role The role to filter by
+     * @return Number of users with the given role
+     */
+    fun countUsersWithRole(role: UserRole): Int = this.lock.read {
+        transaction {
+            User.find { Users.role eq role }.count()
+        }
+    }.toInt()
+
+
     fun listGroups(): List<Group> = this.lock.read {
         transaction {
             Group.all().toList() // need eager loading users outside!

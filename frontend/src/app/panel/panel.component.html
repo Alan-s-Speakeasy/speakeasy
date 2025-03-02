@@ -1,122 +1,79 @@
-<div class="container mt-3">
-
-  <br>
-
-  <div class="row p-2" *ngIf="role == 'HUMAN'">
-    <div class="col-9">
-      <h3>Hi, {{userName}}, welcome! Start with selecting an option below.</h3>
-    </div>
-    <div class="col-3">
-      <button type="button" class="btn btn-secondary float-end" (click)="openModal(modalData)">Logout</button>
-    </div>
+<div class="container mt-5">
+  <!-- Welcome Section -->
+  <div class="text-center mb-5">
+    <h1 class="display-4">Welcome, <span class="text-primary">{{ userName }}</span>!</h1>
   </div>
 
-  <div class="row p-2" *ngIf="role == 'ADMIN'">
-    <div class="col-9">
-      <h3>Hey, {{userName}}, welcome! This is the <span style="color: orangered">admin</span> panel.</h3>
-    </div>
-    <div class="col-3">
-      <button type="button" class="btn btn-secondary float-end" (click)="openModal(modalData)">Logout</button>
-    </div>
-  </div>
-
-
-  <div class="row p-2 justify-content-center" *ngIf="role == 'HUMAN'">
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey;">
-        <img src="../../assets/assessor.png" alt="Assessor image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Chat with agents and give ratings.</p>
-          <button (click)="chat()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Start Conversation</button>
+  <!-- Main Stats -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-md-4 mb-3">
+      <div class="card rounded-0 border">
+        <div class="card-body text-center py-4">
+          <h5 class="card-title">Total Users</h5>
+          <h2 class="display-4">{{ countUsers.countUsers }}</h2>
+          <p class="text-muted">Registered on platform</p>
         </div>
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey;">
-        <img src="../../assets/history.png" alt="History image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Your conversation history and ratings.</p>
-          <button (click)="checkHistory()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check History</button>
+    <div class="col-md-4 mb-3">
+      <div class="card rounded-0 border">
+        <div class="card-body text-center py-4">
+          <h5 class="card-title">Total Bots</h5>
+          <h2 class="display-4">{{ countUsers.countBots }}</h2>
+          <p class="text-muted">Bot accounts</p>
         </div>
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey">
-        <img src="../../assets/password.png" alt="Password image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Please change your default password.</p>
-          <button (click)="changePassword()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Reset Password</button>
+    <div class="col-md-4 mb-3">
+      <div class="card rounded-0 border">
+        <div class="card-body text-center py-4">
+          <h5 class="card-title">Total Humans</h5>
+          <h2 class="display-4">{{ countUsers.countHumans }}</h2>
+          <p class="text-muted">Human accounts</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row p-2 justify-content-center" *ngIf="role == 'ADMIN'">
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey">
-        <img src="../../assets/agent.png" alt="Admin Chat Image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Chat with students/agents.</p>
-          <button (click)="chat()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Start Conversation</button>
+  <!-- Online Stats -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-md-6 mb-3">
+      <div class="card rounded-0 border">
+        <div class="card-body text-center py-4">
+          <h5 class="card-title">Humans Online</h5>
+          <h2 class="display-4">{{ countUsers.countHumansOnline }}</h2>
+          <p class="text-muted">Out of {{ countUsers.countHumans }} total humans</p>
+          <div class="progress rounded-0" style="height: 6px;">
+            <div class="progress-bar rounded-0" role="progressbar"
+                 style="width: {{ (countUsers.countHumansOnline / countUsers.countHumans) * 100 }}%; background-color: #FF4500;"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey;">
-        <img src="../../assets/assessor.png" alt="Status Image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Show all students and agents.</p>
-          <button (click)="userStatus()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check Users</button>
+    <div class="col-md-6 mb-3">
+      <div class="card rounded-0 border">
+        <div class="card-body text-center py-4">
+          <h5 class="card-title">Bots Online</h5>
+          <h2 class="display-4">{{ countUsers.countBotsOnline }}</h2>
+          <p class="text-muted">Out of {{ countUsers.countBots }} total bots</p>
+          <div class="progress rounded-0" style="height: 6px;">
+            <div class="progress-bar rounded-0" role="progressbar"
+                 style="width: {{ (countUsers.countBotsOnline / countUsers.countBots) * 100 }}%; background-color: #FF4500;"></div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey">
-        <img src="../../assets/history.png" alt="Chatroom Image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Show all chatrooms.</p>
-          <button (click)="chatroomStatus()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check Chatrooms</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey">
-        <img src="../../assets/feedback.png" alt="Chatroom Image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Show all evaluation feedbacks.</p>
-          <button (click)="feedbackStatus()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check Feedback</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4 p-2">
-      <div class="card h-100" style="background-color: lightgrey">
-        <img src="../../assets/assignment.png" alt="Chatroom Image" style="width: 100%">
-        <div class="card-body d-flex flex-column">
-          <p class="card-text">Manage assignments.</p>
-          <button (click)="assignmentStatus()" type="submit" class="btn btn-primary mt-auto" style="width:70%;">Check assignments</button>
-        </div>
-      </div>
+  <!-- Total Online -->
+  <div class="card rounded-0 border mx-auto" style="max-width: 400px;">
+    <div class="card-body text-center py-5">
+      <h5 class="card-title">Total Users Online</h5>
+      <h1 class="display-3">{{ countUsers.countHumansOnline + countUsers.countBotsOnline }}</h1>
+      <p class="text-muted">Out of {{ countUsers.countUsers }} total registered users</p>
     </div>
   </div>
 </div>
-
-<ng-template #modalData let-modal>
-  <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title">Logout</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
-      <span aria-hidden="true">×</span>
-    </button>
-  </div>
-  <div class="modal-body">
-    <p>Are you sure you want to log out from your current session?</p>
-  </div>
-  <div class="modal-footer">
-    <button type="button" ngbAutofocus class="btn btn-danger" (click)="modal.close(); userLogout()">Confirm</button>
-  </div>
-</ng-template>

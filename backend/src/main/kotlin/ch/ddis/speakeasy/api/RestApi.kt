@@ -39,6 +39,7 @@ object RestApi {
             GetCurrentUserHandler(),
             ListUsersHandler(),
             ListUserSessionsHandler(),
+            CountUsersHandler(),
             AddUserHandler(),
             RemoveUserHandler(),
             ChangePasswordHandler(),

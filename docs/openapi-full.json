@@ -1742,6 +1742,28 @@
         "security" : [ ]
       }
     },
+    "/api/user/count" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Counts all humans and bots.",
+        "operationId" : "getApiUserCount",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CountUsersResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/user/current" : {
       "get" : {
         "tags" : [ "User" ],
@@ -2232,6 +2254,33 @@
           }
         },
         "required" : [ "alias", "username" ]
+      },
+      "CountUsersResponse" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "countUsers" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "countBots" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "countHumans" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "countBotsOnline" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "countHumansOnline" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "countUsers", "countBots", "countHumans", "countBotsOnline", "countHumansOnline" ]
       },
       "CreateGroupRequest" : {
         "type" : "object",

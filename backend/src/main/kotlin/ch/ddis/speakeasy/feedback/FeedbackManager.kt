@@ -96,6 +96,13 @@ object FeedbackManager {
         return forms.find { it.formName == formName }!!  // throw NullPointerException
     }
 
+    /**
+     * Checks if the given formName is a valid form name. If formname is empty, it is considered valid.
+     *
+     * @param formName The name of the feedback form
+     *
+     * @return true if the formName is valid, false otherwise.
+     */
     fun isValidFormName(formName: String): Boolean {
         if (formName == "") {
             return true
@@ -107,6 +114,7 @@ object FeedbackManager {
 
     /**
      * Write the feedback responses to the CSV file.
+     * Return if the feedback form is not found.
      *
      * @param userSession The user session that filled the feedback form.
      * @param roomId The room ID where the feedback was filled.

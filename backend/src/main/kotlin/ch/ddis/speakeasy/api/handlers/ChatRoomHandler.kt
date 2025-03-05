@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -510,7 +511,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
 
 }
 
-data class ChatRequest(val username: String)
+data class ChatRequest(val username: String, val formName: String = "")
 
 class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -519,12 +520,16 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     private val developmentBotUsername: String = "TesterBot"
 
     @OpenApi(
-        summary = "Creates a Chatroom with another user.",
+        summary = "Creates a Chatroom with another user. If formname is not provided, no form is used.",
         path = "/api/rooms/request",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatRequest::class)]),
         tags = ["Chat"],
+        queryParams = [
+            OpenApiParam("formName", String::class, "The name of the form to be used for the chatroom",
+                required = false),
+        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
@@ -544,8 +549,9 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val request = ctx.bodyAsClass(ChatRequest::class.java)
 
+        // Check if the requested user is connected. This should actually be removed, as we want to allow users
+        // to request chatrooms with offline users.
         val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
-
         if (requestedSessions.isEmpty()) {
             throw ErrorStatusException(
                 404,
@@ -564,10 +570,14 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             chatRoomTime = 60 * 60 * 1000
         }
 
+        val formRef = request.formName
+        if (formRef.isNotBlank() && !FeedbackManager.isValidFormName(formRef)) {
+            throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
+        }
+
         ChatRoomManager.create(
             userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(username)!!),
-//          formRef = FeedbackManager.DEFAULT_FORM_NAME, // TODO: parameterize formRef for requested chatrooms
-            formRef = "",
+            formRef = formRef,
             log = true,
             prompt = null,
             endTime = System.currentTimeMillis() + chatRoomTime)

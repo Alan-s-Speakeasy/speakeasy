@@ -41,13 +41,27 @@
 
     <div class="bg-light h-auto p-3">
       <div class="d-flex flex-row mb-1 mx-2 bg-light">
-        <p-avatar
-          label="{{paneLog.otherAlias[0].toUpperCase()}}"
-          styleClass="mr-2"
-          size="xlarge"
-          [style]="{ 'background-color': '#dee9fc', color: '#1a2551' }"
-          shape="circle" />
-        <div class="d-flex flex-column justify-content-center ms-2"> <h5 class="mt-2">{{paneLog.otherAlias}} </h5>
+        <div class="position-relative">
+          <p-avatar
+            label="{{paneLog.otherAlias[0].toUpperCase()}}"
+            styleClass="mr-2"
+            size="xlarge"
+            [style]="{ 'background-color': '#dee9fc', color: '#1a2551' }"
+            shape="circle" />
+          <!-- Online status indicator -->
+          <span
+            class="position-absolute bottom-0 end-0 p-1 rounded-circle"
+            [ngClass]="{'bg-success': paneLog.isOtherOnline, 'bg-secondary': !paneLog.isOtherOnline}"
+            style="width: 12px; height: 12px;"
+            [title]="paneLog.isOtherOnline ? 'Online' : 'Offline'">
+          </span>
+        </div>
+        <div class="d-flex flex-column justify-content-center ms-2">
+          <div class="d-flex align-items-center">
+            <h5 class="mt-2 mb-0 me-2">{{paneLog.otherAlias}}</h5>
+            <small *ngIf="paneLog.isOtherOnline" class="text-success">online</small>
+            <small *ngIf="!paneLog.isOtherOnline" class="text-secondary">offline</small>
+          </div>
           <i>Bot</i>
         </div>
       </div>
@@ -166,7 +180,11 @@
   <div class="chat">
     <div class="row p-2">
       <div class="chat-header text-center" style="white-space: break-spaces">
-        <h5>Chat with {{paneLog.otherAlias}}<span *ngIf="paneLog.active && remainingTime" style="color: darkred"></span></h5>
+        <h5>
+          Chat with {{paneLog.otherAlias}}
+          <span *ngIf="paneLog.isOtherOnline" class="badge bg-success ms-2" style="font-size: 0.6em;">online</span>
+          <span *ngIf="!paneLog.isOtherOnline" class="badge bg-secondary ms-2" style="font-size: 0.6em;">offline</span>
+        </h5>
       </div>
     </div>
 

@@ -63,7 +63,7 @@ export class CommonService {
           // reset lastReceivedTime so that the remainingTime can be corrected
           this.lastReceivedTime = Date.now()
           response.rooms.forEach( (roomInfo) => {
-            chatService.getApiRoomByRoomIdBySince(roomInfo.uid, 0).pipe(take(1)).subscribe(
+            chatService.getApiRoomByRoomId(roomInfo.uid, 0).pipe(take(1)).subscribe(
               (state) => {
                 const initMessages = state.messages.map( (restMsg) => {
                   return {
@@ -234,7 +234,7 @@ export class CommonService {
    *  Get a chat room status
    */
   public getChatRoomStatus(roomID: string) : Observable<boolean> {
-    return this.chatService.getApiRoomByRoomIdBySince(roomID, 0, undefined).pipe(
+    return this.chatService.getApiRoomByRoomId(roomID, 0, undefined).pipe(
       map(response =>
         response.info.remainingTime > 0
       ),

@@ -72,6 +72,7 @@ export interface PaneLog {
   spectate: boolean, // true: the chatroom is in spectate mode, the chatroom can be still ongoing.
   history?: boolean, // true: the chatroom is in history mode, no new messages will be added
   testerBotAlias?: string
+  isOtherOnline?: boolean // true: the other user is online
 }
 
 export interface Ratings {

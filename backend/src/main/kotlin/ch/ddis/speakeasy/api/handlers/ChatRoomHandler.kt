@@ -248,19 +248,19 @@ data class ChatRoomState(
 
 class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.ADMIN, RestApiRole.EVALUATOR)
-    override val route = "room/{roomId}/{since}"
+    override val route = "room/{roomId}"
 
     @OpenApi(
         summary = "Get state and all messages for a chat room since a specified time",
-        path = "/api/room/{roomId}/{since}",
+        path = "/api/room/{roomId}",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Chat"],
         pathParams = [
             OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
-            OpenApiParam("since", Long::class, "Timestamp for new messages", required = true),
         ],
         queryParams = [
+            OpenApiParam("since", Long::class, "Timestamp for new messages", required = true),
             OpenApiParam("session", String::class, "Session Token")
         ],
         responses = [
@@ -281,7 +281,8 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val since = ctx.pathParamMap().getOrDefault("since", "0").toLongOrNull() ?: 0
+        val since = ctx.queryParam("since")?.toLongOrNull()
+            ?: throw ErrorStatusException(400, "Parameter 'since' is missing!/ill formatted", ctx)
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
@@ -520,16 +521,12 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
     private val developmentBotUsername: String = "TesterBot"
 
     @OpenApi(
-        summary = "Creates a Chatroom with another user. If formname is not provided, no form is used.",
+        summary = "Creates a Chatroom with another user. If formname is not provided, no form is used",
         path = "/api/rooms/request",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.POST],
         requestBody = OpenApiRequestBody([OpenApiContent(ChatRequest::class)]),
         tags = ["Chat"],
-        queryParams = [
-            OpenApiParam("formName", String::class, "The name of the form to be used for the chatroom",
-                required = false),
-        ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
             OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
@@ -552,9 +549,9 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         // Check if the requested user is connected. This should actually be removed, as we want to allow users
         // to request chatrooms with offline users.
         val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
-        if (requestedSessions.isEmpty()) {
+        if (false && requestedSessions.isEmpty()) {
             throw ErrorStatusException(
-                404,
+                403,
                 "No session found for user ${request.username}",
                 ctx
             )
@@ -682,6 +679,55 @@ class CloseChatRoomHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestH
 
         return SuccessStatus("Chatroom closed")
 
+    }
+}
+
+class GetChatRoomUsersStatusHandler : GetRestHandler<Map<String, Boolean>>, AccessManagedRestHandler {
+    override val permittedRoles = setOf(RestApiRole.USER)
+    override val route = "room/{roomId}/users-status"
+
+    @OpenApi(
+        summary = "Get users and their online status for a chat room",
+        path = "/api/room/{roomId}/users-status",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.GET],
+        tags = ["Chat"],
+        pathParams = [
+            OpenApiParam("roomId", String::class, "Id of the Chatroom", required = true),
+        ],
+        queryParams = [
+            OpenApiParam("session", String::class, "Session Token")
+        ],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(Map::class)]),
+            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doGet(ctx: Context): Map<String, Boolean> {
+
+        val session = AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
+            401,
+            "Unauthorized",
+            ctx
+        )
+        val roomId = (ctx.pathParamMap().getOrElse("roomId") {
+            throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
+        }).UID()
+
+        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+
+        if (!room.users.containsKey(session.user.id.UID())) {
+            throw ErrorStatusException(401, "Unauthorized", ctx)
+        }
+
+        // Get all active sessions to check which users are online
+        val activeSessions = AccessManager.listSessions()
+        // Create a map of user aliases to their online status
+        return room.users.entries.associate { (userId, alias) ->
+            val isOnline = activeSessions.any { it.user.id.UID() == userId }
+            alias to isOnline
+        }
     }
 }
 

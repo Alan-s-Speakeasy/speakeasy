@@ -5,7 +5,7 @@
     <h1 class="">Welcome, <span class="text-primary">{{ userName }}</span>!</h1>
   </div>
 
-  <!-- Main Stats - First Line -->
+  <!-- Main Stats -->
   <div class="row justify-content-center mb-5">
     <div class="col-md-4 mb-3">
       <div class="card rounded-0 border">
@@ -38,14 +38,14 @@
     </div>
   </div>
 
-  <!-- Online Stats - Second Line -->
+  <!-- Online Stats -->
   <div class="row justify-content-center mb-5">
-    <div class="col-md-4 mb-3">
+    <div class="col-md-6 mb-3">
       <div class="card rounded-0 border">
         <div class="card-body text-center py-4">
           <h5 class="card-title">Humans Online</h5>
           <h2 class="display-4">{{ countUsers.countHumansOnline }}</h2>
-          <p class="text-muted">Out of {{ countUsers.countHumans }}</p>
+          <p class="text-muted">Out of {{ countUsers.countHumans }} total humans</p>
           <div class="progress rounded-0" style="height: 6px;">
             <div class="progress-bar rounded-0" role="progressbar"
                  style="width: {{ (countUsers.countHumansOnline / countUsers.countHumans) * 100 }}%; background-color: #FF4500;"></div>
@@ -54,12 +54,12 @@
       </div>
     </div>
 
-    <div class="col-md-4 mb-3">
+    <div class="col-md-6 mb-3">
       <div class="card rounded-0 border">
         <div class="card-body text-center py-4">
           <h5 class="card-title">Bots Online</h5>
           <h2 class="display-4">{{ countUsers.countBotsOnline }}</h2>
-          <p class="text-muted">Out of {{ countUsers.countBots }}</p>
+          <p class="text-muted">Out of {{ countUsers.countBots }} total bots</p>
           <div class="progress rounded-0" style="height: 6px;">
             <div class="progress-bar rounded-0" role="progressbar"
                  style="width: {{ (countUsers.countBotsOnline / countUsers.countBots) * 100 }}%; background-color: #FF4500;"></div>
@@ -67,19 +67,14 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="col-md-4 mb-3">
-      <div class="card rounded-0 border">
-        <div class="card-body text-center py-4" style="background-color: rgba(13, 110, 253, 0.05);">
-          <h5 class="card-title fw-bold">Total Online</h5>
-          <h2 class="display-4">{{ countUsers.countHumansOnline + countUsers.countBotsOnline }}</h2>
-          <p class="text-muted">Out of {{ countUsers.countUsers }}</p>
-          <div class="progress rounded-0" style="height: 8px;">
-            <div class="progress-bar rounded-0" role="progressbar"
-                 style="width: {{ ((countUsers.countHumansOnline + countUsers.countBotsOnline) / countUsers.countUsers) * 100 }}%; background-color: #0d6efd;"></div>
-          </div>
-        </div>
-      </div>
+  <!-- Total Online -->
+  <div class="card rounded-0 border mx-auto" style="max-width: 400px;">
+    <div class="card-body text-center py-5">
+      <h5 class="card-title">Total Users Online</h5>
+      <h1 class="display-3">{{ countUsers.countHumansOnline + countUsers.countBotsOnline }}</h1>
+      <p class="text-muted">Out of {{ countUsers.countUsers }} total registered users</p>
     </div>
   </div>
 </div>

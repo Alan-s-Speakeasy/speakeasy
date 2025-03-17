@@ -1174,6 +1174,77 @@
         },
         "deprecated" : false,
         "security" : [ ]
+      },
+      "get" : {
+        "tags" : [ "Chat" ],
+        "summary" : "Get state and all messages for a chat room since a specified time",
+        "operationId" : "getApiRoomByRoomId",
+        "parameters" : [ {
+          "name" : "roomId",
+          "in" : "path",
+          "description" : "Id of the Chatroom",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "since",
+          "in" : "query",
+          "description" : "Timestamp for new messages",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "session",
+          "in" : "query",
+          "description" : "Session Token",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChatRoomState"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
       }
     },
     "/api/room/{roomId}/reaction" : {
@@ -1248,11 +1319,11 @@
         "security" : [ ]
       }
     },
-    "/api/room/{roomId}/{since}" : {
+    "/api/room/{roomId}/users-status" : {
       "get" : {
         "tags" : [ "Chat" ],
-        "summary" : "Get state and all messages for a chat room since a specified time",
-        "operationId" : "getApiRoomByRoomIdBySince",
+        "summary" : "Get users and their online status for a chat room",
+        "operationId" : "getApiRoomByRoomIdUsersStatus",
         "parameters" : [ {
           "name" : "roomId",
           "in" : "path",
@@ -1262,17 +1333,6 @@
           "allowEmptyValue" : false,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "name" : "since",
-          "in" : "path",
-          "description" : "Timestamp for new messages",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }, {
           "name" : "session",
@@ -1291,7 +1351,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ChatRoomState"
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "object"
+                  }
                 }
               }
             }
@@ -1580,7 +1643,7 @@
     "/api/rooms/request" : {
       "post" : {
         "tags" : [ "Chat" ],
-        "summary" : "Creates a Chatroom with another user.",
+        "summary" : "Creates a Chatroom with another user. If formname is not provided, no form is used",
         "operationId" : "postApiRoomsRequest",
         "parameters" : [ ],
         "requestBody" : {
@@ -2108,9 +2171,12 @@
         "properties" : {
           "username" : {
             "type" : "string"
+          },
+          "formName" : {
+            "type" : "string"
           }
         },
-        "required" : [ "username" ]
+        "required" : [ "username", "formName" ]
       },
       "ChatRoomAdminInfo" : {
         "type" : "object",

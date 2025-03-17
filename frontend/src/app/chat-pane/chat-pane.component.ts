@@ -4,7 +4,14 @@ import {UntypedFormControl} from "@angular/forms";
 import {Subscription, interval} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog, SseRoomState} from "../new_data";
-import {ChatMessageReaction, ChatRoomState, ChatService, FeedbackResponseList, FeedbackService} from "../../../openapi";
+import {
+  ChatMessageReaction,
+  ChatRoomState,
+  ChatService,
+  FeedbackResponseList,
+  FeedbackService,
+  UserService
+} from "../../../openapi";
 import {
   Component,
   ElementRef,
@@ -33,6 +40,8 @@ export class ChatPaneComponent implements OnInit {
   };
 
   private chatMessagesSubscription!: Subscription;
+  private usersOnlineStatusSubscription!: Subscription;
+
   @Input() paneLog!: PaneLog
   @Input() numQueries!: number
 
@@ -61,7 +70,7 @@ export class ChatPaneComponent implements OnInit {
       // If it is viewed as a history, the subscription will only execute once.
       this.chatMessagesSubscription = interval(2000)
         .pipe(exhaustMap(_ => {
-          return this.chatService.getApiRoomByRoomIdBySince(this.paneLog.roomID, this.lastGetTime)
+          return this.chatService.getApiRoomByRoomId(this.paneLog.roomID, this.lastGetTime)
         })).subscribe((response) => {
             // update the remainingTime in real-time from the backend
             this.remainingTime = response.info.remainingTime
@@ -92,6 +101,23 @@ export class ChatPaneComponent implements OnInit {
           (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
         );
     }
+    this.usersOnlineStatusSubscription = interval(5000).pipe(
+      exhaustMap(_ => {
+        return this.chatService.getApiRoomByRoomIdUsersStatus(this.paneLog.roomID)
+      })
+    ).subscribe({
+      next: (response) => {
+        // The API returns a map of user aliases to their online status
+        // We want to know if the other user is online
+        if (response && this.paneLog.otherAlias) {
+          this.paneLog.isOtherOnline = !!response[this.paneLog.otherAlias];
+        }
+      },
+      error: (error) => {
+        console.log("Error retrieving users online status:", error);
+      }
+    });
+
   }
 
   private handleChatSubscription(response: SseRoomState | ChatRoomState, isSse: boolean) {

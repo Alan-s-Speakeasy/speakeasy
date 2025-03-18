@@ -62,7 +62,6 @@
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -78,31 +77,87 @@
       </app-feedback-stats-table>
     </div>
 
-
     <div *ngIf="selectedUsernames.length <= 4; else errorMessage">
-      <div class="row mt-5 mb-5 h-100">
-        <div class="col-4" id="chart" *ngFor="let chartOptions of allChartOptions">
-          <apx-chart
-            [series]="chartOptions.series"
-            [legend]="chartOptions.legend"
-            [colors]="chartOptions.colors"
-            [chart]="chartOptions.chart"
-            [dataLabels]="chartOptions.dataLabels"
-            [plotOptions]="chartOptions.plotOptions"
-            [yaxis]="chartOptions.yaxis"
-            [xaxis]="chartOptions.xaxis"
-            [title]="chartOptions.title"
-          ></apx-chart>
+      <div class="row mt-4">
+        <!-- Global Feedback Overview Chart with NgbCollapse -->
+        <div class="col-12 mb-4">
+          <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center" style="cursor: pointer;" (click)="isRadarCollapsed = !isRadarCollapsed">
+              <h5 class="card-title mb-0">Average overview</h5>
+              <span class="collapse-icon">
+                <i class="bi" [ngClass]="isRadarCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+              </span>
+            </div>
+            <div [ngbCollapse]="isRadarCollapsed">
+              <div class="card-body">
+                <div id="radarChart">
+                  <apx-chart
+                    [series]="radarChartOptions.series"
+                    [chart]="radarChartOptions.chart"
+                    [labels]="radarChartOptions.labels"
+                    [title]="radarChartOptions.title"
+                    [colors]="radarChartOptions.colors"
+                    [stroke]="radarChartOptions.stroke"
+                    [markers]="radarChartOptions.markers"
+                    [fill]="radarChartOptions.fill"
+                    [yaxis]="radarChartOptions.yaxis"
+                  ></apx-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual Charts Section with Collapsible Functionality -->
+      <div class="row mt-3 mb-5">
+        <div class="col-12 mb-2">
+          <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center" style="cursor: pointer;" (click)="isIndividualChartsCollapsed = !isIndividualChartsCollapsed">
+              <h5 class="card-title mb-0">Individual charts</h5>
+              <span class="collapse-icon">
+                <i class="bi" [ngClass]="isIndividualChartsCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+              </span>
+            </div>
+            <div [ngbCollapse]="isIndividualChartsCollapsed">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 col-lg-4 mb-4" *ngFor="let chartOptions of allChartOptions">
+                    <div class="card h-100">
+                      <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">{{chartOptions.title.text}}</h6>
+                      </div>
+                      <div class="card-body">
+                        <apx-chart
+                          [series]="chartOptions.series"
+                          [legend]="chartOptions.legend"
+                          [colors]="chartOptions.colors"
+                          [chart]="chartOptions.chart"
+                          [dataLabels]="chartOptions.dataLabels"
+                          [plotOptions]="chartOptions.plotOptions"
+                          [yaxis]="chartOptions.yaxis"
+                          [xaxis]="chartOptions.xaxis"
+                          [title]="chartOptions.title"
+                        ></apx-chart>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <ng-template #errorMessage>
-      <div class="row mt-5 mb-5">
+      <div class="row mt-4">
         <div class="col-12">
           <div class="alert alert-warning text-center" role="alert">
-            More than 4 users cannot be plotted.
+            Please select 4 or fewer users to display charts and analytics.
           </div>
         </div>
       </div>
     </ng-template>
+  </div>
+</div>

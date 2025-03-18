@@ -1,14 +1,14 @@
-import {Component, inject, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {
-  FrontendAverageFeedback,
-  FrontendUserFeedback
-} from "../new_data";
+import {Component, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {FrontendAverageFeedback, FrontendUserFeedback} from "../new_data";
 import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../common.service";
 import {
-  AdminService, FeedbackRequest, FeedbackResponse,
-  FeedbackService, FeedBackStatsOfRequest
+  AdminService,
+  FeedbackRequest,
+  FeedbackResponse,
+  FeedbackService,
+  FeedBackStatsOfRequest
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {HttpClient} from '@angular/common/http';
@@ -17,13 +17,18 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {
   ApexAxisChartSeries,
   ApexChart,
-  ChartComponent,
   ApexDataLabels,
+  ApexFill,
+  ApexLegend,
+  ApexMarkers,
+  ApexNonAxisChartSeries,
   ApexPlotOptions,
-  ApexYAxis,
+  ApexResponsive,
+  ApexStroke,
   ApexTitleSubtitle,
   ApexXAxis,
-  ApexLegend
+  ApexYAxis,
+  ChartComponent
 } from "ng-apexcharts";
 
 export type ChartOptions = {
@@ -36,6 +41,20 @@ export type ChartOptions = {
   yaxis: ApexYAxis;
   xaxis: ApexXAxis;
   title: ApexTitleSubtitle;
+};
+
+// Add this type definition with your other type definitions
+export type RadarChartOptions = {
+  series: ApexNonAxisChartSeries;
+  chart: ApexChart;
+  labels: string[];
+  title: ApexTitleSubtitle;
+  colors: any[];
+  stroke: ApexStroke;
+  markers: ApexMarkers;
+  fill: ApexFill;
+  responsive: ApexResponsive[];
+  yaxis: ApexYAxis;
 };
 
 const COLORS_BARS = ['#ff9933', '#0066ff', '#33cc33', '#cc33ff', '#ff3333'];
@@ -75,6 +94,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   chartDataPerUsername: Map<string, Map<string, number>[]> = new Map<string, Map<string, number>[]>()
   @ViewChild("chart") chart: ChartComponent | undefined;
   allChartOptions: Partial<ChartOptions>[] | any[] = [];
+  radarChartOptions: Partial<RadarChartOptions> | any = {};
 
   toggleElement: number = -1
   authorPerspective: boolean = true
@@ -88,10 +108,13 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   selectedUsernamesChartData: Map<string, Map<string, Array<number>>> = new Map<string, Map<string, Array<number>>>()
   allChartData: Map<string, number>[] = []
 
+
   nonOptionQuestionIds: string[] = []
 
   page = 1;
   pageSize = 10;
+  isRadarCollapsed: boolean = true;
+  isIndividualChartsCollapsed : boolean = true;
 
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback");
@@ -108,59 +131,59 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     });
   }
 
-    fetchFeedback(): void {
-      this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
-          this.ratingRequests = feedbackForm.requests;
-          feedbackForm.requests.forEach((request) => {
-            if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {
-              this.nonOptionQuestionIds.push(request.id);
-            }
-          });
+  fetchFeedback(): void {
+    this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
+        this.ratingRequests = feedbackForm.requests;
+        feedbackForm.requests.forEach((request) => {
+          if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {
+            this.nonOptionQuestionIds.push(request.id);
+          }
+        });
 
-          this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName, this.authorPerspective).subscribe((r) => {
-            this.averageFeedback = [];
-            this.usernames = [];
+        this.adminService.getApiFeedbackaverageByFormName(this.selectedFormName, this.authorPerspective).subscribe((r) => {
+          this.averageFeedback = [];
+          this.usernames = [];
+          let responses = this.chooseAssignments ? r.assigned : r.requested;
+          responses.forEach(average => {
+            this.averageFeedback.push({
+              username: average.username,
+              responses: average.statsOfResponsePerRequest
+            });
+            this.usernames.push(average.username);
+          });
+          this.usernames.sort((a, b) => a.localeCompare(b));
+          this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username));
+          this.statsOfAllRequest = r.statsOfAllRequest;
+
+          this.adminService.getApiFeedbackhistoryFormByFormName(this.selectedFormName).subscribe((r) => {
+            this.userFeedback = [];
+            this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername();
             let responses = this.chooseAssignments ? r.assigned : r.requested;
-            responses.forEach(average => {
-              this.averageFeedback.push({
-                username: average.username,
-                responses: average.statsOfResponsePerRequest
+            responses.forEach(response => {
+              this.userFeedback.push({
+                author: response.author,
+                recipient: response.recipient,
+                roomId: response.room,
+                responses: response.responses
               });
-              this.usernames.push(average.username);
-            });
-            this.usernames.sort((a, b) => a.localeCompare(b));
-            this.averageFeedback.sort((a, b) => a.username.localeCompare(b.username));
-            this.statsOfAllRequest = r.statsOfAllRequest;
-
-            this.adminService.getApiFeedbackhistoryFormByFormName(this.selectedFormName).subscribe((r) => {
-              this.userFeedback = [];
-              this.chartDataPerUsername = this.generateEmptyChartBucketsPerUsername();
-              let responses = this.chooseAssignments ? r.assigned : r.requested;
-              responses.forEach(response => {
-                this.userFeedback.push({
-                  author: response.author,
-                  recipient: response.recipient,
-                  roomId: response.room,
-                  responses: response.responses
+              if (this.ratingRequests) {
+                let username = this.authorPerspective ? response.author : response.recipient;
+                response.responses.forEach(resp => {
+                  if (!this.nonOptionQuestionIds.includes(resp.id)) {
+                    let current = this.chartDataPerUsername.get(username)![parseInt(resp.id)].get(resp.value) || 0;
+                    this.chartDataPerUsername.get(username)![parseInt(resp.id)].set(resp.value, current + 1);
+                  }
                 });
-                if (this.ratingRequests) {
-                  let username = this.authorPerspective ? response.author : response.recipient;
-                  response.responses.forEach(resp => {
-                    if (!this.nonOptionQuestionIds.includes(resp.id)) {
-                      let current = this.chartDataPerUsername.get(username)![parseInt(resp.id)].get(resp.value) || 0;
-                      this.chartDataPerUsername.get(username)![parseInt(resp.id)].set(resp.value, current + 1);
-                    }
-                  });
-                }
-              });
-              this.updateUsernameAndCharts(); // Update charts AFTER all data is fetched
+              }
             });
+            this.updateUsernameAndCharts(); // Update charts AFTER all data is fetched
           });
-        },
-        (error) => {
-          console.log("Ratings form for this chat room is not retrieved properly.", error);
-        }
-      );
+        });
+      },
+      (error) => {
+        console.log("Ratings form for this chat room is not retrieved properly.", error);
+      }
+    );
   }
 
   /**
@@ -174,14 +197,14 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     const usernames_str = this.selectedUsernames.join(",");
     this.feedbackService.getApiFeedbackaverageexportByFormName(this.selectedFormName, usernames_str, this.authorPerspective)
       .subscribe((response) => {
-      const blob = new Blob([response], {type: 'text/csv'});
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'feedback.csv';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
+        const blob = new Blob([response], {type: 'text/csv'});
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'feedback.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
   }
 
   generateEmptyChartBuckets(): Map<string, number>[] {
@@ -211,7 +234,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     return res;
   }
 
-  getChartData(usernames: string[], id: string): number[] {
+  getIndividualChartData(usernames: string[], id: string): number[] {
     const questionIndex = parseInt(id);
     const allUsersData = Array.from(this.allChartData[questionIndex].values());
 
@@ -291,24 +314,26 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     }
 
     if (this.allChartOptions.length === 0) {
-      this.generateCharts();
+      this.generateIndividualCharts();
+      this.generateRadarChart()
     } else {
       this.updateCharts();
+      this.updateRadarChart()
     }
   }
 
-  generateCharts(): void {
+  generateIndividualCharts(): void {
     this.ratingRequests.forEach(f => {
       if (!this.nonOptionQuestionIds.includes(f.id)) {
         let series: ApexAxisChartSeries = [{
           name: "All users",
-          data: this.getChartData([], f.id),
+          data: this.getIndividualChartData([], f.id),
         }];
         if (this.plottedUsernames.length > 0) {
           this.plottedUsernames.forEach(username => {
             series.push({
               name: username,
-              data: this.getChartData([username], f.id)
+              data: this.getIndividualChartData([username], f.id)
             });
           });
         }
@@ -380,7 +405,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
         const chartOptions = this.allChartOptions[parseInt(f.id)];
         chartOptions.series = [{
           name: "All users",
-          data: this.getChartData([], f.id),
+          data: this.getIndividualChartData([], f.id),
           color: "#3954ea",
         }];
 
@@ -388,13 +413,100 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
           let username = this.plottedUsernames[index];
           chartOptions.series.push({
             name: username,
-            data: this.getChartData([username], f.id),
+            data: this.getIndividualChartData([username], f.id),
             color: COLORS_BARS[index % COLORS_BARS.length]
           });
         }
       }
     });
   }
+
+  generateRadarChart(): void {
+    // Extract questions shortnames for radar chart labels
+    const labels: string[] = this.ratingRequests
+      .filter(f => !this.nonOptionQuestionIds.includes(f.id))
+      .map(f => f.shortname);
+
+    // Calculate average score for each question across all users
+    const radarData: number[] = [];
+
+    // This could typically use the backend to avoid recomputing this
+    this.ratingRequests.forEach((request, idx) => {
+      if (!this.nonOptionQuestionIds.includes(request.id)) {
+        // Calculate weighted average for this question
+        let totalWeight = 0;
+        let weightedSum = 0;
+
+        // Get all user data for this question
+        const questionIndex = parseInt(request.id);
+        this.allChartData[questionIndex].forEach((count, option) => {
+          // Convert option (which is a string) to a numeric value
+          const numericValue = parseFloat(option);
+          weightedSum += numericValue * count;
+          totalWeight += count;
+        });
+
+        // Calculate average and push to radar data
+        const average = totalWeight > 0 ? weightedSum / totalWeight : 0;
+        radarData.push(parseFloat(average.toFixed(2)));
+      }
+    });
+
+    this.radarChartOptions = {
+      series: [
+        {
+          name: "Global Average",
+          data: radarData,
+          color: "#f60a0a",
+          stroke: {
+            curve: "smooth"
+          }
+        }
+      ],
+      chart: {
+        height: 600,
+        type: "radar",
+        toolbar: {
+          show: true,
+        }
+      },
+      stroke: {
+        width: 2,
+        dashArray: [4, 0]  // first series dashed (pattern length of 4), subsequent series solid
+      },
+      fill: {
+        opacity: [0, 0.1,0.1, 0.1, 0.1, 0.1]
+      },
+      markers: {
+        size: 2,
+        hover: {
+          size: 4
+        }
+      },
+      labels: labels,
+      yaxis: {
+        min: -2,
+        max: 2,
+        tickAmount: 4
+      }
+    };
+  }
+
+  updateRadarChart(): void {
+    if (!this.radarChartOptions) {
+      return;
+    }
+    const radarData = this.plottedUsernames.map(username => this.averageFeedback.find(f => f.username === username)).filter(f => f !== undefined);
+    this.radarChartOptions.series = [
+      this.radarChartOptions.series[0],  // Keep the first item (Global Average)
+      ...radarData.map((f, index) => ({
+        name: f?.username,
+        data: f?.responses.filter(resp => !this.nonOptionQuestionIds.includes(resp.requestID)).map(resp => parseFloat(resp.average)),
+        color: COLORS_BARS[index % COLORS_BARS.length]
+      }))
+    ];
+  }
+
 
   openImpression(content: any, impression: FeedbackResponse): void {
     this.impressionToRead = impression.value;

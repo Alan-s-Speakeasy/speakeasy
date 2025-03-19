@@ -399,8 +399,8 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
             assignment = assignmentRequested,
             formName = formName
         )
-        // Get content of requests
-        val requestIdToShortName = FeedbackManager.readFeedbackFrom(formName).requests.associateBy({ it.id }, { it.shortname })
+        // This also filters out textual questions, so we don't include them in the CSV
+        val requestIdToShortName = FeedbackManager.readFeedbackFrom(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
         ctx.outputStream().use { outputStream ->
             // Structure of the csv file : username, N, request1, request2, ...
             val writer = CSVWriterBuilder(outputStream.writer()).build()

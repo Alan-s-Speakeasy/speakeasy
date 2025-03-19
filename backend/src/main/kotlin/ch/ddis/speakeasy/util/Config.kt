@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.util
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Config(
@@ -11,7 +12,11 @@ data class Config(
     val enableSsl: Boolean = false,
     val keystorePath: String = "keystore.jks",
     val keystorePassword: String = "password",
-    val dataPath: String = "data"
+    val dataPath: String = "data",
+    // Amount of request allowed per rateLimitUnit.
+    val rateLimit: Int = 5,
+    // Time unit for rate limiting.
+    val rateLimitUnit: TimeUnit = TimeUnit.SECONDS
     ){
 
     /**

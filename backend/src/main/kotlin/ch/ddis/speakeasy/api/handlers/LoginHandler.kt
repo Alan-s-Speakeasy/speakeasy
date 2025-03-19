@@ -7,7 +7,9 @@ import ch.ddis.speakeasy.user.UserSessionDetails
 import ch.ddis.speakeasy.util.getOrCreateSessionToken
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
+import io.javalin.http.util.NaiveRateLimit
 import io.javalin.openapi.*
+import java.util.concurrent.TimeUnit
 
 class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
 
@@ -27,6 +29,9 @@ class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
         ]
     )
     override fun doPost(ctx: Context): UserSessionDetails {
+        // Should prevent to a certain extent brute force attacks
+        // This is an additional, tighter rate limit as the global one in RestApi.kt.
+        NaiveRateLimit.requestPerTimeUnit(ctx, 7, TimeUnit.MINUTES)
 
         val loginRequest = try {
             ctx.bodyAsClass(LoginRequest::class.java)

@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.before
 import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.http.staticfiles.Location
+import io.javalin.http.util.NaiveRateLimit
 import io.javalin.json.JavalinJackson
 import io.javalin.openapi.CookieAuth
 import io.javalin.openapi.OpenApiContact
@@ -163,6 +165,9 @@ object RestApi {
                 }
             }
             path("api") {
+                before { ctx ->
+                    NaiveRateLimit.requestPerTimeUnit(ctx, config.rateLimit, config.rateLimitUnit)
+                }
                 apiRestHandlers.forEach { handler ->
                     path(handler.route) {
 

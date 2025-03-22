@@ -172,7 +172,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       return;
     }
     const usernames_str = this.selectedUsernames.join(",");
-    this.feedbackService.getApiFeedbackaverageexportByFormName(this.selectedFormName, usernames_str, this.authorPerspective)
+    this.feedbackService.getApiFeedbackaverageexportByFormName(this.selectedFormName, usernames_str, this.chooseAssignments,this.authorPerspective)
       .subscribe((response) => {
       const blob = new Blob([response], {type: 'text/csv'});
       const url = window.URL.createObjectURL(blob);

@@ -441,6 +441,16 @@
           "schema" : {
             "type" : "boolean"
           }
+        }, {
+          "name" : "assignment",
+          "in" : "query",
+          "description" : "assignment or request",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
         } ],
         "responses" : {
           "200" : {

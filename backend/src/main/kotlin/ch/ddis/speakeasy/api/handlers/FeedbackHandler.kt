@@ -365,7 +365,8 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
         ],
         queryParams = [
             OpenApiParam("usernames", String::class, "Comma separated list of usernames to export", required = true),
-            OpenApiParam("author", Boolean::class, "author or recipient")
+            OpenApiParam("author", Boolean::class, "author or recipient"),
+            OpenApiParam("assignment", Boolean::class, "assignment or request", required = true),
         ],
         responses = [
             OpenApiResponse(
@@ -389,48 +390,38 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
         val formName = (ctx.pathParamMap().getOrElse("formName") {
             throw ErrorStatusException(400, "Parameter 'formName' is missing!'", ctx)
         })
+        val assignmentRequested = ctx.queryParam("assignment")?.toBooleanStrictOrNull()
+            ?: throw ErrorStatusException(400, "Parameter 'assignment' is missing!'", ctx)
 
-        val feedbackResponsesPerUserAssigned = FeedbackManager.aggregateFeedbackStatisticsPerUser(
+        val feedbackResponsesPerUser = FeedbackManager.aggregateFeedbackStatisticsPerUser(
             userIds = userIds,
             author = author,
-            assignment = true,
+            assignment = assignmentRequested,
             formName = formName
         )
-        val feedbackResponsesPerUserRequested = FeedbackManager.aggregateFeedbackStatisticsPerUser(
-            author = author,
-            assignment = false,
-            formName = formName
-        )
-        // Get content of requests
-        val requestIdToShortName = FeedbackManager.readFeedbackFrom(formName).requests.associateBy({ it.id }, { it.shortname })
+        // This also filters out textual questions, so we don't include them in the CSV
+        val requestIdToShortName = FeedbackManager.readFeedbackFrom(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
         ctx.outputStream().use { outputStream ->
-            // Structure of the csv file : username, assignment, N, request1, request2, ...
+            // Structure of the csv file : username, N, request1, request2, ...
             val writer = CSVWriterBuilder(outputStream.writer()).build()
             // Header
-            val header = mutableListOf("username", "assignment")
+            val header = mutableListOf("username")
             for (requestId in requestIdToShortName.keys) {
                 header.add(requestIdToShortName[requestId] ?: "unknown")
             }
             writer.writeNext(header.toTypedArray())
             userIds.forEach { userId ->
-                val user = UserManager.getUsernameFromId(userId) ?: return@forEach
-                val assigned = feedbackResponsesPerUserAssigned.find { it.username == user }
-                val requested = feedbackResponsesPerUserRequested.find { it.username == user }
-                val requestIdToAverageAssigned = assigned?.statsOfResponsePerRequest?.associateBy({ it.requestID }, { it.average })
-                val requestIdToAverageRequested = requested?.statsOfResponsePerRequest?.associateBy({ it.requestID }, { it.average })
+                val user = UserManager.getUsernameFromId(userId) ?: "UNKNOWN"
+                val responses = feedbackResponsesPerUser.find { it.username == user }
+                val requestIdToAverage = responses?.statsOfResponsePerRequest?.associateBy({ it.requestID }, { it.average })
 
-                // Write in turn the assigned and requested feedbacks
-                var row = mutableListOf(user, "true")
+                val row = mutableListOf(user)
                 for (requestId in requestIdToShortName.keys) {
-                    row.add(requestIdToAverageAssigned?.get(requestId) ?: "")
-                }
-                writer.writeNext(row.toTypedArray())
-                row = mutableListOf(user, "false")
-                for (requestId in requestIdToShortName.keys) {
-                    row.add(requestIdToAverageRequested?.get(requestId) ?: "")
+                    row.add(requestIdToAverage?.get(requestId) ?: "")
                 }
                 writer.writeNext(row.toTypedArray())
             }
+            writer.flush()
         }
         ctx.header("Content-Type", "text/csv")
         ctx.header("Content-Disposition", "attachment; filename=\"feedbacks.csv\"")

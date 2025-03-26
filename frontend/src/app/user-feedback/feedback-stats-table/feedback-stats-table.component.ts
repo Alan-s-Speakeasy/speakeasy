@@ -194,4 +194,5 @@ export class FeedbackStatsTableComponent {
   }
 
   protected readonly isNaN = isNaN;
+  protected readonly parseFloat = parseFloat;
 }

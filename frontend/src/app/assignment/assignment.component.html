@@ -60,24 +60,36 @@
       <!-- Prompts Section -->
       <div class="mb-4">
         <h4 class="card-title border-bottom pb-2">Prompts</h4>
-        <div class="table-responsive mb-3">
-          <table class="table table-hover">
-            <tbody>
-            <tr *ngFor="let prompt of prompts, let i = index">
-              <td class="text-break w-100">{{ prompt }}</td>
-              <td class="text-end"><i class="fa fa-trash text-danger" type="submit" (click)="removePrompt(i)"></i></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="row">
-          <div class="col-md-11">
-            <textarea style="height: 70px" type="text" class="form-control"
-                      placeholder="Add prompts here" [formControl]="promptForm"></textarea>
-            <div class="form-text">You can add multiple prompts by separating by linebreaks.</div>
-          </div>
-          <div class="col-md-1 d-flex align-items-center">
-            <button (click)="addPrompts()" type="submit" class="btn btn-outline-primary">Add</button>
+        <div class="card" [ngClass]="{'border-danger': promptsError.length > 0}">
+          <div class="card-body">
+            <div class="table-responsive mb-3">
+              <table class="table table-hover">
+                <tbody>
+                <tr *ngFor="let prompt of prompts, let i = index">
+                  <td class="text-break w-100">{{ prompt }}</td>
+                  <td class="text-end"><i class="fa fa-trash text-danger" type="submit" (click)="removePrompt(i)"></i>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row">
+              <div class="col-md-11">
+          <textarea style="height: 70px" type="text" class="form-control"
+                    [ngClass]="{'is-invalid': promptsError.length > 0}"
+                    placeholder="Add prompts here" [formControl]="promptForm"></textarea>
+                <div *ngIf="promptsError.length > 0" class="invalid-feedback d-block">
+                  <div class="alert alert-danger mt-2">
+                    <i class="fa fa-exclamation-circle me-2"></i>
+                    {{ promptsError }}
+                  </div>
+                </div>
+                <div class="form-text">You can add multiple prompts by separating by linebreaks.</div>
+              </div>
+              <div class="col-md-1 d-flex align-items-center">
+                <button (click)="addPrompts()" type="submit" class="btn btn-outline-primary">Add</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -86,9 +98,12 @@
 
       <!-- Configuration Controls -->
       <div class="row mb-4">
-        <div class="col-md-6 text-center">
-          <div class="card p-3">
+<div class="col-md-6 text-center">
+          <div class="card p-3" [ngClass]="{'border-danger': botsPerUserConditionError.length > 0}">
             <h5>Bots per user</h5>
+            <div *ngIf="botsPerUserConditionError.length > 0" class="text-danger small mb-2">
+              <i class="fa fa-exclamation-circle"></i> {{ botsPerUserConditionError }}
+            </div>
             <div class="d-flex align-items-center">
               <mat-slider min="1" max="6" step="1" #ngSlider class="flex-grow-1 me-3">
                 <input matSliderThumb [value]="botsPerUser"
@@ -122,9 +137,12 @@
       <div class="mb-4">
         <h3 class="text-center mb-4">Matchmaking</h3>
 
-        <div class="card mb-4">
-          <div class="card-header bg-light">
+        <div class="card mb-4 border" [ngClass]="{'border-danger': humansValidationError.length > 0}">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Humans</h5>
+            <div *ngIf="humansValidationError.length > 0" class="text-danger small">
+              <i class="fa fa-exclamation-circle"></i> {{ humansValidationError }}
+            </div>
           </div>
           <div class="card-body">
             <app-user-table
@@ -138,10 +156,12 @@
             </app-user-table>
           </div>
         </div>
-
-        <div class="card mb-4">
-          <div class="card-header bg-light">
+        <div class="card mb-4 border" [ngClass]="{'border-danger': botsValidationError.length > 0} ">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Bots</h5>
+            <div *ngIf="botsValidationError.length >0" class="text-danger small">
+              <i class="fa fa-exclamation-circle"></i> {{ botsValidationError }}
+            </div>
           </div>
           <div class="card-body">
             <app-user-table
@@ -160,9 +180,12 @@
       <!-- Extras Section -->
       <div class="row mb-4">
         <div class="col-md-4">
-          <div class="card h-100">
-            <div class="card-header bg-light">
+          <div class="card h-100 border" [ngStyle]="{'border-danger': botsValidationError.length > 0}">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center" >
               <h5 class="mb-0">Admins as Bots</h5>
+              <div *ngIf="botsValidationError.length > 0" class="text-danger small">
+                <i class="fa fa-exclamation-circle"></i> {{ botsValidationError }}
+              </div>
             </div>
             <div class="card-body">
               <table class="table">
@@ -205,9 +228,9 @@
               <table class="table">
                 <tbody>
                 <tr *ngFor="let evaluator of evaluator; let firstElement = first">
-                  <td *ngIf="firstElement" >
+                  <td *ngIf="firstElement">
                     <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator()" color="primary">
-                      {{evaluator}}
+                      {{ evaluator }}
                       <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
                       <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
                     </mat-checkbox>
@@ -245,12 +268,33 @@
           </div>
         </div>
       </div>
+<!-- Error Messages -->
+      <div *ngIf="botsPerUserConditionError.length > 0" class="alert alert-danger mb-4">
+        <i class="fa fa-exclamation-circle me-2"></i>
+        {{ botsPerUserConditionError }}
+      </div>
 
+<!-- Error Messages -->
+     <div *ngIf="promptsError.length > 0" class="alert alert-danger mb-4">
+       <i class="fa fa-exclamation-circle me-2"></i>
+       {{ promptsError }}
+     </div>
+
+     <div *ngIf="humansValidationError.length > 0" class="alert alert-danger mb-4">
+       <i class="fa fa-exclamation-circle me-2"></i>
+       {{ humansValidationError }}
+     </div>
+
+     <div *ngIf="botsValidationError.length > 0" class="alert alert-danger mb-4">
+       <i class="fa fa-exclamation-circle me-2"></i>
+       {{ botsValidationError }}
+     </div>
       <!-- Action Buttons -->
       <div class="d-flex justify-content-between mb-4">
         <button *ngIf="isActive" (click)="removeGenerator()" type="submit"
-                class="btn btn-outline-danger">Delete</button>
-        <button (click)="generateNextRound()" [disabled]="!canStartRound()"
+                class="btn btn-outline-danger">Delete
+        </button>
+        <button (click)="generateNextRound()" [disabled]="false"
                 type="button" class="btn btn-primary">
           Generate Round {{ round }}
         </button>
@@ -327,7 +371,8 @@
                 <td>{{ remainingTime | date: 'mm:ss' }}</td>
                 <td>
                   <button type="button" class="btn btn-sm btn-outline-secondary"
-                          (click)="watch(room)">Watch</button>
+                          (click)="watch(room)">Watch
+                  </button>
                 </td>
               </tr>
               </tbody>
@@ -361,7 +406,8 @@
                 <td>{{ room.formRef !== "" ? room.formRef : "[NOT Required]" }}</td>
                 <td>
                   <button type="button" class="btn btn-sm btn-outline-secondary"
-                          (click)="watch(room)">Watch</button>
+                          (click)="watch(room)">Watch
+                  </button>
                 </td>
               </tr>
               </tbody>

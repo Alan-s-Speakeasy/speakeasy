@@ -86,6 +86,11 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   pageSizes: number[] = [5, 10, 15, 20];
   pageSizeHumanSelection = 10
 
+  promptsError: string = "";
+  botsValidationError: string = "";
+  humansValidationError: string = "";
+  botsPerUserConditionError : string = "";
+
   ngOnInit(): void {
     this.titleService.setTitle("Assignments")
 
@@ -104,6 +109,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       this.countdown()
     }, 1000)
   }
+
   /**
    * Fetches the generator from the backend. If it is the first time the generator is fetched, the response is used to store some data, such as
    * the selected users, the prompts, the bots per user, the duration, the selected form name, the active users,
@@ -317,14 +323,25 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     let admins = this.admins.filter(a => this.isAdminSelected.get(a))
     let evaluator = this.evaluatorSelected
     let assistant = this.assistantSelected
-    return ((humans.length > 0 && !evaluator) || (!(humans.length > 0) && evaluator && !assistant)) &&
-      bots.length + admins.length > 0 &&
-      this.prompts.length > 0 &&
-      this.botsPerUser <= bots.length + admins.length
+    // Check each condition separately
+    let humanConditionOk = (humans.length > 0 && !evaluator) || (!(humans.length > 0) && evaluator && !assistant);
+    let botConditionOk = bots.length + admins.length > 0;
+    let promptConditionOk = this.prompts.length > 0;
+    let botsPerUserConditionOk = this.botsPerUser <= bots.length + admins.length;
+
+    // Update validation error messages
+    this.humansValidationError = humanConditionOk ? "" : "Please select at least one human or evaluator";
+    this.botsValidationError = botConditionOk ? "" : "Please select at least one bot or admin";
+    this.promptsError = promptConditionOk ? "" : "Please add at least one prompt";
+    this.botsPerUserConditionError = botsPerUserConditionOk ? "" : "You can't have " + this.botsPerUser + " bots per human, please select more bots/admins";
+
+    // Return whether all conditions are met
+    return humanConditionOk && botConditionOk && promptConditionOk && botsPerUserConditionOk;
   }
 
   generateNextRound(): void {
-    console.log(this.selectedFormName)
+    if (!this.canStartRound())
+      return
     this.assignmentService.postApiAssignmentRound(this.evaluatorSelected.toString(), {
       humans: (this.humans.filter(h => this.isHumanSelected.get(h))),
       bots: this.bots.filter(b => this.isBotSelected.get(b)),

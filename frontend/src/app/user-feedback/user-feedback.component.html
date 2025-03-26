@@ -88,7 +88,7 @@
                 <i class="bi" [ngClass]="isRadarCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
               </span>
             </div>
-            <div [ngbCollapse]="isRadarCollapsed">
+            <div [ngbCollapse]="false">
               <div class="card-body">
                 <div id="radarChart">
                   <apx-chart
@@ -119,7 +119,7 @@
                 <i class="bi" [ngClass]="isIndividualChartsCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
               </span>
             </div>
-            <div [ngbCollapse]="isIndividualChartsCollapsed">
+            <div [ngbCollapse]="false">
               <div class="card-body">
                 <div class="row">
                   <div class="col-md-6 col-lg-4 mb-4" *ngFor="let chartOptions of allChartOptions">

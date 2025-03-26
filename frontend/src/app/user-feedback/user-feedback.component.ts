@@ -57,7 +57,8 @@ export type RadarChartOptions = {
   yaxis: ApexYAxis;
 };
 
-const COLORS_BARS = ['#ff9933', '#0066ff', '#33cc33', '#cc33ff', '#ff3333'];
+const COLORS_BARS = ['#ff4081', '#7b1fa2', '#00796b', '#ffc107', '#ff5722'];
+
 
 @Component({
   selector: 'app-user-feedback',

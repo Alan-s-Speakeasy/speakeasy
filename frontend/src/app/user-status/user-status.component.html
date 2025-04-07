@@ -21,8 +21,7 @@
         <th scope="col">Sessions (ID / StartTime)</th>
       </tr>
       </thead>
-      <tbody
-        *ngFor="let frontendUserDetail of paginate(element.details, currentPagesOfUserDetails[element.name]); let i = index">
+      <tbody *ngFor="let frontendUserDetail of paginate(element.details, currentPagesOfUserDetails[element.name]); let i = index">
       <tr class="align-middle" (click)="toggleElement = toggleElement == i ? -1 : i; toggleList = element.name">
         <td>{{ frontendUserDetail.username }}</td>
         <td>{{ frontendUserDetail.userID }}</td>
@@ -51,14 +50,14 @@
             <tbody *ngFor="let chatroomDetail of sortByTime(allChatroomDetails)">
             <tr *ngIf="isRelevantRoom(chatroomDetail, frontendUserDetail.username)">
               <td>{{ chatroomDetail.roomID }}</td>
-              <td><span
-                *ngFor="let user of getPartners(chatroomDetail.userInfo, frontendUserDetail.username)">{{ user }}
-                <br> </span></td>
+              <td>
+                    <span *ngFor="let user of getPartners(chatroomDetail.userInfo, frontendUserDetail.username)">
+                      {{ user }} <br>
+                    </span>
+              </td>
               <td>{{ readableTime(chatroomDetail.remainingTime) }}</td>
               <td>
-                <button type="button" class="btn btn-secondary"
-                        (click)="watch(frontendUserDetail, chatroomDetail)">Watch
-                </button>
+                <button type="button" class="btn btn-secondary" (click)="watch(frontendUserDetail, chatroomDetail)">Watch</button>
               </td>
             </tr>
             </tbody>
@@ -75,17 +74,19 @@
       [boundaryLinks]="true"
       (pageChange)="setCurrentPage(element.name, $event, true)">
     </ngb-pagination>
-
   </div>
-
 
   <br>
 
   <div class="row p-2">
     <div class="col-12 col-xl-4 p-2" *ngFor="let element of allUserLists">
       <div class="row">
-        <h4 class="text-center col-10">All {{ element.name }} ({{ element.list.length }})</h4>
-        <span type="button" class="fa fa-plus col-2" (click)="openUserAddModal(addUserModalData, element.name)"></span>
+        <h4 class="text-center col-7">All {{ element.name }} ({{ element.list.length }})</h4>
+        <div class="col-5 text-end">
+          <button type="button" class="btn btn-sm btn-success" (click)="openUserAddModal(addUserModalData, element.name)">
+            <i class="fa fa-plus"></i> Add {{ element.name.slice(0, -1) }}
+          </button>
+        </div>
       </div>
       <table class="table table-striped table-bordered">
         <thead>
@@ -102,7 +103,9 @@
             <span>{{ frontendUser.username }}</span> <br>
             <span style="font-size: small">{{ frontendUser.userID }}</span>
           </td>
-          <td style="text-align: center; vertical-align: middle" class="p-0 m-0"><span type="button" class="fa fa-trash mx-3" (click)="openRemoveUserModal(removeUserModalData, frontendUser.username)"></span></td>
+          <td style="text-align: center; vertical-align: middle" class="p-0 m-0">
+            <span type="button" class="fa fa-trash mx-3" (click)="openRemoveUserModal(removeUserModalData, frontendUser.username)"></span>
+          </td>
         </tr>
         </tbody>
       </table>
@@ -123,11 +126,10 @@
   <div class="row p-2">
     <h4 class="text-end col-7">All Groups ({{ groupList.length }})</h4>
     <span class="col-5">
-    <button class="btn btn-sm btn-success float-start" (click)="openGroupAddModal(addGroupModalData)">
-      <i class="fa fa-plus"></i> Add Group
-    </button>
-  </span>
-
+      <button class="btn btn-sm btn-success float-start" (click)="openGroupAddModal(addGroupModalData)">
+        <i class="fa fa-plus"></i> Add Group
+      </button>
+    </span>
     <table class="table table-striped table-bordered">
       <thead>
       <tr class="table-success">
@@ -141,7 +143,6 @@
       </tr>
       </thead>
       <tbody>
-      <!-- Modify the existing group row in the table -->
       <tr *ngFor="let group of groupList">
         <td>
           <ng-container *ngIf="!group.isEditing">
@@ -162,8 +163,7 @@
           </button>
         </td>
         <td style="text-align: center; vertical-align: middle" class="p-0 m-0">
-          <button *ngIf="!group.isEditing" class="btn btn-sm btn-outline-danger"
-                  (click)="openRemoveGroupModal(removeGroupModalData, group.groupName)">
+          <button *ngIf="!group.isEditing" class="btn btn-sm btn-outline-danger" (click)="openRemoveGroupModal(removeGroupModalData, group.groupName)">
             <i class="fa fa-trash"></i>
           </button>
           <button *ngIf="group.isEditing" class="btn btn-sm btn-outline-secondary" (click)="cancelEditGroup(group)">
@@ -195,7 +195,6 @@
     </table>
   </div>
 
-  <!-- Add Group Modal -->
   <ng-template #addGroupModalData let-modal>
     <div class="modal-header">
       <h4 class="modal-title">Add Group</h4>
@@ -205,28 +204,24 @@
       <form>
         <div class="mb-3">
           <label for="groupName" class="form-label">Group Name</label>
-          <input type="text" id="groupName" class="form-control" placeholder="Group Name"
-                 [formControl]="groupNameToAdd">
+          <input type="text" id="groupName" class="form-control" placeholder="Group Name" [formControl]="groupNameToAdd">
         </div>
         <div class="mb-3">
           <label for="users" class="form-label">Users</label>
-          <input type="text" id="users" class="form-control" placeholder="Usernames" [formControl]="usersInGroupToAdd"
-                 ng-list>
-          <p class="small text-danger mt-1">Please enter existing usernames and separate them with commas.<br>e.g.,
-            username1, username2</p>
+          <input type="text" id="users" class="form-control" placeholder="Usernames" [formControl]="usersInGroupToAdd" ng-list>
+          <p class="small text-danger mt-1">
+            Please enter existing usernames and separate them with commas.<br>e.g., username1, username2
+          </p>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
-      <button type="button" class="btn btn-success"
-              [disabled]="groupNameToAdd.value == '' || usersInGroupToAdd.value == ''"
-              (click)="modal.close(); addGroup()">
+      <button type="button" class="btn btn-success" [disabled]="groupNameToAdd.value == '' || usersInGroupToAdd.value == ''" (click)="modal.close(); addGroup()">
         Add Group
       </button>
     </div>
   </ng-template>
-
 
   <ng-template #removeGroupModalData let-modal>
     <div class="modal-header">
@@ -247,7 +242,6 @@
     </div>
   </ng-template>
 
-  <!-- Other existing modals -->
   <ng-template #addUserModalData let-modal>
     <div class="modal-header">
       <h4 class="modal-title">Add {{ roleToAdd }}</h4>
@@ -261,16 +255,13 @@
         </div>
         <div class="mb-3">
           <label for="password" class="form-label">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="Password"
-                 [formControl]="passwordToAdd">
+          <input type="password" id="password" class="form-control" placeholder="Password" [formControl]="passwordToAdd">
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
-      <button type="button" class="btn btn-danger"
-              [disabled]="usernameToAdd.value == '' || passwordToAdd.value == ''"
-              (click)="modal.close(); addUser()">
+      <button type="button" class="btn btn-danger" [disabled]="usernameToAdd.value == '' || passwordToAdd.value == ''" (click)="modal.close(); addUser()">
         Add
       </button>
     </div>
@@ -287,8 +278,7 @@
         Are you sure that you want to remove user <b>{{ usernameToRemove }}?</b>
       </div>
       <div class="form-check">
-        <input class="form-check-input" id="forceRemove" type="checkbox" [checked]="forceRemove"
-               (change)="forceRemove = !forceRemove">
+        <input class="form-check-input" id="forceRemove" type="checkbox" [checked]="forceRemove" (change)="forceRemove = !forceRemove">
         <label class="form-check-label" for="forceRemove">
           Ignore active sessions
         </label>
@@ -301,3 +291,5 @@
       </button>
     </div>
   </ng-template>
+
+</div>

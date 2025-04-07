@@ -54,16 +54,25 @@
           </div>
         </div>
       </ng-template>
-      <span
+
+      <button
         type="button"
         [ngbPopover]="popoverContent"
         [autoClose]="'outside'"
         popoverTitle=""
         placement="top"
-        class="btn btn-primary"
+        class="btn btn-outline-primary"
+        style="
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+  "
       >
-        <i class="fa fa-plus"></i>
-      </span>
+        <i class="fa fa-comments" style="margin-right: 4px;"></i>
+        Request Chat
+      </button>
     </div>
     <div class="input-group">
         <textarea cdkTextareaAutosize="true"
@@ -79,7 +88,7 @@
                   (keyup.enter)="askALl()">
         </textarea>
       <div class="input-group-append">
-        <button class="btn btn-primary" type="button"
+        <button class="btn btn-primary rounded-0 rounded-end" type="button"
                 [disabled]="paneLogs.length === 0 || !hasActiveRooms()"
                 (click)="askALl()">Send
         </button>

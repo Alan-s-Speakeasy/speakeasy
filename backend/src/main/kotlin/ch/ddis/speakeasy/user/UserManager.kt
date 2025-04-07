@@ -179,6 +179,14 @@ object UserManager {
         }
     }
 
+    /**
+     * Creates a new group with the given name and adds the users to it.
+     *
+     * @param groupName The name of the group to create.
+     * @param usernames The list of usernames to add to the group.
+     */
+
+    // NOTE : Userids should be used instead of usernames ...
     fun createGroup(groupName: String, usernames: List<String>) {
         this.lock.write {
 
@@ -206,6 +214,13 @@ object UserManager {
         }
     }
 
+    /**
+     * Remove a group of the given name.
+     *
+     * @param groupName The name of the group to remove.
+     *
+     * NOTE : This should use the group id instead of the name
+     */
     fun removeGroup(groupName: String) {
         this.lock.write {
             transaction {
@@ -214,6 +229,24 @@ object UserManager {
                 GroupUsers.deleteWhere { group_id eq groupToRemove.id }
                 groupToRemove.delete()
             }
+        }
+    }
+
+    /**
+     * Alter a group with the given id.
+     *
+     * @param groupId The id of the group to alter.
+     * @param newName The new name of the group.
+     * @param newUserIds The list of usernames to add to the group.
+     */
+    fun updateGroup(groupId: GroupId, newName : String, newUserIds : List<UserId>) {
+        // TODO : Use a lock here ?
+        transaction {
+            val group = Group.findById(groupId.toUUID())
+                ?: throw GroupNameNotFoundException()
+            group.name = newName
+            val newUserEntities = User.find { Users.id inList newUserIds.distinct().map { it.toUUID() } }
+            group.users = newUserEntities
         }
     }
 

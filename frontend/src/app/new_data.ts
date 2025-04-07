@@ -103,6 +103,9 @@ export interface FrontendGroup {
   groupID: string,
   groupName: string,
   users: FrontendUserInGroup[],
+  isEditing?: boolean;
+  editGroupName?: string;
+  editUsersString?: string;
 }
 
 export interface FrontendUserInGroup {

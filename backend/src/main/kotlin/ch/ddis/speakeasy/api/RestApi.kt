@@ -48,6 +48,7 @@ object RestApi {
             CreateGroupHandler(),
             RemoveGroupHandler(),
             ListGroupsHandler(),
+            UpdateGroupHandler(),
             RemoveAllGroupsHandler(),
             GetCurrentUserbyUsername(),
 

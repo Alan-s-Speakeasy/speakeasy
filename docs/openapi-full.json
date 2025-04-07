@@ -868,6 +868,58 @@
         "security" : [ ]
       }
     },
+    "/api/group/update" : {
+      "patch" : {
+        "tags" : [ "Admin", "Group" ],
+        "summary" : "Modifies an existing group by updating its users.",
+        "operationId" : "patchApiGroupUpdate",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateGroupRequest"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/login" : {
       "post" : {
         "tags" : [ "User" ],
@@ -2709,6 +2761,25 @@
           }
         },
         "required" : [ "humans", "bots", "admins", "evaluator", "assistant" ]
+      },
+      "UpdateGroupRequest" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "usernames" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "id", "name", "usernames" ]
       },
       "ChatMessageReaction" : {
         "type" : "object",

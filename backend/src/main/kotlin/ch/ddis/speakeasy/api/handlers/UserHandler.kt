@@ -26,7 +26,13 @@ class ListUsersHandler : GetRestHandler<List<UserDetails>>, AccessManagedRestHan
     override val route = "user/list"
 }
 
-data class CountUsersResponse(val countUsers: Int, val countBots: Int, val countHumans: Int, val countBotsOnline : Int, val countHumansOnline : Int)
+data class CountUsersResponse(
+    val countUsers: Int,
+    val countBots: Int,
+    val countHumans: Int,
+    val countBotsOnline: Int,
+    val countHumansOnline: Int
+)
 
 class CountUsersHandler : GetRestHandler<CountUsersResponse>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
@@ -44,7 +50,8 @@ class CountUsersHandler : GetRestHandler<CountUsersResponse>, AccessManagedRestH
         val n_bots = UserManager.countUsersWithRole(UserRole.BOT)
         val n_humans = UserManager.countUsersWithRole(UserRole.HUMAN) + UserManager.countUsersWithRole(UserRole.ADMIN)
         val n_bots_online = AccessManager.listSessions().count { it.user.role == UserRole.BOT }
-        val n_humans_online = AccessManager.listSessions().count { it.user.role == UserRole.HUMAN || it.user.role == UserRole.ADMIN }
+        val n_humans_online =
+            AccessManager.listSessions().count { it.user.role == UserRole.HUMAN || it.user.role == UserRole.ADMIN }
         return CountUsersResponse(n_users, n_bots, n_humans, n_bots_online, n_humans_online)
     }
 }
@@ -89,7 +96,7 @@ class AddUserHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler 
             ctx.bodyAsClass(AddUserRequest::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
-        } catch (e: InvalidFormatException){
+        } catch (e: InvalidFormatException) {
             throw ErrorStatusException(400, "Invalid request format.", ctx)
         }
 
@@ -260,10 +267,12 @@ class CreateGroupHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHand
             ctx.bodyAsClass(CreateGroupRequest::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
-        } catch (e: InvalidFormatException){
+        } catch (e: InvalidFormatException) {
             throw ErrorStatusException(400, "Invalid request format.", ctx)
         }
-        if (createGroupRequest.usernames.isEmpty()) { throw ErrorStatusException(400, "usernames cannot be empty", ctx)}
+        if (createGroupRequest.usernames.isEmpty()) {
+            throw ErrorStatusException(400, "usernames cannot be empty", ctx)
+        }
 
         try {
             UserManager.createGroup(createGroupRequest.name, createGroupRequest.usernames)
@@ -336,6 +345,62 @@ class ListGroupsHandler : GetRestHandler<List<GroupDetails>>, AccessManagedRestH
     override val route = "group/list"
 }
 
+class UpdateGroupHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHandler {
+
+    data class UpdateGroupRequest(var id: String, var name: String, var usernames: List<String>)
+
+    @OpenApi(
+        summary = "Modifies an existing group by updating its users.",
+        path = "/api/group/update",
+        operationId = OpenApiOperation.AUTO_GENERATE,
+        methods = [HttpMethod.PATCH],
+        requestBody = OpenApiRequestBody([OpenApiContent(UpdateGroupRequest::class)]),
+        tags = ["Admin", "Group"],
+        responses = [
+            OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+            OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
+        ]
+    )
+    override fun doPatch(ctx: Context): SuccessStatus {
+        val alterGroupRequest = try {
+            ctx.bodyAsClass(UpdateGroupRequest::class.java)
+        } catch (e: BadRequestResponse) {
+            throw ErrorStatusException(400, "Invalid parameters. This is a programmer's error.", ctx)
+        } catch (e: InvalidFormatException) {
+            throw ErrorStatusException(400, "Invalid request format.", ctx)
+        }
+
+        try {
+            // Map usernames to user ids and raise if one of them is not found
+            val userIds = alterGroupRequest.usernames.map { username ->
+                UserManager.getUserIdFromUsername(username)
+                    ?: throw UsernameNotFoundException("Username not found: $username")
+            }
+            UserManager.updateGroup(
+                groupId = GroupId(alterGroupRequest.id),
+                newName = alterGroupRequest.name,
+                newUserIds = userIds
+            )
+        } catch (e: GroupNameNotFoundException) {
+            // Should also never happen
+            throw ErrorStatusException(404, "Group not found: ${alterGroupRequest.name}", ctx)
+        } catch (e: UsernameNotFoundException) {
+            throw ErrorStatusException(404, e.message!!, ctx)
+        } catch (e: GroupNameConflictException) {
+            // This should never happen since we just removed the group
+            throw ErrorStatusException(409, "Unexpected error while modifying group", ctx)
+        }
+
+        return SuccessStatus("Group modified successfully")
+    }
+
+    override val permittedRoles = setOf(RestApiRole.ADMIN)
+
+    override val route = "group/update"
+}
+
+
 class RemoveAllGroupsHandler : DeleteRestHandler<SuccessStatus>, AccessManagedRestHandler {
     @OpenApi(
         summary = "Removes all existing groups.",
@@ -348,7 +413,7 @@ class RemoveAllGroupsHandler : DeleteRestHandler<SuccessStatus>, AccessManagedRe
             OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
         ]
     )
-    override fun doDelete(ctx: Context):SuccessStatus {
+    override fun doDelete(ctx: Context): SuccessStatus {
         UserManager.removeAllGroups()
         return SuccessStatus("All groups removed")
     }

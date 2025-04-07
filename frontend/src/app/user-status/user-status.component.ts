@@ -1,9 +1,9 @@
 import {Component, Inject, OnDestroy, OnInit} from '@angular/core';
 import {
-  FrontendUserDetail,
-  FrontendUser,
   FrontendChatroomDetail,
   FrontendGroup,
+  FrontendUser,
+  FrontendUserDetail,
   FrontendUserInGroup
 } from "../new_data";
 import {Router} from "@angular/router";
@@ -13,14 +13,16 @@ import {
   AddUserRequest,
   AdminService,
   ChatRoomAdminInfo,
-  ChatRoomUserAdminInfo, CreateGroupRequest,
+  ChatRoomUserAdminInfo,
+  CreateGroupRequest,
   GroupDetails,
+  UpdateGroupRequest,
   UserDetails,
   UserSessionDetails
 } from "../../../openapi";
 import {interval, Subscription, timer} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
-import { HttpClient } from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {UntypedFormControl} from "@angular/forms";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {AlertService} from "../alert";
@@ -36,12 +38,14 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     autoClose: true,
     keepAfterRouteChange: true
   };
+
   constructor(private router: Router, private titleService: Title,
               private httpClient: HttpClient,
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
               public alertService: AlertService,
-              private modalService: NgbModal) { }
+              private modalService: NgbModal) {
+  }
 
   private allRoomsSubscription!: Subscription;
   private userSessionSubscription!: Subscription;
@@ -87,7 +91,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   toggleElement: number = -1
   toggleList: string = ""
 
-  existingUsernames:Set<string> = new Set<string>()
+  existingUsernames: Set<string> = new Set<string>()
 
   usernameToAdd = new UntypedFormControl("")
   passwordToAdd = new UntypedFormControl("")
@@ -107,7 +111,9 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     this.titleService.setTitle("User Details")
 
     this.allRoomsSubscription = interval(2500)
-      .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsAll()}))
+      .pipe(exhaustMap(_ => {
+        return this.adminService.getApiRoomsAll()
+      }))
       .subscribe((allchatrooms) => {
         allchatrooms.rooms.forEach(room => {
           let update = true
@@ -124,19 +130,21 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       })
 
     this.allGroupsSubscription = timer(2500, 10_000)
-      .pipe(exhaustMap(_ => {return this.adminService.getApiGroupList()}))
+      .pipe(exhaustMap(_ => {
+        return this.adminService.getApiGroupList()
+      }))
       .subscribe((allGroups) => {
-        while (this.groupList.length > 0) {
-          this.groupList.pop()
-        }
+        this.groupList.length = 0
         allGroups.forEach(groupDetails => {
-          this.pushGroup(this.groupList, groupDetails)
+            this.pushGroup(this.groupList, groupDetails)
           }
         )
       })
 
     this.userSessionSubscription = timer(2500, 10_000)
-      .pipe(exhaustMap(_ => {return this.adminService.getApiUserSessions()}))
+      .pipe(exhaustMap(_ => {
+        return this.adminService.getApiUserSessions()
+      }))
       .subscribe((usersessions) => {
         while (this.humanDetails.length > 0) {
           this.humanDetails.pop()
@@ -166,12 +174,14 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.currentPagesOfUserDetails[element.name] = maxPage;
           }
           this.pagesArrayOfUserDetails[element.name] =
-            Array.from({ length: maxPage }, (_, i) => i + 1);
+            Array.from({length: maxPage}, (_, i) => i + 1);
         })
       })
 
     this.userListSubscription = timer(2500, 10_000)
-      .pipe(exhaustMap(_ => {return this.adminService.getApiUserList()}))
+      .pipe(exhaustMap(_ => {
+        return this.adminService.getApiUserList()
+      }))
       .subscribe((userlist) => {
         while (this.humanList.length > 0) {
           this.humanList.pop()
@@ -202,14 +212,14 @@ export class UserStatusComponent implements OnInit, OnDestroy {
             this.currentPagesOfUserLists[element.name] = maxPage;
           }
           this.pagesArrayOfUserLists[element.name] =
-            Array.from({ length: maxPage }, (_, i) => i + 1);
+            Array.from({length: maxPage}, (_, i) => i + 1);
         })
 
 
       })
   }
 
-  paginate<T>(list: T[], currentPage: number):  T[] {
+  paginate<T>(list: T[], currentPage: number): T[] {
     const startIdx = (currentPage - 1) * this.ITEM_PER_PAGE;
     const endIdx = currentPage * this.ITEM_PER_PAGE;
     return list.slice(startIdx, endIdx);
@@ -227,21 +237,30 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   isValidUsernames(): boolean {
     const usernameList: string[] = this.usersInGroupToAdd.value.split(",").map((item: string) => item.trim())
     if (usernameList.length == 0) return false
-    for (let username of usernameList){
-          if (!this.existingUsernames.has(username)){
-            this.validUsersInGroupToAdd = []
-            return false
-          }
+    for (let username of usernameList) {
+      if (!this.existingUsernames.has(username)) {
+        this.validUsersInGroupToAdd = []
+        return false
+      }
     }
     this.validUsersInGroupToAdd = usernameList
     return true
   }
 
-  pushGroup(groupList: FrontendGroup[], groupDetails: GroupDetails){
+  fetchGroups(): void {
+    this.adminService.getApiGroupList().subscribe(allGroups => {
+      this.groupList.length = 0; // Clear the array
+      allGroups.forEach(groupDetails => {
+        this.pushGroup(this.groupList, groupDetails);
+      });
+    });
+  }
+
+  pushGroup(groupList: FrontendGroup[], groupDetails: GroupDetails) {
     let usersInGroup: FrontendUserInGroup[] = []
     groupDetails.users.forEach(
       u => usersInGroup.push(
-        {username: u.username, role:u.role}
+        {username: u.username, role: u.role}
       )
     )
     groupList.push(
@@ -345,21 +364,23 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   openUserAddModal(content: any, role: string) {
     this.roleToAdd = role == "Humans" ? "HUMAN" : role == "Bots" ? "BOT" : role == "Admins" ? "ADMIN" : ""
     console.log(content)
-    this.modalService.open(content, { centered: true })
+    this.modalService.open(content, {centered: true})
   }
 
   openGroupAddModal(content: any) {
-    this.modalService.open(content, { centered: true })
+    this.modalService.open(content, {centered: true})
   }
+
   openRemoveGroupModal(content: any, groupName: string) {
     this.groupNameToRemove = groupName
-    this.modalService.open(content, { centered: true })
+    this.modalService.open(content, {centered: true})
   }
 
   openRemoveUserModal(content: any, username: string) {
     this.usernameToRemove = username
-    this.modalService.open(content, { centered: true })
+    this.modalService.open(content, {centered: true})
   }
+
 
   addGroup(): void {
     if (!this.isValidUsernames()) {
@@ -373,6 +394,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       } as CreateGroupRequest).subscribe(
       () => {
         this.alertService.success("Group successfully created.", this.options)
+        this.fetchGroups()
       },
       (error) => {
         if (error.status === 409) {
@@ -388,14 +410,75 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     this.groupNameToAdd.reset("")
     this.usersInGroupToAdd.reset("")
     this.validUsersInGroupToAdd = []
+  }
 
+  startEditGroup(group: FrontendGroup): void {
+    // Create a copy of the current values for editing
+    group.isEditing = true;
+    group.editGroupName = group.groupName;
+
+    // Convert users array to comma-separated string for editing
+    const usernames = group.users.map(user => user.username).join(',');
+    group.editUsersString = usernames;
+  }
+
+  cancelEditGroup(group: FrontendGroup): void {
+    group.isEditing = false;
+    // No need to save changes, just exit edit mode
+  }
+
+  confirmEditGroup(group: FrontendGroup): void {
+    // Parse the comma-separated users string into an array and trim whitespace
+    const newUsernames = group.editUsersString!.split(',')
+      .map(username => username.trim())
+      .filter(username => username !== '');
+
+    if (newUsernames.length === 0) {
+      this.alertService.error("Group must have at least one user.", this.options);
+      return;
+    }
+
+    // Call the existing editGroup method with the new values
+    if (!group.editGroupName) {
+      this.alertService.error("Group name cannot be empty.", this.options);
+      return;
+    }
+
+    const request: UpdateGroupRequest = {
+      "id": group.groupID,
+      "name": group.editGroupName,
+      "usernames": newUsernames
+    }
+    this.adminService.patchApiGroupUpdate(request).subscribe(
+      () => {
+        this.alertService.success("Group successfully edited.", this.options);
+        this.fetchGroups()
+      },
+      (error) => {
+        if (error.status === 409) {
+          this.alertService.error("Conflict: Group name already exists.", this.options);
+        } else if (error.status === 404) {
+          this.alertService.error("Cannot find some username(s) or the group is ill-defined.", this.options);
+        } else {
+          this.alertService.error("Group could not be edited.", this.options);
+        }
+      }
+    )
+
+    // Exit edit mode
+    group.isEditing = false;
   }
 
   addUser(): void {
     // username, password, role
-    this.adminService.postApiUserAdd({"username": this.usernameToAdd.value, "role": this.roleToAdd, "password": this.passwordToAdd.value} as AddUserRequest).subscribe(
+    this.adminService.postApiUserAdd({
+      "username": this.usernameToAdd.value,
+      "role": this.roleToAdd,
+      "password": this.passwordToAdd.value
+    } as AddUserRequest).subscribe(
       () => {
         this.alertService.success("User successfully created.", this.options)
+
       },
       (error) => {
         this.alertService.error("User could not be created.", this.options)
@@ -413,12 +496,13 @@ export class UserStatusComponent implements OnInit, OnDestroy {
       (error) => {
         if (error.status == 404) {
           this.alertService.error("Cannot find this group to remove.", this.options)
-        }else {
+        } else {
           this.alertService.error("Group could not be removed.", this.options)
         }
       }
     )
     this.forceRemove = false
+    this.fetchGroups()
   }
 
   removeUser(): void {

@@ -160,7 +160,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       })
       response.assistant.forEach(assistant => {
         if (!this.isAssistantSelected.get(assistant)) {
-          this.isEvaluatorSelected.set(assistant, false)
+          // TODO Fix here
+          this.isAssistantSelected.set(assistant, false)
         }
       })
 

@@ -106,13 +106,14 @@
             </div>
             <div class="d-flex align-items-center">
               <mat-slider min="1" max="6" step="1" #ngSlider class="flex-grow-1 me-3">
-                <input matSliderThumb [value]="botsPerUser"
+                <input matSliderThumb
+                       [value]="botsPerUser"
                        (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
                        #ngSliderThumb="matSliderThumb"/>
               </mat-slider>
               <input type="number" class="form-control" style="width: 60px" min="1" max="6"
-                     [value]="botsPerUser"
-                     (change)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: $event})">
+                     [(ngModel)]="botsPerUser"
+                     (change)="this.changeAfterGenerate = true">
             </div>
           </div>
         </div>
@@ -126,8 +127,8 @@
                        #ngSliderThumb2="matSliderThumb"/>
               </mat-slider>
               <input type="number" class="form-control" style="width: 60px" min="1" max="20"
-                     [value]="duration"
-                     (change)="setDuration({source: ngSliderThumb2, parent: ngSlider, value: $event})">
+                     [(ngModel)]="duration"
+                     (change)="this.changeAfterGenerate = true">
             </div>
           </div>
         </div>

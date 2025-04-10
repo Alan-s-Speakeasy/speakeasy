@@ -1,7 +1,7 @@
 // This component contains code from https://www.bootdey.com/snippets/view/chat-app
 
 import {UntypedFormControl} from "@angular/forms";
-import {Subscription, interval} from "rxjs";
+import {Subscription, interval, timer} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {Message, PaneLog, SseRoomState} from "../new_data";
 import {
@@ -101,7 +101,7 @@ export class ChatPaneComponent implements OnInit {
           (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
         );
     }
-    this.usersOnlineStatusSubscription = interval(5000).pipe(
+    this.usersOnlineStatusSubscription = timer(0, 5000).pipe(
       exhaustMap(_ => {
         return this.chatService.getApiRoomByRoomIdUsersStatus(this.paneLog.roomID)
       })

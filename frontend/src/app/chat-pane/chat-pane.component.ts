@@ -75,15 +75,20 @@ export class ChatPaneComponent implements OnInit {
             // update the remainingTime in real-time from the backend
             this.remainingTime = response.info.remainingTime
             // The aliases can be undefined in the panelLog given as input, so we retrieve them here
-          if (this.paneLog.myAlias === undefined) {
-            this.paneLog.myAlias = response.info.userAliases[0]
-          }
-          if (this.paneLog.otherAlias === undefined) {
-            this.paneLog.otherAlias = response.info.userAliases[1]
-          }
+            if (this.paneLog.myAlias === undefined) {
+              this.paneLog.myAlias = response.info.userAliases[0]
+            }
+            if (this.paneLog.otherAlias === undefined) {
+              this.paneLog.otherAlias = response.info.userAliases[1]
+            }
             this.handleChatSubscription(response, false)
           },
-          (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
+          (error) => {
+            console.log("Messages are not retrieved properly for the chat room.", error);
+            if (error.status === 429) {
+              this.alertService.error("Too many requests. Please try again later.", this.options);
+            }
+          },
         );
     } else {
       // For regular chat activities, we employ the SSE mechanism and subscribe to the cache within the commonService.
@@ -92,13 +97,19 @@ export class ChatPaneComponent implements OnInit {
       // So we need to update the remainingTime on the frontend.
       this.remainingTime = this.commonService.getInitialRemainingTimeByRoomId(this.paneLog.roomID) // corrected remainingTime
       this.lastUpdateRemainingTime = Date.now()
-      this.chatTimer = setInterval(() => {this.countdown()}, 1000)
+      this.chatTimer = setInterval(() => {
+        this.countdown()
+      }, 1000)
       this.chatMessagesSubscription = this.commonService.getChatStatusByRoomId(this.paneLog.roomID)
         .subscribe((response) => {
-            if (response == null) { return }
+            if (response == null) {
+              return
+            }
             this.handleChatSubscription(response, true)
           },
-          (error) => {console.log("Messages are not retrieved properly for the chat room.", error);},
+          (error) => {
+            console.log("Messages are not retrieved properly for the chat room.", error);
+          },
         );
     }
     this.usersOnlineStatusSubscription = timer(0, 5000).pipe(
@@ -130,20 +141,20 @@ export class ChatPaneComponent implements OnInit {
         this.lastGetTime = response.messages.slice(-1)[0].timeStamp + 1
       }
     }
-      response.messages.forEach(api_message => {
-        let message: Message;
-        message = {
-          myMessage: api_message.authorAlias == this.paneLog.myAlias,
-          ordinal: api_message.ordinal,
-          message: api_message.message,
-          time: api_message.timeStamp,
-          type: "",
-          recipients: api_message.recipients,
-          authorAlias: api_message.authorAlias
-        };
-        this.paneLog.ordinals = message.ordinal + 1
-        this.paneLog.messageLog[message.ordinal] = message
-      })
+    response.messages.forEach(api_message => {
+      let message: Message;
+      message = {
+        myMessage: api_message.authorAlias == this.paneLog.myAlias,
+        ordinal: api_message.ordinal,
+        message: api_message.message,
+        time: api_message.timeStamp,
+        type: "",
+        recipients: api_message.recipients,
+        authorAlias: api_message.authorAlias
+      };
+      this.paneLog.ordinals = message.ordinal + 1
+      this.paneLog.messageLog[message.ordinal] = message
+    })
 
     response.reactions.forEach(reaction => {
       this.paneLog.messageLog[reaction.messageOrdinal].type = reaction.type
@@ -167,7 +178,7 @@ export class ChatPaneComponent implements OnInit {
       // When the page or screen loses focus, the browser suspends or slows down some operations, including the
       // execution of timers. We need to subtract the actual elapsed time instead of using a fixed interval of 1000 ms.
       const currentTime = Date.now()
-      this.remainingTime -=  currentTime - this.lastUpdateRemainingTime
+      this.remainingTime -= currentTime - this.lastUpdateRemainingTime
       this.lastUpdateRemainingTime = currentTime
     } else {
       this.remainingTime = 0
@@ -182,19 +193,20 @@ export class ChatPaneComponent implements OnInit {
 
 // when the user wants to start rating
   rating(): void {
-      let questionsAsked = 0
-      for (let i = 0; i < this.paneLog.ordinals; i++) {
-        if (this.paneLog.messageLog[i].myMessage) {
-          questionsAsked++
-        }
+    let questionsAsked = 0
+    for (let i = 0; i < this.paneLog.ordinals; i++) {
+      if (this.paneLog.messageLog[i].myMessage) {
+        questionsAsked++
       }
+    }
 
-      if (this.paneLog.active && questionsAsked < this.num_to_ask) {
-        this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
-      } else {
-        this.paneLog.ratingOpen = !this.paneLog.ratingOpen
-      }
+    if (this.paneLog.active && questionsAsked < this.num_to_ask) {
+      this.alertService.warn("Please ask at least " + this.numQueries + " questions before rating!", {autoClose: true})
+    } else {
+      this.paneLog.ratingOpen = !this.paneLog.ratingOpen
+    }
   }
+
   close(): void {
     const responses: FeedbackResponseList = {responses: []};
     this.feedbackService.postApiFeedbackByRoomId(this.paneLog.roomID, undefined, responses).subscribe(
@@ -217,14 +229,18 @@ export class ChatPaneComponent implements OnInit {
   }
 
   @ViewChild('scroll') scroll!: ElementRef;
+
   scrollToBottom(): void {
-    try {this.scroll.nativeElement.scrollTop = this.scroll.nativeElement.scrollHeight;} catch(err) {
+    try {
+      this.scroll.nativeElement.scrollTop = this.scroll.nativeElement.scrollHeight;
+    } catch (err) {
       console.error(err)
     }
   }
 
   // the input field of this pane
   query = new UntypedFormControl("")
+
   poseQuery(): void {
     this.doQuery(this.query.value)
   }
@@ -246,7 +262,10 @@ export class ChatPaneComponent implements OnInit {
 
   // mark a message as THUMBS_UP/DOWN or STAR
   react(type: string, ordinal: number): void {
-    this.chatService.postApiRoomByRoomIdReaction(this.paneLog.roomID, undefined, {messageOrdinal: ordinal, type: type} as ChatMessageReaction).subscribe(
+    this.chatService.postApiRoomByRoomIdReaction(this.paneLog.roomID, undefined, {
+      messageOrdinal: ordinal,
+      type: type
+    } as ChatMessageReaction).subscribe(
       (response) => {
         //console.log("Messages is posted successfully to the room: ", this.paneLog.roomID);
       },

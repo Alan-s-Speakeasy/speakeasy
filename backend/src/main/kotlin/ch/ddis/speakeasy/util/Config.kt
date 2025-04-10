@@ -14,9 +14,9 @@ data class Config(
     val keystorePassword: String = "password",
     val dataPath: String = "data",
     // Amount of request allowed per rateLimitUnit.
-    val rateLimit: Int = 5,
+    val rateLimit: Int = 60 * 7,
     // Time unit for rate limiting.
-    val rateLimitUnit: TimeUnit = TimeUnit.SECONDS
+    val rateLimitUnit: TimeUnit = TimeUnit.MINUTES
     ){
 
     /**

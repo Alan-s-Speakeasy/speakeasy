@@ -64,9 +64,7 @@ export class PanelComponent implements OnInit {
     ).subscribe(
       response => {
         if (response) {
-          console.log(response);
           this.countUsers = response;
-          console.log(this.countUsers);
         }
       },
       error => {

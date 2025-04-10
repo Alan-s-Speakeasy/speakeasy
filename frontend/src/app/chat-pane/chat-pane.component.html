@@ -1,51 +1,60 @@
-<div class="card chat-app" *ngIf="!(paneLog.testerBotAlias)">
+<div class="card shadow-sm chat-app m-2 w-100">
   <div class="chat">
-
-
-    <div class="bg-light position-relative border-bottom border-secondary" style="width: 100%; height: 40px">
-      <div class="position-absolute top-0 start-0 d-flex flex-row">
-        <div>
-          <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" (click)="op.toggle($event)" />
-          <p-overlayPanel #op [style]="{ width: '350px' }" [showCloseIcon]="false">
-            <div class="d-flex flex-column">
-              <p class="fw-bold pb-1"> Room ID:</p>
-              <p> {{paneLog.roomID}} </p>
-            </div>
-          </p-overlayPanel>
-        </div>
+    <!-- Header with info button, timer, and close button -->
+    <div class="bg-light position-relative border-bottom d-flex align-items-center px-3 py-2">
+      <div class="d-flex align-items-center">
+        <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" (click)="op.toggle($event)" class="btn-transition" />
+        <p-overlayPanel #op [style]="{ width: '350px' }" [showCloseIcon]="false">
+          <div class="d-flex flex-column">
+            <p class="fw-bold pb-1">Room ID:</p>
+            <p class="mb-0">{{paneLog.roomID}}</p>
+          </div>
+        </p-overlayPanel>
       </div>
-      <div class="position-absolute top-0 end-0 d-flex flex-row">
-        <div class="my-auto me-1" [ngStyle]="{'color': remainingTime < 120000 ? 'red' : 'black'}">{{remainingTime | date: 'mm:ss'}} </div>
-        <span *ngIf="paneLog.formRef != ''"
-              (click)="rating()"
-              data-bs-toggle="button"
-              type="button"
-              class="w-auto h-100 text-center py-auto btn"
-        >
-          Assess <i class="fa fa-comment my-auto"></i>
-        </span>
-        <p-button [disabled]="paneLog.history || paneLog.spectate" class="" icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="paneLog.formRef == '' ? close() : rating()" severity="danger">
+
+      <div class="ms-auto d-flex align-items-center">
+        <div class="me-3 fw-medium" [ngClass]="{'text-danger': remainingTime < 120000, 'text-secondary': remainingTime >= 120000}">
+          <i class="pi pi-clock me-1"></i>{{remainingTime | date: 'mm:ss'}}
+        </div>
+
+        <button *ngIf="paneLog.formRef != ''"
+                (click)="rating()"
+                class="btn btn-outline-primary btn-sm me-2 d-flex align-items-center"
+                data-bs-toggle="button">
+          <span>Assess</span>
+          <i class="fa fa-comment ms-1"></i>
+        </button>
+
+        <p-button [disabled]="paneLog.history || paneLog.spectate"
+                  icon="pi pi-times"
+                  [rounded]="true"
+                  [text]="true"
+                  (onClick)="paneLog.formRef == '' ? close() : rating()"
+                  severity="danger"
+                  class="btn-transition">
         </p-button>
       </div>
     </div>
 
-    <div class="row text-center mx-auto p-0 bg-info text-white"
-         *ngIf="paneLog.assignment ">
-      <small> Assigned by TAs {{paneLog.formRef === '' ? '' : '(assessment required)'}} </small>
+    <!-- Status banner -->
+    <div class="alert alert-info py-1 mb-0 text-center rounded-0 animate__animated animate__fadeIn"
+         *ngIf="paneLog.assignment">
+      <small>Assigned by TAs {{paneLog.formRef === '' ? '' : '(assessment required)'}}</small>
     </div>
 
-    <div class="row text-center mx-auto p-0 bg-success bg-opacity-50 text-white"
-         *ngIf="!paneLog.assignment ">
-      <small> Requested manually {{paneLog.formRef === '' ? '' : '(assessment required)'}} </small>
+    <div class="alert alert-success py-1 mb-0 text-center rounded-0"
+         *ngIf="!paneLog.assignment">
+      <small>Requested manually {{paneLog.formRef === '' ? '' : '(assessment required)'}}</small>
     </div>
 
-    <div class="bg-light h-auto p-3">
-      <div class="d-flex flex-row mb-1 mx-2 bg-light">
-        <div class="position-relative">
+    <!-- User info section -->
+    <div class="bg-light p-3 border-bottom">
+      <div class="d-flex align-items-center">
+        <div class="position-relative me-3">
           <p-avatar
             label="{{paneLog.otherAlias[0].toUpperCase()}}"
-            styleClass="mr-2"
-            size="xlarge"
+            styleClass="shadow-sm"
+            size="large"
             [style]="{ 'background-color': '#dee9fc', color: '#1a2551' }"
             shape="circle" />
           <!-- Online status indicator -->
@@ -56,95 +65,141 @@
             [title]="paneLog.isOtherOnline ? 'Online' : 'Offline'">
           </span>
         </div>
-        <div class="d-flex flex-column justify-content-center ms-2">
-          <div class="d-flex align-items-center">
-            <h5 class="mt-2 mb-0 me-2">{{paneLog.otherAlias}}</h5>
-            <small *ngIf="paneLog.isOtherOnline" class="text-success">online</small>
-            <small *ngIf="!paneLog.isOtherOnline" class="text-secondary">offline</small>
+
+        <div>
+          <div class="d-flex align-items-center flex-wrap">
+            <h5 class="mb-0 me-2">{{paneLog.otherAlias}}</h5>
+            <span *ngIf="paneLog.isOtherOnline" class="badge bg-success text-white">online</span>
+            <span *ngIf="!paneLog.isOtherOnline" class="badge bg-secondary text-white">offline</span>
+            <!-- Tester Bot Badge - Added visual indicator -->
+            <span *ngIf="paneLog.testerBotAlias" class="badge bg-warning text-dark ms-1">
+              <i class="fa fa-robot me-1"></i>Tester Bot
+            </span>
           </div>
-          <i>Bot</i>
+          <div class="text-muted fst-italic">Bot</div>
         </div>
       </div>
 
-      <div class="mx-2">
-        <div style="overflow-y: scroll; height:70px;" class="custom-scroll">
-          <p class="text-wrap fst-italic">
-            {{paneLog.prompt}}
-          </p>
+      <!-- Prompt section -->
+      <div class="mt-3" *ngIf="!paneLog.testerBotAlias">
+        <div class="card bg-light border-0">
+          <div class="card-body py-2 px-3">
+            <div style="max-height: 70px; overflow-y: auto;" class="custom-scroll">
+              <p class="text-wrap fst-italic mb-0 small">
+                {{paneLog.prompt}}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-
-
-    <div class="chat-history" style="overflow-y: scroll; height:400px" #scroll>
-      <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
-        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage">
-          <div class="message-data">
-            <span class="message-data-time">{{ paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy' }}</span>
+    <!-- Chat messages -->
+    <div class="chat-history p-3" style="height: 400px; overflow-y: auto;" #scroll>
+      <ul class="list-unstyled m-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
+        <!-- Other's messages TODO : Figure out why we fitler out with testbotAlias is not empty -->
+        <li class="mb-3 animate__animated animate__fadeIn"
+            *ngIf="!paneLog.messageLog[ordinal].myMessage &&
+            (!paneLog.testerBotAlias || paneLog.messageLog[ordinal].recipients.includes(paneLog.myAlias))">
+          <div class="message-data mb-1">
+            <span class="text-muted small">{{ paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy' }}</span>
+            <!-- Show author alias for tester bot mode -->
+            <span class="text-muted small" *ngIf="paneLog.testerBotAlias"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
           </div>
-          <div class="message other-message" style="max-width: 100%; white-space: pre-line">
-            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-            <div *ngIf="!paneLog.spectate">
-              <span
-                (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)"
-                class="label label-default" style="padding-left: 10px"
-                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'THUMBS_UP' ? '#3597E6' : 'gray'}"
-              >
-                <i class="fa fa-thumbs-up"></i>
-              </span>
-              <span
-                (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)"
-                class="label label-default" style="padding-left: 10px"
-                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN' ? '#E64D3D' : 'gray'}"
-              >
-                <i class="fa fa-thumbs-down"></i>
-              </span>
-              <span
-                (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)"
-                class="label label-default" style="padding-left: 10px"
-                [ngStyle]="{'cursor': paneLog.active ? 'pointer' : 'auto', 'color': paneLog.messageLog[ordinal].type == 'STAR' ? 'gold' : 'gray'}"
-              >
-                <i class="fa fa-star"></i>
-              </span>
+
+          <!-- Regular bot message -->
+          <div *ngIf="!paneLog.testerBotAlias"
+               class="message other-message bg-light p-3 rounded-3 shadow-sm"
+               style="max-width: 85%; white-space: pre-line">
+            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"></span>
+
+            <div *ngIf="!paneLog.spectate" class="mt-2 d-flex align-items-center">
+              <div class="d-flex align-items-center">
+                <button
+                  (click)="react('THUMBS_UP', paneLog.messageLog[ordinal].ordinal)"
+                  class="btn btn-sm p-1 border-0 bg-transparent"
+                  [ngClass]="{'text-primary': paneLog.messageLog[ordinal].type == 'THUMBS_UP'}"
+                  [disabled]="!paneLog.active"
+                  title="Like">
+                  <i class="fa fa-thumbs-up"></i>
+                </button>
+
+                <button
+                  (click)="react('THUMBS_DOWN', paneLog.messageLog[ordinal].ordinal)"
+                  class="btn btn-sm p-1 border-0 bg-transparent"
+                  [ngClass]="{'text-danger': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN'}"
+                  [disabled]="!paneLog.active"
+                  title="Dislike">
+                  <i class="fa fa-thumbs-down"></i>
+                </button>
+
+                <button
+                  (click)="react('STAR', paneLog.messageLog[ordinal].ordinal)"
+                  class="btn btn-sm p-1 border-0 bg-transparent"
+                  [ngClass]="{'text-warning': paneLog.messageLog[ordinal].type == 'STAR'}"
+                  [disabled]="!paneLog.active"
+                  title="Star">
+                  <i class="fa fa-star"></i>
+                </button>
+              </div>
+
               <app-copy-button
                 [textToCopy]="paneLog.messageLog[ordinal].message"
-                [isActive]="paneLog.active"
+                [isActive]="true"
                 [resetTimeout]="2000">
               </app-copy-button>
             </div>
+          </div>
 
+          <!-- Tester bot messages with different styles -->
+          <div *ngIf="paneLog.testerBotAlias"
+               [ngClass]="{'message p-3 rounded-3 shadow-sm': true,
+                          'bg-light': paneLog.messageLog[ordinal].authorAlias == paneLog.testerBotAlias,
+                          'bg-info bg-opacity-10': paneLog.messageLog[ordinal].authorAlias != paneLog.testerBotAlias}"
+               style="max-width: 85%; white-space: normal">
+            <!-- Added tester bot label within messages for better visibility -->
+            <div *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.testerBotAlias"
+                 class="position-relative mb-2">
+              <span class="badge bg-warning text-dark">Tester Bot</span>
+            </div>
+            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"></span>
           </div>
         </li>
 
-        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage">
-          <div class="message-data">
-            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
+        <!-- My messages -->
+        <li class="mb-3 text-end animate__animated animate__fadeIn"
+            *ngIf="paneLog.messageLog[ordinal].myMessage &&
+            (!paneLog.testerBotAlias || paneLog.messageLog[ordinal].recipients.includes(paneLog.myAlias))">
+          <div class="message-data mb-1">
+            <span class="text-muted small">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss dd-MM-yyyy'}}</span>
+            <span class="text-muted small" *ngIf="paneLog.testerBotAlias"> - You</span>
           </div>
-          <div class="message my-message" style="max-width: 100%; white-space: pre-line">
-            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-            <div *ngIf="!paneLog.spectate">
-              <span
-                class="label label-default pe-none" style="padding-left: 10px"
-                [ngStyle]="{'color': paneLog.messageLog[ordinal].type == 'THUMBS_UP' ? '#3597E6' : '#b2b2bd'}"
-              >
-                <i class="fa fa-thumbs-up"></i>
-              </span>
-              <span
-                class="label label-default pe-none" style="padding-left: 10px"
-                [ngStyle]="{'color': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN' ? '#E64D3D' : '#b2b2bd'}"
-              >
-                <i class="fa fa-thumbs-down"></i>
-              </span>
-              <span
-                class="label label-default pe-none" style="padding-left: 10px"
-                [ngStyle]="{'color': paneLog.messageLog[ordinal].type == 'STAR' ? 'gold' : '#b2b2bd'}"
-              >
-                <i class="fa fa-star"></i>
-              </span>
+
+          <div class="message my-message bg-primary bg-opacity-75 text-white p-3 rounded-3 shadow-sm ms-auto"
+               style="max-width: 85%; white-space: pre-line">
+            <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"></span>
+
+            <div *ngIf="!paneLog.spectate && !paneLog.testerBotAlias" class="mt-2 d-flex align-items-center justify-content-end">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-sm border-0 text-white opacity-75" [disabled]="true"
+                        [ngClass]="{'opacity-100 fw-bold': paneLog.messageLog[ordinal].type == 'THUMBS_UP'}">
+                  <i class="fa fa-thumbs-up"></i>
+                </button>
+
+                <button class="btn btn-sm border-0 text-white opacity-75" [disabled]="true"
+                        [ngClass]="{'opacity-100 fw-bold': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN'}">
+                  <i class="fa fa-thumbs-down"></i>
+                </button>
+
+                <button class="btn btn-sm border-0 text-white opacity-75" [disabled]="true"
+                        [ngClass]="{'opacity-100 fw-bold': paneLog.messageLog[ordinal].type == 'STAR'}">
+                  <i class="fa fa-star"></i>
+                </button>
+              </div>
+
               <app-copy-button
                 [textToCopy]="paneLog.messageLog[ordinal].message"
-                [isActive]="paneLog.active"
+                [isActive]="true"
                 [resetTimeout]="2000">
               </app-copy-button>
             </div>
@@ -153,94 +208,79 @@
       </ul>
     </div>
 
-    <div *ngIf="!paneLog.spectate && !paneLog.history">
-      <div class="chat-message clearfix">
-        <div class="input-group">
-          <textarea cdkTextareaAutosize="true"
-                    cdkAutosizeMinRows="1"
-                    cdkAutosizeMaxRows="5"
-                    class="form-control"
-                    placeholder="Ask a question..."
-                    maxlength="2000"
-                    [readonly]="!paneLog.active"
-                    [disabled]="!paneLog.active"
-                    [formControl]="query"
-                    (keydown)="handleKeyDown($event)">
+    <!-- Input area -->
+    <div *ngIf="!paneLog.spectate && !paneLog.history" class="chat-message p-3 bg-light border-top">
+      <div class="input-group">
+        <textarea cdkTextareaAutosize="true"
+                  cdkAutosizeMinRows="1"
+                  cdkAutosizeMaxRows="5"
+                  class="form-control rounded-start"
+                  placeholder="Type your message..."
+                  maxlength="2000"
+                  [readonly]="!paneLog.active"
+                  [disabled]="!paneLog.active"
+                  [formControl]="query"
+                  (keydown)="handleKeyDown($event)">
         </textarea>
-        </div>
+
+        <button class="btn btn-primary rounded-end d-flex align-items-center justify-content-center"
+                [disabled]="!paneLog.active || !query.value?.trim()"
+                (click)="doQuery(query.value)">
+          <i class="fa fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="text-end mt-1">
+        <small class="text-muted">{{query.value?.length || 0}}/2000</small>
       </div>
     </div>
-
-
   </div>
 </div>
 
+<style>
+  .btn-transition {
+    transition: all 0.2s ease;
+  }
 
-<div class="card chat-app"  *ngIf="paneLog.testerBotAlias">
-  <div class="chat">
-    <div class="row p-2">
-      <div class="chat-header text-center" style="white-space: break-spaces">
-        <h5>
-          Chat with {{paneLog.otherAlias}}
-          <span *ngIf="paneLog.isOtherOnline" class="badge bg-success ms-2" style="font-size: 0.6em;">online</span>
-          <span *ngIf="!paneLog.isOtherOnline" class="badge bg-secondary ms-2" style="font-size: 0.6em;">offline</span>
-        </h5>
-      </div>
-    </div>
+  .btn-transition:hover:not(:disabled) {
+    transform: scale(1.1);
+  }
 
-    <div class="chat-history" style="overflow-y: scroll; height: 500px" #scroll>
+  .chat-history .message {
+    transition: all 0.2s ease;
+  }
 
-      <ul class="m-b-0" *ngFor="let x of range(paneLog.ordinals); let ordinal = index">
+  /* Ensure smooth scrolling */
+  .custom-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.2) transparent;
+  }
 
-        <li class="clearfix text-start" *ngIf="!paneLog.messageLog[ordinal].myMessage
-        && paneLog.messageLog[ordinal].recipients.includes(paneLog.myAlias)">
-          <div class="message-data">
-            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
-            <span class="message-data-time"> - {{paneLog.messageLog[ordinal].authorAlias}}</span>
-          </div>
-          <div class="message other-message" *ngIf="paneLog.messageLog[ordinal].authorAlias == paneLog.testerBotAlias"
-               style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-          </div>
-          <div class="message evaluated-message" *ngIf="paneLog.messageLog[ordinal].authorAlias != paneLog.testerBotAlias"
-               style="max-width: 100%; white-space: normal"> <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span>
-          </div>
-        </li>
+  .custom-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
 
-        <li class="clearfix text-end" *ngIf="paneLog.messageLog[ordinal].myMessage
-        && paneLog.messageLog[ordinal].recipients.includes(paneLog.myAlias)">
-          <div class="message-data">
-            <span class="message-data-time">{{paneLog.messageLog[ordinal].time | date:'HH:mm:ss'}}</span>
-            <span class="message-data-time"> - You </span>
-          </div>
-          <div class="message my-message" style="max-width: 100%; white-space: normal"><span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"> </span></div>
-        </li>
-      </ul>
-    </div>
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 3px;
+  }
 
-    <div *ngIf="!paneLog.spectate && !paneLog.history">
-      <div class="chat-message clearfix">
-        <div class="input-group">
-          <input (keyup.enter)="poseQuery()" type="text" class="form-control" placeholder="ask a question..." maxlength="1000" [readonly]="!paneLog.active" [formControl]="query">
-          <div class="input-group-append">
-            <button (click)="poseQuery()" class="btn btn-outline-primary" type="button" [disabled]="!paneLog.active">Send</button>
-          </div>
-          <div class="input-group-append">
-            <ng-container *ngIf="paneLog.formRef === ''; then directlyClose; else assess"></ng-container>
-            <ng-template #directlyClose>
-              <button (click)="close()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
-                Close <i class="fa fa-chevron-circle}}"></i>
-              </button>
-            </ng-template>
-            <ng-template #assess>
-              <button (click)="rating()" class="btn btn-outline-success"  data-bs-toggle="button" type="button" style="margin-left: 10px">
-                Assess <i class="fa fa-chevron-circle-{{paneLog.ratingOpen ? 'left' : 'right'}}"></i>
-              </button>
-            </ng-template>
-          </div>
-        </div>
-      </div>
-    </div>
+  /* Animation classes */
+  .animate__animated {
+    animation-duration: 0.5s;
+  }
 
+  .animate__fadeIn {
+    animation-name: fadeIn;
+  }
 
-  </div>
-</div>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

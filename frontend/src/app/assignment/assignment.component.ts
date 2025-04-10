@@ -354,7 +354,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     }).subscribe(response => {
       let selectedHumans = this.humans.filter(h => this.isHumanSelected.get(h))
       this.nextAssignment = response
-      this.notOptimalAssignment = this.nextAssignment.length / selectedHumans.length != this.botsPerUser
       this.generated = true
     }, error => {
       this.alertService.error("Next round could not be created.", this.options)

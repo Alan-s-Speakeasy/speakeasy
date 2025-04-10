@@ -306,8 +306,6 @@
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
             Next Round
-            <i *ngIf="notOptimalAssignment" class="fa fa-warning text-warning ms-2"
-               matTooltip="Not optimal. Try again or change settings."></i>
           </h5>
           <button (click)="startNextRound()"
                   [disabled]="remainingTime > 0 || changeAfterGenerate || !generated"

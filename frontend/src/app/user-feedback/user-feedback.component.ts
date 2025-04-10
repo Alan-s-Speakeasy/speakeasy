@@ -171,8 +171,17 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
                 let username = this.authorPerspective ? response.author : response.recipient;
                 response.responses.forEach(resp => {
                   if (!this.nonOptionQuestionIds.includes(resp.id)) {
-                    let current = this.chartDataPerUsername.get(username)![parseInt(resp.id)].get(resp.value) || 0;
-                    this.chartDataPerUsername.get(username)![parseInt(resp.id)].set(resp.value, current + 1);
+                    const q_id = parseInt(resp.id);
+                    // NOTE : Sometimes the question id is out of bounds (like it does not correspond to the question id in the form)
+                    // this can happen when for example the question id start from 1 to N, when the table is from 0 to N-1.
+                    // This is by design of the backend: it always return the raw CSV line containing the question id and the answer
+                    // AS generateEmptyChartBucketsPerUsername() return a list, we map each indices to the question id
+                    // But the problem arrises when the question id does not start from 0, is it therefore not an index.
+                    // TODO : Change this, I think the whole file should be rewritten at this point to use more comprehensive data structures
+                    if (q_id >= 0 && q_id < this.chartDataPerUsername.get(username)!.length) {
+                      let current = this.chartDataPerUsername.get(username)![q_id].get(resp.value) || 0;
+                      this.chartDataPerUsername.get(username)![q_id].set(resp.value, current + 1);
+                    }
                   }
                 });
               }

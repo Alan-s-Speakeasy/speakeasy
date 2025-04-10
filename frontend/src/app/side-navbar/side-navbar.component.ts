@@ -7,6 +7,7 @@ import {NgClass, NgForOf, NgIf, NgOptimizedImage, NgStyle} from "@angular/common
 import {NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle} from "@ng-bootstrap/ng-bootstrap";
 import {AvatarModule} from "primeng/avatar";
 import {AlertService} from "../alert";
+import {AlertComponent} from "../alert/alert.component";
 
 @Component({
   selector: 'app-side-navbar',
@@ -23,7 +24,8 @@ import {AlertService} from "../alert";
     AvatarModule,
     NgStyle,
     NgClass,
-    NgIf
+    NgIf,
+    AlertComponent
   ],
   templateUrl: './side-navbar.component.html',
   styleUrl: './side-navbar.component.css'

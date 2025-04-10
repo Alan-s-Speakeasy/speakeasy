@@ -1,20 +1,20 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
 
-import { AppComponent } from './app.component';
-import { LoginComponent } from './login/login.component';
+import {AppComponent} from './app.component';
+import {LoginComponent} from './login/login.component';
 
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import { AppRoutingModule } from './app-routing.module';
-import { PanelComponent } from './panel/panel.component';
-import { PasswordComponent } from './password/password.component';
-import { HistoryComponent } from './history/history.component';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { ChatComponent } from './chat/chat.component';
-import { RatingPaneComponent } from './rating-pane/rating-pane.component';
+import {AppRoutingModule} from './app-routing.module';
+import {PanelComponent} from './panel/panel.component';
+import {PasswordComponent} from './password/password.component';
+import {HistoryComponent} from './history/history.component';
+import {provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
+import {ChatComponent} from './chat/chat.component';
+import {RatingPaneComponent} from './rating-pane/rating-pane.component';
 import {ChatPaneComponent, CopyButtonComponent} from './chat-pane/chat-pane.component';
-import { UserStatusComponent } from './user-status/user-status.component';
-import { ChatroomStatusComponent } from './chatroom-status/chatroom-status.component';
+import {UserStatusComponent} from './user-status/user-status.component';
+import {ChatroomStatusComponent} from './chatroom-status/chatroom-status.component';
 import {FrontendDataService} from "./frontend-data.service";
 import {ApiModule, Configuration} from "../../openapi";
 import {AppConfig} from "./app.config";
@@ -52,31 +52,34 @@ import {
 import {FeedbackStatsTableComponent} from "./user-feedback/feedback-stats-table/feedback-stats-table.component";
 import {NgOptimizedImage} from "@angular/common";
 import {SideNavbarComponent} from "./side-navbar/side-navbar.component";
+import {AlertComponent} from "./alert/alert.component";
 
 export function initializeApiConfig() {
   const appConfig = new AppConfig();
   return new Configuration({basePath: appConfig.basePath, withCredentials: true});
 }
 
-@NgModule({ declarations: [
-        AppComponent,
-        LoginComponent,
-        PanelComponent,
-        PasswordComponent,
-        HistoryComponent,
-        ChatComponent,
-        RatingPaneComponent,
-        RatingPaneHistoryComponent,
-        ChatPaneComponent,
-        UserStatusComponent,
-        ChatroomStatusComponent,
-        ChatCommandsPipe,
-        ChatSpectateComponent,
-        UserFeedbackComponent,
-        AssignmentComponent,
-        UserTableComponent
-    ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
+@NgModule({
+  declarations: [
+    AppComponent,
+    LoginComponent,
+    PanelComponent,
+    PasswordComponent,
+    HistoryComponent,
+    ChatComponent,
+    RatingPaneComponent,
+    RatingPaneHistoryComponent,
+    ChatPaneComponent,
+    UserStatusComponent,
+    ChatroomStatusComponent,
+    ChatCommandsPipe,
+    ChatSpectateComponent,
+    UserFeedbackComponent,
+    AssignmentComponent,
+    UserTableComponent,
+  ],
+  bootstrap: [AppComponent],
+  imports: [BrowserModule,
     ReactiveFormsModule,
     AppRoutingModule,
     FormsModule,
@@ -92,9 +95,13 @@ export function initializeApiConfig() {
     MatCheckboxModule,
     MatSliderModule,
     MatTooltipModule,
-    MatInputModule, NgbdDatepickerRangePopup, NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent, NgOptimizedImage, FeedbackStatsTableComponent, SideNavbarComponent], providers: [
-        FrontendDataService,
-        { provide: Configuration, useFactory: initializeApiConfig },
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
-export class AppModule { }
+    MatInputModule, NgbdDatepickerRangePopup,
+    NgSelectComponent, NgOptionComponent, AvatarModule, Button, PanelModule, ScrollPanelModule, OverlayPanelModule, InputTextModule, CdkCopyToClipboard, TooltipModule, CopyButtonComponent, UsersInvolvedSelectedComponent, UsersInvolvedSelectedComponent, NgOptimizedImage, FeedbackStatsTableComponent, SideNavbarComponent],
+  providers: [
+    FrontendDataService,
+    {provide: Configuration, useFactory: initializeApiConfig},
+    provideHttpClient(withInterceptorsFromDi())
+  ]
+})
+export class AppModule {
+}

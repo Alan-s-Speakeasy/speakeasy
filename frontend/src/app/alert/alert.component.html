@@ -1,5 +1,15 @@
-<div *ngFor="let alert of alerts" class="{{cssClass(alert)}}">
-  <a class="close" (click)="removeAlert(alert)"><i class="fa fa-close" style="color: black; cursor: pointer;"></i></a>
-  &nbsp;
-  <span [innerHTML]="alert.message"></span>
+<div class="d-flex flex-column gap-2">
+  <div *ngFor="let alert of alerts.slice().reverse()" 
+       class="alert alert-dismissible d-flex align-items-center"
+       [@fadeAnimation]
+       [ngClass]="{
+         'alert-success': alert.type === 0,
+         'alert-danger': alert.type === 1,
+         'alert-info': alert.type === 2,
+         'alert-warning': alert.type === 3
+       }"
+       role="alert">
+    <span class="flex-grow-1" [innerHTML]="alert.message"></span>
+    <button type="button" class="btn-close" (click)="removeAlert(alert)" aria-label="Close"></button>
+  </div>
 </div>

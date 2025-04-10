@@ -6,14 +6,16 @@ import {AlertModule} from "./alert";
 
 /**
  * MINIMAL LAYOUT
- * - Used for pages like Login, Registration, Password Reset, etc.
+ * - Used for pages like Login
  * - Contains NO sidebar
  */
 @Component({
   selector: 'app-minimal-layout',
   // Inline template to avoid a separate HTML file
   template: `
+    <div class="position-fixed top-0 start-50 translate-middle-x" style="z-index: 1050; width: 100%; max-width: 600px;">
       <alert></alert>
+    </div>
     <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
       <router-outlet></router-outlet>
     </div>
@@ -45,7 +47,6 @@ export class MinimalLayoutComponent {}
       <!-- Main content area -->
       <div class="p-1" style="margin-left: 280px; width: calc(100% - 280px)">
         <div class="position-fixed fixed-top">
-          <alert></alert>
         </div>
         <router-outlet></router-outlet>
       </div>

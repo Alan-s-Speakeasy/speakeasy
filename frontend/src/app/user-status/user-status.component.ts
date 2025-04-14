@@ -47,7 +47,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
               private modalService: NgbModal) {
   }
 
-  private allRoomsSubscription!: Subscription;
   private userSessionSubscription!: Subscription;
   private userListSubscription!: Subscription;
   private allGroupsSubscription!: Subscription;
@@ -85,7 +84,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
     "Humans": [1], "Bots": [1], "Admins": [1]
   };
 
-
   groupList: FrontendGroup[] = []
 
   toggleElement: number = -1
@@ -105,31 +103,15 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   groupNameToRemove: string = ""
 
-  allChatroomDetails: FrontendChatroomDetail[] = []
+  // Map to store chatrooms for each user
+  userChatrooms: { [key: string]: FrontendChatroomDetail[] } = {}
+  // Track loading state for each user
+  loadingChatrooms: { [key: string]: boolean } = {}
 
   ngOnInit(): void {
     this.titleService.setTitle("User Details")
 
-    this.allRoomsSubscription = interval(2500)
-      .pipe(exhaustMap(_ => {
-        return this.adminService.getApiRoomsAll()
-      }))
-      .subscribe((allchatrooms) => {
-        allchatrooms.rooms.forEach(room => {
-          let update = true
-          this.allChatroomDetails.forEach(currentRoom => {
-            if (currentRoom.roomID == room.uid) {
-              update = false
-              currentRoom.remainingTime = room.remainingTime
-            }
-          })
-          if (update) {
-            this.pushChatRoomDetails(this.allChatroomDetails, room)
-          }
-        })
-      })
-
-    this.allGroupsSubscription = timer(2500, 10_000)
+    this.allGroupsSubscription = timer(0, 5_000)
       .pipe(exhaustMap(_ => {
         return this.adminService.getApiGroupList()
       }))
@@ -141,11 +123,12 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         )
       })
 
-    this.userSessionSubscription = timer(2500, 10_000)
+    this.userSessionSubscription = timer(0, 10_000)
       .pipe(exhaustMap(_ => {
         return this.adminService.getApiUserSessions()
       }))
       .subscribe((usersessions) => {
+        // Just why
         while (this.humanDetails.length > 0) {
           this.humanDetails.pop()
         }
@@ -178,7 +161,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
         })
       })
 
-    this.userListSubscription = timer(2500, 10_000)
+    this.userListSubscription = timer(0, 10_000)
       .pipe(exhaustMap(_ => {
         return this.adminService.getApiUserList()
       }))
@@ -214,9 +197,42 @@ export class UserStatusComponent implements OnInit, OnDestroy {
           this.pagesArrayOfUserLists[element.name] =
             Array.from({length: maxPage}, (_, i) => i + 1);
         })
-
-
       })
+  }
+
+  // Load chatrooms for a specific user
+  loadUserChatrooms(username: string, userID: string) {
+    if (!this.userChatrooms[username]) {
+      this.loadingChatrooms[username] = true;
+      this.adminService.getApiRoomsAll(1, 100, undefined, [`${userID},`])
+        .subscribe({
+          next: (response) => {
+            this.userChatrooms[username] = [];
+            response.rooms.forEach(room => {
+              this.pushChatRoomDetails(this.userChatrooms[username], room);
+            });
+            this.loadingChatrooms[username] = false;
+          },
+          error: () => {
+            this.loadingChatrooms[username] = false;
+            this.alertService.error("Failed to load chatrooms for user " + username, this.options);
+          }
+        });
+    }
+  }
+
+  // Handle row expansion
+  toggleUserDetails(element: any, i: number) {
+    if (this.toggleElement === i && this.toggleList === element.name) {
+      this.toggleElement = -1;
+      this.toggleList = "";
+    } else {
+      this.toggleElement = i;
+      this.toggleList = element.name;
+      // Load chatrooms for the user when expanding
+      const user = element.details[i];
+      this.loadUserChatrooms(user.username, user.userID);
+    }
   }
 
   paginate<T>(list: T[], currentPage: number): T[] {
@@ -354,7 +370,7 @@ export class UserStatusComponent implements OnInit, OnDestroy {
           roomID: chatroomDetail.roomID,
           username: user.username,
           userAlias: user.alias,
-          partnerAlias: partner.username,
+          partnerAlias: partner.alias,
           backUrl: "userStatus"
         }
       }).then()
@@ -526,7 +542,6 @@ export class UserStatusComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.userListSubscription.unsubscribe();
-    this.allRoomsSubscription.unsubscribe();
     this.userSessionSubscription.unsubscribe();
     this.allGroupsSubscription.unsubscribe();
   }

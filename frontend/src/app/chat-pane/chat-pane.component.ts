@@ -68,7 +68,7 @@ export class ChatPaneComponent implements OnInit {
       // Handling administrator spectate of a chatroom that is not in the cache,
       // we are still utilizing a polling mechanism to address this administrator functionality.
       // If it is viewed as a history, the subscription will only execute once.
-      this.chatMessagesSubscription = interval(2000)
+      this.chatMessagesSubscription = timer(0, 2000)
         .pipe(exhaustMap(_ => {
           return this.chatService.getApiRoomByRoomId(this.paneLog.roomID, this.lastGetTime)
         })).subscribe((response) => {

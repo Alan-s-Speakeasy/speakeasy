@@ -8,7 +8,7 @@ import {ChatPaneComponent} from "../chat-pane/chat-pane.component";
 import {ChatService, FeedbackService, ChatRequest, ChatRoomInfo} from "../../../openapi";
 import {Component, Inject, OnDestroy, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {AuthService} from "../authentication.service";
-import {interval, Subscription} from "rxjs";
+import {interval, Subscription, timer} from "rxjs";
 import {exhaustMap} from "rxjs/operators";
 import {AlertService} from "../alert";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -55,7 +55,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     // rooms EventListener will listen to sse and update _Rooms (as well as Rooms and currentRooms)
     this.commonService.openSseAndListenRooms(false)
 
-    this.chatroomSubscription = interval(1000)
+    this.chatroomSubscription = timer(0, 1000)
       .pipe(exhaustMap(_ => {return this.commonService.currentRooms}))
       .subscribe(
         (response) => {

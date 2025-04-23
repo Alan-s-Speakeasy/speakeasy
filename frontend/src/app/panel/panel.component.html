@@ -21,7 +21,10 @@
       <div class="card rounded-0 border">
         <div class="card-body text-center py-4">
           <h5 class="card-title">Total Bots</h5>
-          <h2 class="display-4">{{ countUsers.countBots }}</h2>
+<!--
+          Little secret : countHumans + countBots does not sum up to countUsers because of the "special" users (evaluators, etc.)
+-->
+          <h2 class="display-4">{{ countUsers.countUsers - countUsers.countHumans }}</h2>
           <p class="text-muted">Bot accounts</p>
         </div>
       </div>

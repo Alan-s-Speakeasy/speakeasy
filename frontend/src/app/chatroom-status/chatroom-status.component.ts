@@ -3,6 +3,7 @@ import {Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {FrontendChatroomDetail} from "../new_data";
 import {CommonService} from "../common.service";
+import {FrontendDataService} from "../frontend-data.service";
 
 import {AdminService, ChatRoomAdminInfo, UserDetails} from "../../../openapi";
 import {Subscription, timer} from "rxjs";
@@ -21,7 +22,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   constructor(private router: Router, private titleService: Title,
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
-              private http : HttpClient) { }
+              private http : HttpClient,
+              private frontendDataService: FrontendDataService) { }
 
   private activeRoomsSubscription!: Subscription;
 
@@ -49,6 +51,13 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
+
+    // Restore selected chatrooms from localStorage if they exist
+    const savedSelectedChatrooms = this.frontendDataService.getItem('selectedChatrooms');
+    if (savedSelectedChatrooms) {
+      const selectedIds = JSON.parse(savedSelectedChatrooms);
+      this.selectedChatRoomsIdsForExport = new Set(selectedIds);
+    }
 
     this.activeRoomsSubscription = timer(2500, 10_000)
       .pipe(exhaustMap(_ => {return this.adminService.getApiRoomsActive()}))
@@ -87,6 +96,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   resetFiltersAllChat() {
     this.dateRangeSelected = {from: null, to: null};
     this.selectedUserConditions = [];
+    this.selectedChatRoomsIdsForExport = new Set<string>();
+    // Clear selected chatrooms from localStorage
+    this.frontendDataService.removeItem('selectedChatrooms');
     this.setCurrentPage(1, false);
   }
 
@@ -167,6 +179,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     else {
       this.selectedChatRoomsIdsForExport.add(roomID);
     }
+    
+    // Save selected chatrooms to localStorage
+    this.frontendDataService.setItem('selectedChatrooms', JSON.stringify(Array.from(this.selectedChatRoomsIdsForExport)));
   }
 
   /**

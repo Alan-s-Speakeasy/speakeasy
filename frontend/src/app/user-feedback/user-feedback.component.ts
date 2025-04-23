@@ -30,6 +30,7 @@ import {
   ApexYAxis,
   ChartComponent
 } from "ng-apexcharts";
+import {FrontendDataService} from "../frontend-data.service";
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -77,7 +78,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
               @Inject(FeedbackService) private feedbackService: FeedbackService,
               @Inject(AdminService) private adminService: AdminService,
               public alertService: AlertService,
-              private modalService: NgbModal) {
+              private modalService: NgbModal,
+              private frontendDataService: FrontendDataService) {
   }
 
   private feedbackSubscription!: Subscription;
@@ -119,6 +121,12 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.titleService.setTitle("Evaluation Feedback");
+
+    // Restore selected users from localStorage if they exist
+    const savedSelectedUsers = this.frontendDataService.getItem('selectedFeedbackUsers');
+    if (savedSelectedUsers) {
+      this.selectedUsernames = JSON.parse(savedSelectedUsers);
+    }
 
     this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
       this.formNameOptions = feedbackForms.forms.map(form => form.formName);
@@ -280,12 +288,16 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
     } else {
       this.selectedUsernames.push(username);
     }
+    // Save selected users to localStorage
+    this.frontendDataService.setItem('selectedFeedbackUsers', JSON.stringify(this.selectedUsernames));
     this.applyFilter();
   }
 
   switchAll(): void {
     this.selectedUsernames = this.selectedUsernames.length == this.usernames.length ? [] : [...this.usernames];
-    this.applyFilter()
+    // Save selected users to localStorage
+    this.frontendDataService.setItem('selectedFeedbackUsers', JSON.stringify(this.selectedUsernames));
+    this.applyFilter();
   }
 
   applyFilter(): void {
@@ -299,6 +311,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
 
   resetSelected(): void {
     this.selectedUsernames = [];
+    // Clear selected users from localStorage
+    this.frontendDataService.removeItem('selectedFeedbackUsers');
     this.applyFilter();
   }
 
@@ -550,6 +564,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.feedbackSubscription.unsubscribe();
+    if (this.feedbackSubscription) {
+      this.feedbackSubscription.unsubscribe();
+    }
   }
 }

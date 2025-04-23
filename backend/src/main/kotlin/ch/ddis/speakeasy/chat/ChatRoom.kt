@@ -8,7 +8,9 @@ import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import com.opencsv.ICSVWriter
 import kotlinx.serialization.Serializable
+import java.util.*
 import java.util.concurrent.locks.StampedLock
+import kotlin.collections.HashMap
 import kotlin.math.max
 
 typealias ChatRoomId = UID
@@ -181,6 +183,8 @@ data class ExportableChatRoom(
 ) {
 
     companion object {
+        private val dateFormatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
         /**
          * Writes a list of ExportableChatRoom objects to an already opened writer object, used for exporting chatrooms.
          *
@@ -202,7 +206,7 @@ data class ExportableChatRoom(
             chatRoom.messages.forEach { message ->
                 writer.writeNext(
                     arrayOf(
-                        message.timeStamp.toString(),
+                        dateFormatter.format(Date(message.timeStamp)),
                         message.authorUserName,
                         message.authorAlias,
                         message.message,

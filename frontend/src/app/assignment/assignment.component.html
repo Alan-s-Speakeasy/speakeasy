@@ -77,7 +77,8 @@
               <div class="col-md-11">
           <textarea style="height: 70px" type="text" class="form-control"
                     [ngClass]="{'is-invalid': promptsError.length > 0}"
-                    placeholder="Add prompts here" [formControl]="promptForm"></textarea>
+                    placeholder="Add prompts here" [formControl]="promptForm"
+                    (input)="promptsError = ''"></textarea>
                 <div *ngIf="promptsError.length > 0" class="invalid-feedback d-block">
                   <div class="alert alert-danger mt-2">
                     <i class="fa fa-exclamation-circle me-2"></i>
@@ -108,12 +109,12 @@
               <mat-slider min="1" max="6" step="1" #ngSlider class="flex-grow-1 me-3">
                 <input matSliderThumb
                        [value]="botsPerUser"
-                       (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value})"
+                       (input)="setBotsPerUser({source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value}); botsPerUserConditionError = ''"
                        #ngSliderThumb="matSliderThumb"/>
               </mat-slider>
               <input type="number" class="form-control" style="width: 60px" min="1" max="6"
                      [(ngModel)]="botsPerUser"
-                     (change)="this.changeAfterGenerate = true">
+                     (change)="this.changeAfterGenerate = true; botsPerUserConditionError = ''">
             </div>
           </div>
         </div>
@@ -152,8 +153,8 @@
               [isSelected]="isHumanSelected"
               [pageSizes]="pageSizes"
               [pageSize]="pageSizeHumanSelection"
-              (userSwitched)="switchHuman($event)"
-              (allSwitched)="switchAll('human', $event)">
+              (userSwitched)="switchHuman($event); humansValidationError = ''"
+              (allSwitched)="switchAll('human', $event); humansValidationError = ''">
             </app-user-table>
           </div>
         </div>
@@ -171,8 +172,8 @@
               [isSelected]="isBotSelected"
               [pageSizes]="pageSizes"
               [pageSize]="pageSizeHumanSelection"
-              (userSwitched)="switchBot($event)"
-              (allSwitched)="switchAll('bot', $event)">
+              (userSwitched)="switchBot($event); botsValidationError = ''"
+              (allSwitched)="switchAll('bot', $event); botsValidationError = ''">
             </app-user-table>
           </div>
         </div>
@@ -194,7 +195,7 @@
                 <tr>
                   <td>
                     <mat-checkbox [checked]="areAllSelected(this.isAdminSelected)"
-                                  (change)="switchAll('admin', $event)"
+                                  (change)="switchAll('admin', $event); botsValidationError = ''"
                                   color="primary">
                       <b>Select All</b>
                     </mat-checkbox>
@@ -205,7 +206,7 @@
                 <tr *ngFor="let admin of admins">
                   <td>
                     <mat-checkbox [checked]="isAdminSelected.get(admin) == true"
-                                  (change)="switchAdmin(admin)"
+                                  (change)="switchAdmin(admin); botsValidationError = ''"
                                   color="primary">
                       {{ admin }}
                       <i *ngIf="this.active.includes(admin)"
@@ -230,7 +231,7 @@
                 <tbody>
                 <tr *ngFor="let evaluator of evaluator; let firstElement = first">
                   <td *ngIf="firstElement">
-                    <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator()" color="primary">
+                    <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator(); botsValidationError = ''" color="primary">
                       {{ evaluator }}
                       <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
                       <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
@@ -253,7 +254,7 @@
                 <tr *ngFor="let assistant of assistant; let firstElement = first">
                   <td *ngIf="firstElement">
                     <mat-checkbox [checked]="assistantSelected"
-                                  (change)="switchAssistant()"
+                                  (change)="switchAssistant(); botsValidationError = ''"
                                   color="primary">
                       {{ assistant }}
                       <i *ngIf="this.active.includes(assistant)"

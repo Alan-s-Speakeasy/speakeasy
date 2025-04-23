@@ -20,7 +20,8 @@
         <button *ngIf="paneLog.formRef != ''"
                 (click)="rating()"
                 class="btn btn-outline-primary btn-sm me-2 d-flex align-items-center"
-                data-bs-toggle="button">
+                data-bs-toggle="button"
+                [disabled]="paneLog.history || paneLog.spectate">
           <span>Assess</span>
           <i class="fa fa-comment ms-1"></i>
         </button>

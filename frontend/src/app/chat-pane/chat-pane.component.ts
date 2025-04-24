@@ -40,7 +40,8 @@ export class ChatPaneComponent implements OnInit {
   };
 
   private chatMessagesSubscription!: Subscription;
-  private usersOnlineStatusSubscription!: Subscription;
+  private usersOnlineStatusSubscription: Subscription | undefined;
+  private visibilityChangeHandler!: () => void;
 
   @Input() paneLog!: PaneLog
   @Input() numQueries!: number
@@ -64,6 +65,16 @@ export class ChatPaneComponent implements OnInit {
     ) { }
 
   ngOnInit(): void {
+    // Set up visibility change handler
+    this.visibilityChangeHandler = () => {
+      if (document.hidden) {
+        this.stopUserStatusPolling();
+      } else {
+        this.startUserStatusPolling();
+      }
+    };
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+
     if (this.paneLog.spectate || this.paneLog.history) {
       // Handling administrator spectate of a chatroom that is not in the cache,
       // we are still utilizing a polling mechanism to address this administrator functionality.
@@ -112,23 +123,37 @@ export class ChatPaneComponent implements OnInit {
           },
         );
     }
-    this.usersOnlineStatusSubscription = timer(0, 5000).pipe(
-      exhaustMap(_ => {
-        return this.chatService.getApiRoomByRoomIdUsersStatus(this.paneLog.roomID)
-      })
-    ).subscribe({
-      next: (response) => {
-        // The API returns a map of user aliases to their online status
-        // We want to know if the other user is online
-        if (response && this.paneLog.otherAlias) {
-          this.paneLog.isOtherOnline = !!response[this.paneLog.otherAlias];
-        }
-      },
-      error: (error) => {
-        console.log("Error retrieving users online status:", error);
-      }
-    });
+    // Start polling if page is visible
+    if (!document.hidden) {
+      this.startUserStatusPolling();
+    }
+  }
 
+  private startUserStatusPolling() {
+    // TODO : THis should be included into the SSE at some point !
+    if (!this.usersOnlineStatusSubscription) {
+      this.usersOnlineStatusSubscription = timer(0, 5000).pipe(
+        exhaustMap(_ => {
+          return this.chatService.getApiRoomByRoomIdUsersStatus(this.paneLog.roomID)
+        })
+      ).subscribe({
+        next: (response) => {
+          if (response && this.paneLog.otherAlias) {
+            this.paneLog.isOtherOnline = !!response[this.paneLog.otherAlias];
+          }
+        },
+        error: (error) => {
+          console.log("Error retrieving users online status:", error);
+        }
+      });
+    }
+  }
+
+  private stopUserStatusPolling() {
+    if (this.usersOnlineStatusSubscription) {
+      this.usersOnlineStatusSubscription.unsubscribe();
+      this.usersOnlineStatusSubscription = undefined;
+    }
   }
 
   private handleChatSubscription(response: SseRoomState | ChatRoomState, isSse: boolean) {
@@ -291,8 +316,14 @@ export class ChatPaneComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    // Unsubscribe from the chatMessagesSubscription before leaving chat page
-    this.chatMessagesSubscription.unsubscribe();
+    if (this.chatMessagesSubscription) {
+      this.chatMessagesSubscription.unsubscribe();
+    }
+    this.stopUserStatusPolling();
+    document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+    if (this.chatTimer) {
+      clearInterval(this.chatTimer);
+    }
   }
 
   /**

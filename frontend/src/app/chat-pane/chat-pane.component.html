@@ -187,26 +187,32 @@
     <!-- Input area -->
     <div *ngIf="!paneLog.spectate && !paneLog.history" class="chat-message p-3 bg-light border-top">
       <div class="input-group">
-        <textarea cdkTextareaAutosize="true"
-                  cdkAutosizeMinRows="1"
-                  cdkAutosizeMaxRows="5"
-                  class="form-control rounded-start"
-                  placeholder="Type your message..."
-                  maxlength="2000"
-                  [readonly]="!paneLog.active"
-                  [disabled]="!paneLog.active"
-                  [formControl]="query"
-                  (keydown)="handleKeyDown($event)">
-        </textarea>
+        <input cdkTextareaAutosize="true"
+               cdkAutosizeMinRows="1"
+               cdkAutosizeMaxRows="5"
+               type="text"
+               class="form-control rounded-start"
+               placeholder="Type your message ..."
+               maxlength="3000"
+               [attr.readonly]="!paneLog.active || null"
+               [attr.disabled]="!paneLog.active || null"
+               [formControl]="query"
+               (keydown)="handleKeyDown($event)"/>
 
         <button class="btn btn-primary rounded-end d-flex align-items-center justify-content-center"
-                [disabled]="!paneLog.active || !query.value?.trim()"
+                [ngClass]="{'opacity-50': !paneLog.active}"
+                [disabled]="!paneLog.active || !query.value?.trim() || query.value?.length > 2000"
                 (click)="doQuery(query.value)">
           <i class="fa fa-paper-plane"></i>
         </button>
       </div>
       <div class="text-end mt-1">
-        <small class="text-muted">{{query.value?.length || 0}}/2000</small>
+        <small [ngClass]="{'text-danger': query.value?.length > 2000, 'text-muted': query.value?.length <= 2000}">
+          {{query.value?.length || 0}}/2000
+          <span *ngIf="query.value?.length > 2000" class="ms-1">
+            <i class="fa fa-exclamation-circle"></i> Message too long
+          </span>
+        </small>
       </div>
     </div>
   </div>

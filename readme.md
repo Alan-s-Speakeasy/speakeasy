@@ -1,4 +1,10 @@
+<div align="center">
+
+<img src="frontend/src/assets/logo.svg" width="200" alt="Logo">
+
 # Alan's Speakeasy
+
+</div>
 
 Alan's Speakeasy is the backend infrastructure for the project accompanying the lecture *Advanced Topics in Artificial Intelligence* at the University of Zurich.
 The repository is split into two components, **backend** and **frontend**. The backend is responsible for message routing, feedback collection and user management. It is written in *Kotlin*, uses *Javalin* as a web server and provides an *OpenAPI* compliant interface.
@@ -9,22 +15,13 @@ The frontend handles all direct interaction. It is built using *Angular*.
 
 *Gradle* is used as a build system for this project.
 
-### Generate OpenAPI Specification and Client
+### Generating OpenAPI Specification and Client
 
-To generate the OpenAPI Client binding for the frontend, run the following command:
-```bash
-./gradlew openApiGenerate
-```
+To generate the OpenAPI Client binding for the frontend, use `scripts/fetch-and-generate-openapi.sh`.
 
-Note that this command depends on `docs/openapi-full.json`, which should be the specification that auto-generated from OpenAPI notations 
-in you code. So please avoid modifying its contents manually. If you plan to modify or debug these APIs in development, 
-you should first change the openapi notations in your code and then replace `docs/openapi-full.json` with the 
-auto-generated contents of `http://127.0.0.1:8080/swagger-docs`. 
+This script will download the OpenAPI specification from swagger and then generate the TypeScript bindings.
 
-Unfortunately there is no script to automate this step for now, you should replace it manually 
-but should not modify its content manually.
-
-### Run Speakeasy
+### Running Speakeasy
 
 In order to run the whole Speakeasy project, simply click and run `speakeasy/backend/src/main/kotlin/ch/ddis/speakeasy/Main.kt`.
 
@@ -50,7 +47,7 @@ as well as some information about "user groups". The available roles are *ADMIN*
 
 To add a new user, simply run Speakeasy and use its CLI, e.g:
 
-`user add -r HUMAN -u new_username -p new_passward`
+`user add -r HUMAN -u new_username -p new_password`
 ```agsl
 Options:
 -r, --role [HUMAN|BOT|ADMIN]  Role of the user to add

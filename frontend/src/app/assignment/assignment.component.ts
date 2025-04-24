@@ -401,8 +401,12 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   getQuestionTooltip(question: any): string {
-    return question.description
+    if (!question.options?.length) {
+      return 'Text input';
+    }
+    return question.options.map((opt: any, idx: number) => `${idx + 1}. ${opt.name}`).join('\n');
   }
+
 
   /**
    * Returns a tooltip message explaining why the Start Round button is disabled.

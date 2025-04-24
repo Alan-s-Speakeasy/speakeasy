@@ -44,7 +44,7 @@
               <div class="col-12" *ngIf="selectedFormName != ''">
                 <div class="card bg-light">
                   <div class="card-header">
-                    <h6 class="mb-0">Form Dimensions</h6>
+                    <h6 class="mb-0">Form Questions</h6>
                   </div>
                   <div class="card-body p-0">
                     <div class="table-responsive">
@@ -54,7 +54,11 @@
                             <th *ngFor="let question of formsMap.get(selectedFormName)"
                                 class="text-nowrap text-center"
                                 [style.font-weight]="'normal'"
-                                [style.font-size.px]="12">
+                                [style.font-size.px]="12"
+                                [matTooltip]="question.name"
+                                matTooltipPosition="above"
+                                matTooltipClass="tooltip-multiline"
+                            >
                               {{ question.shortname }}
                             </th>
                           </tr>
@@ -64,7 +68,7 @@
                             <td *ngFor="let question of formsMap.get(selectedFormName)"
                                 class="text-center"
                                 [matTooltip]="getQuestionTooltip(question)"
-                                matTooltipPosition="above"
+                                matTooltipPosition="below"
                                 matTooltipClass="tooltip-multiline"
                                 style="cursor: pointer">
                               <small class="text-muted">

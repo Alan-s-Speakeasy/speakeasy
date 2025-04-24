@@ -400,6 +400,13 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     }
   }
 
+  getQuestionTooltip(question: any): string {
+    if (!question.options?.length) {
+      return 'Text input';
+    }
+    return question.options.map((opt: any, idx: number) => `${idx + 1}. ${opt.name}`).join('\n');
+  }
+
   watch(chatroomDetail: FrontendChatroomDetail): void {
     let user1 = chatroomDetail.userInfo[0]
     let user2 = chatroomDetail.userInfo[1]

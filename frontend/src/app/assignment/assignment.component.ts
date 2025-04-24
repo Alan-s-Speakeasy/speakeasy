@@ -401,10 +401,24 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   getQuestionTooltip(question: any): string {
-    if (!question.options?.length) {
-      return 'Text input';
+    return question.description
+  }
+
+  /**
+   * Returns a tooltip message explaining why the Start Round button is disabled.
+   * @returns A string explaining the reason for the button being disabled
+   */
+  getStartRoundTooltip(): string {
+    if (this.remainingTime > 0) {
+      return `Please wait ${Math.ceil(this.remainingTime / 1000)} seconds for the current round to finish`;
     }
-    return question.options.map((opt: any, idx: number) => `${idx + 1}. ${opt.name}`).join('\n');
+    if (this.changeAfterGenerate) {
+      return 'Configuration has changed after generation. Please generate the round again';
+    }
+    if (!this.generated) {
+      return 'Please generate the round first';
+    }
+    return 'Start the next round';
   }
 
   watch(chatroomDetail: FrontendChatroomDetail): void {

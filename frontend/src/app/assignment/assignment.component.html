@@ -356,11 +356,13 @@
           <h5 class="mb-0">
             Next Round
           </h5>
-          <button (click)="startNextRound()"
-                  [disabled]="remainingTime > 0 || changeAfterGenerate || !generated"
-                  type="button" class="btn btn-primary">
-            Start Round {{ round }}
-          </button>
+          <span [matTooltip]="getStartRoundTooltip()" matTooltipPosition="above">
+            <button (click)="startNextRound()"
+                    [disabled]="remainingTime > 0 || changeAfterGenerate || !generated"
+                    type="button" class="btn btn-primary">
+              Start Round {{ round }}
+            </button>
+          </span>
         </div>
         <div class="card-body">
           <div class="table-responsive">

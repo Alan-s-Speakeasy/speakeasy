@@ -179,31 +179,6 @@
           <div class="message my-message bg-primary bg-opacity-75 text-white p-3 rounded-3 shadow-sm ms-auto"
                style="max-width: 85%; white-space: pre-line">
             <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"></span>
-
-            <div *ngIf="!paneLog.spectate && !paneLog.testerBotAlias" class="mt-2 d-flex align-items-center justify-content-end">
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-sm border-0 text-white opacity-75" [disabled]="true"
-                        [ngClass]="{'opacity-100 fw-bold': paneLog.messageLog[ordinal].type == 'THUMBS_UP'}">
-                  <i class="fa fa-thumbs-up"></i>
-                </button>
-
-                <button class="btn btn-sm border-0 text-white opacity-75" [disabled]="true"
-                        [ngClass]="{'opacity-100 fw-bold': paneLog.messageLog[ordinal].type == 'THUMBS_DOWN'}">
-                  <i class="fa fa-thumbs-down"></i>
-                </button>
-
-                <button class="btn btn-sm border-0 text-white opacity-75" [disabled]="true"
-                        [ngClass]="{'opacity-100 fw-bold': paneLog.messageLog[ordinal].type == 'STAR'}">
-                  <i class="fa fa-star"></i>
-                </button>
-              </div>
-
-              <app-copy-button
-                [textToCopy]="paneLog.messageLog[ordinal].message"
-                [isActive]="true"
-                [resetTimeout]="2000">
-              </app-copy-button>
-            </div>
           </div>
         </li>
       </ul>

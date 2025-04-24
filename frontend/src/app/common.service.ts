@@ -1,6 +1,6 @@
 import {Inject, Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, of} from "rxjs";
-import {take, filter} from "rxjs/operators";
+import {BehaviorSubject, Observable, of, timer} from "rxjs";
+import {take, filter, switchMap} from "rxjs/operators";
 import {map, catchError, tap} from 'rxjs/operators';
 import {AuthService} from "./authentication.service";
 import { AppConfig } from './app.config';
@@ -144,6 +144,7 @@ export class CommonService {
 
     this.chatMessageEventListener =  (ev) => {
       const sseChatMessage = convertFromJSON<SseChatMessage>((ev as MessageEvent).data)
+      console.log('sseChatMessage', sseChatMessage)
       if (!this._roomsStateMap.has(sseChatMessage.roomId)) {
         // This could happen because there's a delay mechanism in backend for sending rooms.
         this._roomsStateMap.set(sseChatMessage.roomId,
@@ -219,32 +220,29 @@ export class CommonService {
    @param roomId - The unique identifier of the chat room
    @returns An Observable that emits the room state or null if the room cannot be found after retries
    */
-  public getChatStatusByRoomId(roomId: string): Observable<SseRoomState|null> {
-    //  NOTE : Sometimes, for some reason that I don't know, the roomId is not in the _roomsStateMap.
-    // My main theory is that ther is a weird but expected race conditions here
-    // Retrying after a few ms fixes the problem
-    return new Observable<SseRoomState|null>(observer => {
-        const maxRetries = 3;
-        let retries = 0;
+public getChatStatusByRoomId(roomId: string): Observable<SseRoomState | null> {
+    // NOTE : Sometimes the roomId is not in the _roomsStateMap due to race conditions,
+    // Not sure where it could come from. It is likely that roomd are populated with delay for some reasons.
+    const maxRetries = 3;
+    const retryDelay = 100; // ms
 
-        const tryGetRoom = () => {
-            const roomState = this._roomsStateMap.get(roomId);
-            if (roomState) {
-                observer.next(roomState.getValue());
-                observer.complete();
-            } else if (retries < maxRetries) {
-                retries++;
-                console.log(`Retry ${retries} for roomId: ${roomId}`);
-                setTimeout(tryGetRoom, 100); // Wait 500ms before retry
-            } else {
-                console.warn(`Failed to find roomId after ${maxRetries} retries: ${roomId}`);
-                observer.next(null);
-                observer.complete();
-            }
-        };
+    const attemptToGetRoom = (attemptsLeft: number): Observable<SseRoomState | null> => {
+      const roomState = this._roomsStateMap.get(roomId);
 
-        tryGetRoom();
-    });
+      if (roomState) {
+        return roomState.asObservable();
+      } else if (attemptsLeft > 0) {
+        // Try again after delay
+        return timer(retryDelay).pipe(
+          switchMap(() => attemptToGetRoom(attemptsLeft - 1))
+        );
+      } else {
+        console.warn(`Can't find such roomId in cached room state after ${maxRetries} retries: ${roomId}`);
+        return of(null);
+      }
+    };
+
+    return attemptToGetRoom(maxRetries);
   }
   public getInitialRemainingTimeByRoomId(roomId: string): number {
     let correctedRemainingTime: number = 0

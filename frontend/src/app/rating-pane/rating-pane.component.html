@@ -27,7 +27,23 @@
             </div>
 
             <div *ngIf="request.options.length === 0">
-              <input type="text" class="form-control" placeholder="..." name="item.name" maxlength="1000" [(ngModel)]="paneLog.ratings[request.id]">
+              <div class="input-group">
+                <textarea class="form-control"
+                          placeholder="..."
+                          name="item.name"
+                          maxlength="2100"
+                          [ngClass]="{'is-invalid': (paneLog.ratings[request.id] || '').length > 2000}"
+                          [(ngModel)]="paneLog.ratings[request.id]">
+                </textarea>
+              </div>
+              <div class="text-end mt-1">
+                <small [ngClass]="{'text-danger': (paneLog.ratings[request.id] || '').length > 2000, 'text-muted': (paneLog.ratings[request.id] || '').length <= 2000}">
+                  {{(paneLog.ratings[request.id] || '').length}}/2000
+                  <span *ngIf="(paneLog.ratings[request.id] || '').length > 2000" class="ms-1">
+                    <i class="fa fa-exclamation-circle"></i> Response too long
+                  </span>
+                </small>
+              </div>
             </div>
           </div>
         </form>

@@ -208,15 +208,44 @@ export class CommonService {
     });
   }
 
-  public getChatStatusByRoomId(roomId: string): Observable<SseRoomState|null> {
-    const roomState = this._roomsStateMap.get(roomId);
-    if (!roomState) {
-      console.warn(`Can't find such roomId in cached room state: ${roomId}`);
-      return of(null);
-    }
-    return roomState.asObservable();
-  }
+  /**
+   Retrieves the current SSE chat state for a specific room.
 
+   This function returns an Observable containing the current state of a chat room,
+   including all messages and reactions. If the room is not found in the state map,
+   it will retry up to 3 times with a 100ms delay between attempts to handle potential
+   race conditions with SSE events.
+
+   @param roomId - The unique identifier of the chat room
+   @returns An Observable that emits the room state or null if the room cannot be found after retries
+   */
+  public getChatStatusByRoomId(roomId: string): Observable<SseRoomState|null> {
+    //  NOTE : Sometimes, for some reason that I don't know, the roomId is not in the _roomsStateMap.
+    // My main theory is that ther is a weird but expected race conditions here
+    // Retrying after a few ms fixes the problem
+    return new Observable<SseRoomState|null>(observer => {
+        const maxRetries = 3;
+        let retries = 0;
+
+        const tryGetRoom = () => {
+            const roomState = this._roomsStateMap.get(roomId);
+            if (roomState) {
+                observer.next(roomState.getValue());
+                observer.complete();
+            } else if (retries < maxRetries) {
+                retries++;
+                console.log(`Retry ${retries} for roomId: ${roomId}`);
+                setTimeout(tryGetRoom, 100); // Wait 500ms before retry
+            } else {
+                console.warn(`Failed to find roomId after ${maxRetries} retries: ${roomId}`);
+                observer.next(null);
+                observer.complete();
+            }
+        };
+
+        tryGetRoom();
+    });
+  }
   public getInitialRemainingTimeByRoomId(roomId: string): number {
     let correctedRemainingTime: number = 0
     this._Rooms.pipe(take(1)).subscribe(response => {

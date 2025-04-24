@@ -99,7 +99,9 @@ export class FeedbackStatsTableComponent {
 
 
   getAverageFeedback(): FrontendAverageFeedback[] {
-    let averageFeedbackProcessed = this.averageFeedback.filter(f => f.username.includes(this.usernameFilter))
+    let averageFeedbackProcessed = this.averageFeedback.filter(f => 
+      f.username.toLowerCase().includes(this.usernameFilter.toLowerCase())
+    )
     // sort the table
     if (this.sortColumn != '') {
        averageFeedbackProcessed.sort((a, b) => {
@@ -114,7 +116,7 @@ export class FeedbackStatsTableComponent {
     }
 
     if (this.appliedSelectedUsernames.length != 0) {
-      return averageFeedbackProcessed .filter(f => this.appliedSelectedUsernames.includes(f.username))
+      return averageFeedbackProcessed.filter(f => this.appliedSelectedUsernames.includes(f.username))
     } else {
       return averageFeedbackProcessed
     }

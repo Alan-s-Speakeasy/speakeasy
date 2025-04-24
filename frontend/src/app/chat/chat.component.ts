@@ -55,8 +55,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     // rooms EventListener will listen to sse and update _Rooms (as well as Rooms and currentRooms)
     this.commonService.openSseAndListenRooms(false)
 
-    this.chatroomSubscription = timer(0, 1000)
-      .pipe(exhaustMap(_ => {return this.commonService.currentRooms}))
+    this.chatroomSubscription = this.commonService.Rooms
       .subscribe(
         (response) => {
           if (response) {
@@ -74,8 +73,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             }
           }
         },
-      (error) => {console.log("Chat rooms are not retrieved properly.", error);},
-    )
+        (error) => {console.log("Chat rooms are not retrieved properly.", error);},
+      )
   }
 
   // add a chatroom to the UI

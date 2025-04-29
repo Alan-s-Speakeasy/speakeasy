@@ -2,6 +2,7 @@ package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -12,11 +13,9 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 
-// I really wonder the point of all of this when most of these are mapppings.
 
-data class FeedbackAnswerOption(val name: String, val value: Int)
-data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>)
-data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest>)
+ // I really wonder the point of all of this when most of these are mapppings.
+
 data class FeedbackFormList(val forms: MutableList<FeedbackForm>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
@@ -31,16 +30,19 @@ data class FeedbackResponseStatsMapList(
     val statsOfAllRequest: List<FeedBackStatsOfRequest> = listOf()
 )
 
+/*
+// TOOD : Remove
 class GetFeedbackFormListHandler : GetRestHandler<FeedbackFormList>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER)
-    override val route: String = "feedbackforms"
+    override val route: String = "feedbackforms_v0"
     @OpenApi(
-        summary = "Gets the list of all feedback forms.",
-        path = "/api/feedbackforms",
+        summary = "Gets the list of all feedback forms. DEPRECATED.",
+        path = "/api/feedbackforms_v0",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
-
+        // DEPCATED :
+        deprecated = true,
         queryParams = [
             OpenApiParam("session", String::class, "Session Token")
         ],
@@ -61,7 +63,7 @@ class GetFeedbackFormListHandler : GetRestHandler<FeedbackFormList>, AccessManag
         return FeedbackFormList(forms = FeedbackManager.readFeedbackFromList())
     }
 }
-
+// TODO : Remove
 class GetFeedbackFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHandler {
 
     override val permittedRoles = setOf(RestApiRole.USER)
@@ -69,10 +71,11 @@ class GetFeedbackFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHa
     override val route: String = "feedbackform/{formName}"
     @OpenApi(
         summary = "Gets the feedback form (with form name and questions).",
-        path = "/api/feedbackform/{formName}",
+        path = "/api/feedbackform_v0/{formName}",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
         tags = ["Feedback"],
+        deprecated = true,
         pathParams = [
             OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
         ],
@@ -106,6 +109,7 @@ class GetFeedbackFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHa
         return form
     }
 }
+*/
 
 class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -428,3 +432,4 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
     }
 }
 
+class PutNewForm()

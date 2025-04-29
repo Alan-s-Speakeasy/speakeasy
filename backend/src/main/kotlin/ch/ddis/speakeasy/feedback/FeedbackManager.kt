@@ -92,6 +92,7 @@ object FeedbackManager {
      *
      * @throws NullPointerException if the formName is not found.
      */
+    @Deprecated("Use readFeedbackFrom(formName: String) instead.")
     fun readFeedbackFrom(formName: String): FeedbackForm {
         return forms.find { it.formName == formName }!!  // throw NullPointerException
     }
@@ -103,6 +104,8 @@ object FeedbackManager {
      *
      * @return true if the formName is valid, false otherwise.
      */
+    // TODO : Remove now,
+    @Deprecated("Use FormManager.isValidFormName(formName: String) instead.")
     fun isValidFormName(formName: String): Boolean {
         if (formName == "") {
             return true
@@ -110,6 +113,7 @@ object FeedbackManager {
         return this.forms.find { it.formName == formName } != null
     }
 
+    // TODO : Remove now
     fun readFeedbackFromList(): MutableList<FeedbackForm> = forms
 
     /**

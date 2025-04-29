@@ -1,0 +1,480 @@
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, AbstractControl, ValidatorFn} from '@angular/forms';
+import {AlertService} from "../alert";
+import {FormService} from "../../../openapi";
+import {FeedbackForm, FeedbackRequest, FeedbackAnswerOption} from "../../../openapi";
+import {Observable} from 'rxjs';
+
+interface FormDefinition {
+  id: string;
+  name: string;
+  questions: {
+    type: 'text' | 'options';
+    name: string;
+    shortname: string;
+    options?: FeedbackAnswerOption[];
+  }[];
+  lastModified: Date;
+}
+
+@Component({
+  selector: 'app-form-definitions',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './form-definitions.component.html',
+})
+export class FormDefinitionsComponent implements OnInit {
+  forms: FormDefinition[] = [];
+  isLoading = false;
+
+  selectedForm: FormDefinition | null = null;
+  isEditing = false;
+  formGroup!: FormGroup;
+  jsonInput: string = '';
+  showJsonModal = false;
+
+  questionTypes = [
+    {value: 'text', label: 'Text Input'},
+    {value: 'options', label: 'Options (Select/Radio)'}
+  ];
+
+  // Pre-registered options sets
+  predefinedOptionsSets = [
+    {
+      name: 'Likert scale',
+      options: [
+        {name: 'Strongly Disagree', value: -2},
+        {name: 'Slightly Disagree', value: -1},
+        {name: 'Not Applicable / I don\'t know', value: 0},
+        {name: 'Slightly Agree', value: 1},
+        {name: 'Strongly Agree', value: 2}
+      ]
+    }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    private alertService: AlertService,
+    private formService: FormService
+  ) {
+    this.formGroup = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(1)]],
+      questions: this.fb.array([], [Validators.required, this.atLeastOneQuestion()])
+    });
+  }
+
+  ngOnInit() {
+    console.log('FormDefinitionsComponent initialized');
+    this.loadForms();
+  }
+
+  private loadForms() {
+    this.isLoading = true;
+    this.formService.getApiFeedbackforms().subscribe({
+      next: (response: FeedbackForm[]) => {
+        console.log(response);
+        if (response) {
+          this.forms = response.map(form => ({
+            id: form.formName,
+            name: form.formName,
+            questions: form.requests.map(q => ({
+              type: q.type as 'text' | 'options',
+              name: q.name,
+              shortname: q.shortname,
+              options: q.options
+            })),
+            lastModified: new Date()
+          }));
+        } else {
+          this.forms = [];
+        }
+        this.isLoading = false;
+        console.log('Loaded forms:', this.forms);
+      },
+      error: (error: Error) => {
+        console.error('Error loading forms:', error);
+        this.alertService.error('Failed to load forms: ' + error.message);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  get questions() {
+    return this.formGroup.get('questions') as FormArray;
+  }
+
+  addQuestion() {
+    const questionGroup = this.fb.group({
+      type: ['text', Validators.required],
+      name: ['', Validators.required],
+      shortname: ['', Validators.required],
+      options: this.fb.array([])
+    });
+
+    this.questions.push(questionGroup);
+  }
+
+  removeQuestion(index: number) {
+    this.questions.removeAt(index);
+  }
+
+  getOptions(questionIndex: number) {
+    return this.questions.at(questionIndex).get('options') as FormArray;
+  }
+
+  addOption(questionIndex: number) {
+    const optionGroup = this.fb.group({
+      name: ['', Validators.required],
+      value: [0, Validators.required]
+    });
+    this.getOptions(questionIndex).push(optionGroup);
+  }
+
+  removeOption(questionIndex: number, optionIndex: number) {
+    this.getOptions(questionIndex).removeAt(optionIndex);
+  }
+
+  addPredefinedOptions(questionIndex: number, optionsSetIndex: number) {
+    const optionsSet = this.predefinedOptionsSets[optionsSetIndex];
+    const optionsArray = this.getOptions(questionIndex);
+
+    // Clear existing options
+    optionsArray.clear();
+    // Add predefined options
+    optionsSet.options.forEach(option => {
+      optionsArray.push(this.fb.group({
+        name: [option.name, Validators.required],
+        value: [option.value, Validators.required]
+      }));
+    });
+  }
+
+  selectForm(form: FormDefinition) {
+    this.selectedForm = form;
+  }
+
+  createNewForm() {
+    // Create a new form with default values
+    const newForm: FormDefinition = {
+      id: Date.now().toString(),
+      name: 'New Form',
+      questions: [],
+      lastModified: new Date()
+    };
+
+    // Add to the list
+    this.forms.push(newForm);
+
+    // Select and start editing
+    this.selectedForm = newForm;
+    this.isEditing = true;
+
+    // Reset form group
+    this.formGroup.reset({
+      name: 'New Form',
+      questions: []
+    });
+    this.questions.clear();
+  }
+
+  startEditing() {
+    if (this.selectedForm) {
+      this.formGroup.patchValue({
+        name: this.selectedForm.name
+      });
+
+      this.questions.clear();
+      this.selectedForm.questions.forEach(q => {
+        const questionGroup = this.fb.group({
+          type: [q.type, Validators.required],
+          name: [q.name, Validators.required],
+          shortname: [q.shortname, Validators.required],
+          options: this.fb.array([])
+        });
+
+        if (q.options) {
+          q.options.forEach(opt => {
+            this.getOptions(this.questions.length).push(this.fb.group({
+              name: [opt.name, Validators.required],
+              value: [opt.value, Validators.required]
+            }));
+          });
+        }
+
+        this.questions.push(questionGroup);
+      });
+
+      this.isEditing = true;
+    }
+  }
+
+  saveForm() {
+    if (this.formGroup.valid && !this.hasEmptyOptionArrays()) {
+      const formData = this.formGroup.value;
+      const questions = formData.questions.map((q: any) => ({
+        type: q.type,
+        name: q.name,
+        shortname: q.shortname,
+        options: q.options && q.options.length > 0 ? q.options : []
+      }));
+
+      // Create the form payload for API
+      const formToSave: FeedbackForm = {
+        formName: formData.name,
+        requests: questions.map((q: any, index: number) => ({
+          id: index.toString(),
+          type: q.type,
+          name: q.name,
+          shortname: q.shortname,
+          options: q.options || []
+        }))
+      };
+
+      // Determine if we're creating a new form or updating an existing one
+      const isNewForm = !this.selectedForm ||
+        (this.selectedForm && this.selectedForm.id !== formData.name);
+
+      console.log('Saving form:', isNewForm ? 'Creating new form' : 'Updating existing form', formToSave);
+
+      if (isNewForm) {
+        // Create new form with POST
+        this.formService.postApiFeedbackforms(formToSave).subscribe({
+          next: (response) => {
+            console.log('Form created successfully:', response);
+            this.alertService.success('Form created successfully');
+            this.loadForms();
+            this.isEditing = false;
+          },
+          error: (error: Error) => {
+            console.error('Error creating form:', error);
+            this.alertService.error('Failed to create form: ' + error.message);
+          }
+        });
+      } else {
+        // Update existing form with PUT
+        this.formService.putApiFeedbackformsByFormName(formData.name, formToSave).subscribe({
+          next: (response) => {
+            console.log('Form updated successfully:', response);
+            this.alertService.success('Form updated successfully');
+            this.loadForms();
+            this.isEditing = false;
+          },
+          error: (error: Error) => {
+            console.error('Error updating form:', error);
+            this.alertService.error('Failed to update form: ' + error.message);
+          }
+        });
+      }
+    } else {
+      // Mark all fields as touched to trigger validation messages
+      this.markFormGroupTouched(this.formGroup);
+      
+      // Show specific validation error messages
+      if (this.formGroup.get('name')?.errors?.['required']) {
+        this.alertService.error('Form title is required');
+      } else if (this.formGroup.get('name')?.errors?.['minLength']) {
+        this.alertService.error('Form title cannot be empty');
+      } else if (this.questions.errors?.['atLeastOneQuestion']) {
+        this.alertService.error('At least one question is required');
+      }
+    }
+  }
+
+  // Helper to mark all controls in a form group as touched
+  markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      } else if (control instanceof FormArray) {
+        for (let i = 0; i < control.length; i++) {
+          if (control.at(i) instanceof FormGroup) {
+            this.markFormGroupTouched(control.at(i) as FormGroup);
+          } else {
+            control.at(i).markAsTouched();
+          }
+        }
+      }
+    });
+  }
+
+  // Check if any question with type 'options' has an empty options array
+  hasEmptyOptionArrays(): boolean {
+    if (!this.questions) return false;
+
+    for (let i = 0; i < this.questions.length; i++) {
+      const question = this.questions.at(i);
+      if (question.get('type')?.value === 'options' &&
+        (question.get('options') as FormArray).length === 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Check if any question has validation errors
+  hasInvalidQuestions(): boolean {
+    if (!this.questions) return false;
+
+    for (let i = 0; i < this.questions.length; i++) {
+      if (this.questions.at(i).invalid) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  deleteForm(form: FormDefinition) {
+    // Note: The FormService doesn't have a delete method, so this would need to be added
+    // For now, we'll just remove it from the local array
+
+    // Alternative implementation if there was a delete endpoint:
+    this.formService.deleteApiFeedbackformsByFormName(form.name).subscribe({
+      next: () => {
+        this.alertService.success('Form deleted successfully');
+        this.forms = this.forms.filter(f => f.id !== form.id);
+        if (this.selectedForm?.id === form.id) {
+          this.selectedForm = null;
+        }
+      },
+      error: (error: Error) => {
+        this.alertService.error('Failed to delete form: ' + error.message);
+      }
+    });
+  }
+
+  // JSON operations
+  openJsonModal() {
+    this.showJsonModal = true;
+    if (this.selectedForm) {
+      this.jsonInput = JSON.stringify(this.selectedForm, null, 2);
+    } else {
+      this.jsonInput = '';
+    }
+  }
+
+  closeJsonModal() {
+    this.showJsonModal = false;
+    this.jsonInput = '';
+  }
+
+  // Handle file upload
+  onFileSelected(event: Event) {
+    const fileInput = event.target as HTMLInputElement;
+    if (fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+
+      // Only accept JSON files
+      if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+        alert('Please select a valid JSON file');
+        fileInput.value = '';
+        return;
+      }
+
+      // Read the file content
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const content = reader.result as string;
+          // Validate JSON format
+          JSON.parse(content); // This will throw if content is not valid JSON
+          this.jsonInput = content;
+        } catch (error) {
+          this.alertService.error('Invalid JSON file. Please check the file and try again.');
+          this.jsonInput = '';
+        }
+      };
+      reader.onerror = () => {
+        this.alertService.error('Error reading file');
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  importJson() {
+    if (!this.jsonInput.trim()) {
+      this.alertService.error('Please provide JSON data to import');
+      return;
+    }
+
+    try {
+      const formData = JSON.parse(this.jsonInput);
+
+      // Validate the imported data has the required structure
+      if (!formData.name || !formData.questions || !Array.isArray(formData.questions)) {
+        throw new Error('Invalid form structure');
+      }
+
+      // Create a new form from the imported data
+      const newForm: FeedbackForm = {
+        formName: formData.name,
+        requests: formData.questions.map((q: any, index: number) => ({
+          id: index.toString(),
+          type: q.type === 'options' ? 'options' : 'text',
+          name: q.name,
+          shortname: q.shortname,
+          options: q.options ? q.options.map((opt: any) => ({
+            name: opt.name,
+            value: opt.value
+          })) : []
+        }))
+      };
+
+      // Save to backend
+      this.formService.postApiFeedbackforms(newForm).subscribe({
+        next: () => {
+          this.alertService.success('Form imported successfully');
+          this.loadForms();
+          this.closeJsonModal();
+        },
+        error: (error: Error) => {
+          this.alertService.error('Failed to import form: ' + error.message);
+        }
+      });
+    } catch (error) {
+      this.alertService.error('Invalid JSON format. Please check your input.');
+    }
+  }
+
+  exportJson() {
+    if (this.selectedForm) {
+      const jsonStr = JSON.stringify(this.selectedForm, null, 2);
+
+      // Create a blob and download link
+      const blob = new Blob([jsonStr], {type: 'application/json'});
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.selectedForm.name.replace(/\s+/g, '_')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  }
+
+  // Update form name and description in real-time
+  updateFormName() {
+    if (this.selectedForm && this.formGroup.get('name')?.value) {
+      const index = this.forms.findIndex(f => f.id === this.selectedForm?.id);
+      if (index !== -1) {
+        this.forms[index].name = this.formGroup.get('name')?.value;
+      }
+    }
+  }
+
+  // Remove updateFormDescription as description field is not part of our model
+
+  // Custom validator to ensure at least one question exists
+  private atLeastOneQuestion(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const formArray = control as FormArray;
+      if (formArray.length === 0) {
+        return { atLeastOneQuestion: true };
+      }
+      return null;
+    };
+  }
+}

@@ -1,6 +1,6 @@
 package ch.ddis.speakeasy.cli.commands
 
-import ch.ddis.speakeasy.api.handlers.FeedbackForm
+import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseStatsItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.feedback.FeedbackManager

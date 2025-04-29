@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.assignment.UIChatAssignmentGenerator
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FormManager
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -88,13 +89,9 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
         }
 
-        if ( !FeedbackManager.isValidFormName(newAssignment.formName) ) {
+        if ( !FormManager.isValidFormName(newAssignment.formName) ) {
             throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
         }
-
-        //if (newAssignment.humans.isEmpty() || (newAssignment.bots.isEmpty() && newAssignment.admins.isEmpty())) {
-        //    throw ErrorStatusException(404, "A number of humans and bots need to be selected.", ctx)
-        //}
 
         if (newAssignment.prompts.isEmpty()) {
             throw ErrorStatusException(404, "A number of prompts need to be provided.", ctx)

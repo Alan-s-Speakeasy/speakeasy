@@ -1,0 +1,290 @@
+<!-- Page Header -->
+<div class="bg-light border-bottom py-4 mb-4">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center">
+      <div>
+        <h4 class="mb-1">Form Definitions</h4>
+        <p class="text-muted mb-0">Create and manage assessment forms</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+  <div class="row g-4">
+    <!-- List of forms - vertical table -->
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Forms</h5>
+            <div>
+              <button class="btn btn-outline-secondary btn-sm me-2" (click)="openJsonModal()">
+                <i class="fa fa-file-import me-1"></i>Import
+              </button>
+              <button class="btn btn-primary btn-sm" (click)="createNewForm()">
+                <i class="fa fa-plus me-1"></i>New Form
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <tbody>
+              <tr *ngFor="let form of forms"
+                  [class.table-active]="selectedForm?.id === form.id"
+                  (click)="selectForm(form)"
+                  style="cursor: pointer;">
+                <td class="py-3">
+                  <div class="fw-medium">{{form.name}}</div>
+                  <div class="text-muted small mt-1">{{form.lastModified | date:'short'}}</div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty state -->
+          <div *ngIf="forms.length === 0" class="text-center py-5">
+            <div class="mb-3">
+              <i class="fa fa-file-alt fa-3x text-muted"></i>
+            </div>
+            <h6 class="mb-2">No Forms Yet</h6>
+            <p class="text-muted small mb-3">Create your first form or import an existing one</p>
+            <button class="btn btn-primary btn-sm" (click)="createNewForm()">
+              <i class="fa fa-plus me-1"></i>Create Form
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form details/edit -->
+    <div class="col-md-8">
+      <div *ngIf="selectedForm || isEditing">
+        <div class="d-flex justify-content-end mb-3" *ngIf="!isEditing && selectedForm">
+          <button class="btn btn-outline-secondary btn-sm me-2" (click)="exportJson()">
+            <i class="fa fa-file-export me-1"></i>Export
+          </button>
+          <button class="btn btn-outline-primary btn-sm me-2" (click)="startEditing()">
+            <i class="fa fa-edit me-1"></i>Edit
+          </button>
+          <button class="btn btn-outline-danger btn-sm" (click)="deleteForm(selectedForm!)">
+            <i class="fa fa-trash me-1"></i>Delete
+          </button>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <form *ngIf="isEditing" [formGroup]="formGroup" (ngSubmit)="saveForm()">
+              <div class="mb-4">
+                <label class="form-label fw-medium">Name</label>
+                <input type="text" class="form-control form-control-lg" formControlName="name" required (input)="updateFormName()"
+                       [ngClass]="{'is-invalid': formGroup.get('name')?.invalid && formGroup.get('name')?.touched}">
+                <div class="invalid-feedback" *ngIf="formGroup.get('name')?.invalid && formGroup.get('name')?.touched">
+                  Form name is required
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="mb-0 fw-medium">Questions</h6>
+                  <button type="button" class="btn btn-primary btn-sm" (click)="addQuestion()">
+                    <i class="fa fa-plus me-1"></i>Add Question
+                  </button>
+                </div>
+
+                <div formArrayName="questions" class="border rounded p-3 bg-light">
+                  <div *ngFor="let question of questions.controls; let i=index" [formGroupName]="i" class="mb-3 p-3 border-bottom bg-white rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h6 class="mb-0 fw-medium">Question {{i+1}}</h6>
+                      <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeQuestion(i)">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" formControlName="type">
+                          <option *ngFor="let type of questionTypes" [value]="type.value">{{type.label}}</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Question Name</label>
+                        <input type="text" class="form-control" formControlName="name" placeholder="e.g., Full Name"
+                               [ngClass]="{'is-invalid': question.get('name')?.invalid && question.get('name')?.touched}">
+                        <div class="invalid-feedback" *ngIf="question.get('name')?.invalid && question.get('name')?.touched">
+                          Question name is required
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Short Name (ID)</label>
+                        <input type="text" class="form-control" formControlName="shortname" placeholder="e.g., fullName"
+                               [ngClass]="{'is-invalid': question.get('shortname')?.invalid && question.get('shortname')?.touched}">
+                        <div class="invalid-feedback" *ngIf="question.get('shortname')?.invalid && question.get('shortname')?.touched">
+                          Short name is required
+                        </div>
+                      </div>
+
+                      <!-- Options for options type -->
+                      <div class="col-12" *ngIf="question.get('type')?.value === 'options'">
+                        <label class="form-label">Options</label>
+
+                        <!-- Predefined options sets dropdown -->
+                        <div class="mb-3">
+                          <label class="form-label small text-muted">Predefined Options Sets</label>
+                          <div class="input-group">
+                            <select class="form-select" (change)="addPredefinedOptions(i, +$any($event).target.value)">
+                              <option value="">Select a predefined set...</option>
+                              <option *ngFor="let set of predefinedOptionsSets; let idx = index" [value]="idx">
+                                {{set.name}}
+                              </option>
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" (click)="addPredefinedOptions(i, 0)">
+                              <i class="fa fa-plus"></i>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div formArrayName="options" class="mb-2">
+                          <div *ngFor="let option of getOptions(i).controls; let j=index" [formGroupName]="j" class="input-group mb-2">
+                            <input type="text" class="form-control" formControlName="name" placeholder="Option name"
+                                   [ngClass]="{'is-invalid': option.get('name')?.invalid && option.get('name')?.touched}">
+                            <input type="number" class="form-control" formControlName="value" placeholder="Value"
+                                   [ngClass]="{'is-invalid': option.get('value')?.invalid && option.get('value')?.touched}">
+                            <button type="button" class="btn btn-outline-danger" (click)="removeOption(i, j)">
+                              <i class="fa fa-times"></i>
+                            </button>
+                            <div class="invalid-feedback" *ngIf="option.get('name')?.invalid && option.get('name')?.touched">
+                              Option name is required
+                            </div>
+                          </div>
+                          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addOption(i)">
+                            <i class="fa fa-plus me-1"></i>Add Option
+                          </button>
+                        </div>
+
+                        <!-- Validation message for options when type is options but no options added -->
+                        <div class="text-danger small mt-2" *ngIf="question.get('type')?.value === 'options' && getOptions(i).length === 0">
+                          Please add at least one option or use a predefined options set
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div *ngIf="questions.length === 0" class="text-center text-muted py-4">
+                    <i class="fa fa-question-circle fa-2x mb-3"></i>
+                    <p class="mb-0">No questions added yet. Click "Add Question" to get started.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-secondary me-2" (click)="isEditing = false">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="!formGroup.valid || hasEmptyOptionArrays()">Save</button>
+              </div>
+
+              <!-- Form-level validation summary -->
+              <div class="alert alert-danger mt-3" *ngIf="!formGroup.valid && formGroup.touched">
+                <p class="mb-0"><strong>Please fix the following issues:</strong></p>
+                <ul class="mb-0 ps-3 mt-1">
+                  <li *ngIf="formGroup.get('name')?.invalid">Form name is required</li>
+                  <li *ngIf="questions.length === 0">Add at least one question</li>
+                  <li *ngIf="hasInvalidQuestions()">Some questions have validation errors</li>
+                  <li *ngIf="hasEmptyOptionArrays()">Questions with type 'Options' must have at least one option</li>
+                </ul>
+              </div>
+            </form>
+
+            <div *ngIf="!isEditing && selectedForm">
+              <div class="mb-4">
+                <label class="form-label fw-bold">Name</label>
+                <p class="h4 mb-0">{{selectedForm.name}}</p>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Questions</label>
+                <div class="list-group">
+                  <div *ngFor="let question of selectedForm.questions; let i=index" class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <h6 class="mb-1">{{question.name}} <span class="badge bg-primary ms-2">{{question.type}}</span></h6>
+                      <small class="text-muted">{{question.shortname}}</small>
+                    </div>
+                    <div *ngIf="question.options && question.options.length > 0">
+                      <small class="text-muted">Options:</small>
+                      <div class="d-flex flex-wrap gap-2 mt-1">
+                        <span *ngFor="let option of question.options" class="badge bg-light text-dark">
+                          {{option.name}} ({{option.value}})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm" *ngIf="!selectedForm && !isEditing">
+        <div class="card-body text-center text-muted py-5">
+          <i class="fa fa-file-code fa-3x mb-3"></i>
+          <h5>No Form Selected</h5>
+          <p class="mb-0">Select a form from the list or create a new one to get started.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JSON Import Modal -->
+<div class="modal fade" [class.show]="showJsonModal" [style.display]="showJsonModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Import Form JSON</h5>
+        <button type="button" class="btn-close" (click)="closeJsonModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- File Upload -->
+        <div class="mb-4">
+          <label class="form-label fw-medium">Upload JSON File</label>
+          <div class="input-group">
+            <input type="file" class="form-control" accept=".json" (change)="onFileSelected($event)" #fileInput>
+            <button class="btn btn-outline-secondary" type="button" (click)="fileInput.click()">
+              <i class="fa fa-file-upload me-1"></i>Browse
+            </button>
+          </div>
+          <div class="form-text">Select a JSON file to upload or paste JSON below</div>
+        </div>
+
+        <div class="divider d-flex align-items-center my-3">
+          <hr class="flex-grow-1">
+          <span class="px-3 text-muted">OR</span>
+          <hr class="flex-grow-1">
+        </div>
+
+        <!-- Paste JSON -->
+        <div class="mb-3">
+          <label class="form-label fw-medium">Paste JSON here</label>
+          <textarea class="form-control" rows="15" [(ngModel)]="jsonInput"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeJsonModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="importJson()" [disabled]="!jsonInput.trim()">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="showJsonModal"></div>
+
+<style>
+  .divider {
+    color: #6c757d;
+  }
+</style>

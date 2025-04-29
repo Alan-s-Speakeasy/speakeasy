@@ -65,8 +65,8 @@ object RestApi {
             PostChatMessageReactionHandler(),
             PatchNewUserHandler(),
 
-            GetFeedbackFormListHandler(),
-            GetFeedbackFormHandler(),
+            // GetFeedbackFormListHandler(),
+            // GetFeedbackFormHandler(),
             PostFeedbackHandler(),
             GetFeedbackHistoryHandler(),
             ExportFeedbackHandler(),
@@ -78,7 +78,13 @@ object RestApi {
             GetAssignmentGeneratorHandler(),
             PostGenerateAssignmentHandler(),
             PatchStartAssignmentHandler(),
-            DeleteAssignmentGeneratorHandler()
+            DeleteAssignmentGeneratorHandler(),
+
+            GetFormListHandler(),
+            GetFormHandler(),
+            PostFormHandler(),
+            PutFormHandler(),
+            DeleteFormHandler(),
         )
 
         javalin = Javalin.create {
@@ -175,6 +181,8 @@ object RestApi {
                         val permittedRoles = if (handler is AccessManagedRestHandler) {
                             handler.permittedRoles
                         } else {
+                            // fallback in case no roles are set, none are required
+                            // TODO : AccessManager should be enforced in the handler so we avoid those flaws
                             setOf(RestApiRole.ANYONE)
                         }
 
@@ -193,6 +201,9 @@ object RestApi {
                         if (handler is DeleteRestHandler<*>) {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
+
+
+
                     }
                 }
             }

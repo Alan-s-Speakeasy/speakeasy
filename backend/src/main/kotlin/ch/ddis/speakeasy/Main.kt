@@ -16,6 +16,16 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 
+const val SPEAKEASY_ASCII = """
+                                Welcome to 
+    
+    ███████╗██████╗ ███████╗ █████╗ ██╗  ██╗███████╗ █████╗ ███████╗██╗   ██╗
+    ██╔════╝██╔══██╗██╔════╝██╔══██╗██║ ██╔╝██╔════╝██╔══██╗██╔════╝╚██╗ ██╔╝
+    ███████╗██████╔╝█████╗  ███████║█████╔╝ █████╗  ███████║███████╗ ╚████╔╝ 
+    ╚════██║██╔═══╝ ██╔══╝  ██╔══██║██╔═██╗ ██╔══╝  ██╔══██║╚════██║  ╚██╔╝  
+    ███████║██║     ███████╗██║  ██║██║  ██╗███████╗██║  ██║███████║   ██║   
+    ╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝   
+"""
 
 object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
 
@@ -31,7 +41,8 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
 
 
     override fun run() {
-        println("===== Speakeasy =====")
+        println(SPEAKEASY_ASCII)
+        println("Starting ...")
 
         var config = configPath?.let {
             println("Running with config file: $it")

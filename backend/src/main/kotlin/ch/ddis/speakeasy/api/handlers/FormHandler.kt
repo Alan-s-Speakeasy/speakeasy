@@ -3,6 +3,8 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.feedback.FormManager
+import ch.ddis.speakeasy.feedback.InvalidFormException
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import io.javalin.http.Context
 import io.javalin.openapi.*
 
@@ -78,11 +80,27 @@ class PostFormHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler
         if (ctx.body().isBlank()) {
             throw ErrorStatusException(400, "Request body is empty!", ctx)
         }
-        // TODO : Catch that and throw nicer messages to the frontend
-        val form = ctx.bodyAsClass(FeedbackForm::class.java)
+        var form: FeedbackForm? = null
+        try {
+            form = ctx.bodyAsClass(FeedbackForm::class.java)
+        } catch (e: ValueInstantiationException) {
+            // We can show the whole error, in this specific case where the validation failed
+            if (e.cause is InvalidFormException) {
+                // Cast to InvalidFormException
+                val invalidFormException = e.cause as InvalidFormException
+                throw ErrorStatusException(400, invalidFormException.message ?: "Invalid form", ctx)
+            }
+        } catch (e: Exception) {
+            // This is a generic error, we don't want to show the whole stack trace or whatever, I guess
+            throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+        }
 
-        FormManager.createNewForm(form)
-        return SuccessStatus("Form '${form.formName}' created successfully!")    }
+        if (form != null) {
+            FormManager.createNewForm(form)
+            return SuccessStatus("Form '${form.formName}' created successfully!")
+        }
+        throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
+    }
 }
 
 class PutFormHandler : PutRestHandler<SuccessStatus>, AccessManagedRestHandler {

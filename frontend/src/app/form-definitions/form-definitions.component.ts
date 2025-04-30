@@ -3,8 +3,8 @@ import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, AbstractControl, ValidatorFn} from '@angular/forms';
 import {AlertService} from "../alert";
 import {FormService} from "../../../openapi";
-import {FeedbackForm, FeedbackRequest, FeedbackAnswerOption} from "../../../openapi";
-import {Observable} from 'rxjs';
+import {FeedbackForm, FeedbackAnswerOption} from "../../../openapi";
+import {HttpErrorResponse} from "@angular/common/http";
 
 interface FormDefinition {
   id: string;
@@ -33,6 +33,7 @@ export class FormDefinitionsComponent implements OnInit {
   formGroup!: FormGroup;
   jsonInput: string = '';
   showJsonModal = false;
+  jsonValidationError: string | null = null;
 
   questionTypes = [
     {value: 'text', label: 'Text Input'},
@@ -107,8 +108,8 @@ export class FormDefinitionsComponent implements OnInit {
   addQuestion() {
     const questionGroup = this.fb.group({
       type: ['text', Validators.required],
-      name: ['', Validators.required],
-      shortname: ['', Validators.required],
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      shortname: ['', [Validators.required, Validators.pattern('^[a-zA-Z][a-zA-Z0-9_]*$'), Validators.minLength(2)]],
       options: this.fb.array([])
     });
 
@@ -269,7 +270,7 @@ export class FormDefinitionsComponent implements OnInit {
     } else {
       // Mark all fields as touched to trigger validation messages
       this.markFormGroupTouched(this.formGroup);
-      
+
       // Show specific validation error messages
       if (this.formGroup.get('name')?.errors?.['required']) {
         this.alertService.error('Form title is required');
@@ -319,17 +320,45 @@ export class FormDefinitionsComponent implements OnInit {
     if (!this.questions) return false;
 
     for (let i = 0; i < this.questions.length; i++) {
-      if (this.questions.at(i).invalid) {
+      const question = this.questions.at(i);
+      if (question.invalid) {
         return true;
+      }
+      // Check if it's a text question with proper validation
+      if (question.get('type')?.value === 'text') {
+        const name = question.get('name');
+        const shortname = question.get('shortname');
+
+        if (name?.errors?.['minLength']) {
+          return true;
+        }
+        if (shortname?.errors?.['pattern'] || shortname?.errors?.['minLength']) {
+          return true;
+        }
       }
     }
     return false;
   }
 
-  deleteForm(form: FormDefinition) {
-    // Note: The FormService doesn't have a delete method, so this would need to be added
-    // For now, we'll just remove it from the local array
+  getQuestionErrorMessage(question: AbstractControl, field: string): string {
+    const control = question.get(field);
+    if (!control?.errors) return '';
 
+    if (field === 'name') {
+      if (control.errors['required']) return 'Question name is required';
+      if (control.errors['minLength']) return 'Question name must be at least 3 characters long';
+    }
+
+    if (field === 'shortname') {
+      if (control.errors['required']) return 'Short name is required';
+      if (control.errors['pattern']) return 'Short name must start with a letter and contain only letters, numbers, and underscores';
+      if (control.errors['minLength']) return 'Short name must be at least 2 characters long';
+    }
+
+    return '';
+  }
+
+  deleteForm(form: FormDefinition) {
     // Alternative implementation if there was a delete endpoint:
     this.formService.deleteApiFeedbackformsByFormName(form.name).subscribe({
       next: () => {
@@ -358,6 +387,7 @@ export class FormDefinitionsComponent implements OnInit {
   closeJsonModal() {
     this.showJsonModal = false;
     this.jsonInput = '';
+    this.jsonValidationError = null;
   }
 
   // Handle file upload
@@ -399,6 +429,9 @@ export class FormDefinitionsComponent implements OnInit {
       return;
     }
 
+    // Clear any previous validation errors
+    this.jsonValidationError = null;
+
     try {
       const formData = JSON.parse(this.jsonInput);
 
@@ -429,12 +462,17 @@ export class FormDefinitionsComponent implements OnInit {
           this.loadForms();
           this.closeJsonModal();
         },
-        error: (error: Error) => {
-          this.alertService.error('Failed to import form: ' + error.message);
+        error: (error: HttpErrorResponse) => {
+          // Check if this is a validation error from InvalidFormException
+          if (error.error && error.error.description) {
+            this.jsonValidationError = `${error.error.description}`;
+          } else {
+            this.alertService.error('Failed to import form: ' + (error.error?.description || 'Unknown error'));
+          }
         }
       });
     } catch (error) {
-      this.alertService.error('Invalid JSON format. Please check your input.');
+      this.jsonValidationError = "Invalid JSON format. Please check your input.";
     }
   }
 

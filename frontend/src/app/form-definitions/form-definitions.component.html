@@ -118,7 +118,7 @@
                         <input type="text" class="form-control" formControlName="name" placeholder="e.g., Full Name"
                                [ngClass]="{'is-invalid': question.get('name')?.invalid && question.get('name')?.touched}">
                         <div class="invalid-feedback" *ngIf="question.get('name')?.invalid && question.get('name')?.touched">
-                          Question name is required
+                          {{getQuestionErrorMessage(question, 'name')}}
                         </div>
                       </div>
 
@@ -127,8 +127,11 @@
                         <input type="text" class="form-control" formControlName="shortname" placeholder="e.g., fullName"
                                [ngClass]="{'is-invalid': question.get('shortname')?.invalid && question.get('shortname')?.touched}">
                         <div class="invalid-feedback" *ngIf="question.get('shortname')?.invalid && question.get('shortname')?.touched">
-                          Short name is required
+                          {{getQuestionErrorMessage(question, 'shortname')}}
                         </div>
+                        <small class="form-text text-muted" *ngIf="!question.get('shortname')?.invalid || !question.get('shortname')?.touched">
+                          Must start with a letter and contain only letters, numbers, and underscores
+                        </small>
                       </div>
 
                       <!-- Options for options type -->
@@ -195,7 +198,20 @@
                 <ul class="mb-0 ps-3 mt-1">
                   <li *ngIf="formGroup.get('name')?.invalid">Form name is required</li>
                   <li *ngIf="questions.length === 0">Add at least one question</li>
-                  <li *ngIf="hasInvalidQuestions()">Some questions have validation errors</li>
+                  <li *ngIf="hasInvalidQuestions()">Some questions have validation errors:
+                    <ul class="mb-0 ps-3 mt-1">
+                      <li *ngFor="let question of questions.controls; let i=index">
+                        <ng-container *ngIf="question.invalid">
+                          Question {{i+1}}:
+                          <ul class="mb-0 ps-3">
+                            <li *ngIf="question.get('name')?.invalid">{{getQuestionErrorMessage(question, 'name')}}</li>
+                            <li *ngIf="question.get('shortname')?.invalid">{{getQuestionErrorMessage(question, 'shortname')}}</li>
+                            <li *ngIf="question.get('type')?.value === 'options' && getOptions(i).length === 0">Options are required for this question type</li>
+                          </ul>
+                        </ng-container>
+                      </li>
+                    </ul>
+                  </li>
                   <li *ngIf="hasEmptyOptionArrays()">Questions with type 'Options' must have at least one option</li>
                 </ul>
               </div>
@@ -271,7 +287,10 @@
         <!-- Paste JSON -->
         <div class="mb-3">
           <label class="form-label fw-medium">Paste JSON here</label>
-          <textarea class="form-control" rows="15" [(ngModel)]="jsonInput"></textarea>
+          <textarea class="form-control" rows="15" [(ngModel)]="jsonInput" [class.is-invalid]="jsonValidationError"></textarea>
+          <div *ngIf="jsonValidationError" class="invalid-feedback d-block">
+            <pre class="mb-0 text-danger">{{ jsonValidationError }}</pre>
+          </div>
         </div>
       </div>
       <div class="modal-footer">

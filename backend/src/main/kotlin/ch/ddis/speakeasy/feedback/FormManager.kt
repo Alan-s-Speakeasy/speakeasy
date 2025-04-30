@@ -1,10 +1,12 @@
 package ch.ddis.speakeasy.feedback
 
 import ch.ddis.speakeasy.util.Config
+import ch.ddis.speakeasy.util.require
 import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+
 
 /**
  * A class representing a feedback form.
@@ -14,34 +16,34 @@ import com.fasterxml.jackson.module.kotlin.readValue
 data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest>) {
     init {
         // TODO : check if formName is a valid file name
-        require(formName.isNotBlank()) { "Form name cannot be blank" }
-        require(requests.isNotEmpty()) { "Form must contain at least one question" }
+        require<InvalidFormException>(formName.isNotBlank(), "Form name cannot be blank")
+        require<InvalidFormException>(requests.isNotEmpty(), "Form must contain at least one question")
         val shortnames = requests.map { it.shortname }
-        require(shortnames.size == shortnames.distinct().size) { "Shortnames must be unique" }
+        require<InvalidFormException>(shortnames.size == shortnames.distinct().size, "Shortnames must be unique")
         // Check if the ids are increasing and startin from 0
         val ids = requests.map { it.id.toInt() }
-        require(ids.sorted() == ids) { "Question IDs must be increasing" }
-        require(ids.first() == 0) { "Question IDs must start from 0" }
+        require<InvalidFormException>(ids.sorted() == ids, "Question IDs must be increasing")
+        require<InvalidFormException>(ids.first() == 0, "Question IDs must start from 0")
     }
 }
 // TODO : id should be int. Kept that way for backwards compatibility
 data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>) {
     init {
-        require(id.toIntOrNull() != null) { "Question ID must be an integer" }
-        require(id.toInt() >= 0) { "Question ID must be non-negative" }
-        require(name.isNotBlank()) { "Name cannot be blank" }
-        require(shortname.isNotBlank()) { "Shortname cannot be blank" }
+        require<InvalidFormException>(id.toIntOrNull() != null, "Question ID must be an integer")
+        require<InvalidFormException>(id.toInt() >= 0, "Question ID must be non-negative")
+        require<InvalidFormException>(name.isNotBlank(), "Name cannot be blank")
+        require<InvalidFormException>(shortname.isNotBlank(), "Shortname cannot be blank")
         if (type == "multiple") {
-            require(options.isNotEmpty()) { "Multiple choice questions must have at least one option" }
+            require<InvalidFormException>(options.isNotEmpty(), "Multiple choice questions must have at least one option")
         }
     }
 }
 data class FeedbackAnswerOption(val name: String, val value: Int) {
     init {
-        require(name.isNotBlank()) { "Option name cannot be blank" }
-        require(value >= 0) { "Value must be non-negative" }
+        require<InvalidFormException>(name.isNotBlank(), "Option name cannot be blank")
     }
 }
+
 
 class InvalidFormException(message: String) : Exception(message)
 

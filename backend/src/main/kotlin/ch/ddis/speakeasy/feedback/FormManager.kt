@@ -6,6 +6,9 @@ import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.locks.ReentrantLock
 
 
 /**
@@ -57,9 +60,23 @@ class InvalidFormException(message: String) : Exception(message)
 object FormManager {
     private lateinit var formsPath: File
     private val kMapper: ObjectMapper = jacksonObjectMapper()
-    private val forms = mutableListOf<FeedbackForm>()
+
+    // CopyOnWrite basically create a copy on each write operation.
+    // Useful as there will be much more reads that writes here,
+    // So it's easier to implement - no need for general locking - and still guaranteed to be thread safe
+    private val forms = CopyOnWriteArrayList<FeedbackForm>()
+    // Fine-grained threading. Multiple thread can read different files at the same time
+    private val fileLocks = ConcurrentHashMap<String, ReentrantLock>()
+
+    private fun getLockForForm(formName: String): ReentrantLock {
+        return fileLocks.computeIfAbsent(formName) { ReentrantLock() }
+    }
 
     fun init(config: Config) {
+        // Throw if already initialized
+        if (this::formsPath.isInitialized) {
+            throw IllegalStateException("FormManager is already initialized")
+        }
         this.formsPath = File(File(config.dataPath), "feedbackforms/")
         if (!this.formsPath.exists()) {
             this.formsPath.mkdirs()
@@ -104,9 +121,16 @@ object FormManager {
         if (formFile.exists()) {
             throw IllegalArgumentException("A form with name '${newForm.formName}' already exists")
         }
-        this.kMapper.writeValue(formFile, newForm)
-        this.forms.add(newForm)
-        this.forms.sortBy { it.formName }
+        val lock = getLockForForm(newForm.formName)
+        lock.lock()
+        try {
+            this.kMapper.writeValue(formFile, newForm)
+            this.forms.add(newForm)
+            this.forms.sortBy { it.formName }
+        }
+        finally {
+            lock.unlock()
+        }
     }
 
     /**
@@ -120,12 +144,20 @@ object FormManager {
         if (!formFile.exists()) {
             throw IllegalArgumentException("Form '$formName' not found")
         }
-        formFile.delete()
-        forms.removeIf { it.formName == formName }
+        val lock = getLockForForm(formName)
+
+        lock.lock()
+        try {
+            formFile.delete()
+            forms.removeIf { it.formName == formName }
+        }
+        finally {
+            lock.unlock()
+        }
     }
 
     fun listForms(): List<FeedbackForm> {
-        return this.forms
+        return this.forms // Note that this is already thread safe
     }
 
     @Deprecated("Prefer to use getForm and deal with any exception raised instead")

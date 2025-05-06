@@ -1,10 +1,12 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, AfterViewInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, AbstractControl, ValidatorFn} from '@angular/forms';
 import {AlertService} from "../alert";
 import {FormService} from "../../../openapi";
 import {FeedbackForm, FeedbackAnswerOption} from "../../../openapi";
 import {HttpErrorResponse} from "@angular/common/http";
+import {MatTooltip} from "@angular/material/tooltip";
+import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 
 interface FormDefinition {
   id: string;
@@ -21,18 +23,86 @@ interface FormDefinition {
 @Component({
   selector: 'app-form-definitions',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatTooltip, NgbAccordionModule],
   templateUrl: './form-definitions.component.html',
 })
 export class FormDefinitionsComponent implements OnInit {
   forms: FormDefinition[] = [];
   isLoading = false;
 
+  /**
+   * The currently selected form in the list.
+   * Used to track which form is being viewed or edited.
+   * - When a user clicks on a form in the list, this is set to that form
+   * - When editing a form, this contains the form being edited
+   * - When creating a new form, this is set to the new form draft
+   * - When no form is selected, this is null
+   */
   selectedForm: FormDefinition | null = null;
+
+  /**
+   * Flag indicating whether the form is in editing mode.
+   * Used to control the UI state between view and edit modes.
+   * - When true: Shows the form editor with input fields
+   * - When false: Shows the form preview
+   * - Set to true when:
+   *   - Creating a new form (createNewForm)
+   *   - Editing an existing form (startEditing)
+   * - Set to false when:
+   *   - Canceling edits (cancelEditing)
+   *   - Successfully saving a form (saveForm)
+   */
   isEditing = false;
+
+  /**
+   * The main form group that contains all form data.
+   * Used to manage the form's data and validation state.
+   * Contains:
+   * - name: The form's name
+   * - questions: An array of question form groups
+   * Each question group contains:
+   * - type: The question type (text/options)
+   * - name: The question name
+   * - shortname: The question's short identifier
+   * - options: Array of options (for options type questions)
+   */
   formGroup!: FormGroup;
+
+  /**
+   * The JSON string input for importing forms.
+   * Used in the JSON import modal to store the pasted or uploaded JSON.
+   * - Set when:
+   *   - Opening the JSON modal with an existing form (openJsonModal)
+   *   - Uploading a JSON file (onFileSelected)
+   *   - Pasting JSON directly
+   * - Cleared when:
+   *   - Closing the JSON modal (closeJsonModal)
+   *   - Successfully importing a form (importJson)
+   */
   jsonInput: string = '';
+
+  /**
+   * Flag controlling the visibility of the JSON import modal.
+   * Used to show/hide the modal for importing forms via JSON.
+   * - Set to true when:
+   *   - Clicking the import button (openJsonModal)
+   * - Set to false when:
+   *   - Clicking cancel (closeJsonModal)
+   *   - Successfully importing a form (importJson)
+   */
   showJsonModal = false;
+
+  /**
+   * Error message for JSON validation.
+   * Used to display validation errors when importing JSON.
+   * - Set when:
+   *   - JSON parsing fails (importJson)
+   *   - JSON structure is invalid (importJson)
+   *   - Backend validation fails (importJson)
+   * - Cleared when:
+   *   - Opening the JSON modal (openJsonModal)
+   *   - Closing the JSON modal (closeJsonModal)
+   */
   jsonValidationError: string | null = null;
 
   questionTypes = [
@@ -53,6 +123,9 @@ export class FormDefinitionsComponent implements OnInit {
       ]
     }
   ];
+
+  showExportModal = false;
+  exportJsonString: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -137,17 +210,21 @@ export class FormDefinitionsComponent implements OnInit {
   }
 
   addPredefinedOptions(questionIndex: number, optionsSetIndex: number) {
+    if (optionsSetIndex === undefined || optionsSetIndex < 0) return;
+
     const optionsSet = this.predefinedOptionsSets[optionsSetIndex];
     const optionsArray = this.getOptions(questionIndex);
 
     // Clear existing options
     optionsArray.clear();
+
     // Add predefined options
     optionsSet.options.forEach(option => {
-      optionsArray.push(this.fb.group({
+      const optionGroup = this.fb.group({
         name: [option.name, Validators.required],
         value: [option.value, Validators.required]
-      }));
+      });
+      optionsArray.push(optionGroup);
     });
   }
 
@@ -181,12 +258,19 @@ export class FormDefinitionsComponent implements OnInit {
 
   startEditing() {
     if (this.selectedForm) {
+      // Reset the form group
+      this.formGroup.reset();
+
+      // Set the form name
       this.formGroup.patchValue({
         name: this.selectedForm.name
       });
 
+      // Clear existing questions
       this.questions.clear();
-      this.selectedForm.questions.forEach(q => {
+
+      // Add each question from the selected form
+      this.selectedForm.questions.forEach((q, index) => {
         const questionGroup = this.fb.group({
           type: [q.type, Validators.required],
           name: [q.name, Validators.required],
@@ -194,9 +278,11 @@ export class FormDefinitionsComponent implements OnInit {
           options: this.fb.array([])
         });
 
-        if (q.options) {
+        // Add options if they exist
+        if (q.options && q.options.length > 0) {
+          const optionsArray = questionGroup.get('options') as FormArray;
           q.options.forEach(opt => {
-            this.getOptions(this.questions.length).push(this.fb.group({
+            optionsArray.push(this.fb.group({
               name: [opt.name, Validators.required],
               value: [opt.value, Validators.required]
             }));
@@ -206,6 +292,7 @@ export class FormDefinitionsComponent implements OnInit {
         this.questions.push(questionGroup);
       });
 
+      // Enable editing mode
       this.isEditing = true;
     }
   }
@@ -247,11 +334,17 @@ export class FormDefinitionsComponent implements OnInit {
             this.loadForms();
             this.isEditing = false;
           },
-          error: (error: Error) => {
-            console.error('Error creating form:', error);
-            this.alertService.error('Failed to create form: ' + error.message);
+          error: (error: HttpErrorResponse) => {
+            this.alertService.error('Failed to create form: ' + error.error.description);
           }
         });
+        // Keep the current form selected the one we created
+        this.selectedForm = {
+          id: formData.name,
+          name: formData.name,
+          questions: questions,
+          lastModified: new Date()
+        };
       } else {
         // Update existing form with PUT
         this.formService.putApiFeedbackformsByFormName(formData.name, formToSave).subscribe({
@@ -377,11 +470,9 @@ export class FormDefinitionsComponent implements OnInit {
   // JSON operations
   openJsonModal() {
     this.showJsonModal = true;
-    if (this.selectedForm) {
-      this.jsonInput = JSON.stringify(this.selectedForm, null, 2);
-    } else {
-      this.jsonInput = '';
-    }
+    // Clear the JSON input when opening the modal
+    this.jsonInput = '';
+    this.jsonValidationError = null;
   }
 
   closeJsonModal() {
@@ -390,7 +481,6 @@ export class FormDefinitionsComponent implements OnInit {
     this.jsonValidationError = null;
   }
 
-  // Handle file upload
   onFileSelected(event: Event) {
     const fileInput = event.target as HTMLInputElement;
     if (fileInput.files && fileInput.files.length > 0) {
@@ -398,7 +488,7 @@ export class FormDefinitionsComponent implements OnInit {
 
       // Only accept JSON files
       if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-        alert('Please select a valid JSON file');
+        this.alertService.error('Please select a valid JSON file');
         fileInput.value = '';
         return;
       }
@@ -514,5 +604,75 @@ export class FormDefinitionsComponent implements OnInit {
       }
       return null;
     };
+  }
+
+  isQuestionInvalid(question: AbstractControl): boolean {
+    if (question.invalid) return true;
+
+    // Check name and shortname validation
+    const name = question.get('name');
+    const shortname = question.get('shortname');
+    if (name?.invalid || shortname?.invalid) return true;
+
+    // Check options validation if it's an options type question
+    if (question.get('type')?.value === 'options') {
+      const options = question.get('options') as FormArray;
+      if (options.length === 0) return true;
+
+      // Check if any option is invalid
+      for (let i = 0; i < options.length; i++) {
+        const option = options.at(i);
+        if (option.invalid) return true;
+      }
+    }
+
+    return false;
+  }
+
+  cancelEditing() {
+    // If this is a new form (not saved yet), remove it from the list
+    if (this.selectedForm && this.forms.includes(this.selectedForm)) {
+      this.forms = this.forms.filter(f => f.id !== this.selectedForm?.id);
+    }
+
+    // Reset the form state
+    this.isEditing = false;
+    this.selectedForm = null;
+    this.formGroup.reset();
+  }
+
+  openExportModal() {
+    if (this.selectedForm) {
+      this.exportJsonString = JSON.stringify(this.selectedForm, null, 2);
+      this.showExportModal = true;
+    }
+  }
+
+  closeExportModal() {
+    this.showExportModal = false;
+    this.exportJsonString = '';
+  }
+
+  copyToClipboard() {
+    navigator.clipboard.writeText(this.exportJsonString).then(() => {
+      this.alertService.success('JSON copied to clipboard');
+    }).catch(() => {
+      this.alertService.error('Failed to copy to clipboard');
+    });
+  }
+
+  exportToFile() {
+    if (this.selectedForm) {
+      const jsonStr = JSON.stringify(this.selectedForm, null, 2);
+      const blob = new Blob([jsonStr], {type: 'application/json'});
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.selectedForm.name.replace(/\s+/g, '_')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
   }
 }

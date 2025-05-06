@@ -65,8 +65,6 @@ object RestApi {
             PostChatMessageReactionHandler(),
             PatchNewUserHandler(),
 
-            // GetFeedbackFormListHandler(),
-            // GetFeedbackFormHandler(),
             PostFeedbackHandler(),
             GetFeedbackHistoryHandler(),
             ExportFeedbackHandler(),
@@ -88,7 +86,7 @@ object RestApi {
         )
 
         javalin = Javalin.create {
-            it.plugins.enableCors {corsContainer ->
+            it.plugins.enableCors { corsContainer ->
                 corsContainer.add { cfg ->
 //                    cfg.anyHost() // TODO: anyHost does not work for dev when using 4200 frontend port
                     cfg.reflectClientOrigin = true
@@ -115,7 +113,7 @@ object RestApi {
                             }
                             cfg.withSecurity(
                                 SecurityComponentConfiguration()
-                                .withSecurityScheme("CookieAuth", CookieAuth(AccessManager.SESSION_COOKIE_NAME))
+                                    .withSecurityScheme("CookieAuth", CookieAuth(AccessManager.SESSION_COOKIE_NAME))
                             )
                         }
                 )
@@ -125,7 +123,7 @@ object RestApi {
                 SwaggerPlugin(
                     SwaggerConfiguration().apply {
                         this.documentationPath = "/swagger-docs"
-                        this.uiPath =  "/swagger-ui"
+                        this.uiPath = "/swagger-ui"
                     }
                 )
             )
@@ -142,7 +140,9 @@ object RestApi {
             it.http.defaultContentType = "application/json"
             it.http.prefer405over404 = true
             it.accessManager(AccessManager::manage)
-            if(config.enableSsl) { it.plugins.enableSslRedirects() }
+            if (config.enableSsl) {
+                it.plugins.enableSslRedirects()
+            }
             it.staticFiles.add("html", Location.CLASSPATH)
             it.spaRoot.addFile("/", "html/index.html")
         }.before { ctx ->
@@ -166,7 +166,7 @@ object RestApi {
             }
 
         }.routes {
-            path("sse"){
+            path("sse") {
                 path(SseRoomHandler.route) { // "room"
                     ApiBuilder.sse(SseRoomHandler, *SseRoomHandler.permittedRoles.toTypedArray())
                 }
@@ -201,9 +201,6 @@ object RestApi {
                         if (handler is DeleteRestHandler<*>) {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
-
-
-
                     }
                 }
             }

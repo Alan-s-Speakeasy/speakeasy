@@ -5,6 +5,7 @@ import ch.ddis.speakeasy.api.RestApi
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.Config
 import com.github.ajalt.clikt.core.CliktCommand
@@ -15,6 +16,16 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 
+const val SPEAKEASY_ASCII = """
+                                Welcome to 
+    
+    ███████╗██████╗ ███████╗ █████╗ ██╗  ██╗███████╗ █████╗ ███████╗██╗   ██╗
+    ██╔════╝██╔══██╗██╔════╝██╔══██╗██║ ██╔╝██╔════╝██╔══██╗██╔════╝╚██╗ ██╔╝
+    ███████╗██████╔╝█████╗  ███████║█████╔╝ █████╗  ███████║███████╗ ╚████╔╝ 
+    ╚════██║██╔═══╝ ██╔══╝  ██╔══██║██╔═██╗ ██╔══╝  ██╔══██║╚════██║  ╚██╔╝  
+    ███████║██║     ███████╗██║  ██║██║  ██╗███████╗██║  ██║███████║   ██║   
+    ╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝   
+"""
 
 object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
 
@@ -30,7 +41,8 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
 
 
     override fun run() {
-        println("===== Speakeasy =====")
+        println(SPEAKEASY_ASCII)
+        println("Starting ...")
 
         var config = configPath?.let {
             println("Running with config file: $it")
@@ -56,6 +68,7 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
         AccessManager.init(config)
         FeedbackManager.init(config)
         ChatRoomManager.init(config)
+        FormManager.init(config)
 
         println("Starting api")
         RestApi.init(config)

@@ -2,7 +2,9 @@ package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
@@ -12,11 +14,9 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 
-// I really wonder the point of all of this when most of these are mapppings.
 
-data class FeedbackAnswerOption(val name: String, val value: Int)
-data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>)
-data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest>)
+ // I really wonder the point of all of this when most of these are mapppings.
+
 data class FeedbackFormList(val forms: MutableList<FeedbackForm>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
@@ -30,82 +30,6 @@ data class FeedbackResponseStatsMapList(
     val requested: List<FeedbackResponseStatsItem>,
     val statsOfAllRequest: List<FeedBackStatsOfRequest> = listOf()
 )
-
-class GetFeedbackFormListHandler : GetRestHandler<FeedbackFormList>, AccessManagedRestHandler {
-    override val permittedRoles = setOf(RestApiRole.USER)
-    override val route: String = "feedbackforms"
-    @OpenApi(
-        summary = "Gets the list of all feedback forms.",
-        path = "/api/feedbackforms",
-        operationId = OpenApiOperation.AUTO_GENERATE,
-        methods = [HttpMethod.GET],
-        tags = ["Feedback"],
-
-        queryParams = [
-            OpenApiParam("session", String::class, "Session Token")
-        ],
-        responses = [
-            OpenApiResponse("200", [OpenApiContent(FeedbackFormList::class)]),
-            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
-        ]
-    )
-    override fun doGet(ctx: Context): FeedbackFormList {
-
-        AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
-            401,
-            "Unauthorized",
-            ctx
-        )
-
-        return FeedbackFormList(forms = FeedbackManager.readFeedbackFromList())
-    }
-}
-
-class GetFeedbackFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHandler {
-
-    override val permittedRoles = setOf(RestApiRole.USER)
-
-    override val route: String = "feedbackform/{formName}"
-    @OpenApi(
-        summary = "Gets the feedback form (with form name and questions).",
-        path = "/api/feedbackform/{formName}",
-        operationId = OpenApiOperation.AUTO_GENERATE,
-        methods = [HttpMethod.GET],
-        tags = ["Feedback"],
-        pathParams = [
-            OpenApiParam("formName", String::class, "Name of the feedback form", required = true),
-        ],
-        queryParams = [
-            OpenApiParam("session", String::class, "Session Token")
-        ],
-        responses = [
-            OpenApiResponse("200", [OpenApiContent(FeedbackForm::class)]),
-            OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-            OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)])
-        ]
-    )
-    override fun doGet(ctx: Context): FeedbackForm {
-
-        AccessManager.getUserSessionForSessionToken(ctx.sessionToken()) ?: throw ErrorStatusException(
-            401,
-            "Unauthorized",
-            ctx
-        )
-
-        val formName = (ctx.pathParamMap().getOrElse("formName") {
-            throw ErrorStatusException(400, "Parameter 'formName' is missing!'", ctx)
-        })
-
-        val form = try {
-            FeedbackManager.readFeedbackFrom(formName)
-        } catch (e: NullPointerException) {
-            throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
-        }
-
-        return form
-    }
-}
 
 class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -250,7 +174,7 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
         })
 
         try {
-            FeedbackManager.readFeedbackFrom(formName)
+            FormManager.isValidFormName(formName)
         } catch (e: NullPointerException) {
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
@@ -306,7 +230,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapLi
         })
 
         try {
-            FeedbackManager.readFeedbackFrom(formName)
+            FormManager.getForm(formName)
         } catch (e: NullPointerException) {
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
@@ -400,7 +324,7 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
             formName = formName
         )
         // This also filters out textual questions, so we don't include them in the CSV
-        val requestIdToShortName = FeedbackManager.readFeedbackFrom(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
+        val requestIdToShortName = FormManager.getForm(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
         ctx.outputStream().use { outputStream ->
             // Structure of the csv file : username, N, request1, request2, ...
             val writer = CSVWriterBuilder(outputStream.writer()).build()
@@ -428,3 +352,4 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
     }
 }
 
+class PutNewForm()

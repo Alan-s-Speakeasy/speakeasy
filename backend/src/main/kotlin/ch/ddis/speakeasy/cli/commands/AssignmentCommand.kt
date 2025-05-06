@@ -6,6 +6,7 @@ import ch.ddis.speakeasy.assignment.ShuffledChatAssignmentGenerator
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.UID
 import com.github.ajalt.clikt.core.CliktCommand
@@ -99,7 +100,7 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
         private val formName: String by option(
             "-f",
             "--form",
-            help = "which feedback form to use: ${FeedbackManager.readFeedbackFromList().map { it.formName }} (default no feedback)"
+            help = "which feedback form to use: ${FormManager.listForms().map { it.formName }} (default no feedback)"
         ).default("")
 
         override fun run() {
@@ -108,8 +109,8 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
                 println("No assignment generator active")
                 return
             }
-            if (!FeedbackManager.isValidFormName(formName)){
-                println("You should leave it blank or choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+            if (!FormManager.isValidFormName(formName)){
+                println("You should leave it blank or choose an existing form: ${FormManager.listForms().map { it.formName }}")
                 return
             }
 

@@ -9,7 +9,7 @@ import {
   ChatService,
   FeedbackResponse,
   FeedbackResponseStatsItem,
-  FeedbackService, FeedBackStatsOfRequest,
+  FeedbackService, FeedBackStatsOfRequest, FormService,
   UserService
 } from "../../../openapi";
 import {AuthService} from "../authentication.service";
@@ -30,6 +30,7 @@ export class HistoryComponent implements OnInit {
               @Inject(CommonService) private commonService: CommonService,
               @Inject(UserService) private userService: UserService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
+              @Inject(FormService) private formService: FormService,
               @Inject(ChatService) private chatService: ChatService,
               public alertService: AlertService) { }
 
@@ -61,8 +62,8 @@ export class HistoryComponent implements OnInit {
     this.commonService.openSseAndListenRooms()
 
     // get all forms
-    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
-        feedbackForms.forms.forEach( (form) => {
+    this.formService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
+        feedbackForms.forEach( (form) => {
           this.ratingFormsMap.set(form.formName, form)
 
           // for each form, we get the FeedbackResponseAverageItem

@@ -6,7 +6,7 @@ import {
   AdminService,
   AssignmentGeneratorObject,
   AssignmentService,
-  ChatRoomAdminInfo, FeedbackRequest, FeedbackService,
+  ChatRoomAdminInfo, FeedbackRequest, FeedbackService, FormService,
   GeneratedAssignment,
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
@@ -32,6 +32,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
               private commonService: CommonService,
               @Inject(AdminService) private adminService: AdminService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
+              @Inject(FormService) private formService: FormService,
               @Inject(AssignmentService) private assignmentService: AssignmentService,
               public alertService: AlertService) {
   }
@@ -94,8 +95,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.setTitle("Assignments")
 
-    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
-      feedbackForms.forms.forEach((form) => {
+    this.formService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
+      feedbackForms.forEach((form) => {
         this.formsMap.set(form.formName, form.requests)
       })
     })

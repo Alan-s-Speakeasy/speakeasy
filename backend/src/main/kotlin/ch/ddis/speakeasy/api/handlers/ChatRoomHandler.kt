@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -568,7 +569,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         }
 
         val formRef = request.formName
-        if (formRef.isNotBlank() && !FeedbackManager.isValidFormName(formRef)) {
+        if (formRef.isNotBlank() && !FormManager.isValidFormName(formRef)) {
             throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
         }
 

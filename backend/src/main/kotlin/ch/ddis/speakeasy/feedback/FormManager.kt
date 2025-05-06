@@ -13,8 +13,17 @@ import com.fasterxml.jackson.module.kotlin.readValue
  */
 data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest>) {
     init {
-        // TODO : check if formName is a valid file name
+        // Validate form name as a filename
+        // NOTE : This is TEMPORARY.
+        // In the near future, we will use uuid as file names
         require<InvalidFormException>(formName.isNotBlank(), "Form name cannot be blank")
+        require<InvalidFormException>(formName.matches(Regex("^[a-zA-Z0-9][a-zA-Z0-9_\\- ]*[a-zA-Z0-9]\$")), 
+            "Form name must start and end with a letter or number, and can only contain letters, numbers, spaces, underscores, and hyphens")
+        require<InvalidFormException>(formName.length <= 100, "Form name cannot be longer than 100 characters")
+        require<InvalidFormException>(!formName.contains(".."), "Form name cannot contain '..'")
+        require<InvalidFormException>(!formName.contains("/"), "Form name cannot contain '/'")
+        require<InvalidFormException>(!formName.contains("\\"), "Form name cannot contain '\\'")
+        
         require<InvalidFormException>(requests.isNotEmpty(), "Form must contain at least one question")
         val shortnames = requests.map { it.shortname }
         require<InvalidFormException>(shortnames.size == shortnames.distinct().size, "Shortnames must be unique")

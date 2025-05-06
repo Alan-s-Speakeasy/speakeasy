@@ -78,7 +78,7 @@
               <input type="text" class="form-control" formControlName="name" required (input)="updateFormName()"
                      [ngClass]="{'is-invalid': formGroup.get('name')?.invalid && formGroup.get('name')?.touched}">
               <div class="invalid-feedback" *ngIf="formGroup.get('name')?.invalid && formGroup.get('name')?.touched">
-                Form name is required
+                {{getFormErrorMessage('name')}}
               </div>
             </div>
 

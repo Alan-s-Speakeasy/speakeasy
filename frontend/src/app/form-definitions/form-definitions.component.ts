@@ -133,7 +133,7 @@ export class FormDefinitionsComponent implements OnInit {
     private formService: FormService
   ) {
     this.formGroup = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(1)]],
+      name: ['', [Validators.required, Validators.minLength(1), this.uniqueFormNameValidator()]],
       questions: this.fb.array([], [Validators.required, this.atLeastOneQuestion()])
     });
   }
@@ -451,6 +451,19 @@ export class FormDefinitionsComponent implements OnInit {
     return '';
   }
 
+  getFormErrorMessage(field: string): string {
+    const control = this.formGroup.get(field);
+    if (!control?.errors) return '';
+
+    if (field === 'name') {
+      if (control.errors['required']) return 'Form name is required';
+      if (control.errors['minLength']) return 'Form name cannot be empty';
+      if (control.errors['duplicateName']) return 'A form with this name already exists';
+    }
+
+    return '';
+  }
+
   deleteForm(form: FormDefinition) {
     // Alternative implementation if there was a delete endpoint:
     this.formService.deleteApiFeedbackformsByFormName(form.name).subscribe({
@@ -674,5 +687,21 @@ export class FormDefinitionsComponent implements OnInit {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     }
+  }
+
+  // Custom validator to ensure form name is unique
+  private uniqueFormNameValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const formName = control.value;
+      if (!formName) return null;
+
+      // Check if the name is already used by another form
+      const isDuplicate = this.forms.some(form => 
+        form.name === formName && 
+        (!this.selectedForm || form.id !== this.selectedForm.id)
+      );
+
+      return isDuplicate ? { duplicateName: true } : null;
+    };
   }
 }

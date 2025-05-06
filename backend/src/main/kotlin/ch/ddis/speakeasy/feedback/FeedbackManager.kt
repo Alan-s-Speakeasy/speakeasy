@@ -88,25 +88,6 @@ object FeedbackManager {
     private val writerLock = StampedLock()
 
     /**
-     * Checks if the given formName is a valid form name. If formname is empty, it is considered valid.
-     *
-     * @param formName The name of the feedback form
-     *
-     * @return true if the formName is valid, false otherwise.
-     */
-    // TODO : Remove now,
-    @Deprecated("Use FormManager.isValidFormName(formName: String) instead.")
-    fun isValidFormName(formName: String): Boolean {
-        if (formName == "") {
-            return true
-        }
-        return this.forms.find { it.formName == formName } != null
-    }
-
-    // TODO : Remove now
-    fun readFeedbackFromList(): MutableList<FeedbackForm> = forms
-
-    /**
      * Write the feedback responses to the CSV file.
      * Return if the feedback form is not found.
      *

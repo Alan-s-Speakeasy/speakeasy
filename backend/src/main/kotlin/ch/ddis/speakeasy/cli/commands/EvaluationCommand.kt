@@ -252,7 +252,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
 
         private val formName: String by option(
             "-f", "--form",
-            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
+            help = "Which form to review: ${FormManager.listForms().map { it.formName }}").required()
 
         override fun run() {
             val user = UserManager.list().find { it.name == username }
@@ -266,8 +266,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
-                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+            if (formName.isBlank() || !FormManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FormManager.listForms().map { it.formName }}")
                 return
             }
 
@@ -294,7 +294,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             help = "Flag to list ratings only for chat rooms requested by students.").flag()
         private val formName: String by option(
             "-f", "--form",
-            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
+            help = "Which form to review: ${FormManager.listForms().map { it.formName }}").required()
 
 
         override fun run() {
@@ -308,8 +308,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
-            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
-                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+            if (formName.isBlank() || !FormManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FormManager.listForms().map { it.formName }}")
                 return
             }
 
@@ -339,7 +339,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
         private val output: String? by option("-o", "--output")
         private val formName: String by option(
             "-f", "--form",
-            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
+            help = "Which form to review: ${FormManager.listForms().map { it.formName }}").required()
 
         override fun run() {
 
@@ -353,8 +353,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
-            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
-                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+            if (formName.isBlank() || !FormManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FormManager.listForms().map { it.formName }}")
                 return
             }
 
@@ -380,7 +380,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
             help = "Flag to list ratings only for chat rooms requested by students.").flag()
         private val formName: String by option(
             "-f", "--form",
-            help = "Which form to review: ${FeedbackManager.readFeedbackFromList().map { it.formName }}").required()
+            help = "Which form to review: ${FormManager.listForms().map { it.formName }}").required()
 
         override fun run() {
             if ((assigned && requested) || (!assigned && !requested)) {
@@ -388,8 +388,8 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println(getFormattedHelp())
                 return
             }
-            if (formName.isBlank() || !FeedbackManager.isValidFormName(formName)){
-                println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
+            if (formName.isBlank() || !FormManager.isValidFormName(formName)){
+                println("You should choose an existing form: ${FormManager.listForms().map { it.formName }}")
                 return
             }
             val header = FormManager.getForm(formName)

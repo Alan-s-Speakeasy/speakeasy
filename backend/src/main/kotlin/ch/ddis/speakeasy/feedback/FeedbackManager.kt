@@ -88,16 +88,6 @@ object FeedbackManager {
     private val writerLock = StampedLock()
 
     /**
-     * Returns a matching FeedbackForm object for the given formName.
-     *
-     * @throws NullPointerException if the formName is not found.
-     */
-    @Deprecated("Use readFeedbackFrom(formName: String) instead.")
-    fun readFeedbackFrom(formName: String): FeedbackForm {
-        return forms.find { it.formName == formName }!!  // throw NullPointerException
-    }
-
-    /**
      * Checks if the given formName is a valid form name. If formname is empty, it is considered valid.
      *
      * @param formName The name of the feedback form

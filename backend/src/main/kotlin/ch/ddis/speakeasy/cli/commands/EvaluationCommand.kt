@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseStatsItem
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseItem
 import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -270,7 +271,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            val header = FeedbackManager.readFeedbackFrom(formName)
+            val header = FormManager.getForm(formName)
             val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName = formName)
             val userResponses = allFeedbackResponses.filter { it.author == user.name }
 
@@ -312,7 +313,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            val header = FeedbackManager.readFeedbackFrom(formName)
+            val header = FormManager.getForm(formName)
             val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName = formName)
             val userResponses = allFeedbackResponses.filter { it.recipient == user.name }
 
@@ -357,7 +358,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 return
             }
 
-            val header = FeedbackManager.readFeedbackFrom(formName)
+            val header = FormManager.getForm(formName)
             val responsesPerUser = FeedbackManager.aggregateFeedbackStatisticsPerUser(
                 author = author,
                 assignment = assigned,
@@ -391,7 +392,7 @@ class EvaluationCommand : NoOpCliktCommand(name = "evaluation") {
                 println("You should choose an existing form: ${FeedbackManager.readFeedbackFromList().map { it.formName }}")
                 return
             }
-            val header = FeedbackManager.readFeedbackFrom(formName)
+            val header = FormManager.getForm(formName)
             val allFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = assigned, formName = formName)
 
             val supplement = if (assigned) "assigned by administrators" else "requested by students"

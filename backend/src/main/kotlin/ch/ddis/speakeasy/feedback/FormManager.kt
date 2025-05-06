@@ -10,8 +10,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 
 /**
  * A class representing a feedback form.
- *
- * NOTE : in earlier versions of speakeasy, questions were called requests.
  */
 data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest>) {
     init {

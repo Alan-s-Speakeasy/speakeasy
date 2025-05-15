@@ -8,7 +8,7 @@ import {
   FeedbackRequest,
   FeedbackResponse,
   FeedbackService,
-  FeedBackStatsOfRequest
+  FeedBackStatsOfRequest, FormService
 } from "../../../openapi";
 import {interval, Subscription} from "rxjs";
 import {HttpClient} from '@angular/common/http';
@@ -76,6 +76,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
               private httpClient: HttpClient,
               private commonService: CommonService,
               @Inject(FeedbackService) private feedbackService: FeedbackService,
+              @Inject(FormService) private formService: FormService,
               @Inject(AdminService) private adminService: AdminService,
               public alertService: AlertService,
               private modalService: NgbModal,
@@ -128,8 +129,8 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
       this.selectedUsernames = JSON.parse(savedSelectedUsers);
     }
 
-    this.feedbackService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
-      this.formNameOptions = feedbackForms.forms.map(form => form.formName);
+    this.formService.getApiFeedbackforms(undefined).subscribe((feedbackForms) => {
+      this.formNameOptions = feedbackForms.map(form => form.formName);
       this.selectedFormName = this.formNameOptions[0]; // use the first one as default form
 
       // Fetch initially and then periodically refetch
@@ -141,7 +142,7 @@ export class UserFeedbackComponent implements OnInit, OnDestroy {
   }
 
   fetchFeedback(): void {
-    this.feedbackService.getApiFeedbackformByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
+    this.formService.getApiFeedbackformsByFormName(this.selectedFormName, undefined).subscribe((feedbackForm) => {
         this.ratingRequests = feedbackForm.requests;
         feedbackForm.requests.forEach((request) => {
           if (request.options.length == 0 && !this.nonOptionQuestionIds.includes(request.id)) {

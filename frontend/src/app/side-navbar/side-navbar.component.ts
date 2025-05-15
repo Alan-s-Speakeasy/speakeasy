@@ -54,6 +54,7 @@ export class SideNavbarComponent implements OnInit{
     {name: 'Feedback', url: '/feedback', icon: 'pi pi-comment'},
     {name: 'Chatrooms', url: '/chatroomStatus', icon: 'pi pi-list'},
     {name: 'Users', url: '/userStatus', icon: 'pi pi-users'},
+    {name: 'Form Definitions', url: '/forms', icon: 'pi pi-file-edit'},
   ]
     links_user = [
     {name: 'Home', url: '/panel', icon: 'pi pi-home'},

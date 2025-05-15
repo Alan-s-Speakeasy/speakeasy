@@ -97,6 +97,23 @@ interface DeleteRestHandler<T: Any> : RestHandler {
 
 }
 
+interface PutRestHandler<T: Any> : RestHandler {
+
+    fun put(ctx: Context) {
+        AccessManager.updateLastAccess(ctx.sessionToken())
+        try {
+            ctx.json(doPut(ctx))
+        } catch (e: ErrorStatusException) {
+            ctx.errorResponse(e)
+        } catch (e: Exception) {
+            ctx.errorResponse(500, e.message ?: "")
+        }
+    }
+
+    fun doPut(ctx: Context): T
+
+}
+
 interface AccessManagedRestHandler : RestHandler {
 
     val permittedRoles: Set<RouteRole>

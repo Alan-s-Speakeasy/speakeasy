@@ -2,7 +2,14 @@
 
 import {Component, EventEmitter, Inject, Input, OnInit, Output} from '@angular/core';
 import {PaneLog, Ratings} from "../new_data";
-import {ChatService, FeedbackRequest, FeedbackResponse, FeedbackResponseList, FeedbackService} from "../../../openapi";
+import {
+  ChatService,
+  FeedbackRequest,
+  FeedbackResponse,
+  FeedbackResponseList,
+  FeedbackService,
+  FormService
+} from "../../../openapi";
 import {AlertService} from "../alert";
 
 @Component({
@@ -16,6 +23,7 @@ export class RatingPaneComponent implements OnInit {
     keepAfterRouteChange: true
   };
   constructor(@Inject(FeedbackService) private feedbackService: FeedbackService,
+              @Inject(FormService) private formService: FormService,
               @Inject(ChatService) private chatService: ChatService,
               public alertService: AlertService) { }
 
@@ -32,7 +40,7 @@ export class RatingPaneComponent implements OnInit {
 
   // fetch the rating form
   fetchRatingForm(): void {
-    this.feedbackService.getApiFeedbackformByFormName(this.paneLog.formRef, undefined).subscribe(
+    this.formService.getApiFeedbackformsByFormName(this.paneLog.formRef, undefined).subscribe(
       (feedbackForm) => {
         this.ratingForm = feedbackForm.requests;
       },

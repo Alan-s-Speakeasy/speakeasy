@@ -156,6 +156,32 @@ object FormManager {
         }
     }
 
+    /**
+     * Update an existing feedback form, but thread safe :O
+     *
+     * @param formName The name of the form to update
+     * @param newForm The new feedback form data
+     * @throws IllegalArgumentException if the form doesn't exist
+     */
+    fun updateForm(formName: String, newForm: FeedbackForm) {
+        val formFile = File(formsPath, "$formName.json")
+        if (!formFile.exists()) {
+            throw IllegalArgumentException("Form '$formName' not found")
+        }
+        val lock = getLockForForm(formName)
+
+        lock.lock()
+        try {
+            this.kMapper.writeValue(formFile, newForm)
+            forms.removeIf { it.formName == formName }
+            forms.add(newForm)
+            forms.sortBy { it.formName }
+        }
+        finally {
+            lock.unlock()
+        }
+    }
+
     fun listForms(): List<FeedbackForm> {
         return this.forms // Note that this is already thread safe
     }

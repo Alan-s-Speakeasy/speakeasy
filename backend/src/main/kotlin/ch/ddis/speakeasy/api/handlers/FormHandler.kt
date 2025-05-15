@@ -134,9 +134,7 @@ class PutFormHandler : PutRestHandler<SuccessStatus>, AccessManagedRestHandler {
             throw ErrorStatusException(400, "Request body is empty!", ctx)
         }
         val form = ctx.bodyAsClass(FeedbackForm::class.java)
-        // TODO : This does not look thread safe ahah
-        FormManager.deleteForm(formName)
-        FormManager.createNewForm(form)
+        FormManager.updateForm(formName, form)
         return SuccessStatus("Form '${form.formName}' updated successfully!")
     }
 }

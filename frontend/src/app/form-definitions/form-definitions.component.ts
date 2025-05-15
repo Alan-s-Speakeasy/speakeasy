@@ -139,7 +139,6 @@ export class FormDefinitionsComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log('FormDefinitionsComponent initialized');
     this.loadForms();
   }
 
@@ -147,7 +146,6 @@ export class FormDefinitionsComponent implements OnInit {
     this.isLoading = true;
     this.formService.getApiFeedbackforms().subscribe({
       next: (response: FeedbackForm[]) => {
-        console.log(response);
         if (response) {
           this.forms = response.map(form => ({
             id: form.formName,
@@ -164,10 +162,8 @@ export class FormDefinitionsComponent implements OnInit {
           this.forms = [];
         }
         this.isLoading = false;
-        console.log('Loaded forms:', this.forms);
       },
       error: (error: Error) => {
-        console.error('Error loading forms:', error);
         this.alertService.error('Failed to load forms: ' + error.message);
         this.isLoading = false;
       }
@@ -323,13 +319,10 @@ export class FormDefinitionsComponent implements OnInit {
       const isNewForm = !this.selectedForm ||
         (this.selectedForm && this.selectedForm.id !== formData.name);
 
-      console.log('Saving form:', isNewForm ? 'Creating new form' : 'Updating existing form', formToSave);
-
       if (isNewForm) {
         // Create new form with POST
         this.formService.postApiFeedbackforms(formToSave).subscribe({
           next: (response) => {
-            console.log('Form created successfully:', response);
             this.alertService.success('Form created successfully');
             this.loadForms();
             this.isEditing = false;
@@ -349,7 +342,6 @@ export class FormDefinitionsComponent implements OnInit {
         // Update existing form with PUT
         this.formService.putApiFeedbackformsByFormName(formData.name, formToSave).subscribe({
           next: (response) => {
-            console.log('Form updated successfully:', response);
             this.alertService.success('Form updated successfully');
             this.loadForms();
             this.isEditing = false;
@@ -696,8 +688,8 @@ export class FormDefinitionsComponent implements OnInit {
       if (!formName) return null;
 
       // Check if the name is already used by another form
-      const isDuplicate = this.forms.some(form => 
-        form.name === formName && 
+      const isDuplicate = this.forms.some(form =>
+        form.name === formName &&
         (!this.selectedForm || form.id !== this.selectedForm.id)
       );
 

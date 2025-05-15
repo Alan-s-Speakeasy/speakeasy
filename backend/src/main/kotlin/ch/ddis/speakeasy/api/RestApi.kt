@@ -201,6 +201,10 @@ object RestApi {
                         if (handler is DeleteRestHandler<*>) {
                             ApiBuilder.delete(handler::delete, *permittedRoles.toTypedArray())
                         }
+
+                        if (handler is PutRestHandler<*>) {
+                            ApiBuilder.put(handler::put, *permittedRoles.toTypedArray())
+                        }
                     }
                 }
             }

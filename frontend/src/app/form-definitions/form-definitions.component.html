@@ -138,19 +138,17 @@
                         <div class="col-12 mt-3" *ngIf="question.get('type')?.value === 'options'">
                           <div class="mb-2 d-flex justify-content-between align-items-center">
                             <label class="form-label small mb-0">Options</label>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addOption(i)">
-                              <i class="fa fa-plus me-1"></i>Add
-                            </button>
-                          </div>
-
-                          <!-- Predefined options dropdown - More compact -->
-                          <div class="mb-2">
-                            <select class="form-select form-select-sm" (change)="addPredefinedOptions(i, +$any($event).target.value)">
-                              <option value="">Select predefined options...</option>
-                              <option *ngFor="let set of predefinedOptionsSets; let idx = index" [value]="idx">
-                                {{set.name}}
-                              </option>
-                            </select>
+                            <div class="d-flex gap-2">
+                              <select class="form-select form-select-sm" style="width: auto" (change)="addPredefinedOptions(i, +$any($event).target.value)">
+                                <option value="">Predefined sets...</option>
+                                <option *ngFor="let set of predefinedOptionsSets; let idx = index" [value]="idx">
+                                  {{set.name}}
+                                </option>
+                              </select>
+                              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addOption(i)">
+                                <i class="fa fa-plus me-1"></i>Add
+                              </button>
+                            </div>
                           </div>
 
                           <!-- Options list with more compact layout -->

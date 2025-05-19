@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.RestApi
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.db.DatabaseHandler
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
@@ -63,6 +64,8 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
             println("WARNING : Creating data directory: $dataDir")
             dataDir.createDirectory()
         }
+
+        DatabaseHandler.init(config)
 
         UserManager.init(config)
         AccessManager.init(config)

@@ -102,7 +102,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
         if (ChatRoomManager.getFeedbackFormReference(roomId) == null) {
             throw ErrorStatusException(403, "No feedback form assigned to this chat.", ctx)
         }
-        FeedbackManager.logFeedback(session, roomId, feedback)
+        FeedbackManager.logFeedback(session.user, roomId, feedback)
         ChatRoomManager.markAsAssessed(session, roomId)
         return SuccessStatus("Feedback received")
     }

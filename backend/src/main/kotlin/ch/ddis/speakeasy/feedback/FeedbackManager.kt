@@ -16,10 +16,9 @@ import ch.ddis.speakeasy.util.write
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -66,7 +65,7 @@ object FeedbackManager {
         DatabaseHandler.dbQuery {
             forms.forEach { form ->
                 // Check if form already exists in database
-                val existingForm = FeedbackForms.select { FeedbackForms.formName eq form.formName }
+                val existingForm = FeedbackForms.selectAll().where { FeedbackForms.formName eq form.formName }
                     .singleOrNull()
 
                 if (existingForm == null) {
@@ -126,7 +125,7 @@ object FeedbackManager {
 
             DatabaseHandler.dbQuery {
                 // Fetch the Form ID from the database using formName
-                val formEntityId = FeedbackForms.select { FeedbackForms.formName eq formName }
+                val formEntityId = FeedbackForms.selectAll().where { FeedbackForms.formName eq formName }
                     .singleOrNull()?.get(FeedbackForms.id) ?: run {
                     System.err.println("Feedback form '$formName' not found in database. Skipping DB logging.")
                     return@dbQuery
@@ -163,7 +162,8 @@ object FeedbackManager {
             // INNER JOIN FeedbackSubmissions ON FeedbackAnswers.submission_id = FeedbackSubmissions.id
             // WHERE FeedbackSubmissions.author = userId AND FeedbackSubmissions.room = roomId
             (FeedbackAnswers innerJoin FeedbackSubmissions)
-                .select { (FeedbackSubmissions.author eq userId.toUUID()) and (FeedbackSubmissions.room eq roomId.string) }
+                .selectAll()
+                .where { (FeedbackSubmissions.author eq userId.toUUID()) and (FeedbackSubmissions.room eq roomId.string) }
                 .forEach { resultRow ->
                     responses.add(
                         FeedbackResponse(
@@ -221,29 +221,30 @@ object FeedbackManager {
 
         DatabaseHandler.dbQuery {
             // TODO: Implement that in Kotlin DSL
-            val formId = FeedbackForms.select { FeedbackForms.formName eq formName }
+            val formId = FeedbackForms.selectAll().where { FeedbackForms.formName eq formName }
                 .singleOrNull()?.get(FeedbackForms.id)?.value ?: run {
                 // Should in theory never happen
                 System.err.println("Feedback form '$formName' not found in database. Skipping DB query for feedback history.")
                 return@dbQuery null
             }
 
-            val query = FeedbackAnswers
-                .innerJoin(FeedbackSubmissions) // Exposed will use FeedbackAnswers.submission and FeedbackSubmissions.id if FK is set or by convention for EntityID columns. Or explicit join condition in select.
-                .slice(
-                    FeedbackSubmissions.author,
-                    FeedbackSubmissions.room,
-                    FeedbackAnswers.requestId,
-                    FeedbackAnswers.value
-                )
-                .select {
-                    var currentCondition = (FeedbackSubmissions.form eq formId) and
-                                           (FeedbackAnswers.submission eq FeedbackSubmissions.id) // Explicit join condition
-                    if (userIDs.isNotEmpty()) {
-                        currentCondition = currentCondition and (FeedbackSubmissions.author inList userIDs.map { it.toUUID() })
+            val query = // Explicit join condition
+                FeedbackAnswers
+                    .innerJoin(FeedbackSubmissions) // Exposed will use FeedbackAnswers.submission and FeedbackSubmissions.id if FK is set or by convention for EntityID columns. Or explicit join condition in select.
+                    .select(FeedbackSubmissions.author,
+                               FeedbackSubmissions.room, 
+                               FeedbackAnswers.requestId, 
+                               FeedbackAnswers.value) 
+                    .where {
+                        var currentCondition = (FeedbackSubmissions.form eq formId) and
+                                (FeedbackAnswers.submission eq FeedbackSubmissions.id) // Explicit join condition
+                        if (userIDs.isNotEmpty()) {
+                            currentCondition =
+                                currentCondition and (FeedbackSubmissions.author inList userIDs.map { it.toUUID() })
+                        }
+                        // Explicit join condition
+                        currentCondition
                     }
-                    currentCondition
-                }
 
             // TODO: Most of this will be simplified when rooms are stored in the db.
             query.forEach { resultRow ->

@@ -265,11 +265,15 @@ object UserManager {
             val user2 = User.find { Users.username eq username2 }.firstOrNull()
             if (user1 == null || user2 == null) throw UsernameNotFoundException()
 
-            val user1Groups = GroupUsers.slice(GroupUsers.group_id).select{GroupUsers.user_id eq user1.id}
+            val user1Groups = GroupUsers.
+                 select(GroupUsers.group_id)
+                .where { GroupUsers.user_id eq user1.id }
                 .map { it[GroupUsers.group_id] }
                 .toSet()
 
-            val user2Groups = GroupUsers.slice(GroupUsers.group_id).select{GroupUsers.user_id eq user2.id}
+            val user2Groups = GroupUsers
+                .select(GroupUsers.group_id)
+                .where { GroupUsers.user_id eq user2.id }
                 .map { it[GroupUsers.group_id] }
                 .toSet()
             return@transaction user1Groups.intersect(user2Groups).isNotEmpty()

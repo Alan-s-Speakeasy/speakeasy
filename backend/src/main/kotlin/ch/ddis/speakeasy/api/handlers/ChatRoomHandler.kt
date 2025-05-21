@@ -3,8 +3,8 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.feedback.FormManager
+import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -448,8 +448,12 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             recipients = recipientsList
         }
 
-        room.addMessage(ChatMessage(finalMessage,
-            session.user.id.UID(), userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
+        ChatRoomManager.addMessageTo(
+            room, ChatMessage(
+                finalMessage,
+                session.user.id.UID(), userAlias, SessionId.INVALID, room.nextMessageOrdinal, recipients, isRead = false
+            )
+        )
 
         return SuccessStatus("Message received")
 

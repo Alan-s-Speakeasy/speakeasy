@@ -12,7 +12,6 @@ import kotlinx.serialization.Serializable
  * @param message The message that is sent.
  * @param authorUserId the UserID of the author.
  * @param authorAlias The alias of the author of the message. As of now, this parameter could be removed and replaced by authorUserId.
- * @param authorSessionId The session id of the author of the message.
  * @param ordinal The ordinal of the message in the chat room.
  * @param recipients The recipients of the message, but only their aliases.
  * @param isRead Whether the message has been read.

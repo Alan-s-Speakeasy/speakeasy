@@ -12,9 +12,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 object FeedbackForms : UUIDTable() {
     val formName = varchar("form_name", 100).uniqueIndex()
     val fileName = varchar("file_name", 255)
-}
-
-
+    }
 /**
  * Represents a complete feedback submission event
  */

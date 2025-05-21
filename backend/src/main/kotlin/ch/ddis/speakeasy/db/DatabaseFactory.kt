@@ -5,14 +5,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-// Import all tables
-import ch.ddis.speakeasy.db.Users
-import ch.ddis.speakeasy.db.Groups
-import ch.ddis.speakeasy.db.GroupUsers
-import ch.ddis.speakeasy.db.FeedbackForms
-import ch.ddis.speakeasy.db.FeedbackSubmissions
-import ch.ddis.speakeasy.db.FeedbackAnswers
-
 object DatabaseHandler {
     private var mainDB: Database? = null
 
@@ -28,7 +20,11 @@ object DatabaseHandler {
                 GroupUsers,  // Junction table for users and groups
                 FeedbackForms,      // Base table for feedback forms
                 FeedbackSubmissions, // Submissions depend on Users and Forms
-                FeedbackAnswers     // Answers depend on Submissions
+                FeedbackAnswers,
+                ChatRooms,
+                ChatroomParticipants,
+                ChatMessages,
+
             )
         }
     }

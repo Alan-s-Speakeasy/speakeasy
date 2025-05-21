@@ -9,6 +9,7 @@ import java.io.FileWriter
 import java.io.PrintWriter
 import java.util.concurrent.locks.StampedLock
 
+@Deprecated("Should be merged with Chatroom")
 class LoggingChatRoom(
     assignment: Boolean = false,
     formRef: String,

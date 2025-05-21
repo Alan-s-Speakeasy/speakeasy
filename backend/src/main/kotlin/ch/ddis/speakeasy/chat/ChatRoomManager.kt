@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.api.sse.SseRoomHandler
+import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object ChatRoomManager {
 
+    @Deprecated("Should be replaced by a cache")
     private val chatrooms = ConcurrentHashMap<ChatRoomId, ChatRoom>()
     private lateinit var chatsFolder: File
     private val objectMapper = jacksonObjectMapper()
@@ -80,7 +82,11 @@ object ChatRoomManager {
 
     fun listAll(): List<ChatRoom> = this.chatrooms.values.toList()
 
-    operator fun get(id: ChatRoomId) = this.chatrooms[id]
+    // Not sure about that. Should we lazy load the chatrooms?
+    operator fun get(id: ChatRoomId): ChatRoom? {
+        ChatRepository.findChatRoomById(id)
+        return this.chatrooms[id]
+    }
 
     fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> =
         when (bot) {
@@ -161,8 +167,19 @@ object ChatRoomManager {
         listeners.forEach {
             chatRoom.addListener(it)
         }
-
+        ChatRepository.createChatRoom(chatRoom, userIds)
         return chatRoom
+    }
+
+    /**
+     * Adds a message to the given ChatRoom.
+     *
+     * @param room The ChatRoom to which the message will be added.
+     * @param message The ChatMessage to be added.
+     */
+    fun addMessageTo(room : ChatRoom, message : ChatMessage) {
+        room.addMessage(message)
+        ChatRepository.addMessageTo(room.uid, message)
     }
 
     fun markAsAssessed(session: UserSession, id: ChatRoomId) {

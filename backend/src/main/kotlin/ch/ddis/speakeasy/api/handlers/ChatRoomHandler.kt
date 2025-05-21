@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
+import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserId
@@ -423,8 +424,10 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        //; val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRepository.findChatRoomById(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
+        // Means that the user is not a member of the chatroom
         val userAlias = room.users[session.user.id.UID()] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
 
         if (!room.active) {

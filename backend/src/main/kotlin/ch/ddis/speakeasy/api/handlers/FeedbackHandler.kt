@@ -1,7 +1,9 @@
 package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
+import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.feedback.FormManager
@@ -20,8 +22,10 @@ import io.javalin.openapi.*
 data class FeedbackFormList(val forms: MutableList<FeedbackForm>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
-data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
-data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseItem>, val requested: MutableList<FeedbackResponseItem>)
+// One Item corresponds to one room. The author is the one _giving_ the feedback, the recipient the one receiving it, and the responses,
+// well the reponses.
+data class FeedbackResponseOfChatroom(var author: UserId, val recipient: UserId, val room: ChatRoomId, val responses: List<FeedbackResponse>)
+data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseOfChatroom>, val requested: MutableList<FeedbackResponseOfChatroom>)
 // NOTE : a request is a question in the feedback form
 data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float, val count : Int)
 data class FeedbackResponseStatsItem(val username: String, val count: Int, val statsOfResponsePerRequest: List<FeedBackStatsOfRequest>)
@@ -69,24 +73,15 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
         val roomId = (ctx.pathParamMap().getOrElse("roomId") {
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
-
+        ChatRoomManager[roomId]?: throw ErrorStatusException(400, "Room not found", ctx)
         val feedback = try {
             ctx.bodyAsClass(FeedbackResponseList::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid feedback.", ctx)
         }
 
-        val isAssessed = try {
-            ChatRoomManager.isAssessedBy(session, roomId)
-        } catch (e : NullPointerException) {
-            throw ErrorStatusException(404, "Chatroom ${roomId.string} not found.", ctx)
-        }
-
-        if (isAssessed) {
-            throw ErrorStatusException(409, "Chatroom already assessed.", ctx)
-        }
-
         // if user wants to mark this chat room as "no feedback"
+        // TODO : Not sure about this. Feels very confusing.
         if (feedback.responses.isEmpty()) {
             if (ChatRoomManager.isAssignment(roomId)
                 && ChatRoomManager.getFeedbackFormReference(roomId) != null) {
@@ -98,12 +93,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
             ChatRoomManager.markAsNoFeedback(roomId)
             return SuccessStatus("No feedback required for this chat now.")
         }
-
-        if (ChatRoomManager.getFeedbackFormReference(roomId) == null) {
-            throw ErrorStatusException(403, "No feedback form assigned to this chat.", ctx)
-        }
         FeedbackManager.logFeedback(session.user, roomId, feedback)
-        ChatRoomManager.markAsAssessed(session, roomId)
         return SuccessStatus("Feedback received")
     }
 
@@ -142,6 +132,8 @@ class GetFeedbackHistoryHandler : GetRestHandler<FeedbackResponseList>, AccessMa
         val roomId = (ctx.pathParamMap().getOrElse("roomId") {
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
+
+        // TODO : throw if user is not in the room id and not admin.
 
         return FeedbackManager.readFeedbackHistoryPerRoom(session.user.id.UID(), roomId)
     }

@@ -19,13 +19,13 @@ object DatabaseHandler {
                 Groups,      // Base table for groups
                 GroupUsers,  // Junction table for users and groups
                 FeedbackForms,      // Base table for feedback forms
-                FeedbackSubmissions, // Submissions depend on Users and Forms
-                FeedbackAnswers,
+                FeedbackResponses,
                 ChatRooms,
                 ChatroomParticipants,
                 ChatMessages,
 
             )
+
         }
     }
 

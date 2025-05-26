@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.chat
 import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.DatabaseHandler
+import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
@@ -87,9 +88,7 @@ object ChatRoomManager {
 
     // Not sure about that. Should we lazy load the chatrooms?
     operator fun get(id: ChatRoomId): ChatRoom? {
-        return DatabaseHandler.dbQuery {
-            ChatRepository.findChatRoomById(id)
-        }
+        return ChatRepository.findChatRoomById(id)
     }
 
     fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> =
@@ -121,6 +120,10 @@ object ChatRoomManager {
         return userIds?.find { it != userId }
     }
 
+
+    /**
+     * Get the feedbackform name of the roomi
+     */
     fun getFeedbackFormReference(roomId: UID): String? {
         val formRef = this.chatrooms[roomId]?.formRef
         return if (formRef == "") null else formRef
@@ -205,12 +208,17 @@ object ChatRoomManager {
     }
 
     @Deprecated("USeless, can be get by just getting how  many feedbacks are assigned to the chatroom")
+    // CAN BE DELETED
     fun markAsAssessed(session: UserSession, id: ChatRoomId) {
         this.chatrooms[id]?.addAssessor(Assessor(session.user.id.UID()))
     }
 
     fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
         return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id.UID()))
+    }
+
+    fun isRoomAlreadyAssessed(room: ChatRoomId, userId: UserId, formId: FormId): Boolean {
+        return ChatRepository.isRoomAlreadyAssessed(room, userId, formId)
     }
 
     fun addUser(newUserId: UserId, id: ChatRoomId) {

@@ -145,7 +145,7 @@ open class ChatRoom(
     }
 
     open fun addAssessor(assessor: Assessor): Unit = this.lock.write {
-        TODO()
+        TODO("Not implemented")
         this.assessedBy.add(assessor)
         return@write
     }

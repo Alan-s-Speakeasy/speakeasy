@@ -1,10 +1,12 @@
 package ch.ddis.speakeasy.db
 
+import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.chat.ChatMessage
 import ch.ddis.speakeasy.chat.ChatRoom
 import ch.ddis.speakeasy.chat.ChatMessage as DomainChatMessage
 import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomId
+import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.util.UID
@@ -12,7 +14,6 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.util.*
 
@@ -30,6 +31,7 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var participants by UserEntity via ChatroomParticipants
     var testerBotAlias by ChatRooms.testerBotAlias
     var markAsNoFeedback by ChatRooms.markAsNoFeedback
+    val feedbackResponses by FeedbackResponseEntity referrersOn FeedbackResponses.room
 
     /*
     * Convert the ChatRoomEntity to a regular ChatRoom object.
@@ -40,20 +42,18 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     fun toDomainModel(): DomainChatRoom = DatabaseHandler.dbQuery {
         // See comment below for why we do that. Ho boy I don't like Exposed.
         val aliases =
-            DatabaseHandler.dbQuery {
                 ChatroomParticipants.selectAll().where(ChatroomParticipants.chatRoom eq id)
                     .associate {
                         (it[ChatroomParticipants.user].UID() to (it[ChatroomParticipants.alias] ?: ""))
                     }.toMutableMap()
-            }
         DomainChatRoom(
             uid = id.UID(),
             assignment = assignment,
-            formRef = formId.value.toString(),
+            formRef = formId?.value.toString(),
             startTime = startTime,
             prompt = prompt,
             // Despite what the IDE could tell this.messages can be null!
-            messages = this.messages.toList().map { it.toDomainModel() }.toMutableList(),
+            messages = this.messages.map { it.toDomainModel() }.toMutableList(),
             users = aliases,
         )
     }
@@ -91,7 +91,6 @@ class ChatMessageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
  * Repository for chat-related database operations
  */
 object ChatRepository {
-    private val objectMapper = jacksonObjectMapper()
 
     /**
      * Finds a chat room by ID
@@ -100,8 +99,27 @@ object ChatRepository {
      * @return The chat room entity if found, null otherwise
      */
     // TODO : This should return a DomainChatRoom object
-    fun findChatRoomById(id: ChatRoomId): ChatRoom? = DatabaseHandler.dbQuery {
+    fun findChatRoomById(id: ChatRoomId): DomainChatRoom? = DatabaseHandler.dbQuery {
         ChatRoomEntity.findById(id.toUUID())?.toDomainModel()
+    }
+
+    fun getFormForChatRoom(id: ChatRoomId): FormId? {
+        return DatabaseHandler.dbQuery {
+            ChatRoomEntity[id.toUUID()].formId
+        }?.UID()
+    }
+
+    /**
+     * Returns true if the room already has feedback applied to.
+     */
+    fun isRoomAlreadyAssessed(id: ChatRoomId, formId: FormId, authorID: UserId): Boolean {
+        return !DatabaseHandler.dbQuery {
+            FeedbackResponseEntity.find {
+                (FeedbackResponses.room eq id.toUUID()) and 
+                (FeedbackResponses.form eq formId.toUUID()) and
+                (FeedbackResponses.author eq authorID.toUUID())
+            }.empty()
+        }
     }
 
     /**
@@ -167,6 +185,10 @@ object ChatRepository {
         }
     }
 
+    fun getParticipants(chatRoomId: ChatRoomId) : List<UserId> = DatabaseHandler.dbQuery {
+        ChatRoomEntity.findById(chatRoomId.toUUID())!!.participants.map { it.id.UID() }.toList()
+    }
+
     /**
      * Changes the feedback status of a chat room
      *
@@ -179,6 +201,13 @@ object ChatRepository {
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.markAsNoFeedback = !feedbackWanted
         true
+    }
+
+    fun getFeedbackResponseForRoom(roomId: ChatRoomId): List<FeedbackResponse> = DatabaseHandler.dbQuery {
+        val room = ChatRoomEntity.findById(roomId.toUUID())
+            ?: throw IllegalArgumentException("Room with ID ${roomId.string} not found")
+
+        room.feedbackResponses.map { it.toFeedbackResponse() }
     }
 
     /**

@@ -1,11 +1,9 @@
 package ch.ddis.speakeasy.feedback
 
 import ch.ddis.speakeasy.api.handlers.*
+import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.chat.ChatRoomManager
-import ch.ddis.speakeasy.db.DatabaseHandler
-import ch.ddis.speakeasy.db.FeedbackAnswers
-import ch.ddis.speakeasy.db.FeedbackForms
-import ch.ddis.speakeasy.db.FeedbackSubmissions
+import ch.ddis.speakeasy.db.*
 import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
@@ -17,8 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -112,186 +108,65 @@ object FeedbackManager {
     }
 
 
+    @Deprecated("Useless")
     private val writerLock = StampedLock()
 
     /**
      * Write the feedback responses to the CSV file and database.
      * Return if the feedback form is not found.
      *
+     * @throws IllegalArgumentException if the chatroom is already assessed
+     * @throws IllegalArgumentException if the chatroom does not have any form attached.
      */
-    fun logFeedback(user2: User, roomId: UID, feedbackResponseList: FeedbackResponseList) =
+    fun logFeedback(author: User, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
+        // The recipient of the feedback
         writerLock.write {
-            val formName = ChatRoomManager.getFeedbackFormReference(roomId) ?: return@write
-
-            DatabaseHandler.dbQuery {
-                // Fetch the Form ID from the database using formName
-                val formEntityId = FeedbackForms.selectAll().where { FeedbackForms.formName eq formName }
-                    .singleOrNull()?.get(FeedbackForms.id) ?: run {
-                    System.err.println("Feedback form '$formName' not found in database. Skipping DB logging.")
-                    return@dbQuery
-                }
-
-                // Insert the feedback submission
-                val submissionId = FeedbackSubmissions.insertAndGetId {
-                    it[author] = user2.id
-                    it[room] = roomId.string
-                    it[form] = formEntityId
-                }.value
-
-                // Insert individual answers
-                feedbackResponseList.responses.forEach { response ->
-                    FeedbackAnswers.insert {
-                        it[submission] = submissionId
-                        it[requestId] = response.id.toInt()
-                        it[value] = response.value
-                    }
-                }
+            val recipientId = ChatRepository.getParticipants(roomId).single { it != author.id.UID() }
+            val formId = ChatRepository.getFormForChatRoom(roomId)
+                ?: throw IllegalArgumentException("Chatroom does not have any form attached !")
+            if (ChatRepository.isRoomAlreadyAssessed(roomId, formId, author.id.UID())) {
+                throw IllegalArgumentException("Room alreadu assessed!")
             }
-
+            for (response in feedbackResponseList.responses) {
+                FeedbackRepository.saveFeedbackResponse(author.id.UID(), recipientId, roomId, formId, response)
+            }
             this.FeedbackHistoryCacher.invalidate()
         }
 
     fun readFeedbackHistoryPerRoom(userId: UserId, roomId: UID): FeedbackResponseList = this.lock.read {
-        var response: FeedbackResponse
-        val responses: MutableList<FeedbackResponse> = mutableListOf()
-        val formName = ChatRoomManager.getFeedbackFormReference(roomId) ?: return FeedbackResponseList(responses)
-
-        DatabaseHandler.dbQuery {
-            // SELECT FeedbackAnswers.requestId, FeedbackAnswers.value
-            // FROM FeedbackAnswers
-            // INNER JOIN FeedbackSubmissions ON FeedbackAnswers.submission_id = FeedbackSubmissions.id
-            // WHERE FeedbackSubmissions.author = userId AND FeedbackSubmissions.room = roomId
-            (FeedbackAnswers innerJoin FeedbackSubmissions)
-                .selectAll()
-                .where { (FeedbackSubmissions.author eq userId.toUUID()) and (FeedbackSubmissions.room eq roomId.string) }
-                .forEach { resultRow ->
-                    responses.add(
-                        FeedbackResponse(
-                            resultRow[FeedbackAnswers.requestId].toString(),
-                            resultRow[FeedbackAnswers.value]
-                        )
-                    )
-                }
-        }
-
-        return FeedbackResponseList(responses)
+        return FeedbackResponseList(responses = ChatRepository.getFeedbackResponseForRoom(roomId).toMutableList())
     }
 
     /**
-     * Read all the feedback from a single CSV file.
+     * Givem a set of authors, return the set of feedback responses those authors provided.
      *
-     * @param userIDs The list of userIDs to get the feedback for. If empty, get all the feedback.
+     * @param authorIds The list of userIDs to get the feedback for. If empty, get all the feedback.
      * @param assignment If true, only return feedback that were filled in an assignment chatroom
      * @param formName The name of the feedback form
      *
      * @return List of FeedbackResponseItem with the feedback responses.
      */
     fun readFeedbackHistory(
-        userIDs: Set<UserId> = emptySet<UserId>(),
+        authorIds: Set<UserId> = emptySet(),
         assignment: Boolean = false,
         formName: String
-    ): MutableList<FeedbackResponseItem> = this.lock.read {
+    ): MutableList<FeedbackResponseOfChatroom> = this.lock.read {
         var response: FeedbackResponse
         val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
-        val responseList: MutableList<FeedbackResponseItem> = mutableListOf()
+        val responseList: MutableList<FeedbackResponseOfChatroom> = mutableListOf()
         if (!FormManager.isValidFormName(formName)) {
             throw IllegalStateException("Invalid form name")
         }
 
 
-        // NOTE : Only cache the result for empty userIDs for now. This is because as of now,
-        // there is no eviction policy for the cache, so the cache can grow theoretically indefinitely (in practice, it
-        // still gets invalided).
-        // TODO : DELETE
-        if (userIDs.isEmpty() && this.FeedbackHistoryCacher.isHit(userIDs, assignment, formName)) {
-            return this.FeedbackHistoryCacher.get(userIDs, assignment, formName)
+        val formId = FeedbackRepository.findFormByName(formName)?: throw IllegalArgumentException("Form name not found")
+        if (authorIds.isEmpty()){
+            TODO()
         }
 
-        //read all CSV lines with the given userid
-
-        // SQL VERSION :
-        // form_id = SELECT form_id FROM FeedbackForms WHERE form_name = formName
-        // (raise if no)
-
-        // SELECT FeedbackAnswers.requestId, FeedbackAnswers.value
-        // FROM FeedbackAnswers
-        // INNER JOIN FeedbackSubmissions ON FeedbackAnswers.submission_id = FeedbackSubmissions.id
-        // WHERE FeedbackSubmissions.author = userId AND FeedbackSubmissions.form_id = formId
-        // INNER JOIN
-
-        DatabaseHandler.dbQuery {
-            // TODO: Implement that in Kotlin DSL
-            val formId = FeedbackForms.selectAll().where { FeedbackForms.formName eq formName }
-                .singleOrNull()?.get(FeedbackForms.id)?.value ?: run {
-                // Should in theory never happen
-                System.err.println("Feedback form '$formName' not found in database. Skipping DB query for feedback history.")
-                return@dbQuery null
-            }
-
-            val query = // Explicit join condition
-                FeedbackAnswers
-                    .innerJoin(FeedbackSubmissions) // Exposed will use FeedbackAnswers.submission and FeedbackSubmissions.id if FK is set or by convention for EntityID columns. Or explicit join condition in select.
-                    .select(FeedbackSubmissions.author,
-                               FeedbackSubmissions.room, 
-                               FeedbackAnswers.requestId, 
-                               FeedbackAnswers.value) 
-                    .where {
-                        var currentCondition = (FeedbackSubmissions.form eq formId) and
-                                (FeedbackAnswers.submission eq FeedbackSubmissions.id) // Explicit join condition
-                        if (userIDs.isNotEmpty()) {
-                            currentCondition =
-                                currentCondition and (FeedbackSubmissions.author inList userIDs.map { it.toUUID() })
-                        }
-                        // Explicit join condition
-                        currentCondition
-                    }
-
-            // TODO: Most of this will be simplified when rooms are stored in the db.
-            query.forEach { resultRow ->
-                val authorUUID = resultRow[FeedbackSubmissions.author]
-                val roomIdStr = resultRow[FeedbackSubmissions.room]
-
-                // Apply assignment filter, similar to CSV processing logic
-                if (ChatRoomManager.isAssignment(roomIdStr.UID()) != assignment) {
-                    return@forEach // Skip this answer if assignment filter doesn't match
-                }
-
-                // TODO : Potentially useless
-                val authorUserId = UserId(authorUUID.toString())
-                if (!UserManager.checkUserIdExists(authorUserId)) {
-                    return@forEach // Skip if author user does not exist
-                }
-
-                // Determine and validate partnerUserId
-                // TODO : can be greatly simplified when users are stored in the same DB.
-                val partnerUserId = ChatRoomManager.getChatPartner(roomIdStr.UID(), authorUserId) ?: return@forEach
-                val authorUsername = UserManager.getUsernameFromId(authorUserId) ?: ""
-                val recipientUsername = UserManager.getUsernameFromId(partnerUserId) ?: ""
-
-                val responseId = resultRow[FeedbackAnswers.requestId].toString()
-                val responseValue = resultRow[FeedbackAnswers.value]
-                val feedbackResponse = FeedbackResponse(responseId, responseValue)
-
-                val key = Triple(authorUsername, recipientUsername, roomIdStr)
-                responseMap.computeIfAbsent(key) { mutableListOf() }.add(feedbackResponse)
-            }
-        }
-
-        responseMap.forEach { (triple, responses) ->
-            var res = responses
-            // This check can be tossed away
-            val requestsSize = this.forms.find { it.formName == formName }!!.requests.size
-            if (responses.size > requestsSize) {
-                res = responses.take(requestsSize) as MutableList<FeedbackResponse>
-            }
-            responseList.add(FeedbackResponseItem(triple.first, triple.second, triple.third, res))
-        }
-
-        // Cache the result, only for empty userIDs for now
-        if (userIDs.isEmpty())
-            this.FeedbackHistoryCacher.cache(userIDs, assignment, formName, responseList)
-
-        return responseList
+        return authorIds.map {
+            UserRepository.getFeedbackResponsesOfUser(it, formId, assignment)
+        }.toMutableList()
     }
 
     /**
@@ -319,9 +194,9 @@ object FeedbackManager {
         assignment: Boolean = false,
         formName: String
     ): List<FeedbackResponseStatsItem> {
-        val allFeedbackResponses = readFeedbackHistory(userIDs = userIds, assignment = assignment, formName = formName)
-        val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
-        val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
+        val allFeedbackResponses = readFeedbackHistory(authorIds = userIds, assignment = assignment, formName = formName)
+        val responsesPerUser: HashMap<UserId, MutableList<FeedbackResponse>> = hashMapOf()
+        val feedbackCountPerUser: HashMap<UserId, Int> = hashMapOf()
 
         allFeedbackResponses.forEach {
             val key = if (author) it.author else it.recipient
@@ -334,10 +209,10 @@ object FeedbackManager {
             it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
         // get the list of _all_ feedback responses and compute the average and variance from that.
-        return responsesPerUser.map { (username, responses) ->
+        return responsesPerUser.map { (userId, responses) ->
             FeedbackResponseStatsItem(
-                username,
-                feedbackCountPerUser[username] ?: 0,
+                UserRepository.getUsernameFromId(userId)?:"",
+                feedbackCountPerUser[userId] ?: 0,
                 computeStatsPerRequestOfFeedback(responses, formName)
             )
         }
@@ -417,7 +292,7 @@ object FeedbackManager {
  */
 @Deprecated("We use a database now !")
 class FeedbackHistoryCacher {
-    private val cache = ConcurrentHashMap<String, Pair<Long, MutableList<FeedbackResponseItem>>>()
+    private val cache = ConcurrentHashMap<String, Pair<Long, MutableList<FeedbackResponseOfChatroom>>>()
     private val TTLCACHE_ms = 1000L * 60 * 10 // 10 minutes
 
     /**
@@ -429,13 +304,13 @@ class FeedbackHistoryCacher {
      * @param userIDs the set of user IDs used to generate the cache key (default is an empty set).
      * @param assignment a flag indicating whether the feedback is for an assignment chat room (default is false).
      * @param formName the name of the feedback form.
-     * @return the list of cached [FeedbackResponseItem] if valid; otherwise, an empty list.
+     * @return the list of cached [FeedbackResponseOfChatroom] if valid; otherwise, an empty list.
      */
     fun get(
         userIDs: Set<UserId> = emptySet(),
         assignment: Boolean = false,
         formName: String
-    ): MutableList<FeedbackResponseItem> {
+    ): MutableList<FeedbackResponseOfChatroom> {
         val key = "${userIDs.hashCode()}-$assignment-$formName"
         return cache[key]?.let { (timestamp, data) ->
             if (System.currentTimeMillis() - timestamp < TTLCACHE_ms) {
@@ -478,13 +353,13 @@ class FeedbackHistoryCacher {
      * @param userIDs the set of user IDs used to generate the cache key (default is an empty set).
      * @param assignment a flag indicating whether the feedback is for an assignment chat room (default is false).
      * @param formName the name of the feedback form.
-     * @param feedback the list of [FeedbackResponseItem] to be cached.
+     * @param feedback the list of [FeedbackResponseOfChatroom] to be cached.
      */
     fun cache(
         userIDs: Set<UserId> = emptySet(),
         assignment: Boolean = false,
         formName: String,
-        feedback: MutableList<FeedbackResponseItem>
+        feedback: MutableList<FeedbackResponseOfChatroom>
     ) {
         val key = "${userIDs.hashCode()}-$assignment-$formName"
         cache[key] = System.currentTimeMillis() to feedback

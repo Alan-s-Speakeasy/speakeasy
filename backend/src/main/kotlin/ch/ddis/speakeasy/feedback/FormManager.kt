@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.feedback
 
 import ch.ddis.speakeasy.util.Config
+import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.require
 import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
 
+typealias FormId = UID
 
 /**
  * A class representing a feedback form.

@@ -4,7 +4,7 @@ import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomManager
-import ch.ddis.speakeasy.user.User
+import ch.ddis.speakeasy.db.UserEntity
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.CyclicList
@@ -16,11 +16,11 @@ import ch.ddis.speakeasy.util.UID
  */
 object UIChatAssignmentGenerator {
 
-    private var humans = emptyList<User>()
-    private var bots = emptyList<User>()
-    private var admins = emptyList<User>()
-    private var evaluator = emptyList<User>()
-    private var assistant = emptyList<User>()
+    private var humans = emptyList<UserEntity>()
+    private var bots = emptyList<UserEntity>()
+    private var admins = emptyList<UserEntity>()
+    private var evaluator = emptyList<UserEntity>()
+    private var assistant = emptyList<UserEntity>()
     private var selected = SelectedUsers(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
     private var prompts = emptyList<String>()
     private var botsPerHuman = 0

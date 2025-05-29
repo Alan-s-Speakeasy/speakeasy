@@ -1,12 +1,12 @@
 package ch.ddis.speakeasy.user
 
-import ch.ddis.speakeasy.util.SessionAliasGenerator
+import ch.ddis.speakeasy.db.UserEntity
 import ch.ddis.speakeasy.util.UID
 
 typealias SessionId = UID
 
 data class UserSession(
-    val user: User,
+    val user: UserEntity,
     val sessionToken: String,
     val sessionId: SessionId = UID(),
     val startTime: Long = System.currentTimeMillis()

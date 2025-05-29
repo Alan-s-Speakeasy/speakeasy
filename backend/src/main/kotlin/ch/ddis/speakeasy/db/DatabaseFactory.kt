@@ -30,6 +30,25 @@ object DatabaseHandler {
     }
 
     /**
+     * Initialize with a custom database (useful for testing)
+     */
+    fun initWithDatabase(database: Database) {
+        mainDB = database
+        transaction(database) {
+            SchemaUtils.create(
+                Users,
+                Groups,
+                GroupUsers,
+                FeedbackForms,
+                FeedbackResponses,
+                ChatRooms,
+                ChatroomParticipants,
+                ChatMessages,
+            )
+        }
+    }
+
+    /**
      * Execute a database transaction.
      *
      * @param statement The code to execute within the transaction
@@ -39,5 +58,17 @@ object DatabaseHandler {
         return transaction(mainDB) {
             statement()
         }
+    }
+
+    /**
+     * Get the current database (useful for testing)
+     */
+    fun getCurrentDatabase(): Database? = mainDB
+
+    /**
+     * Reset the database handler (useful for testing cleanup)
+     */
+    fun reset() {
+        mainDB = null
     }
 }

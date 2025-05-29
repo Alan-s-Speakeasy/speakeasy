@@ -1,5 +1,8 @@
 package ch.ddis.speakeasy.user
 
+import ch.ddis.speakeasy.db.GroupUsers
+import ch.ddis.speakeasy.db.Groups
+import ch.ddis.speakeasy.db.UserEntity
 import ch.ddis.speakeasy.util.UID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -8,17 +11,17 @@ import java.util.*
 
 typealias GroupId = UID
 
-class Group(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Group>(Groups)
+class GroupEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<GroupEntity>(Groups)
 
     var name by Groups.name
-    var users by User via GroupUsers
+    var users by UserEntity via GroupUsers
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Group
+        other as GroupEntity
 
         if (id != other.id) return false
         if (name != other.name) return false

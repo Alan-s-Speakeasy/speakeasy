@@ -2,12 +2,9 @@ package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.db.ChatRepository
-import ch.ddis.speakeasy.db.DatabaseHandler
-import ch.ddis.speakeasy.feedback.FormId
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
-import ch.ddis.speakeasy.user.UserSession
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
@@ -207,20 +204,6 @@ object ChatRoomManager {
         ChatRepository.addMessageTo(room.uid, message)
     }
 
-    @Deprecated("USeless, can be get by just getting how  many feedbacks are assigned to the chatroom")
-    // CAN BE DELETED
-    fun markAsAssessed(session: UserSession, id: ChatRoomId) {
-        this.chatrooms[id]?.addAssessor(Assessor(session.user.id.UID()))
-    }
-
-    fun isAssessedBy(session: UserSession, id: ChatRoomId): Boolean {
-        return this.chatrooms[id]!!.assessedBy.contains(Assessor(session.user.id.UID()))
-    }
-
-    fun isRoomAlreadyAssessed(room: ChatRoomId, userId: UserId, formId: FormId): Boolean {
-        return ChatRepository.isRoomAlreadyAssessed(room, userId, formId)
-    }
-
     fun addUser(newUserId: UserId, id: ChatRoomId) {
         val newUser = newUserId to SessionAliasGenerator.getRandomName()
         this.chatrooms[id]?.users?.put(newUser.first, newUser.second)
@@ -272,6 +255,15 @@ object ChatRoomManager {
         }
     }
 
+    /**
+     * Implements a round-robin selection strategy for bots based on their role.
+     * Each call returns the next bot in rotation for the specified role,
+     * ensuring even distribution of work across all available bots.
+     *
+     * @param userRole The role of the bot to select (TESTER, EVALUATOR, or ASSISTANT)
+     * @return The username of the selected bot
+     * @throws IndexOutOfBoundsException if no active bots of the specified role are available
+     */
     fun getBot(userRole: UserRole): String {
 
         val activeBots = UserManager.listOfActiveUsersByRole(userRole)

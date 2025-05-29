@@ -1,7 +1,7 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.user.SessionId
-import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.UID
 import kotlinx.serialization.Serializable

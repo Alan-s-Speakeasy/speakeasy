@@ -3,15 +3,12 @@ package ch.ddis.speakeasy.db
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseOfChatroom
 import ch.ddis.speakeasy.feedback.FormId
-import ch.ddis.speakeasy.user.User
 import ch.ddis.speakeasy.util.UID
-import ch.ddis.speakeasy.util.read
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import java.util.*
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
 
 typealias UserId = UID
 

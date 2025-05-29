@@ -1,6 +1,6 @@
 package ch.ddis.speakeasy.chat
 
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.write
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper

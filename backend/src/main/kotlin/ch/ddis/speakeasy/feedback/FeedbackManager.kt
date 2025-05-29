@@ -2,11 +2,7 @@ package ch.ddis.speakeasy.feedback
 
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoomId
-import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.db.*
-import ch.ddis.speakeasy.user.User
-import ch.ddis.speakeasy.user.UserId
-import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
@@ -118,7 +114,7 @@ object FeedbackManager {
      * @throws IllegalArgumentException if the chatroom is already assessed
      * @throws IllegalArgumentException if the chatroom does not have any form attached.
      */
-    fun logFeedback(author: User, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
+    fun logFeedback(author: UserEntity, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
         // The recipient of the feedback
         writerLock.write {
             val recipientId = ChatRepository.getParticipants(roomId).single { it != author.id.UID() }
@@ -161,7 +157,8 @@ object FeedbackManager {
 
         val formId = FeedbackRepository.findFormByName(formName)?: throw IllegalArgumentException("Form name not found")
         if (authorIds.isEmpty()){
-            TODO()
+            TODO("Investigate if this is needed. We should avoid loading all the chatrooms in the memory as much " +
+                    "as possible. ")
         }
 
         return authorIds.map {

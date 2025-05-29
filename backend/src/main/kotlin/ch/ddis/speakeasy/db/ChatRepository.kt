@@ -8,7 +8,6 @@ import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.SessionId
-import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.util.UID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass

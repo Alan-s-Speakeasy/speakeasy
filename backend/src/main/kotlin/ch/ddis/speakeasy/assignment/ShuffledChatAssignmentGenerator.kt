@@ -1,13 +1,13 @@
 package ch.ddis.speakeasy.assignment
 
-import ch.ddis.speakeasy.user.User
+import ch.ddis.speakeasy.db.UserEntity
 import ch.ddis.speakeasy.util.CyclicList
 
 /**
  * Generates a round-robin-style assignment of humans and bots with a fixed number of bots per human.
  * Does not assign humans as bots.
  */
-class ShuffledChatAssignmentGenerator(users: List<User>, prompts: List<String>, private val botsPerHuman: Int) : ChatAssignmentGenerator {
+class ShuffledChatAssignmentGenerator(users: List<UserEntity>, prompts: List<String>, private val botsPerHuman: Int) : ChatAssignmentGenerator {
 
     private val humans = users.filter { it.role.isHuman() }.shuffled()
     private val bots = CyclicList(

@@ -10,7 +10,7 @@ enum class UserRole {
     TESTER;
 
     companion object {
-        fun fromInt(value: Int): UserRole = values().find { it.ordinal == value } ?: HUMAN
+        fun fromInt(value: Int): UserRole = entries.find { it.ordinal == value } ?: HUMAN
         fun toInt(userRole: UserRole): Int = userRole.ordinal
     }
 

@@ -1,5 +1,7 @@
 package ch.ddis.speakeasy.api
 
+import ch.ddis.speakeasy.db.UserEntity
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.user.*
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
@@ -24,7 +26,7 @@ object AccessManager {
 
     private lateinit var sessionFile: File
     private lateinit var sessionWriter: PrintWriter
-    private val cleanupTimer = Timer()
+    private var cleanupTimer: Timer? = null
 
     const val SESSION_COOKIE_NAME = "SESSIONID"
     const val SESSION_COOKIE_LIFETIME = 60 * 60 * 24 //a day
@@ -59,19 +61,22 @@ object AccessManager {
         )
 
         val expiredSessionCleanupTimer = 10
-        cleanupTimer.scheduleAtFixedRate(timerTask {
+        cleanupTimer = Timer()
+        cleanupTimer!!.scheduleAtFixedRate(timerTask {
             clearExpiredSessions()
         }, expiredSessionCleanupTimer * 1000L, expiredSessionCleanupTimer * 1000L)
     }
 
     fun stop() {
-        cleanupTimer.cancel()
+        cleanupTimer?.cancel()
+        cleanupTimer = null
     }
 
     private val writerLock = StampedLock()
 
     private fun logSession(userSession: UserSession) = writerLock.write {
-        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken},${userSession.user.id.string()},${userSession.user.name}")
+        sessionWriter.println("${System.currentTimeMillis()},${userSession.sessionId.string},${userSession.sessionToken}," +
+                "${userSession.user.id},${userSession.user.name}")
         sessionWriter.flush()
     }
 
@@ -84,7 +89,7 @@ object AccessManager {
         UserRole.TESTER -> setOf(RestApiRole.ANYONE, RestApiRole.USER)
     }
 
-    fun setUserForSession(sessionToken: String, user: User): UserSession {
+    fun setUserForSession(sessionToken: String, user: UserEntity): UserSession {
 
         if (sessionTokenUserSessionMap.containsKey(sessionToken)
             // if the role in HashMap and the role of current user don't match (e.g. BOT == HUMAN), we need to create a new UserSession
@@ -119,7 +124,7 @@ object AccessManager {
         return session
     }
 
-    private fun addSessionToMaps(session: UserSession, user: User) {
+    private fun addSessionToMaps(session: UserSession, user: UserEntity) {
         sessionTokenUserSessionMap[session.sessionToken] = session
 
         if (!userIdUserSessionMap.containsKey(user.id.UID())) {

@@ -1,6 +1,6 @@
 package ch.ddis.speakeasy.chat
 
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID

@@ -4,9 +4,9 @@ import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.db.ChatRepository
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.SessionId
-import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
@@ -135,7 +135,8 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedOrMarkedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
+            ChatRoomManager.getAssessedOrMarkedRoomsByUserId(session.user.id.UID())
+                .map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }
@@ -152,9 +153,17 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         tags = ["Admin"],
         queryParams = [
             OpenApiParam("page", Int::class, "page number for pagination. Defaults to 1."),
-            OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
-            OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
-                    "If not specified, all rooms are returned."),
+            OpenApiParam(
+                "limit",
+                Int::class,
+                "number of rooms to return per page. If not specified, there is no limit."
+            ),
+            OpenApiParam(
+                "timeRange",
+                String::class,
+                "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
+                        "If not specified, all rooms are returned."
+            ),
             OpenApiParam(
                 name = "userTuples",
                 type = Array<String>::class,
@@ -189,10 +198,16 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         val filteredRooms = allRooms.filter { room ->
             // Filter by time range if timeRange is provided
             (timeRange == null || (room.startTime in timeRange[0]..timeRange[1])) &&
-            // Equivalent to usertuple[i] \subseteq room.users. If none of userIds are invalid, this is equivalent to
-            // check subset equality. (an "invalidID" here Is used a wildcard)
-            // This should be a proper SQL/else command instead of doing O(nm) stuff, but whatever.
-            (userTuples.isEmpty() || userTuples.any { tuple -> tuple.all { userId -> UserId.isInvalid(userId) || room.users.containsKey(userId) } })
+                    // Equivalent to usertuple[i] \subseteq room.users. If none of userIds are invalid, this is equivalent to
+                    // check subset equality. (an "invalidID" here Is used a wildcard)
+                    // This should be a proper SQL/else command instead of doing O(nm) stuff, but whatever.
+                    (userTuples.isEmpty() || userTuples.any { tuple ->
+                        tuple.all { userId ->
+                            UserId.isInvalid(userId) || room.users.containsKey(
+                                userId
+                            )
+                        }
+                    })
         }
         if (filteredRooms.isEmpty()) {
             return ChatRoomAdminList(0, emptyList())
@@ -203,7 +218,8 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         val endIndex = startIndex + (limit ?: filteredRooms.size)
         val paginatedRooms = filteredRooms.subList(
             startIndex.coerceAtLeast(0),
-            endIndex.coerceAtMost(filteredRooms.size))
+            endIndex.coerceAtMost(filteredRooms.size)
+        )
 
         return ChatRoomAdminList(
             numOfAllRooms = filteredRooms.size,
@@ -299,7 +315,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
     }
 }
 
-class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
+class ExportChatRoomsHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.ADMIN)
     override val route = "rooms/export"
 
@@ -425,7 +441,11 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         }).UID()
 
         //; val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
-        val room = ChatRepository.findChatRoomById(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRepository.findChatRoomById(roomId) ?: throw ErrorStatusException(
+            404,
+            "Room ${roomId.string} not found",
+            ctx
+        )
 
         // Means that the user is not a member of the chatroom
         val userAlias = room.users[session.user.id.UID()] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
@@ -441,13 +461,14 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableSet() ?: mutableSetOf()
 
-        if(recipients.isEmpty() || recipients.first().isBlank()){
+        if (recipients.isEmpty() || recipients.first().isBlank()) {
             recipients.addAll(room.users.values)
         }
 
-        val (recipientsList, finalMessage) = ChatRoomManager.processMessageAndRecipients(message, room, userAlias) ?: return SuccessStatus("Message not received")
+        val (recipientsList, finalMessage) = ChatRoomManager.processMessageAndRecipients(message, room, userAlias)
+            ?: return SuccessStatus("Message not received")
 
-        if(recipientsList.isNotEmpty()){
+        if (recipientsList.isNotEmpty()) {
             recipients = recipientsList
         }
 
@@ -568,7 +589,7 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         var username = request.username
         var chatRoomTime = 10 * 60 * 1000
 
-        if (username == developmentBotUsername){
+        if (username == developmentBotUsername) {
             val testerBotRole = UserRole.TESTER
             val testerBot = ChatRoomManager.getBot(testerBotRole)
             username = testerBot
@@ -585,7 +606,8 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             formRef = formRef,
             log = true,
             prompt = null,
-            endTime = System.currentTimeMillis() + chatRoomTime)
+            endTime = System.currentTimeMillis() + chatRoomTime
+        )
 
         return SuccessStatus("Chatroom created")
 

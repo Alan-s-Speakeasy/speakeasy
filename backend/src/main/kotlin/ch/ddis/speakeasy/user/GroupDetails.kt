@@ -1,12 +1,13 @@
 package ch.ddis.speakeasy.user
 
+import ch.ddis.speakeasy.db.string
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
 data class GroupDetails(val id: String, val name: String, val users: List<UserDetails>) {
 
     companion object {
-        fun of(group: Group): GroupDetails {
+        fun of(group: GroupEntity): GroupDetails {
             val usersEager = transaction {// eager loading
                  group.users.toList()
             }

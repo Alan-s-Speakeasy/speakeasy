@@ -113,6 +113,16 @@ dependencies {
     //// CSV handling
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5'
 
+    ////// Testing Dependencies
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("io.javalin:javalin-testtools:$javaLinVersion") // For HTTP testing
+
+}
+
+test {
+    useJUnitPlatform()
 }
 
 startScripts {

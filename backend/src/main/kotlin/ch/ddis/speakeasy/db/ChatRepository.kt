@@ -217,18 +217,28 @@ object ChatRepository {
         val chatRoom_ = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
 
-        val nextOrdinal = nextMessageOrdinalFor(chatRoomId)
+        val MAX_RETRIES = 3
 
-        ChatMessages.insert {
-            it[chatRoom] = chatRoom_.id
-            it[sender] = EntityID(message.authorUserId.toUUID(), Users)
-            it[content] = message.message
-            it[timestamp] = message.time
-            it[ordinal] = nextOrdinal
+        for (it in 0..MAX_RETRIES) {
+            val nextOrdinal = nextMessageOrdinalFor(chatRoomId)
+            try {
+                // Try to insert the message with the next ordinal
+                ChatMessages.insert {
+                    it[chatRoom] = chatRoom_.id
+                    it[sender] = EntityID(message.authorUserId.toUUID(), Users)
+                    it[content] = message.message
+                    it[timestamp] = message.time
+                    it[ordinal] = nextOrdinal
+                }
+                // If successful, return the message with the assigned ordinal
+                return@dbQuery message.copy(ordinal = nextOrdinal)
+            } catch (e: ExposedSQLException) {
+                // If there's a constraint violation, retry with a new ordinal
+                if (it == MAX_RETRIES - 1) throw e // If it's the last attempt, rethrow the exception
+            }
         }
-
-        // Return the domain message with the assigned ordinal
-        message.copy(ordinal = nextOrdinal)
+        // Should in theory never reach here
+        throw IllegalStateException("Could not insert message to chat room $chatRoomId")
     }
 
     /**

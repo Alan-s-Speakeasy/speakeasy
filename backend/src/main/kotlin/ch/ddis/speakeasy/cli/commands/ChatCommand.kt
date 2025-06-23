@@ -117,7 +117,7 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                 return
             }
 
-            room.getAllMessages().forEach { message ->
+            ChatRoomManager.getMessagesFor(room.uid).forEach { message ->
                 val userId = room.aliasToUserId[message.authorAlias]
                 val username = UserManager.getUsernameFromId(userId!!) ?: "unknown"
                 val reaction = room.getAllReactions().find { it.messageOrdinal == message.ordinal }

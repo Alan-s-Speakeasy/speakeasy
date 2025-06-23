@@ -28,6 +28,8 @@ object ChatMessages : CompositeIdTable() {
     val content = text("content")
     val timestamp = long("timestamp")
 
+    override val primaryKey = PrimaryKey(chatRoom, ordinal)
+
     init {
         addIdColumn(chatRoom)
         addIdColumn(ordinal)

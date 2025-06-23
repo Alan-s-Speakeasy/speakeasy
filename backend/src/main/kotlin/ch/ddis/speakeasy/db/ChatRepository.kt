@@ -6,12 +6,14 @@ import ch.ddis.speakeasy.chat.ChatMessageReactionType
 import ch.ddis.speakeasy.chat.ChatMessage as DomainChatMessage
 import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomId
+import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.util.UID
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.util.*
@@ -41,10 +43,10 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     fun toDomainModel(): DomainChatRoom = DatabaseHandler.dbQuery {
         // See comment below for why we do that. Ho boy I don't like Exposed.
         val aliases =
-                ChatroomParticipants.selectAll().where(ChatroomParticipants.chatRoom eq id)
-                    .associate {
-                        (it[ChatroomParticipants.user].UID() to (it[ChatroomParticipants.alias] ?: ""))
-                    }.toMutableMap()
+            ChatroomParticipants.selectAll().where(ChatroomParticipants.chatRoom eq id)
+                .associate {
+                    (it[ChatroomParticipants.user].UID() to (it[ChatroomParticipants.alias] ?: ""))
+                }.toMutableMap()
         DomainChatRoom(
             uid = id.UID(),
             assignment = assignment,
@@ -68,7 +70,6 @@ class ChatMessageEntity(id: EntityID<CompositeID>) : CompositeEntity(id) {
     var content by ChatMessages.content
     var timestamp by ChatMessages.timestamp
     var ordinal by ChatMessages.ordinal
-
 
 
     fun toDomainModel(): DomainChatMessage = DatabaseHandler.dbQuery {
@@ -139,7 +140,8 @@ object ChatRepository {
      * @param id The ID of the chat room
      */
     fun getFormForChatRoom(id: ChatRoomId): FormId? = DatabaseHandler.dbQuery {
-        val chatRoom = ChatRoomEntity.findById(id.toUUID()) ?: throw IllegalArgumentException("Chat room with ID ${id.string} not found")
+        val chatRoom = ChatRoomEntity.findById(id.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${id.string} not found")
         chatRoom.formId?.UID()
     }
 
@@ -175,9 +177,9 @@ object ChatRepository {
     fun isRoomAlreadyAssessed(id: ChatRoomId, formId: FormId, authorID: UserId): Boolean {
         return !DatabaseHandler.dbQuery {
             FeedbackResponseEntity.find {
-                (FeedbackResponses.room eq id.toUUID()) and 
-                (FeedbackResponses.form eq formId.toUUID()) and
-                (FeedbackResponses.author eq authorID.toUUID())
+                (FeedbackResponses.room eq id.toUUID()) and
+                        (FeedbackResponses.form eq formId.toUUID()) and
+                        (FeedbackResponses.author eq authorID.toUUID())
             }.empty()
         }
     }
@@ -207,13 +209,10 @@ object ChatRepository {
      * Adds a message to a chat room with auto-generated ordinal
      *
      * @param chatRoomId The ID of the chat room
-     * @param message The message to add (ordinal will be ignored and auto-generated)
+     * @param message The message to add (ordinal will be auto-generated if -1)
      * @return The created message with the assigned ordinal
      */
-    fun addMessageTo(chatRoomId: ChatRoomId, message: DomainChatMessage): ChatMessage = DatabaseHandler.dbQuery {
-        // This locks all messages for chatroom.
-        // We need this lock for race conditions on the ordinal.
-        ChatMessages.selectAll().where { ChatMessages.chatRoom eq chatRoomId.toUUID() }.forUpdate().toList()
+    fun addMessageTo(chatRoomId: ChatRoomId, message: DomainChatMessage): DomainChatMessage = DatabaseHandler.dbQuery {
         val chatRoom_ = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
 
@@ -242,6 +241,32 @@ object ChatRepository {
     }
 
     /**
+     * Gets all messages for a chat room, sorted by timestamp in ascending order.
+     *
+     * @param chatRoomId The ID of the chat room
+     * @return List of chat messages in the chat room
+     * @throws IllegalArgumentException if the chatRoom does not exist
+     */
+    fun getMessagesFor(chatRoomId: ChatRoomId, since: Long = -1): List<DomainChatMessage> = DatabaseHandler.dbQuery {
+        ChatRoomEntity.findById(chatRoomId.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+        if (since > 0) {
+            // If a timestamp is provided, filter messages by that timestamp
+            ChatMessageEntity.find {
+                (ChatMessages.chatRoom eq EntityID(
+                    chatRoomId.toUUID(),
+                    ChatRooms
+                )) and (ChatMessages.timestamp greaterEq since)
+            }
+                .orderBy(ChatMessages.timestamp to SortOrder.ASC).map { it.toDomainModel() }.toList()
+        } else {
+            // Otherwise, return all messages for the chat room
+            ChatMessageEntity.find { ChatMessages.chatRoom eq EntityID(chatRoomId.toUUID(), ChatRooms) }
+                .orderBy(ChatMessages.timestamp to SortOrder.ASC).map { it.toDomainModel() }.toList()
+        }
+    }
+
+    /**
      * Adds a reaction to a message in a chat room
      *
      * @param chatRoomId The ID of the chat room
@@ -250,15 +275,21 @@ object ChatRepository {
      * @param sender The user ID of the sender of the reaction. Not supported yet
      * @throws IllegalArgumentException if the chat room does not exist
      */
-    fun addReactionToMessage(chatRoomId: ChatRoomId, messageOrdinal : Int, reaction: ChatMessageReactionType, sender: UserId = UserId.INVALID): Unit = DatabaseHandler.dbQuery {
-        ChatRepository.findChatRoomById(
-            chatRoomId) ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+    fun addReactionToMessage(
+        chatRoomId: ChatRoomId,
+        messageOrdinal: Int,
+        reaction: ChatMessageReactionType,
+        sender: UserId = UserId.INVALID
+    ): Unit = DatabaseHandler.dbQuery {
+        findChatRoomById(
+            chatRoomId
+        ) ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
 
         if (messageOrdinal < 0) {
             throw IllegalArgumentException("Message ordinal must be non-negative")
         }
-        if (messageOrdinal > getMessagesCountFor(chatRoomId)) {
-            throw IllegalArgumentException("Message ordrinas must be between 0 and $messageOrdinal")
+        if (messageOrdinal >= getMessagesCountFor(chatRoomId)) {
+            throw IllegalArgumentException("Message ordinal must be between 0 and $messageOrdinal")
         }
 
         ChatReactions.upsert() {
@@ -303,6 +334,7 @@ object ChatRepository {
         val current = lastRow?.get(ChatMessages.ordinal)?.value   // unwrap EntityID → Int
         return (current ?: -1) + 1
     }
+
     /**
      * Adds a user to a chat room
      *
@@ -324,7 +356,7 @@ object ChatRepository {
         }
     }
 
-    fun getParticipants(chatRoomId: ChatRoomId) : List<UserId> = DatabaseHandler.dbQuery {
+    fun getParticipants(chatRoomId: ChatRoomId): List<UserId> = DatabaseHandler.dbQuery {
         val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.participants.map { it.id.UID() }.toList()
@@ -337,11 +369,18 @@ object ChatRepository {
      * @param chatRoomId The ID of the chat room
      * @return True if the status was changed successfully, false otherwise
      */
-    fun changeFeedbackStatus(feedbackWanted : Boolean, chatRoomId: ChatRoomId): Boolean = DatabaseHandler.dbQuery {
+    fun changeFeedbackStatus(feedbackWanted: Boolean, chatRoomId: ChatRoomId): Boolean = DatabaseHandler.dbQuery {
         val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.markAsNoFeedback = !feedbackWanted
         true
+    }
+
+    fun isFeedbackWantedForRoom(roomId: ChatRoomId): Boolean = DatabaseHandler.dbQuery {
+        val room = ChatRoomEntity.findById(roomId.toUUID())
+            ?: throw IllegalArgumentException("Room with ID ${roomId.string} not found")
+
+        !room.markAsNoFeedback
     }
 
     fun getFeedbackResponseForRoom(roomId: ChatRoomId): List<FeedbackResponse> = DatabaseHandler.dbQuery {
@@ -369,7 +408,7 @@ object ChatRepository {
      * @param id The ID of the chat room.
      * @return The number of messages in the chat room.
      */
-    fun getMessagesCountFor(id : ChatRoomId): Int = DatabaseHandler.dbQuery {
+    fun getMessagesCountFor(id: ChatRoomId): Int = DatabaseHandler.dbQuery {
         ChatMessages.selectAll().where { ChatMessages.chatRoom eq id.toUUID() }.count().toInt()
     }
 

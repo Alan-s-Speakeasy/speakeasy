@@ -59,37 +59,9 @@ class LoggingChatRoom(
     }
 
     override fun addMessage(message: ChatMessage) {
-        val exception =
-            this.writerLock.write {
-                try {
-                    super.addMessage(message)
-                    writer.println(objectMapper.writeValueAsString(message))
-                    writer.flush()
-                    null
-                } catch (e: IllegalArgumentException) {
-                    e
-                }
-            }
-        if (exception != null) {
-            throw exception
-        }
     }
 
     override fun addReaction(reaction: ChatMessageReaction) {
-        val exception =
-            this.writerLock.write {
-                try {
-                    super.addReaction(reaction)
-                    writer.println(objectMapper.writeValueAsString(ChatMessageReactionContainer(reaction)))
-                    writer.flush()
-                    null
-                } catch (e: IllegalArgumentException) {
-                    e
-                }
-            }
-        if (exception != null) {
-            throw exception
-        }
     }
 
     override fun addAssessor(assessor: Assessor) {
@@ -109,20 +81,4 @@ class LoggingChatRoom(
         }
     }
 
-    override fun addMarkAsNoFeedback(noFeedback: NoFeedback) {
-        val exception =
-            this.writerLock.write {
-                try {
-                    super.addMarkAsNoFeedback(noFeedback)
-                    writer.println(objectMapper.writeValueAsString(noFeedback))
-                    writer.flush()
-                    null
-                } catch (e: IllegalArgumentException) {
-                    e
-                }
-            }
-        if (exception != null) {
-            throw exception
-        }
-    }
 }

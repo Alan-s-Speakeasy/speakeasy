@@ -99,7 +99,7 @@ object ChatRoomManager {
 
             false -> this.chatrooms.values.filter {
                 it.users.contains(userId)
-                        && !it.markAsNoFeedback
+                        && !isRoomNoFeedback(it.uid)
                         && !it.assessedBy.contains(Assessor(userId))
                         && (((System.currentTimeMillis() - it.startTime) / 60_000) < 60)
             }
@@ -109,7 +109,7 @@ object ChatRoomManager {
     fun getAssessedOrMarkedRoomsByUserId(userId: UserId): List<ChatRoom> =
         this.chatrooms.values.filter {
             it.users.contains(userId)
-                    && (it.assessedBy.contains(Assessor(userId)) || it.markAsNoFeedback)
+                    && (it.assessedBy.contains(Assessor(userId)) || isRoomNoFeedback(it.uid))
         }
             .sortedBy { it.startTime }
 
@@ -196,8 +196,20 @@ object ChatRoomManager {
      * @param message The ChatMessage to be added.
      */
     fun addMessageTo(room: ChatRoom, message: ChatMessage) {
-        room.addMessage(message)
         ChatRepository.addMessageTo(room.uid, message)
+    }
+
+    /**
+     * Retrieves all messages for a given ChatRoom.
+     *
+     * @param room The ChatRoom for which messages are requested.
+     * @param since Optional parameter to filter messages since a specific timestamp.
+     * @return A list of ChatMessage objects for the specified ChatRoom.
+     *
+     * @throws IllegalArgumentException if the chat room ID is not found.
+     */
+    fun getMessagesFor(room: ChatRoomId, since : Long = -1): List<ChatMessage> {
+        return ChatRepository.getMessagesFor(room, since)
     }
 
     /**
@@ -207,7 +219,6 @@ object ChatRoomManager {
      * @param reaction The ChatMessageReaction to be added.
      */
     fun addReactionTo(room: ChatRoom, reaction: ChatMessageReaction) {
-        room.addReaction(reaction)
         ChatRepository.addReactionToMessage(room.uid, reaction.messageOrdinal, reaction.type)
     }
 
@@ -334,9 +345,13 @@ object ChatRoomManager {
     }
 
     fun markAsNoFeedback(id: ChatRoomId) {
-        this.chatrooms[id]?.addMarkAsNoFeedback(NoFeedback(mark = true))
         ChatRepository.changeFeedbackStatus(false, id)
     }
+
+    fun isRoomNoFeedback(id: ChatRoomId): Boolean {
+        return !ChatRepository.isFeedbackWantedForRoom(id)
+    }
+
 
     /**
      * Checks if the given chatroom id is an assignment.

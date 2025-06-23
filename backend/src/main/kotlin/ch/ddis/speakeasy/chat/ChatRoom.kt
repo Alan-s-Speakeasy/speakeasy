@@ -37,11 +37,6 @@ open class ChatRoom(
 
     private val listeners = mutableListOf<ChatEventListener>()
 
-    @Deprecated("Directly handled by the database now. See addMessageTo in ChatRoomRepository")
-    val nextMessageOrdinal: Int
-        get() = this.lock.read {
-            messages.size
-        }
     companion object {
         /**
          * Export a given chatRoom.
@@ -93,10 +88,6 @@ open class ChatRoom(
         }
     }
 
-    fun getAllMessages(): List<ChatMessage> = this.lock.read {
-        this.messages.toList()
-    }
-
     @Deprecated("handled by the database now. Use getAllReactions() instead.",
         replaceWith = ReplaceWith("ChatRoomManager.getReactionsFor(chatRoom.uid, chatMessage.)"))
     fun getAllReactions(): List<ChatMessageReaction> = this.lock.read {
@@ -106,6 +97,8 @@ open class ChatRoom(
     /**
      * @return all [ChatMessage]s since a specified timestamp
      */
+    @Deprecated("handled by the database now. Use getAllReactions() instead.",
+        replaceWith = ReplaceWith("ChatRoomManager.getMessagesFor(chatRoom.uid, since)"))
     fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
         val currentUserRole = UserManager.getUserRoleByUserID(userId)
         if (currentUserRole == UserRole.ADMIN) { return this.messages.filter { it.time >= since } }
@@ -114,11 +107,10 @@ open class ChatRoom(
         return this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
     }
 
-    @Deprecated("Directly handled by the database now.", replaceWith =
-    ReplaceWith("ChatRoomManager.addMessageTo(chatRoom, message)"))
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
         this.messages.add(message)
+        // TODO : Listeners
         listeners.removeIf { listener -> //check state of listener, update if active, remove if not
             if (listener.isActive) {
                 listener.onMessage(message, this)
@@ -130,8 +122,6 @@ open class ChatRoom(
         return@write //actively return nothing
     }
 
-    @Deprecated("Directly handled by the database now.",
-        replaceWith = ReplaceWith("ChatRoomManager.addReactionTo(chatRoom, reaction)"))
     open fun addReaction(reaction: ChatMessageReaction): Unit = this.lock.write {
         require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
@@ -153,10 +143,6 @@ open class ChatRoom(
         return@write
     }
 
-    open fun addMarkAsNoFeedback(noFeedback: NoFeedback): Unit = this.lock.write {
-        this.markAsNoFeedback = noFeedback.mark
-        return@write
-    }
 
     fun setEndTime(endTime: Long) = this.lock.write {
         this.endTime = endTime

@@ -475,7 +475,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         ChatRoomManager.addMessageTo(
             room, ChatMessage(
                 finalMessage,
-                session.user.id.UID(), userAlias, SessionId.INVALID, room.nextMessageOrdinal, recipients, isRead = false
+                session.user.id.UID(), userAlias, SessionId.INVALID, -1, recipients, isRead = false
             )
         )
 

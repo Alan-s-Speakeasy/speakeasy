@@ -41,6 +41,7 @@ open class ChatRoom(
 
     private val listeners = mutableListOf<ChatEventListener>()
 
+    @Deprecated("Directly handled by the database now. See addMessageTo in ChatRoomRepository")
     val nextMessageOrdinal: Int
         get() = this.lock.read {
             messages.size
@@ -159,6 +160,10 @@ open class ChatRoom(
         this.endTime = endTime
     }
 
+    /**
+     * Deactivates the chat room by setting the end time to the current time.
+     * This method should be called when the chat room is no longer active.
+     */
     fun deactivate() = this.lock.write {
         if (active) {
             this.endTime = System.currentTimeMillis()

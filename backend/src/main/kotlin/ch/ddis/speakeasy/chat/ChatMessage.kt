@@ -24,7 +24,7 @@ data class ChatMessage(
     val authorUserId: UserId = UserId.INVALID,
     val authorAlias: String,
     val authorSessionId: SessionId,
-    val ordinal: Int,
+    val ordinal: Int = -1,
     val recipients: Set<String> = mutableSetOf(),
     val isRead : Boolean = false,
     val time: Long = System.currentTimeMillis(),

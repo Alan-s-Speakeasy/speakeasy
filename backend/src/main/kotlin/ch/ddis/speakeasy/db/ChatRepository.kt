@@ -9,8 +9,8 @@ import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.util.UID
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -36,8 +36,7 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     * Convert the ChatRoomEntity to a regular ChatRoom object.
      */
     // NOTE : See https://github.com/JetBrains/Exposed/issues/656#issuecomment-542113164
-    // Why we need to wrap the whole thing with dbQuery. What annoys me is that
-    // There is no warning. Wasted 45 minutes figuring out why. Love Exposed !!!
+    // on why we need to wrap the whole thing with dbQuery.
     fun toDomainModel(): DomainChatRoom = DatabaseHandler.dbQuery {
         // See comment below for why we do that. Ho boy I don't like Exposed.
         val aliases =
@@ -51,7 +50,6 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             formRef = formId?.value.toString(),
             startTime = startTime,
             prompt = prompt,
-            // Despite what the IDE could tell this.messages can be null!
             messages = this.messages.map { it.toDomainModel() }.toMutableList(),
             users = aliases,
         )
@@ -61,8 +59,8 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 /**
  * Entity class for ChatMessage table
  */
-class ChatMessageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ChatMessageEntity>(ChatMessages)
+class ChatMessageEntity(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<ChatMessageEntity>(ChatMessages)
 
     var chatroom by ChatRoomEntity referencedOn ChatMessages.chatRoom
     var sender by ChatMessages.sender
@@ -70,12 +68,14 @@ class ChatMessageEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var timestamp by ChatMessages.timestamp
     var ordinal by ChatMessages.ordinal
 
+
+
     fun toDomainModel(): DomainChatMessage = DatabaseHandler.dbQuery {
         DomainChatMessage(
             authorUserId = sender.UID(),
             message = content,
             time = timestamp,
-            ordinal = ordinal,
+            ordinal = ordinal.value,
             // NOTE : See https://github.com/JetBrains/Exposed/issues/928
             // It is not possible to nicely get the alias from the many-to-many relationship database.
             authorAlias = ChatroomParticipants.select(ChatroomParticipants.alias).where {
@@ -128,8 +128,7 @@ object ChatRepository {
      * @param participants List of participant user IDs
      * @return The created chat room
      */
-    // TODO : This should return a DomainChatRoom object
-    fun createChatRoom(domainChatRoom: DomainChatRoom, participants: List<UserId>): ChatRoom =
+    fun createChatRoom(domainChatRoom: DomainChatRoom, participants: List<UserId>): DomainChatRoom =
         DatabaseHandler.dbQuery {
             val chatRoom = ChatRoomEntity.new(domainChatRoom.uid.toUUID()) {
                 assignment = domainChatRoom.assignment
@@ -144,25 +143,52 @@ object ChatRepository {
         }
 
     /**
-     * Adds a message to a chat room
+     * Adds a message to a chat room with auto-generated ordinal
      *
      * @param chatRoomId The ID of the chat room
-     * @param message The message to add
-     * @return The created message
+     * @param message The message to add (ordinal will be ignored and auto-generated)
+     * @return The created message with the assigned ordinal
      */
     fun addMessageTo(chatRoomId: ChatRoomId, message: DomainChatMessage): ChatMessage = DatabaseHandler.dbQuery {
-        val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
+        // This locks all messages for chatroom.
+        // We need this lock for race conditions on the ordinal.
+        ChatMessages.selectAll().where { ChatMessages.chatRoom eq chatRoomId.toUUID() }.forUpdate().toList()
+        val chatRoom_ = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
 
-        ChatMessageEntity.new {
-            this.chatroom = chatRoom
-            this.sender = EntityID(message.authorUserId.toUUID(), Users)
-            this.content = message.message
-            this.timestamp = message.time
-            this.ordinal = message.ordinal
-        }.toDomainModel()
+        val nextOrdinal = nextMessageOrdinalFor(chatRoomId)
+
+        ChatMessages.insert {
+            it[chatRoom] = chatRoom_.id
+            it[sender] = EntityID(message.authorUserId.toUUID(), Users)
+            it[content] = message.message
+            it[timestamp] = message.time
+            it[ordinal] = nextOrdinal
+        }
+
+        // Return the domain message with the assigned ordinal
+        message.copy(ordinal = nextOrdinal)
     }
 
+
+    /**
+     * Gets the next message ordinal - i.e, next sequential index
+     *
+     * @param chatRoomId The ID of the chat room
+     * @return The next ordinal number for messages in the chat room
+     */
+    private fun nextMessageOrdinalFor(chatRoomId: ChatRoomId): Int {
+        val lastRow = ChatMessages
+            .select(ChatMessages.ordinal)                     // we only need the ordinal column
+            .where { ChatMessages.chatRoom eq chatRoomId.toUUID() } // restrict to this room
+            .orderBy(ChatMessages.ordinal, SortOrder.DESC)   // highest ordinal first
+            .limit(1)
+            .firstOrNull()
+
+
+        val current = lastRow?.get(ChatMessages.ordinal)?.value   // unwrap EntityID → Int
+        return (current ?: -1) + 1
+    }
     /**
      * Adds a user to a chat room
      *
@@ -216,9 +242,20 @@ object ChatRepository {
      * @return List of chat message entities
      */
     fun getChatMessages(chatRoomId: ChatRoomId): List<DomainChatMessage> = DatabaseHandler.dbQuery {
-        ChatMessageEntity.find { ChatMessages.chatRoom eq chatRoomId.toUUID() }
+        ChatMessageEntity.find { ChatMessages.chatRoom eq EntityID(chatRoomId.toUUID(), ChatRooms) }
             .orderBy(ChatMessages.timestamp to SortOrder.ASC).map { it.toDomainModel() }
             .toList()
+    }
+
+    /**
+     * Checks if a chat room is an assignment.
+     *
+     * @param chatRoomId The ID of the chat room
+     * @return True if the chat room is an assignment, false otherwise
+     */
+    fun isChatroomAssignment(chatRoomId: ChatRoomId): Boolean = DatabaseHandler.dbQuery {
+        ChatRoomEntity.findById(chatRoomId.toUUID())
+            ?.assignment ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
     }
 
     /**

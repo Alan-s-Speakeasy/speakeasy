@@ -19,12 +19,16 @@ object ChatroomParticipants : CompositeIdTable() {
     override val primaryKey = PrimaryKey(chatRoom, user) // Composite primary key
 }
 
-// TODO : Primary key cam be chatroom and ordinal.
-object ChatMessages : UUIDTable() {
+object ChatMessages : CompositeIdTable() {
     val chatRoom = reference("chatroom", ChatRooms)
+    val ordinal = integer("ordinal").entityId()
     val sender = reference("sender", Users)
     val content = text("content")
     val timestamp = long("timestamp")
-    val ordinal = integer("ordinal")
+
+    init {
+        addIdColumn(chatRoom)
+        addIdColumn(ordinal)
+    }
 }
 

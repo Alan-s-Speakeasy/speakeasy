@@ -206,8 +206,8 @@ object ChatRoomManager {
 
     fun addUser(newUserId: UserId, id: ChatRoomId) {
         val newUser = newUserId to SessionAliasGenerator.getRandomName()
-        this.chatrooms[id]?.users?.put(newUser.first, newUser.second)
         ChatRepository.addUserTo(id, newUser.first, newUser.second)
+        this.chatrooms[id]?.users?.put(newUser.first, newUser.second)
     }
 
     fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
@@ -288,7 +288,7 @@ object ChatRoomManager {
     }
 
     fun isAssignment(id: ChatRoomId): Boolean {
-        return this.chatrooms[id]?.assignment ?: false
+        return ChatRepository.isChatroomAssignment(id)
     }
 
     /**

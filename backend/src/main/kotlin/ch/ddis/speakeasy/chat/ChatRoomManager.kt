@@ -139,7 +139,7 @@ object ChatRoomManager {
         userIds: List<UserId>,
 //               formRef: String = DEFAULT_FORM_NAME,
         formRef: String,
-        log: Boolean = true,
+        log: Boolean = true, // Shoudl be removed
         prompt: String?,
         endTime: Long? = null,
         assignment: Boolean = false
@@ -198,6 +198,44 @@ object ChatRoomManager {
     fun addMessageTo(room: ChatRoom, message: ChatMessage) {
         room.addMessage(message)
         ChatRepository.addMessageTo(room.uid, message)
+    }
+
+    /**
+     * Adds a reaction to a message in the given ChatRoom.
+     *
+     * @param room The ChatRoom where the reaction will be added.
+     * @param reaction The ChatMessageReaction to be added.
+     */
+    fun addReactionTo(room: ChatRoom, reaction: ChatMessageReaction) {
+        room.addReaction(reaction)
+        ChatRepository.addReactionToMessage(room.uid, reaction.messageOrdinal, reaction.type)
+    }
+
+    /**
+     * Gets the reactions for a specific message in a chat room.
+     *
+     * @param id The ID of the chat room.
+     * @param ordinal The ordinal of the message for which reactions are requested.
+     * @throws IllegalArgumentException if the chat room ID is not found.x
+     */
+    fun getReactionsForMessage(id: ChatRoomId, ordinal : Int): List<ChatMessageReactionType> {
+        if (ordinal >= ChatRepository.getMessagesCountFor(id)) {
+            throw IllegalArgumentException("Message ordinal $ordinal is out of bounds for chat room $id")
+        }
+        return ChatRepository.getReactionsForMessage(id, ordinal)
+    }
+
+    /**
+     * Retrieves all reactions for each message in a chat room.
+     *
+     * @throws IllegalArgumentException if the chat room ID is not found.
+     */
+    fun getReactionsForChatRoom(id: ChatRoomId): List<ChatMessageReaction> {
+        // Returns a list for each ordinal a ChatMessageReaction with the type and ordinal
+        return (0.. ChatRepository.getMessagesCountFor(id)).map { ordinal ->
+            ordinal to ChatRepository.getReactionsForMessage(id, ordinal)
+        }.filter { it.second.isNotEmpty() }. map { ChatMessageReaction(it.first, it.second.last()) }
+        // NOTE : Only unique reaction is supported. The latest is returned
     }
 
     fun addUser(newUserId: UserId, id: ChatRoomId) {

@@ -97,6 +97,8 @@ open class ChatRoom(
         this.messages.toList()
     }
 
+    @Deprecated("handled by the database now. Use getAllReactions() instead.",
+        replaceWith = ReplaceWith("ChatRoomManager.getReactionsFor(chatRoom.uid, chatMessage.)"))
     fun getAllReactions(): List<ChatMessageReaction> = this.lock.read {
         this.reactions.values.toList()
     }
@@ -112,6 +114,8 @@ open class ChatRoom(
         return this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
     }
 
+    @Deprecated("Directly handled by the database now.", replaceWith =
+    ReplaceWith("ChatRoomManager.addMessageTo(chatRoom, message)"))
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
         require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
         this.messages.add(message)
@@ -126,6 +130,8 @@ open class ChatRoom(
         return@write //actively return nothing
     }
 
+    @Deprecated("Directly handled by the database now.",
+        replaceWith = ReplaceWith("ChatRoomManager.addReactionTo(chatRoom, reaction)"))
     open fun addReaction(reaction: ChatMessageReaction): Unit = this.lock.write {
         require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }

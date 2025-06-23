@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy.db
 
+import ch.ddis.speakeasy.chat.ChatMessageReactionType
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 
@@ -26,6 +27,20 @@ object ChatMessages : CompositeIdTable() {
     val sender = reference("sender", Users)
     val content = text("content")
     val timestamp = long("timestamp")
+
+    init {
+        addIdColumn(chatRoom)
+        addIdColumn(ordinal)
+    }
+}
+
+object ChatReactions : CompositeIdTable() {
+    val chatRoom = reference("chatroom", ChatRooms)
+    val ordinal = integer("ordinal").entityId()
+    val reaction = enumeration<ChatMessageReactionType>("reaction")
+    val timestamp = long("timestamp")
+
+    override val primaryKey = PrimaryKey(chatRoom, ordinal, reaction) // Composite primary key
 
     init {
         addIdColumn(chatRoom)

@@ -260,7 +260,7 @@ data class ChatRoomState(
     constructor(room: ChatRoom, since: Long, userId: UserId) : this(
         ChatRoomInfo(room, userId),
         ChatMessage.toRestMessages(room.getMessagesSince(since, userId)),
-        room.getAllReactions()
+        ChatRoomManager.getReactionsForChatRoom(room.uid)
     )
 }
 
@@ -531,7 +531,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
         val reaction = ctx.bodyAsClass(ChatMessageReaction::class.java)
 
         try {
-            room.addReaction(reaction)
+            ChatRoomManager.addReactionTo(room, reaction)
             return SuccessStatus("Message received")
         } catch (e: IllegalArgumentException) {
             throw ErrorStatusException(400, e.localizedMessage, ctx)

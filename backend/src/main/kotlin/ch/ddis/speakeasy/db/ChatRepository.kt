@@ -2,7 +2,7 @@ package ch.ddis.speakeasy.db
 
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.chat.ChatMessage
-import ch.ddis.speakeasy.chat.ChatRoom
+import ch.ddis.speakeasy.chat.ChatMessageReactionType
 import ch.ddis.speakeasy.chat.ChatMessage as DomainChatMessage
 import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomId
@@ -85,6 +85,15 @@ class ChatMessageEntity(id: EntityID<CompositeID>) : CompositeEntity(id) {
             authorSessionId = SessionId.INVALID
         )
     }
+}
+
+class ChatMessageReactionEntity(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<ChatMessageReactionEntity>(ChatReactions)
+
+    var chatroom by ChatRoomEntity referencedOn ChatReactions.chatRoom
+    var ordinal by ChatReactions.ordinal
+    var reaction by ChatReactions.reaction
+    var timestamp by ChatReactions.timestamp
 }
 
 /**
@@ -222,6 +231,49 @@ object ChatRepository {
         message.copy(ordinal = nextOrdinal)
     }
 
+    /**
+     * Adds a reaction to a message in a chat room
+     *
+     * @param chatRoomId The ID of the chat room
+     * @param ordinal The ordinal of the message to react to
+     * @param reaction The reaction type
+     * @param sender The user ID of the sender of the reaction. Not supported yet
+     * @throws IllegalArgumentException if the chat room does not exist
+     */
+    fun addReactionToMessage(chatRoomId: ChatRoomId, messageOrdinal : Int, reaction: ChatMessageReactionType, sender: UserId = UserId.INVALID): Unit = DatabaseHandler.dbQuery {
+        ChatRepository.findChatRoomById(
+            chatRoomId) ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+
+        if (messageOrdinal < 0) {
+            throw IllegalArgumentException("Message ordinal must be non-negative")
+        }
+        if (messageOrdinal > getMessagesCountFor(chatRoomId)) {
+            throw IllegalArgumentException("Message ordrinas must be between 0 and $messageOrdinal")
+        }
+
+        ChatReactions.upsert() {
+            it[chatRoom] = chatRoomId.toUUID()
+            it[ordinal] = messageOrdinal
+            // it[sender] = EntityID(reaction.)
+            it[ChatReactions.reaction] = reaction
+            it[timestamp] = System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * Gets all reactions for a specific message in a chat room, sorted in descending order by timestamp.
+     *
+     * @param chatRoomId The ID of the chat room
+     * @param ordinal The ordinal of the message to get reactions for
+     * @return List of reaction types for the specified message
+     */
+    fun getReactionsForMessage(chatRoomId: ChatRoomId, ordinal: Int): List<ChatMessageReactionType> =
+        DatabaseHandler.dbQuery {
+            ChatReactions.select(ChatReactions.reaction).orderBy(ChatReactions.timestamp, SortOrder.ASC)
+                .where { (ChatReactions.chatRoom eq chatRoomId.toUUID()) and (ChatReactions.ordinal eq ordinal) }
+                .map { it[ChatReactions.reaction] }.toList()
+        }
+
 
     /**
      * Gets the next message ordinal - i.e, next sequential index
@@ -299,6 +351,16 @@ object ChatRepository {
         ChatMessageEntity.find { ChatMessages.chatRoom eq EntityID(chatRoomId.toUUID(), ChatRooms) }
             .orderBy(ChatMessages.timestamp to SortOrder.ASC).map { it.toDomainModel() }
             .toList()
+    }
+
+    /**
+     * Gets the count of messages for a given chat room ID.
+     *
+     * @param id The ID of the chat room.
+     * @return The number of messages in the chat room.
+     */
+    fun getMessagesCountFor(id : ChatRoomId): Int = DatabaseHandler.dbQuery {
+        ChatMessages.selectAll().where { ChatMessages.chatRoom eq id.toUUID() }.count().toInt()
     }
 
     /**

@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.chat
 import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.UserId
+import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.Config
@@ -79,9 +80,9 @@ object ChatRoomManager {
         }
     }
 
-    fun listActive(): List<ChatRoom> = this.chatrooms.values.filter { it.active }
+    fun listActive(): List<ChatRoom> = ChatRepository.listActiveChatRooms()
 
-    fun listAll(): List<ChatRoom> = this.chatrooms.values.toList()
+    fun listAll(): List<ChatRoom> = ChatRepository.listChatRooms()
 
     // Not sure about that. Should we lazy load the chatrooms?
     operator fun get(id: ChatRoomId): ChatRoom? {
@@ -112,18 +113,15 @@ object ChatRoomManager {
         }
             .sortedBy { it.startTime }
 
-    fun getChatPartner(roomId: UID, userId: UserId): UserId? {
-        val userIds = this.chatrooms[roomId]?.users?.keys
-        return userIds?.find { it != userId }
-    }
 
 
     /**
-     * Get the feedbackform name of the roomi
+     * Returns the reference to the feedback form for a given chatroom.
+     *
+     * @throws IllegalArgumentException if the chatroom does not exist.
      */
-    fun getFeedbackFormReference(roomId: UID): String? {
-        val formRef = this.chatrooms[roomId]?.formRef
-        return if (formRef == "") null else formRef
+    fun getFeedbackFormReference(roomId: UID): FormId? {
+        return ChatRepository.getFormForChatRoom(roomId)
     }
 
     /**
@@ -162,8 +160,6 @@ object ChatRoomManager {
         } else {
             ChatRoom(assignment = assignment, formRef = formRef, users = users, prompt = roomPrompt)
         }
-
-
 
         chatRoom.prompt = prompt ?: "Chatroom requested by ${users[userIds[0]]}"
         chatrooms[chatRoom.uid] = chatRoom
@@ -211,9 +207,24 @@ object ChatRoomManager {
     }
 
     fun getUsersIDofARoom(id: ChatRoomId): List<UserId> {
-        return this.chatrooms[id]?.users?.keys?.toList() ?: listOf()
+       return ChatRepository.getParticipants(id)
     }
 
+    /**
+     * Processes a received message to identify recipients mentioned using the `@` symbol and extracts the message content.
+     *
+     * It parses the message to find usernames, identifies corresponding users in the chat room,
+     * and compiles a list of recipients along with the actual message content.
+     *
+     * @param receivedMessage The complete message received from a user, potentially containing mentions and message content.
+     *                        Expected format: "@username1 @username2: message content".
+     * @param room The `ChatRoom` object representing the current chat room.
+     * @param userAlias The alias of the user who sent the message.
+     * @return A `Pair` containing:
+     *         - A `MutableSet<String>` of recipient aliases identified from the message.
+     *         - The extracted message content as a `String`.
+     *         Returns `null` if no usernames are found or the message is empty.
+     */
     fun processMessageAndRecipients(
         receivedMessage: String,
         room: ChatRoom,
@@ -228,6 +239,7 @@ object ChatRoomManager {
 
         if (usernames.isNotEmpty() && message.isNotEmpty()) {
             for (user in usernames) {
+                // This seems to manually add users ?
                 if (user == this.constantTester || user == this.constantAssistant) {
                     val botRole = if (user == this.constantTester) UserRole.TESTER else UserRole.ASSISTANT
                     val testerBots = UserManager.getUsersIDsFromUserRole(botRole)
@@ -237,6 +249,7 @@ object ChatRoomManager {
                         }
                     }
                 }
+                // What is this
                 if (user == this.constantUserBot) {
                     for (users in room.users.keys) {
                         if (UserManager.getUserRoleByUserID(users) == UserRole.BOT) {
@@ -287,8 +300,47 @@ object ChatRoomManager {
         ChatRepository.changeFeedbackStatus(false, id)
     }
 
+    /**
+     * Checks if the given chatroom id is an assignment.
+     *
+     * @param id The chatroom id to check
+     * @throws IllegalArgumentException if the chatroom id is not found
+     * @return true if the chatroom is an assignment, false otherwise
+     */
     fun isAssignment(id: ChatRoomId): Boolean {
         return ChatRepository.isChatroomAssignment(id)
+    }
+
+    /**
+     * Deactivates the chat room by setting the end time to the current time.
+     *
+     * @param id The chat room id to deactivate
+     */
+    fun deactivateChatRoom(id: ChatRoomId) {
+        ChatRepository.setEndTimeToChatRoom(id, System.currentTimeMillis())
+    }
+
+    /**
+     * A room is defined as active if it has a start time and end time, and the current time is within that range.
+     */
+    fun isChatRoomActive(id: ChatRoomId): Boolean {
+        val (startTime, endTime) = ChatRepository.getTimeBoundsForChatRoom(id)
+        return endTime == null || (System.currentTimeMillis() in startTime..endTime)
+    }
+
+    /**
+     * Gets the remaining time for a chat room. If end time is null, it returns Long.MAX_VALUE.
+     *
+     * @return List of active chatrooms
+     * @throws IllegalArgumentException if the chatroom id is not found
+     */
+    fun getRemainingTimeForChatRoom(id: ChatRoomId): Long {
+        val (startTime, endTime) = ChatRepository.getTimeBoundsForChatRoom(id)
+        return if (endTime != null) {
+            endTime - System.currentTimeMillis()
+        } else {
+            Long.MAX_VALUE
+        }
     }
 
     /**

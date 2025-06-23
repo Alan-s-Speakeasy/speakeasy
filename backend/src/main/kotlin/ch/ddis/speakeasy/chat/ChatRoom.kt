@@ -27,15 +27,11 @@ open class ChatRoom(
     val assessedBy: MutableList<Assessor> = mutableListOf(),
     var testerBotAlias: String = "",
     var markAsNoFeedback: Boolean = false,
+    var active : Boolean = true, // This is used to determine if the chat room is active or not.
+    var remainingTime: Long = 0L, // This is used to determine the remaining time for the chat room.
 ) {
     internal var endTime: Long? = null
     val aliasToUserId = users.entries.associateBy({ it.value }) { it.key }
-
-    val active: Boolean
-        get() = startTime <= System.currentTimeMillis() && remainingTime > 0
-
-    val remainingTime: Long
-        get() = max((endTime ?: Long.MAX_VALUE) - System.currentTimeMillis(), 0)
 
     private val lock: StampedLock = StampedLock()
 
@@ -117,7 +113,7 @@ open class ChatRoom(
     }
 
     open fun addMessage(message: ChatMessage): Unit = this.lock.write {
-        require(this.active) { "Chatroom ${this.uid.string} is not active" }
+        require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
         this.messages.add(message)
         listeners.removeIf { listener -> //check state of listener, update if active, remove if not
             if (listener.isActive) {
@@ -131,7 +127,7 @@ open class ChatRoom(
     }
 
     open fun addReaction(reaction: ChatMessageReaction): Unit = this.lock.write {
-        require(this.active) { "Chatroom ${this.uid.string} is not active" }
+        require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
         require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
         this.reactions[reaction.messageOrdinal] = reaction
         listeners.removeIf { listener -> //check state of listener, update if active, remove if not
@@ -164,8 +160,9 @@ open class ChatRoom(
      * Deactivates the chat room by setting the end time to the current time.
      * This method should be called when the chat room is no longer active.
      */
+    @Deprecated("Use setEndTime im chatroommanager instead to set a specific end time.")
     fun deactivate() = this.lock.write {
-        if (active) {
+        if (ChatRoomManager.isChatRoomActive(this.uid)) {
             this.endTime = System.currentTimeMillis()
         }
     }

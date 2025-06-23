@@ -7,6 +7,7 @@ object ChatRooms : UUIDTable() {
     val assignment = bool("assignment").default(false)
     val formId = reference("form_id", FeedbackForms).nullable() // Can be null if the room is not meant to be assessed
     val startTime = long("start_time")
+    val endTime = long("end_time").nullable()
     val prompt = text("prompt").default("")
     val testerBotAlias = varchar("tester_bot_alias", 255).nullable()
     val markAsNoFeedback = bool("mark_as_no_feedback").default(false)

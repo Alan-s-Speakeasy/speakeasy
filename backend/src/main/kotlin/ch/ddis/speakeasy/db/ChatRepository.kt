@@ -25,6 +25,7 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var assignment by ChatRooms.assignment
     var formId by ChatRooms.formId
     var startTime by ChatRooms.startTime
+    var endTime by ChatRooms.endTime
     var prompt by ChatRooms.prompt
     val messages by ChatMessageEntity referrersOn ChatMessages.chatRoom
     var participants by UserEntity via ChatroomParticipants
@@ -102,11 +103,62 @@ object ChatRepository {
         ChatRoomEntity.findById(id.toUUID())?.toDomainModel()
     }
 
-    fun getFormForChatRoom(id: ChatRoomId): FormId? {
-        return DatabaseHandler.dbQuery {
-            ChatRoomEntity[id.toUUID()].formId
-        }?.UID()
+    /**
+     * Returns a list of all chat rooms in the database. Use carefully, as this can be a large list.
+     */
+    fun listChatRooms(): List<DomainChatRoom> = DatabaseHandler.dbQuery {
+        ChatRoomEntity.all().map { it.toDomainModel() }.toList()
     }
+
+    /**
+     * Returns a list of all active chat rooms.
+     * An active chat room is defined as one that has started before now and either has no end time or an end time in the future.
+     */
+    fun listActiveChatRooms(): List<DomainChatRoom> = DatabaseHandler.dbQuery {
+        ChatRoomEntity.find {
+            // Started before now
+            (ChatRooms.startTime lessEq System.currentTimeMillis()) and
+                    // End time not defined or in the future
+                    ((ChatRooms.endTime.isNull()) or (ChatRooms.endTime greater System.currentTimeMillis()))
+        }
+            .map { it.toDomainModel() }.toList()
+    }
+
+    /**
+     * Get the formId associated with a chat room
+     *
+     * @param id The ID of the chat room
+     */
+    fun getFormForChatRoom(id: ChatRoomId): FormId? = DatabaseHandler.dbQuery {
+        val chatRoom = ChatRoomEntity.findById(id.toUUID()) ?: throw IllegalArgumentException("Chat room with ID ${id.string} not found")
+        chatRoom.formId?.UID()
+    }
+
+    /**
+     * Sets the end time for a chat room
+     *
+     * @throws IllegalArgumentException if the chatroom does not exist.
+     */
+    fun setEndTimeToChatRoom(id: ChatRoomId, endTime: Long): Unit = DatabaseHandler.dbQuery {
+        val chatRoom = ChatRoomEntity.findById(id.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${id.string} not found")
+        chatRoom.endTime = endTime
+    }
+
+    /**
+     * Gets the (startTime, endTime) bounds for a chat room.
+     *
+     * @param id The ID of the chat room
+     * @return A pair containing the start time and end time (nullable) of the chat room
+     */
+    fun getTimeBoundsForChatRoom(id: ChatRoomId): Pair<Long, Long?> = DatabaseHandler.dbQuery {
+        val chatRoom = ChatRoomEntity.findById(id.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${id.string} not found")
+        val startTime = chatRoom.startTime
+        val endTime = chatRoom.endTime
+        Pair(startTime, endTime)
+    }
+
 
     /**
      * Returns true if the room already has feedback applied to.
@@ -211,7 +263,9 @@ object ChatRepository {
     }
 
     fun getParticipants(chatRoomId: ChatRoomId) : List<UserId> = DatabaseHandler.dbQuery {
-        ChatRoomEntity.findById(chatRoomId.toUUID())!!.participants.map { it.id.UID() }.toList()
+        val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+        chatRoom.participants.map { it.id.UID() }.toList()
     }
 
     /**

@@ -55,7 +55,7 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                                 it.uid.string,
                                 usernames.getOrNull(0) ?: " n/a ",
                                 usernames.getOrNull(0) ?: " n/a ",
-                                it.active,
+                                ChatRoomManager.isChatRoomActive(it.uid),
                                 formatTimeStamp(it.startTime),
                                 if (it.endTime != null) formatTimeStamp(it.endTime!!) else " n/a "
                             )

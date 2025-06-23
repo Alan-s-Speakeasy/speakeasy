@@ -25,6 +25,8 @@ data class ChatMessage(
     val authorAlias: String,
     val authorSessionId: SessionId,
     val ordinal: Int = -1,
+    // Recipients are typically users tagged (e.g. @user) in the message.
+    // This is a set of aliases, not UserIds.
     val recipients: Set<String> = mutableSetOf(),
     val isRead : Boolean = false,
     val time: Long = System.currentTimeMillis(),

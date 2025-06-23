@@ -450,7 +450,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         // Means that the user is not a member of the chatroom
         val userAlias = room.users[session.user.id.UID()] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
 
-        if (!room.active) {
+        if (!ChatRoomManager.isChatRoomActive(room.uid)) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
@@ -524,7 +524,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 
-        if (!room.active) {
+        if (!ChatRoomManager.isChatRoomActive(room.uid)) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
@@ -651,7 +651,7 @@ class PatchNewUserHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHa
 
         val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (!room.active) {
+        if (!ChatRoomManager.isChatRoomActive(room.uid)) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 

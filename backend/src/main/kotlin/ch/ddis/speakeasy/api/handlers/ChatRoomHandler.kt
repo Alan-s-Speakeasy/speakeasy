@@ -41,12 +41,12 @@ data class ChatRoomInfo(
         room.formRef,
         room.uid.string,
         room.startTime,
-        room.remainingTime,
+        room.computeRemainingTime(),
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
         room.testerBotAlias,
-        room.markAsNoFeedback
+        room.isMarkedAsNoFeedback()
     )
 }
 
@@ -65,10 +65,10 @@ data class ChatRoomAdminInfo(
         room.formRef,
         room.uid.string,
         room.startTime,
-        room.remainingTime,
+        room.computeRemainingTime(),
         room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key) ?: "n/a") },
         room.prompt,
-        room.markAsNoFeedback
+        room.isMarkedAsNoFeedback()
     )
 }
 
@@ -260,7 +260,7 @@ data class ChatRoomState(
     constructor(room: ChatRoom, since: Long, userId: UserId) : this(
         ChatRoomInfo(room, userId),
         ChatMessage.toRestMessages(room.getMessagesSince(since, userId)),
-        ChatRoomManager.getReactionsForChatRoom(room.uid)
+        room.getReactions()
     )
 }
 
@@ -302,7 +302,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
         val since = ctx.queryParam("since")?.toLongOrNull()
             ?: throw ErrorStatusException(400, "Parameter 'since' is missing!/ill formatted", ctx)
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (session.user.role != UserRole.ADMIN) {
             if (!room.users.containsKey(session.user.id.UID())) {
@@ -450,7 +450,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         // Means that the user is not a member of the chatroom
         val userAlias = room.users[session.user.id.UID()] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
 
-        if (!ChatRoomManager.isChatRoomActive(room.uid)) {
+        if (!room.isActive()) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
@@ -472,8 +472,8 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             recipients = recipientsList
         }
 
-        ChatRoomManager.addMessageTo(
-            room, ChatMessage(
+        room.addMessage(
+            ChatMessage(
                 finalMessage,
                 session.user.id.UID(), userAlias, SessionId.INVALID, -1, recipients, isRead = false
             )
@@ -518,20 +518,20 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 
-        if (!ChatRoomManager.isChatRoomActive(room.uid)) {
+        if (!room.isActive()) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
         val reaction = ctx.bodyAsClass(ChatMessageReaction::class.java)
 
         try {
-            ChatRoomManager.addReactionTo(room, reaction)
+            room.addReaction(reaction)
             return SuccessStatus("Message received")
         } catch (e: IllegalArgumentException) {
             throw ErrorStatusException(400, e.localizedMessage, ctx)
@@ -604,7 +604,6 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         ChatRoomManager.create(
             userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(username)!!),
             formRef = formRef,
-            log = true,
             prompt = null,
             endTime = System.currentTimeMillis() + chatRoomTime
         )
@@ -649,15 +648,15 @@ class PatchNewUserHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHa
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (!ChatRoomManager.isChatRoomActive(room.uid)) {
+        if (!room.isActive()) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
         val newUser = UserManager.getUserIdFromUsername(ctx.body())!!
 
-        ChatRoomManager.addUser(newUser, roomId)
+        room.addUser(newUser)
 
         return SuccessStatus("User added")
 
@@ -699,7 +698,7 @@ class CloseChatRoomHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestH
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
@@ -745,7 +744,7 @@ class GetChatRoomUsersStatusHandler : GetRestHandler<Map<String, Boolean>>, Acce
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)

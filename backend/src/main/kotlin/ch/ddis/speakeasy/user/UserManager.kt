@@ -23,7 +23,7 @@ object UserManager {
         DatabaseHandler.dbQuery {
             if (Users.selectAll().empty()) {
                 // Create the tables if they do not exist
-                System.err.println("WARNING : The user database !")
+                System.err.println("WARNING : The user database is empty!")
             }
         }
     }

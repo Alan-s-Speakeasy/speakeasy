@@ -1,8 +1,10 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.UserId
+import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.UserManager
-import ch.ddis.speakeasy.user.UserRole
+import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
@@ -10,106 +12,164 @@ import com.opencsv.ICSVWriter
 import kotlinx.serialization.Serializable
 import java.util.*
 import java.util.concurrent.locks.StampedLock
-import kotlin.collections.HashMap
-import kotlin.math.max
 
 typealias ChatRoomId = UID
 
-open class ChatRoom(
-    val assignment: Boolean = false,
-    val formRef: String,
-    val uid: ChatRoomId = UID(),
-    val users: MutableMap<UserId, String>, //UserId --> UserAlias
-    val startTime: Long = System.currentTimeMillis(),
-    var prompt: String = "",
-    private val messages: MutableList<ChatMessage> = mutableListOf(),
-    private val reactions: HashMap<Int, ChatMessageReaction> = hashMapOf(),
-    val assessedBy: MutableList<Assessor> = mutableListOf(),
-    var testerBotAlias: String = "",
-    var markAsNoFeedback: Boolean = false,
-    var active : Boolean = true, // This is used to determine if the chat room is active or not.
-    var remainingTime: Long = 0L, // This is used to determine the remaining time for the chat room.
-) {
-    internal var endTime: Long? = null
-    val aliasToUserId = users.entries.associateBy({ it.value }) { it.key }
+/**
+ * An interface for any chatRoom.
+ *
+ * This interface defines the basic operations that can be performed on a chat room, such as adding messages, reactions, and users, as well as retrieving messages and reactions.
+ */
+interface ChatRoom {
+    val uid: ChatRoomId
+    var testerBotAlias: String
+    val users: Map<UserId, String>
+    val aliasToUserId: Map<String, UserId>
+    val assignment: Boolean
+    val formRef: String
+    val startTime: Long
+    val endTime: Long?
+    var prompt: String
+    fun getMessages(): List<ChatMessage>
+    fun computeRemainingTime(): Long
+    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage>
+    fun addMessage(message: ChatMessage)
+    fun addReaction(reaction: ChatMessageReaction)
+    fun getReactionsForMessage(messageOrdinal: Int): List<ChatMessageReactionType>
+    fun getReactions(): List<ChatMessageReaction>
+    fun addUser(newUserId: UserId)
+    fun getFeedbackForm(): FormId?
+    fun markAsNoFeedback()
+    fun isMarkedAsNoFeedback(): Boolean
+    fun addAssessor(assessor: Assessor)
+    fun isAssessedBy(userId: UserId): Boolean
+    fun setEndTime(endTime: Long)
+    fun deactivate()
+    fun isActive(): Boolean
+    fun addListener(listener: ChatEventListener, alert: Boolean = true)
+    fun export(): ExportableChatRoom
+}
+
+/**
+ * Represents a chat room where users can exchange messages and reactions. Is not intended to
+ *
+ * @param uid Unique identifier for this chat room
+ */
+internal class DatabaseChatRoom(
+    override val uid: ChatRoomId = UID(),
+    override var testerBotAlias: String = "", // No idea what this is for
+) : ChatRoom {
 
     private val lock: StampedLock = StampedLock()
 
     private val listeners = mutableListOf<ChatEventListener>()
 
-    companion object {
-        /**
-         * Export a given chatRoom.
-         *
-         * @param chatRoom The ChatRoom object to be serialized.
-         * @return A SerializedChatRoom object containing the serialized data of the given ChatRoom.
-         */
-        fun export(chatRoom: ChatRoom): ExportableChatRoom {
-            val usernames = chatRoom.users.keys.map { UserManager.getUsernameFromId(it)!!}
-            var exportedChatMessages = ChatMessage.toExportableMessages(chatRoom.messages)
-            // Merge the messages with the reactions (as of now, they are stored in separate lists)
-            exportedChatMessages = exportedChatMessages.map { message ->
-                message.copy(
-                    reaction = chatRoom.reactions[message.ordinal]?.type
-                )
-            }
-
-            // NOTE : on earlier versions of Speakeasy, the authorUserId was not present in the ChatMessage object.
-            // In that case, ExportableMessage will have an empty string as the author. This is purely for backward compatibility.
-            val updatedExportedMessages = exportedChatMessages.map { message ->
-                if (message.authorUserName != ExportableMessage.UNKNOWN_USERNAME) {
-                    return@map message
-                }
-                val userNameFromAlias = chatRoom.aliasToUserId[message.authorAlias]?.let { userId ->
-                    UserManager.getUsernameFromId(userId)
-                }
-                if (userNameFromAlias != null) {
-                    // Found the username !
-                    message.copy(authorUserName = userNameFromAlias)
-                } else {
-                    message.copy(authorUserName = ExportableMessage.NOT_REGISTED_USERNAME)
-                }
-            }
-            return ExportableChatRoom(
-                chatRoom.assignment,
-                chatRoom.formRef,
-                usernames,
-                chatRoom.startTime,
-                chatRoom.prompt,
-                updatedExportedMessages,
-                chatRoom.endTime
-            )
-        }
-    }
-    fun addListener(listener: ChatEventListener, alert: Boolean = true) = this.lock.write {
+    override fun addListener(listener: ChatEventListener, alert: Boolean) = this.lock.write {
         this.listeners.add(listener)
         if (alert) {
             listener.onNewRoom(this)
         }
     }
 
-    @Deprecated("handled by the database now. Use getAllReactions() instead.",
-        replaceWith = ReplaceWith("ChatRoomManager.getReactionsFor(chatRoom.uid, chatMessage.)"))
-    fun getAllReactions(): List<ChatMessageReaction> = this.lock.read {
-        this.reactions.values.toList()
+
+    // A map of user IDs to their aliases in this chat room.
+    override val users: Map<UserId, String>
+        get() = ChatRepository.getParticipantAliases(this.uid)
+
+    // A map of user aliases to their user IDs in this chat room.
+    override val aliasToUserId: Map<String, UserId>
+        get() = this.users.entries.associateBy({ it.value }) { it.key }
+
+    override val assignment: Boolean
+        get() = ChatRepository.isChatroomAssignment(this.uid)
+
+    // Getters with database access
+    override val formRef: String
+        get() = "TODO"
+
+    override val startTime: Long
+        get() = ChatRepository.getTimeBoundsForChatRoom(this.uid).first
+
+    override val endTime: Long?
+        get() = ChatRepository.getTimeBoundsForChatRoom(this.uid).second
+    override var prompt: String
+        get() = ChatRepository.getPromptForChatRoom(this.uid)
+        set(value) {
+            ChatRepository.setPromptForChatRoom(this.uid, value)
+        }
+
+    override fun getMessages(): List<ChatMessage> {
+        return ChatRepository.getMessagesFor(this.uid)
+    }
+
+    /**
+     * Export a given chatRoom.
+     *
+     * @return A SerializedChatRoom object containing the serialized data of the given ChatRoom.
+     */
+    override fun export(): ExportableChatRoom {
+        val usernames = this.users.keys.map { UserManager.getUsernameFromId(it)!! }
+        val exportedChatMessages = ChatMessage.toExportableMessages(this.getMessages())
+
+        // NOTE : on earlier versions of Speakeasy, the authorUserId was not present in the ChatMessage object.
+        // In that case, ExportableMessage will have an empty string as the author. This is purely for backward compatibility.
+        val updatedExportedMessages = exportedChatMessages.map { message ->
+            if (message.authorUserName != ExportableMessage.UNKNOWN_USERNAME) {
+                return@map message
+            }
+            val userNameFromAlias = this.aliasToUserId[message.authorAlias]?.let { userId ->
+                UserManager.getUsernameFromId(userId)
+            }
+            if (userNameFromAlias != null) {
+                // Found the username !
+                message.copy(authorUserName = userNameFromAlias)
+            } else {
+                message.copy(authorUserName = ExportableMessage.NOT_REGISTED_USERNAME)
+            }
+        }
+        return ExportableChatRoom(
+            this.assignment,
+            this.formRef,
+            usernames,
+            this.startTime,
+            this.prompt,
+            updatedExportedMessages,
+            this.endTime,
+        )
+    }
+
+    /**
+     * Computes the remaining time for this chat room session.
+     *
+     * @return The remaining time in milliseconds, or Long.MAX_VALUE if there's no end time set
+     */
+    override fun computeRemainingTime(): Long {
+        val (_, endTime) = ChatRepository.getTimeBoundsForChatRoom(this.uid)
+        return if (endTime != null) {
+            endTime - System.currentTimeMillis()
+        } else {
+            Long.MAX_VALUE
+        }
     }
 
     /**
      * @return all [ChatMessage]s since a specified timestamp
+     *
+     * @userId The recipients. Seems to be useless now.
      */
-    @Deprecated("handled by the database now. Use getAllReactions() instead.",
-        replaceWith = ReplaceWith("ChatRoomManager.getMessagesFor(chatRoom.uid, since)"))
-    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> = this.lock.read {
-        val currentUserRole = UserManager.getUserRoleByUserID(userId)
-        if (currentUserRole == UserRole.ADMIN) { return this.messages.filter { it.time >= since } }
-
-        val currentUser = this.users[userId]
-        return this.messages.filter { it.time >= since && it.recipients.contains(currentUser) }
+    override fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
+        return ChatRepository.getMessagesFor(this.uid, since)
     }
 
-    open fun addMessage(message: ChatMessage): Unit = this.lock.write {
-        require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
-        this.messages.add(message)
+    /**
+     * Adds a new message to the chat room and notifies all active listeners.
+     *
+     * @param message The chat message to be added.
+     * @throws IllegalArgumentException if the chat room is not active/not found or the message is invalid.
+     */
+    override fun addMessage(message: ChatMessage) {
+        require(this.isActive()) { "Chatroom ${this.uid.string} is not active" }
+        ChatRepository.addMessageTo(this.uid, message)
         // TODO : Listeners
         listeners.removeIf { listener -> //check state of listener, update if active, remove if not
             if (listener.isActive) {
@@ -119,13 +179,17 @@ open class ChatRoom(
                 true
             }
         }
-        return@write //actively return nothing
     }
 
-    open fun addReaction(reaction: ChatMessageReaction): Unit = this.lock.write {
-        require(ChatRoomManager.isChatRoomActive(this.uid)) { "Chatroom ${this.uid.string} is not active" }
-        require(reaction.messageOrdinal < this.messages.size) { "Reaction ordinal out of bounds" }
-        this.reactions[reaction.messageOrdinal] = reaction
+    /**
+     * Adds a reaction to a specific message in the chat room and notifies all active listeners.
+     *
+     * @param reaction The reaction to be added.
+     * @throws IllegalArgumentException if the chat room is not active/not found or the reaction is invalid.
+     */
+    override fun addReaction(reaction: ChatMessageReaction) {
+        require(this.isActive()) { "Chatroom ${this.uid.string} is not active" }
+        ChatRepository.addReactionToMessage(this.uid, reaction.messageOrdinal, reaction.type)
         listeners.removeIf { listener -> //check state of listener, update if active, remove if not
             if (listener.isActive) {
                 listener.onReaction(reaction, this)
@@ -134,29 +198,109 @@ open class ChatRoom(
                 true
             }
         }
-        return@write
-    }
-
-    open fun addAssessor(assessor: Assessor): Unit = this.lock.write {
-        TODO("Not implemented")
-        this.assessedBy.add(assessor)
-        return@write
-    }
-
-
-    fun setEndTime(endTime: Long) = this.lock.write {
-        this.endTime = endTime
     }
 
     /**
-     * Deactivates the chat room by setting the end time to the current time.
-     * This method should be called when the chat room is no longer active.
+     * Gets the reactions for a specific message in a chat room.
+     *
+     * @param messageOrdinal The ordinal of the message for which reactions are requested.
+     * @throws IllegalArgumentException if the chat room ID is not found.x
      */
-    @Deprecated("Use setEndTime im chatroommanager instead to set a specific end time.")
-    fun deactivate() = this.lock.write {
-        if (ChatRoomManager.isChatRoomActive(this.uid)) {
-            this.endTime = System.currentTimeMillis()
+    override fun getReactionsForMessage(messageOrdinal: Int): List<ChatMessageReactionType> = this.lock.read {
+        if (messageOrdinal >= ChatRepository.getMessagesCountFor(this.uid)) {
+            throw IllegalArgumentException("Message ordinal $messageOrdinal is out of bounds for chat room ${this.uid}")
         }
+        return ChatRepository.getReactionsForMessage(this.uid, messageOrdinal)
+    }
+
+    /**
+     * Gets all reactions for the chat room.
+     *
+     * @return A list of ChatMessageReaction objects containing the ordinal and type of each reaction.
+     * @throws IllegalArgumentException if the chat room ID is not found.
+     */
+    override fun getReactions(): List<ChatMessageReaction> {
+        // Returns a list for each ordinal a ChatMessageReaction with the type and ordinal
+        return (0..ChatRepository.getMessagesCountFor(this.uid)).map { ordinal ->
+            ordinal to ChatRepository.getReactionsForMessage(this.uid, ordinal)
+        }.filter { it.second.isNotEmpty() }.map { ChatMessageReaction(it.first, it.second.last()) }
+        // NOTE : Only unique reaction is supported. The latest is returned
+    }
+
+    /**
+     * Adds a user to the chat room while also generating a random alias for them.
+     *
+     * @throws IllegalArgumentException if the user is already in the chat room or if the user ID is invalid.
+     */
+    override fun addUser(newUserId: UserId) {
+        val newUser = newUserId to SessionAliasGenerator.getRandomName()
+        ChatRepository.addUserTo(this.uid, newUser.first, newUser.second)
+    }
+
+    /**
+     * Gets the feedback form associated with this chat room.
+     *
+     * @return The FormId of the feedback form, or null if no form is associated.
+     * @throws IllegalArgumentException if the chat room ID is not found.
+     */
+    // Could also be a property
+    override fun getFeedbackForm(): FormId? {
+        return ChatRepository.getFormForChatRoom(this.uid)
+    }
+
+    /**
+     * Marks the chat room as NOT requiring feedback. Idempotent (no effect if already marked).
+     *
+     * @throws IllegalArgumentException if the chat room ID is not found.
+     */
+    override fun markAsNoFeedback() {
+        ChatRepository.changeFeedbackStatusFor(this.uid, false)
+    }
+
+    /**
+     * Self-explanatory.
+     *
+     * @throws IllegalArgumentException if the chat room ID is not found.
+     */
+    override fun isMarkedAsNoFeedback(): Boolean {
+        return !ChatRepository.isFeedbackWantedForRoom(this.uid)
+    }
+
+    override fun addAssessor(assessor: Assessor) = this.lock.write {
+        TODO("Not implemented")
+    }
+
+    /**
+     * Checks if this chat room has been assessed by the specified user.
+     *
+     * @param userId The ID of the user to check for assessment
+     * @return true if the chat room has feedback associated with the given user as author, false otherwise
+     */
+    override fun isAssessedBy(userId: UserId): Boolean {
+        TODO()
+    }
+
+
+    override fun setEndTime(endTime: Long) =
+        ChatRepository.setEndTimeToChatRoom(this.uid, endTime)
+
+
+    /**
+     * Closes the chat room, preventing any further messages or reactions from being added.
+     */
+    override fun deactivate() =
+        setEndTime(System.currentTimeMillis())
+
+    /**
+     * Determines whether the chat room is currently active.
+     * A chat room is considered active if its start time has passed and its end time has not yet been reached.
+     *
+     * @return `true` if the chat room is active, `false` otherwise.
+     */
+    override fun isActive(): Boolean = this.lock.read {
+        val (startTime, endTime) = ChatRepository.getTimeBoundsForChatRoom(this.uid)
+        val now = System.currentTimeMillis()
+        return now >= startTime && (endTime == null || now < endTime)
     }
 }
 

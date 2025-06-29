@@ -12,7 +12,7 @@ object DatabaseHandler {
         mainDB = Database.connect("jdbc:sqlite:${config.dataPath}/database.db", driver = "org.sqlite.JDBC")
         // Print the database connection URL for debugging
 
-        transaction {
+        transaction(mainDB) {
             // Create all tables in the correct order (dependencies first)
             SchemaUtils.create(
                 Users,        // Base table for users

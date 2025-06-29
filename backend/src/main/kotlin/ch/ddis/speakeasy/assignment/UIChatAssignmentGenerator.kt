@@ -179,20 +179,20 @@ object UIChatAssignmentGenerator {
                     val chatRoom = ChatRoomManager.create(
                         userIds = listOf(humanId, botId, assistantUsername),
                         formRef = a.formName,
-                        log = true,
                         prompt = a.prompt,
                         endTime = endTime,
-                        assignment = true)
+                        assignment = true
+                    )
 
                     chatRooms.add(chatRoom)
                 }else{
                     val chatRoom = ChatRoomManager.create(
                         userIds = listOf(humanId, botId),
                         formRef = a.formName,
-                        log = true,
                         prompt = a.prompt,
                         endTime = endTime,
-                        assignment = true)
+                        assignment = true
+                    )
                     chatRooms.add(chatRoom)
                 }
             }

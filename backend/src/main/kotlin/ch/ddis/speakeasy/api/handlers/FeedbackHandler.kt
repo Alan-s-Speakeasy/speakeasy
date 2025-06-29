@@ -73,7 +73,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
         val roomId = (ctx.pathParamMap().getOrElse("roomId") {
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
-        ChatRoomManager[roomId]?: throw ErrorStatusException(400, "Room not found", ctx)
+        val chatRoom = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(400, "Room not found", ctx)
         val feedback = try {
             ctx.bodyAsClass(FeedbackResponseList::class.java)
         } catch (e: BadRequestResponse) {
@@ -83,14 +83,14 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
         // if user wants to mark this chat room as "no feedback"
         // TODO : Not sure about this. Feels very confusing.
         if (feedback.responses.isEmpty()) {
-            if (ChatRoomManager.isAssignment(roomId)
-                && ChatRoomManager.getFeedbackFormReference(roomId) != null) {
+            if (chatRoom.assignment
+                && chatRoom.getFeedbackForm() != null) {
                 throw ErrorStatusException(403, "You must fill-in the feedback form.", ctx)
             }
             if (session.user.role == UserRole.BOT) {
                 throw ErrorStatusException(403, "Bot is not allowed to send this request.", ctx)
             }
-            ChatRoomManager.markAsNoFeedback(roomId)
+            chatRoom.markAsNoFeedback()
             return SuccessStatus("No feedback required for this chat now.")
         }
         FeedbackManager.logFeedback(session.user, roomId, feedback)

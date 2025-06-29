@@ -1,12 +1,9 @@
 package ch.ddis.speakeasy.db
 
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
-import ch.ddis.speakeasy.chat.ChatMessage
 import ch.ddis.speakeasy.chat.ChatMessageReactionType
-import ch.ddis.speakeasy.chat.ChatMessage as DomainChatMessage
-import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
 import ch.ddis.speakeasy.chat.ChatRoomId
-import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.chat.DatabaseChatRoom
 import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.util.UID
@@ -15,8 +12,9 @@ import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.util.*
+import ch.ddis.speakeasy.chat.ChatMessage as DomainChatMessage
+import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
 
 /**
  * Entity class for ChatRoom table
@@ -42,19 +40,8 @@ class ChatRoomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     // on why we need to wrap the whole thing with dbQuery.
     fun toDomainModel(): DomainChatRoom = DatabaseHandler.dbQuery {
         // See comment below for why we do that. Ho boy I don't like Exposed.
-        val aliases =
-            ChatroomParticipants.selectAll().where(ChatroomParticipants.chatRoom eq id)
-                .associate {
-                    (it[ChatroomParticipants.user].UID() to (it[ChatroomParticipants.alias] ?: ""))
-                }.toMutableMap()
-        DomainChatRoom(
+        DatabaseChatRoom(
             uid = id.UID(),
-            assignment = assignment,
-            formRef = formId?.value.toString(),
-            startTime = startTime,
-            prompt = prompt,
-            messages = this.messages.map { it.toDomainModel() }.toMutableList(),
-            users = aliases,
         )
     }
 }
@@ -185,25 +172,33 @@ object ChatRepository {
     }
 
     /**
-     * Creates a new chat room
+     * Creates a new chat room and persists it to the database.
      *
-     * @param domainChatRoom The domain chat room object to create
-     * @param participants List of participant user IDs
-     * @return The created chat room
+     * @param participants The list of user IDs to be added to the chat room.
+     * @param assignment A boolean indicating if the chat room is an assignment.
+     * @param markAsNoFeedback A boolean indicating if the chat room should be marked as having no feedback.
+     * @param prompt An optional prompt for the chat room.
+     * @return The newly created [DomainChatRoom].
      */
-    fun createChatRoom(domainChatRoom: DomainChatRoom, participants: List<UserId>): DomainChatRoom =
-        DatabaseHandler.dbQuery {
-            val chatRoom = ChatRoomEntity.new(domainChatRoom.uid.toUUID()) {
-                assignment = domainChatRoom.assignment
-                formId = EntityID(UUID.randomUUID(), FeedbackForms) // This is a placeholder TODO TODO TODO
-                startTime = domainChatRoom.startTime
-                prompt = domainChatRoom.prompt
-                testerBotAlias = domainChatRoom.testerBotAlias
-                markAsNoFeedback = domainChatRoom.markAsNoFeedback
-                this.participants = UserEntity.find { Users.id inList participants.map { it.toUUID() } }
-            }
-            chatRoom.toDomainModel()
+    fun createChatRoom(
+        participants: List<UserId>,
+        assignment: Boolean,
+        markAsNoFeedback: Boolean = false,
+        prompt: String? = null
+    ): DomainChatRoom = DatabaseHandler.dbQuery {
+        val chatRoom = DatabaseChatRoom()
+        ChatRoomEntity.new(chatRoom.uid.toUUID()) {
+            this.assignment = assignment
+            this.formId = EntityID(UUID.randomUUID(), FeedbackForms) // This is a placeholder TODO TODO TODO
+            this.startTime = System.currentTimeMillis()
+            this.prompt = prompt ?: "New chat room"
+            this.testerBotAlias = ""
+            this.markAsNoFeedback = markAsNoFeedback
+            this.participants =
+                UserEntity.find { Users.id inList participants.map { it.toUUID() } }
         }
+        return@dbQuery chatRoom
+    }
 
     /**
      * Adds a message to a chat room with auto-generated ordinal
@@ -347,6 +342,13 @@ object ChatRepository {
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         val user = UserEntity.findById(userId.toUUID())
             ?: throw IllegalArgumentException("User with ID ${userId.string} not found")
+        // If the user is already a participant, throw an exception
+        if (ChatroomParticipants.selectAll().where {
+                (ChatroomParticipants.chatRoom eq chatRoom.id) and
+                        (ChatroomParticipants.user eq user.id)
+            }.any()) {
+            throw IllegalArgumentException("User with ID ${userId.string} is already a participant in chat room ${chatRoomId.string}")
+        }
 
         // Add the user to participants and set the alias in the join table
         ChatroomParticipants.insert {
@@ -356,10 +358,32 @@ object ChatRepository {
         }
     }
 
+    /**
+     * Gets the participants of a chat room
+     *
+     * @param chatRoomId The ID of the chat room
+     */
     fun getParticipants(chatRoomId: ChatRoomId): List<UserId> = DatabaseHandler.dbQuery {
         val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.participants.map { it.id.UID() }.toList()
+    }
+
+    /**
+     * Gets the mapping participant user IDs to their aliases in a chat room.
+     *
+     * @param chatRoomId The ID of the chat room
+     * @return Map of user IDs to their aliases in the chat room
+     * @throws IllegalArgumentException if the chat room does not exist
+     */
+    fun getParticipantAliases(chatRoomId: ChatRoomId): Map<UserId, String> = DatabaseHandler.dbQuery {
+        val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+        ChatroomParticipants.selectAll()
+            .where { ChatroomParticipants.chatRoom eq chatRoom.id }
+            .associate {
+                it[ChatroomParticipants.user].UID() to (it[ChatroomParticipants.alias] ?: "")
+            }
     }
 
     /**
@@ -369,7 +393,7 @@ object ChatRepository {
      * @param chatRoomId The ID of the chat room
      * @return True if the status was changed successfully, false otherwise
      */
-    fun changeFeedbackStatus(feedbackWanted: Boolean, chatRoomId: ChatRoomId): Boolean = DatabaseHandler.dbQuery {
+    fun changeFeedbackStatusFor(chatRoomId: ChatRoomId, feedbackWanted: Boolean): Boolean = DatabaseHandler.dbQuery {
         val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.markAsNoFeedback = !feedbackWanted
@@ -383,10 +407,16 @@ object ChatRepository {
         !room.markAsNoFeedback
     }
 
+    /**
+     * Gets all feedback responses for a chat room
+     *
+     * @param roomId The ID of the chat room
+     * @return List of feedback responses for the chat room
+     * @throws IllegalArgumentException if the chat room does not exist
+     */
     fun getFeedbackResponseForRoom(roomId: ChatRoomId): List<FeedbackResponse> = DatabaseHandler.dbQuery {
         val room = ChatRoomEntity.findById(roomId.toUUID())
             ?: throw IllegalArgumentException("Room with ID ${roomId.string} not found")
-
         room.feedbackResponses.map { it.toFeedbackResponse() }
     }
 
@@ -428,8 +458,39 @@ object ChatRepository {
      *
      * @param userId The ID of the user
      * @return List of chat room entities
+     * @throws IllegalArgumentException if the user does not exist
      */
-    fun getChatRoomsForUser(userId: UserId): List<ChatRoomEntity> = DatabaseHandler.dbQuery {
-        UserEntity.findById(userId.toUUID())?.chatRooms?.toList() ?: emptyList()
+    fun getChatRoomsForUser(userId: UserId): List<ChatRoomId> = DatabaseHandler.dbQuery {
+        val user = UserEntity.findById(userId.toUUID())
+            ?: throw IllegalArgumentException("User with ID ${userId.string} not found")
+        ChatroomParticipants.select(ChatroomParticipants.chatRoom).where {
+            ChatroomParticipants.user eq user.id
+        }.map { it[ChatroomParticipants.chatRoom].UID() }.toList()
+    }
+
+    /**
+     * Gets the prompt for a chat room
+     *
+     * @param chatRoomId The ID of the chat room
+     * @return The prompt string for the chat room
+     * @throws IllegalArgumentException if the chat room does not exist
+     */
+    fun getPromptForChatRoom(chatRoomId: ChatRoomId): String = DatabaseHandler.dbQuery {
+        val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+        chatRoom.prompt
+    }
+
+    /**
+     * Sets the prompt for a chat room
+     *
+     * @param chatRoomId The ID of the chat room
+     * @param prompt The new prompt string for the chat room
+     * @throws IllegalArgumentException if the chat room does not exist
+     */
+    fun setPromptForChatRoom(chatRoomId: ChatRoomId, prompt: String): Unit = DatabaseHandler.dbQuery {
+        val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
+            ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
+        chatRoom.prompt = prompt
     }
 }

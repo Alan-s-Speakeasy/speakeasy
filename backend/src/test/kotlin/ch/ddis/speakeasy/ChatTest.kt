@@ -78,7 +78,7 @@ class ChatTest {
             recipients = setOf("TestUser")
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message)
+        chatRoom.addMessage(message)
 
         // Add a reaction to the message
         val reaction = ChatMessageReaction(
@@ -86,18 +86,18 @@ class ChatTest {
             type = ChatMessageReactionType.THUMBS_UP
         )
 
-        ChatRoomManager.addReactionTo(chatRoom, reaction)
+        chatRoom.addReaction(reaction)
 
         // Verify reaction was added
-        val allReactions = ChatRoomManager.getReactionsForMessage(chatRoom.uid, 0)
+        val allReactions = chatRoom.getReactionsForMessage(0)
         assertEquals(1, allReactions.size)
         assertEquals(ChatMessageReactionType.THUMBS_UP, allReactions[0])
 
         assertFailsWith<IllegalArgumentException> {
-            ChatRoomManager.addReactionTo(chatRoom, ChatMessageReaction(1, ChatMessageReactionType.THUMBS_UP))
+            chatRoom.addReaction(ChatMessageReaction(1, ChatMessageReactionType.THUMBS_UP))
         }
         assertFailsWith<IllegalArgumentException> {
-            ChatRoomManager.getReactionsForMessage(chatRoom.uid, 1)
+            chatRoom.getReactionsForMessage(1)
         }
 
         // Add a few more messages and reactions and test the behavior
@@ -110,7 +110,7 @@ class ChatTest {
             recipients = setOf(chatRoom.users[userId]!!)
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message2)
+        chatRoom.addMessage(message2)
 
         val message3 = ChatMessage(
             message = "Third message for testing",
@@ -121,7 +121,7 @@ class ChatTest {
             recipients = setOf(chatRoom.users[userId]!!)
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message3)
+        chatRoom.addMessage(message3)
 
         // Add reactions to different messages
         val reaction2 = ChatMessageReaction(
@@ -134,13 +134,13 @@ class ChatTest {
             type = ChatMessageReactionType.STAR
         )
 
-        ChatRoomManager.addReactionTo(chatRoom, reaction2)
-        ChatRoomManager.addReactionTo(chatRoom, reaction3)
+        chatRoom.addReaction(reaction2)
+        chatRoom.addReaction(reaction3)
 
         // Verify each message has its correct reaction
-        val reactions0 = ChatRoomManager.getReactionsForMessage(chatRoom.uid, 0)
-        val reactions1 = ChatRoomManager.getReactionsForMessage(chatRoom.uid, 1)
-        val reactions2 = ChatRoomManager.getReactionsForMessage(chatRoom.uid, 2)
+        val reactions0 = chatRoom.getReactionsForMessage(0)
+        val reactions1 = chatRoom.getReactionsForMessage(1)
+        val reactions2 = chatRoom.getReactionsForMessage(2)
 
         assertEquals(1, reactions0.size)
         assertEquals(ChatMessageReactionType.THUMBS_UP, reactions0[0])
@@ -157,9 +157,9 @@ class ChatTest {
             type = ChatMessageReactionType.STAR
         )
 
-        ChatRoomManager.addReactionTo(chatRoom, newReaction1)
+        chatRoom.addReaction(newReaction1)
 
-        val updatedReactions1 = ChatRoomManager.getReactionsForMessage(chatRoom.uid, 1)
+        val updatedReactions1 = chatRoom.getReactionsForMessage(1)
         assertEquals(2, updatedReactions1.size)
         // The order should be depedent on time of the reactiob
         assertEquals(ChatMessageReactionType.THUMBS_DOWN, updatedReactions1[0])
@@ -167,15 +167,15 @@ class ChatTest {
 
         // Add another thumbs down reaction to the same message
         // The new thumbs down should be in last position in the array
-        ChatRoomManager.addReactionTo(chatRoom, reaction2)
-        val finalReactions1 = ChatRoomManager.getReactionsForMessage(chatRoom.uid, 1)
+        chatRoom.addReaction(reaction2)
+        val finalReactions1 = chatRoom.getReactionsForMessage(1)
 
         // Should not change
         assertEquals(2, finalReactions1.size)
         assertContentEquals(listOf(ChatMessageReactionType.STAR, ChatMessageReactionType.THUMBS_DOWN), finalReactions1)
 
         // Test getReactionsForChatRoom for the current chatroom
-        val allReactionsOfRoom = ChatRoomManager.getReactionsForChatRoom(chatRoom.uid)
+        val allReactionsOfRoom = chatRoom.getReactions()
         assertEquals(3, allReactionsOfRoom.size) // 1 for message 0, 2 for message 1, 1 for message 2
 
         // Verify specific reactions exist
@@ -199,7 +199,6 @@ class ChatTest {
             prompt = "Test message filtering"
         )
 
-
         val timestamp1 = System.currentTimeMillis()
 
         // Add first message
@@ -212,7 +211,7 @@ class ChatTest {
             recipients = setOf("User1", "User2"),
             time = timestamp1
         )
-        ChatRoomManager.addMessageTo(chatRoom, message1)
+        chatRoom.addMessage(message1)
 
         // Wait a bit and add second message
         Thread.sleep(10)
@@ -227,7 +226,7 @@ class ChatTest {
             recipients = setOf("User1", "User2"),
             time = timestamp2
         )
-        ChatRoomManager.addMessageTo(chatRoom, message2)
+        chatRoom.addMessage(message2)
 
         // Get messages since timestamp between the two messages
         val messagesSince = ChatRoomManager.getMessagesFor(chatRoom.uid, timestamp1 + 5)
@@ -282,7 +281,7 @@ class ChatTest {
             recipients = setOf("ListenerTest")
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message)
+        chatRoom.addMessage(message)
         assertTrue(messageReceived, "Listener should receive message notification")
     }
 
@@ -347,12 +346,7 @@ class ChatTest {
         }
 
         // Create chat room
-        val chatRoom = ChatRoom(
-            assignment = false,
-            formRef = "listener-test",
-            users = mutableMapOf(userId to "ListenerUser"),
-            prompt = "Test multiple listeners"
-        )
+        val chatRoom = ChatRoomManager.create(prompt = "Test multiple listeners", userIds = listOf(userId))
 
         // Add all listeners
         chatRoom.addListener(activeListener1)
@@ -380,7 +374,7 @@ class ChatTest {
             recipients = setOf("ListenerUser")
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message)
+        chatRoom.addMessage(message)
 
         // Verify only active listeners received message event
         assertEquals(1, activeListener1Events.size)
@@ -399,7 +393,7 @@ class ChatTest {
             type = ChatMessageReactionType.THUMBS_UP
         )
 
-        ChatRoomManager.addReactionTo(chatRoom, reaction)
+        chatRoom.addReaction(reaction)
 
         // Verify only active listeners received reaction event
         assertEquals(1, activeListener1Events.size)
@@ -439,17 +433,10 @@ class ChatTest {
             }
         }
 
-        // Create chat room and add listener
-        var chatRoom = ChatRoom(
-            assignment = false,
-            formRef = "cleanup-test",
-            users = mutableMapOf(userId to "CleanupUser"),
-            prompt = "Test listener cleanup"
-        )
-        chatRoom = ChatRoomManager.create(
+        val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = chatRoom.formRef,
-            prompt = chatRoom.prompt,
+            formRef = "cleanup-test",
+            prompt = "Test listener cleanup"
         )
 
         chatRoom.addListener(dynamicListener)
@@ -467,7 +454,7 @@ class ChatTest {
             recipients = setOf("CleanupUser")
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message1)
+        chatRoom.addMessage(message1)
         assertEquals(2, eventsReceived)
 
         // Make listener inactive
@@ -483,7 +470,7 @@ class ChatTest {
             recipients = setOf("CleanupUser")
         )
 
-        ChatRoomManager.addMessageTo(chatRoom, message2)
+        chatRoom.addMessage(message2)
 
         // Events should still be 2 (listener was removed)
         assertEquals(2, eventsReceived)
@@ -500,7 +487,7 @@ class ChatTest {
 
         // Make listener active again, but it shouldn't receive events since it was removed
         listenerActive = true
-        ChatRoomManager.addMessageTo(chatRoom, message3)
+        chatRoom.addMessage(message3)
 
         // Events should still be 2 (listener was removed and won't be re-added automatically)
         assertEquals(2, eventsReceived)
@@ -519,13 +506,12 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
             formRef = "test-form",
-            log = false,
             prompt = "Test prompt for chat room"
         )
 
         // Verify chat room was created correctly
         assertNotNull(chatRoom)
-        assertTrue(ChatRoomManager.isChatRoomActive(chatRoom.uid))
+        assertTrue(chatRoom.isActive())
         assertEquals("test-form", chatRoom.formRef)
         assertEquals("Test prompt for chat room", chatRoom.prompt)
         assertEquals(2, chatRoom.users.size)
@@ -546,7 +532,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "test-form",
-            log = false,
             prompt = "Test message room"
         )
 
@@ -561,7 +546,7 @@ class ChatTest {
         )
 
         // Add message using ChatRoomManager
-        ChatRoomManager.addMessageTo(chatRoom, message)
+        chatRoom.addMessage(message)
 
         // Verify message was added
         val messages = ChatRoomManager.getMessagesFor(chatRoom.uid)
@@ -585,21 +570,18 @@ class ChatTest {
         val room1 = ChatRoomManager.create(
             userIds = listOf(aliceId, bobId),
             formRef = "form1",
-            log = false,
             prompt = "Alice and Bob chat"
         )
 
         val room2 = ChatRoomManager.create(
             userIds = listOf(aliceId, charlieId),
             formRef = "form2",
-            log = false,
             prompt = "Alice and Charlie chat"
         )
 
         val room3 = ChatRoomManager.create(
             userIds = listOf(bobId, charlieId),
             formRef = "form3",
-            log = false,
             prompt = "Bob and Charlie chat"
         )
 
@@ -638,7 +620,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
             formRef = "add-user-test",
-            log = false,
             prompt = "Add user test room"
         )
 
@@ -646,14 +627,14 @@ class ChatTest {
         assertEquals(2, chatRoom.users.size)
 
         // Add new user
-        ChatRoomManager.addUser(newcomerId, chatRoom.uid)
+        chatRoom.addUser(newcomerId)
 
         // Should now have 3 users
         assertEquals(3, chatRoom.users.size)
         assertTrue(chatRoom.users.containsKey(newcomerId))
 
         // Verify user list method
-        val userIds = ChatRoomManager.getUsersIDofARoom(chatRoom.uid)
+        val userIds = chatRoom.users.keys
         assertEquals(3, userIds.size)
         assertTrue(userIds.contains(user1Id))
         assertTrue(userIds.contains(user2Id))
@@ -700,7 +681,6 @@ class ChatTest {
         val regularRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "regular-form",
-            log = false,
             prompt = "Regular room",
             assignment = false
         )
@@ -709,14 +689,13 @@ class ChatTest {
         val assignmentRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "assignment-form",
-            log = false,
             prompt = "Assignment room",
             assignment = true
         )
 
         // Test assignment detection
-        assertFalse(ChatRoomManager.isAssignment(regularRoom.uid))
-        assertTrue(ChatRoomManager.isAssignment(assignmentRoom.uid))
+        assertFalse(regularRoom.assignment)
+        assertTrue(assignmentRoom.assignment)
     }
 
     @Test
@@ -729,18 +708,17 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "nofeedback-form",
-            log = false,
             prompt = "No feedback test room"
         )
 
         // Initially should not be marked as no feedback
-        assertFalse(ChatRoomManager.isRoomNoFeedback(chatRoom.uid))
+        assertFalse(chatRoom.isMarkedAsNoFeedback())
 
         // Mark as no feedback
-        ChatRoomManager.markAsNoFeedback(chatRoom.uid)
+        chatRoom.markAsNoFeedback()
 
         // Should now be marked as no feedback
-        assertTrue(ChatRoomManager.isRoomNoFeedback(chatRoom.uid))
+        assertTrue(chatRoom.isMarkedAsNoFeedback())
     }
 
     @Test
@@ -756,7 +734,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(senderId, receiverId),
             formRef = "recipient-test",
-            log = false,
             prompt = "Recipient test room"
         )
 
@@ -790,7 +767,6 @@ class ChatTest {
         val activeRoom = ChatRoomManager.create(
             userIds = listOf(user1Id),
             formRef = "active-form",
-            log = false,
             prompt = "Active room"
         )
 
@@ -798,12 +774,10 @@ class ChatTest {
         val anotherActiveRoom = ChatRoomManager.create(
             userIds = listOf(user2Id),
             formRef = "another-active-form",
-            log = false,
             prompt = "Another active room"
         )
 
-        // Deactivate one room
-        ChatRoomManager.deactivateChatRoom(activeRoom.uid)
+        activeRoom.deactivate()
 
         // Test listing all rooms
         val allRooms = ChatRoomManager.listAll()
@@ -827,7 +801,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "export-form",
-            log = false,
             prompt = "Export test room"
         )
 
@@ -840,7 +813,7 @@ class ChatTest {
             ordinal = 0,
             recipients = setOf(chatRoom.users[userId]!!)
         )
-        ChatRoomManager.addMessageTo(chatRoom, message)
+        chatRoom.addMessage(message)
 
         // Export the chat room
         val exportedRooms = ChatRoomManager.exportChatrooms(listOf(chatRoom.uid))
@@ -859,11 +832,15 @@ class ChatTest {
     fun `ChatRoom should handle assignements`() {
         UserManager.addUser("alice", UserRole.HUMAN, PlainPassword("password"))
         val userId = UserManager.getUserIdFromUsername("alice")!!
-        val chatroom = ChatRoom(
-            assignment = true,
+//        val chatroom = ChatRoom(
+//            formRef = "assignment-form",
+//            prompt = "Assignment test room"
+//        )
+        val chatroom = ChatRoomManager.create(
+            userIds = listOf(userId),
             formRef = "assignment-form",
-            users = mutableMapOf(),
-            prompt = "Assignment test room"
+            prompt = "Assignment test room",
+            assignment = true
         )
 
         assertTrue(chatroom.assignment, "Chat room should be an assignment")
@@ -871,12 +848,11 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "export-form",
-            log = false,
             prompt = "Export test room",
             assignment = true
         )
         assertTrue(chatRoom.assignment, "Chat room should be an assignment")
-        assertTrue(ChatRoomManager.isAssignment(chatRoom.uid), "Chat room should be recognized as an assignment")
+        assertTrue(chatRoom.assignment, "Chat room should be recognized as an assignment")
 
     }
 
@@ -890,43 +866,22 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "deactivate-test",
-            log = false,
             prompt = "Deactivation test room"
         )
 
         // Initially should be active
-        assertTrue(ChatRoomManager.isChatRoomActive(chatRoom.uid))
+        assertTrue(chatRoom.isActive())
         assertTrue(ChatRoomManager.listActive().any { it.uid == chatRoom.uid })
 
         // Deactivate room
-        ChatRoomManager.deactivateChatRoom(chatRoom.uid)
-        assertFalse(ChatRoomManager.isChatRoomActive(chatRoom.uid))
+        chatRoom.deactivate()
+        assertFalse(chatRoom.isActive())
         assertFalse(ChatRoomManager.listActive().any { it.uid == chatRoom.uid })
 
         // Room should still be in all rooms list
         assertTrue(ChatRoomManager.listAll().any { it.uid == chatRoom.uid })
     }
 
-    @Test
-    fun `ChatRoomManager should handle non-existent room operations gracefully`() {
-        // Create test user
-        UserManager.addUser("nonexistentuser", UserRole.HUMAN, PlainPassword("password"))
-        val userId = UserManager.getUserIdFromUsername("nonexistentuser")!!
-
-        val fakeRoomUid = ChatRoomId()
-
-        // Test operations on non-existent room
-        assertFailsWith<IllegalArgumentException> {
-            ChatRoomManager.getFeedbackFormReference(fakeRoomUid)
-        }
-        assertFailsWith<IllegalArgumentException> {
-            ChatRoomManager.isAssignment(fakeRoomUid)
-        }
-
-        assertFailsWith<IllegalArgumentException> {
-            ChatRoomManager.getUsersIDofARoom(fakeRoomUid)
-        }
-    }
 
     @Test
     fun `ChatRoom should handle empty and special messages correctly`() {
@@ -937,7 +892,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "special-test",
-            log = false,
             prompt = "Special messages test"
         )
 
@@ -951,7 +905,7 @@ class ChatTest {
             authorSessionId = SessionId.INVALID,
             recipients = setOf(userAlias)
         )
-        ChatRoomManager.addMessageTo(chatRoom, emptyMessage)
+        chatRoom.addMessage(emptyMessage)
 
         // Test message with special characters
         val specialMessage = ChatMessage(
@@ -961,7 +915,7 @@ class ChatTest {
             authorSessionId = SessionId.INVALID,
             recipients = setOf(userAlias)
         )
-        ChatRoomManager.addMessageTo(chatRoom, specialMessage)
+        chatRoom.addMessage(specialMessage)
 
         // Test very long message
         val longMessage = ChatMessage(
@@ -971,7 +925,7 @@ class ChatTest {
             authorSessionId = SessionId.INVALID,
             recipients = setOf(userAlias)
         )
-        ChatRoomManager.addMessageTo(chatRoom, longMessage)
+        chatRoom.addMessage(longMessage)
 
         val messages = ChatRoomManager.getMessagesFor(chatRoom.uid)
         assertEquals(3, messages.size)
@@ -993,7 +947,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = userIds,
             formRef = "large-room-test",
-            log = false,
             prompt = "Large room test with many users"
         )
 
@@ -1012,7 +965,7 @@ class ChatTest {
                 authorSessionId = SessionId.INVALID,
                 recipients = chatRoom.users.values.toSet()
             )
-            ChatRoomManager.addMessageTo(chatRoom, message)
+            chatRoom.addMessage(message)
         }
 
         // Verify all messages were added
@@ -1038,7 +991,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
             formRef = "order-test",
-            log = false,
             prompt = "Message order test"
         )
 
@@ -1076,9 +1028,9 @@ class ChatTest {
         )
 
         // Add messages in order they were created (by ordinal)
-        ChatRoomManager.addMessageTo(chatRoom, message1)
-        ChatRoomManager.addMessageTo(chatRoom, message2)
-        ChatRoomManager.addMessageTo(chatRoom, message3)
+        chatRoom.addMessage(message1)
+        chatRoom.addMessage(message2)
+        chatRoom.addMessage(message3)
 
         // Messages should be retrieved in the order they were added (by ordinal)
         val messages = ChatRoomManager.getMessagesFor(chatRoom.uid)
@@ -1100,7 +1052,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
             formRef = "concurrent-test",
-            log = false,
             prompt = "Concurrent access test"
         )
 
@@ -1170,8 +1121,7 @@ class ChatTest {
         val fakeUserId = UserId()
 
         // Should handle non-existent user gracefully
-        val rooms = ChatRoomManager.getByUser(fakeUserId)
-        assertTrue(rooms.isEmpty())
+        assertFailsWith<IllegalArgumentException> { ChatRoomManager.getByUser(fakeUserId) }
 
         // Create valid room and test adding non-existent user
         UserManager.addUser("validuser", UserRole.HUMAN, PlainPassword("password"))
@@ -1180,13 +1130,12 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(validUserId),
             formRef = "invalid-user-test",
-            log = false,
             prompt = "Invalid user test"
         )
 
         // Test adding non-existent user to room
         assertFailsWith<IllegalArgumentException> {
-            ChatRoomManager.addUser(fakeUserId, chatRoom.uid)
+            chatRoom.addUser(fakeUserId)
         }
         // Room should still only have the original user
         assertEquals(1, chatRoom.users.size)
@@ -1203,7 +1152,6 @@ class ChatTest {
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
             formRef = "original-form",
-            log = false,
             prompt = "Original prompt"
         )
 

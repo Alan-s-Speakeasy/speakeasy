@@ -32,8 +32,21 @@ object ChatRoomManager {
      * @throws IllegalArgumentException if the chat room ID is not found.
      * @return The ChatRoom instance associated with the given ID, or null if not found.
      */
-    fun getFromId(id: ChatRoomId): ChatRoom? {
-        return ChatRepository.findChatRoomById(id)
+    fun getFromId(id: ChatRoomId): ListenedChatRoom? {
+        val chatRoom = ChatRepository.findChatRoomById(id) ?: return null
+
+        // Add back missing listeners. They are not stored in the database, so we need to retrieve them again.
+        // NOTE : This is quite a bad design, but would work as of now.
+        // A much better and cleaner design would be to have a separate method
+        // So, essentially, you would create or retrieve a chat room, and then add corresponding listeners to it.
+        val userIds = chatRoom.users.keys.toList()
+        val listeners = SseRoomHandler.getChatListeners(userIds)
+        // Wrap the chat room in a listened chat room and add the listeners.
+        val listenedChatRoom = ListenedChatRoom(chatRoom)
+        // Do no alert
+        listenedChatRoom.addListeners(listeners, alert = false)
+        return listenedChatRoom
+
     }
 
     /**
@@ -48,7 +61,7 @@ object ChatRoomManager {
     fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> {
         return ChatRepository.getChatRoomsForUser(userId)
             .map {
-                ChatRoomManager.getFromId(it) ?: throw IllegalStateException("Chat room with id $it not found")
+                getFromId(it) ?: throw IllegalStateException("Chat room with id $it not found")
             }
     }
 //        when (bot) {
@@ -74,23 +87,25 @@ object ChatRoomManager {
 
 
     /**
-     * Handles the creation of a new chatroom.
+     * Creates a new chat room with the specified participants and settings.
      *
-     * @param userIds List of user ids that should be in the chatroom
-     * @param formRef Reference to the form that should be used for the chatroom
-     * @param prompt The prompt for the chatroom
-     * @param endTime The end time of the chatroom
-     * @param assignment If the chatroom is an assignment
-     * @return The created chatroom
+     * This method handles the creation of a `ChatRoom`, sets up its properties, and wraps it in a `ListenedChatRoom`
+     * to enable event listening. Listeners from `SseRoomHandler` are automatically added to the newly created room.
+     *
+     * @param userIds List of user IDs to include in the chat room.
+     * @param formRef A reference to the form to be used for feedback (currently unused).
+     * @param prompt An optional initial prompt or topic for the chat room.
+     * @param endTime An optional end time for the chat room.
+     * @param assignment A flag indicating whether the chat room is for an assignment.
+     * @return A `ChatRoom` instance, decorated with listener capabilities.
      */
     fun create(
         userIds: List<UserId>,
-//               formRef: String = DEFAULT_FORM_NAME,
         formRef: String = "",
         prompt: String?,
         endTime: Long? = null,
         assignment: Boolean = false
-    ): ChatRoom {
+    ): ListenedChatRoom {
         val chatRoom = ChatRepository.createChatRoom(userIds, assignment, prompt = prompt)
         val users = ChatRepository.getParticipantAliases(chatRoom.uid)
 
@@ -108,13 +123,14 @@ object ChatRoomManager {
             }
         }
 
-        //add listeners
+        // Add listeners on the fly. See discussion above
+        val listenedChatRoom = ListenedChatRoom(chatRoom)
         val listeners = SseRoomHandler.getChatListeners(userIds)
-        listeners.forEach {
-            chatRoom.addListener(it)
-        }
-        return chatRoom
+        listenedChatRoom.addListeners(listeners)
+        return listenedChatRoom
     }
+
+
 
     /**
      * Retrieves all messages for a given ChatRoom.

@@ -11,6 +11,7 @@ import ch.ddis.speakeasy.util.write
 import com.opencsv.ICSVWriter
 import kotlinx.serialization.Serializable
 import java.util.*
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.locks.StampedLock
 
 typealias ChatRoomId = UID
@@ -46,7 +47,6 @@ interface ChatRoom {
     fun setEndTime(endTime: Long)
     fun deactivate()
     fun isActive(): Boolean
-    fun addListener(listener: ChatEventListener, alert: Boolean = true)
     fun export(): ExportableChatRoom
 }
 
@@ -59,18 +59,6 @@ internal class DatabaseChatRoom(
     override val uid: ChatRoomId = UID(),
     override var testerBotAlias: String = "", // No idea what this is for
 ) : ChatRoom {
-
-    private val lock: StampedLock = StampedLock()
-
-    private val listeners = mutableListOf<ChatEventListener>()
-
-    override fun addListener(listener: ChatEventListener, alert: Boolean) = this.lock.write {
-        this.listeners.add(listener)
-        if (alert) {
-            listener.onNewRoom(this)
-        }
-    }
-
 
     // A map of user IDs to their aliases in this chat room.
     override val users: Map<UserId, String>
@@ -170,15 +158,6 @@ internal class DatabaseChatRoom(
     override fun addMessage(message: ChatMessage) {
         require(this.isActive()) { "Chatroom ${this.uid.string} is not active" }
         ChatRepository.addMessageTo(this.uid, message)
-        // TODO : Listeners
-        listeners.removeIf { listener -> //check state of listener, update if active, remove if not
-            if (listener.isActive) {
-                listener.onMessage(message, this)
-                false
-            } else {
-                true
-            }
-        }
     }
 
     /**
@@ -190,14 +169,6 @@ internal class DatabaseChatRoom(
     override fun addReaction(reaction: ChatMessageReaction) {
         require(this.isActive()) { "Chatroom ${this.uid.string} is not active" }
         ChatRepository.addReactionToMessage(this.uid, reaction.messageOrdinal, reaction.type)
-        listeners.removeIf { listener -> //check state of listener, update if active, remove if not
-            if (listener.isActive) {
-                listener.onReaction(reaction, this)
-                false
-            } else {
-                true
-            }
-        }
     }
 
     /**
@@ -206,7 +177,7 @@ internal class DatabaseChatRoom(
      * @param messageOrdinal The ordinal of the message for which reactions are requested.
      * @throws IllegalArgumentException if the chat room ID is not found.x
      */
-    override fun getReactionsForMessage(messageOrdinal: Int): List<ChatMessageReactionType> = this.lock.read {
+    override fun getReactionsForMessage(messageOrdinal: Int): List<ChatMessageReactionType> {
         if (messageOrdinal >= ChatRepository.getMessagesCountFor(this.uid)) {
             throw IllegalArgumentException("Message ordinal $messageOrdinal is out of bounds for chat room ${this.uid}")
         }
@@ -266,7 +237,7 @@ internal class DatabaseChatRoom(
         return !ChatRepository.isFeedbackWantedForRoom(this.uid)
     }
 
-    override fun addAssessor(assessor: Assessor) = this.lock.write {
+    override fun addAssessor(assessor: Assessor) {
         TODO("Not implemented")
     }
 
@@ -297,13 +268,92 @@ internal class DatabaseChatRoom(
      *
      * @return `true` if the chat room is active, `false` otherwise.
      */
-    override fun isActive(): Boolean = this.lock.read {
+    override fun isActive(): Boolean {
         val (startTime, endTime) = ChatRepository.getTimeBoundsForChatRoom(this.uid)
         val now = System.currentTimeMillis()
         return now >= startTime && (endTime == null || now < endTime)
     }
 }
 
+/**
+ * A decorator for a [ChatRoom] that adds support for listeners.
+ *
+ * This class wraps an existing [ChatRoom] instance and provides functionality for adding, removing, and notifying
+ * [ChatEventListener]s of events such as new messages and reactions. It follows the Decorator pattern to separate
+ * the core chat room logic from the event notification mechanism.
+ *
+ * @property decorated The underlying [ChatRoom] instance that this class decorates.
+ */
+class ListenedChatRoom(private val decorated: ChatRoom) : ChatRoom by decorated {
+
+    private val lock = StampedLock()
+
+    // Using a CopyOnWriteArraySet to allow concurrent modifications while iterating over listeners.
+    // Simpler and makes the whole thing thread-safe.
+    private val listeners = CopyOnWriteArraySet<ChatEventListener>()
+
+    /**
+     * Returns a list of all listeners currently registered to this chat room.
+     *
+     * @return A list of [ChatEventListener]s.
+     */
+    fun getListeners(): List<ChatEventListener> =
+        listeners.toList()
+
+    /**
+     * Adds a listener to this chat room.
+     *
+     * @param listener The listener to add.
+     * @param alert If true, the listener will be immediately notified of the new room.
+     */
+    fun addListener(listener: ChatEventListener, alert: Boolean = true) : Unit  {
+        this.listeners.add(listener)
+        if (alert) {
+            listener.onNewRoom(this)
+        }
+    }
+
+    /**
+     * Adds a collection of listeners to this chat room.
+     */
+    fun addListeners(listeners: Collection<ChatEventListener>, alert: Boolean = true): Unit =
+        listeners.forEach {
+            addListener(it, alert)
+        }
+
+    /**
+     * Removes a listener from this chat room.
+     *
+     * @param listener The listener to remove.
+     */
+    fun removeListener(listener: ChatEventListener)  {
+        listeners.remove(listener)
+    }
+
+    override fun addMessage(message: ChatMessage) {
+        decorated.addMessage(message)
+        listeners.removeIf { listener ->
+            if (listener.isActive) {
+                listener.onMessage(message, this)
+                false
+            } else {
+                true
+            }
+        }
+    }
+
+    override fun addReaction(reaction: ChatMessageReaction) {
+        decorated.addReaction(reaction)
+        listeners.removeIf { listener ->
+            if (listener.isActive) {
+                listener.onReaction(reaction, this)
+                false
+            } else {
+                true
+            }
+        }
+    }
+}
 
 /**
  * A serialized data class version of chatroom.

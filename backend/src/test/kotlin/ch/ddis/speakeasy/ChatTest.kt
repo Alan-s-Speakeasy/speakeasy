@@ -1,5 +1,6 @@
 package ch.ddis.speakeasy
 
+import ch.ddis.speakeasy.api.sse.SseClientWorker
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.DatabaseHandler
@@ -238,24 +239,16 @@ class ChatTest {
 
     @Test
     fun `should create and test simple event listener`() {
-        // Create a simple test event listener
-        var messageReceived = false
-        var roomReceived = false
+        // Create a test event listener that captures event objects
+        var receivedRoom: ChatRoom? = null
+        var receivedMessage: ChatMessage? = null
+        var receivedReaction: ChatMessageReaction? = null
 
         val testListener = object : ChatEventListener {
             override val isActive = true
-
-            override fun onNewRoom(chatRoom: ChatRoom) {
-                roomReceived = true
-            }
-
-            override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) {
-                messageReceived = true
-            }
-
-            override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) {
-                // Not tested in this simple example
-            }
+            override fun onNewRoom(chatRoom: ChatRoom) { receivedRoom = chatRoom }
+            override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) { receivedMessage = chatMessage }
+            override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) { receivedReaction = chatMessageReaction }
         }
 
         // Create user and chat room
@@ -267,22 +260,23 @@ class ChatTest {
             prompt = "Test listener room"
         )
 
-        // Add listener to chat room
+        // Add listener and verify onNewRoom
         chatRoom.addListener(testListener)
-        assertTrue(roomReceived, "Listener should receive room notification")
+        assertNotNull(receivedRoom, "Listener should receive room notification")
+        assertEquals(chatRoom.uid, receivedRoom?.uid, "Listener should receive the correct room")
 
-        // Add a message
-        val message = ChatMessage(
-            message = "Test message for listener",
-            authorUserId = userId,
-            authorAlias = "ListenerTest",
-            authorSessionId = SessionId.INVALID,
-            ordinal = 0,
-            recipients = setOf("ListenerTest")
-        )
-
+        // Add a message and verify onMessage
+        val message = ChatMessage("Test message for listener", userId, "ListenerTest", SessionId.INVALID, 0, setOf("ListenerTest"))
         chatRoom.addMessage(message)
-        assertTrue(messageReceived, "Listener should receive message notification")
+        assertNotNull(receivedMessage, "Listener should receive message notification")
+        assertEquals(message.message, receivedMessage?.message, "Listener should receive the correct message")
+
+        // Add a reaction and verify onReaction
+        val reaction = ChatMessageReaction(messageOrdinal = 0, type = ChatMessageReactionType.THUMBS_UP)
+        chatRoom.addReaction(reaction)
+        assertNotNull(receivedReaction, "Listener should receive reaction notification")
+        assertEquals(reaction.type, receivedReaction?.type, "Listener should receive the correct reaction")
+
     }
 
     @Test
@@ -405,6 +399,7 @@ class ChatTest {
         // Verify inactive listener never received any events
         assertEquals(0, inactiveListenerEvents.size)
     }
+
 
     @Test
     fun `should automatically remove inactive listeners during event processing`() {
@@ -930,7 +925,7 @@ class ChatTest {
         val messages = ChatRoomManager.getMessagesFor(chatRoom.uid)
         assertEquals(3, messages.size)
         assertEquals("", messages[0].message)
-        assertEquals("Hello! \uD83C\uDF89 @user #hashtag & symbols: <>&\"'", messages[1].message)
+        assertEquals("Hello! 🎉 @user #hashtag & symbols: <>&\"'", messages[1].message)
         assertEquals(10000, messages[2].message.length)
     }
 

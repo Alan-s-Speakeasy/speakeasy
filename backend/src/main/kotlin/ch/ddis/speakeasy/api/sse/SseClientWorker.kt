@@ -62,7 +62,10 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
         // without re-sending them as new rooms
         val rooms = ChatRoomManager.getByUser(userId)
         rooms.forEach {
-            if (it.isActive()) {  it.addListener(this, alert=false) } // not trigger `onNewRoom`
+            if (it.isActive()) {
+                // In theory any active room will be a ListenedChatRoom.
+                (it as? ListenedChatRoom)?.addListener(this, alert = false) // not trigger `onNewRoom`
+            }
         }
     }
 

@@ -3,10 +3,8 @@ package ch.ddis.speakeasy.feedback
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.db.*
-import ch.ddis.speakeasy.util.Config
-import ch.ddis.speakeasy.util.UID
-import ch.ddis.speakeasy.util.read
-import ch.ddis.speakeasy.util.write
+import ch.ddis.speakeasy.db.UserId
+import ch.ddis.speakeasy.util.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -14,7 +12,6 @@ import org.jetbrains.exposed.sql.*
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.StampedLock
 
 object FeedbackManager {
@@ -33,7 +30,6 @@ object FeedbackManager {
 
     private val lock: StampedLock = StampedLock()
 
-    private val FeedbackHistoryCacher = FeedbackHistoryCacher()
 
     fun init(config: Config) {
 
@@ -114,23 +110,23 @@ object FeedbackManager {
      * @throws IllegalArgumentException if the chatroom is already assessed
      * @throws IllegalArgumentException if the chatroom does not have any form attached.
      */
-    fun logFeedback(author: UserEntity, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
+    fun logFeedback(authorId: UserId, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
         // The recipient of the feedback
         writerLock.write {
-            val recipientId = ChatRepository.getParticipants(roomId).single { it != author.id.UID() }
+            val recipientId = ChatRepository.getParticipants(roomId).single { it != authorId }
             val formId = ChatRepository.getFormForChatRoom(roomId)
                 ?: throw IllegalArgumentException("Chatroom does not have any form attached !")
-            if (ChatRepository.isRoomAlreadyAssessed(roomId, formId, author.id.UID())) {
-                throw IllegalArgumentException("Room alreadu assessed!")
+            if (ChatRepository.isRoomAlreadyAssessed(roomId, formId, authorId)) {
+                throw IllegalArgumentException("Room already assessed!")
             }
             for (response in feedbackResponseList.responses) {
-                FeedbackRepository.saveFeedbackResponse(author.id.UID(), recipientId, roomId, formId, response)
+                // Should use batch write instead
+                FeedbackRepository.saveFeedbackResponse(authorId, recipientId, roomId, formId, response)
             }
-            this.FeedbackHistoryCacher.invalidate()
         }
 
     fun readFeedbackHistoryPerRoom(userId: UserId, roomId: UID): FeedbackResponseList = this.lock.read {
-        return FeedbackResponseList(responses = ChatRepository.getFeedbackResponseForRoom(roomId).toMutableList())
+        return FeedbackResponseList(responses = FeedbackRepository.getFeedbackResponseForRoom(roomId).toMutableList())
     }
 
     /**
@@ -140,31 +136,30 @@ object FeedbackManager {
      * @param assignment If true, only return feedback that were filled in an assignment chatroom
      * @param formName The name of the feedback form
      *
-     * @return List of FeedbackResponseItem with the feedback responses.
+     * @return List of FeedbackResponseItem with the feedback responses. Null if user did not provide any feedback.
      */
     fun readFeedbackHistory(
         authorIds: Set<UserId> = emptySet(),
         assignment: Boolean = false,
         formName: String
-    ): MutableList<FeedbackResponseOfChatroom> = this.lock.read {
-        var response: FeedbackResponse
-        val responseMap: HashMap<Triple<String, String, String>, MutableList<FeedbackResponse>> = hashMapOf()
-        val responseList: MutableList<FeedbackResponseOfChatroom> = mutableListOf()
+    ): MutableList<FeedbackResponseOfChatroom?> = this.lock.read {
         if (!FormManager.isValidFormName(formName)) {
-            throw IllegalStateException("Invalid form name")
+            throw FormNotFoundException("Invalid form name")
+        }
+        val formId = FormManager.getFormIdByName(formName)
+        if (authorIds.isEmpty()) {
+            return FeedbackRepository.getAllFeedbackResponsesOfForm(
+                formId,
+                assignment = assignment
+            ).toMutableList()
         }
 
-
-        val formId = FeedbackRepository.findFormByName(formName)?: throw IllegalArgumentException("Form name not found")
-        if (authorIds.isEmpty()){
-            TODO("Investigate if this is needed. We should avoid loading all the chatrooms in the memory as much " +
-                    "as possible. ")
-        }
-
-        return authorIds.map {
-            UserRepository.getFeedbackResponsesOfUser(it, formId, assignment)
+        return authorIds.flatMap { userId ->
+            FeedbackRepository.getFeedbackResponsesOfUser(userId, formId, assignment)
         }.toMutableList()
+
     }
+
 
     /**
      * Do the equivalent of this SQL query:
@@ -191,11 +186,12 @@ object FeedbackManager {
         assignment: Boolean = false,
         formName: String
     ): List<FeedbackResponseStatsItem> {
-        val allFeedbackResponses = readFeedbackHistory(authorIds = userIds, assignment = assignment, formName = formName)
+        val allFeedbackResponses =
+            readFeedbackHistory(authorIds = userIds, assignment = assignment, formName = formName)
         val responsesPerUser: HashMap<UserId, MutableList<FeedbackResponse>> = hashMapOf()
         val feedbackCountPerUser: HashMap<UserId, Int> = hashMapOf()
 
-        allFeedbackResponses.forEach {
+        allFeedbackResponses.filterNotNull().forEach {
             val key = if (author) it.author else it.recipient
             if (!responsesPerUser.containsKey(key)) {
                 responsesPerUser[key] = mutableListOf()
@@ -208,7 +204,7 @@ object FeedbackManager {
         // get the list of _all_ feedback responses and compute the average and variance from that.
         return responsesPerUser.map { (userId, responses) ->
             FeedbackResponseStatsItem(
-                UserRepository.getUsernameFromId(userId)?:"",
+                UserRepository.getUsernameFromId(userId) ?: "",
                 feedbackCountPerUser[userId] ?: 0,
                 computeStatsPerRequestOfFeedback(responses, formName)
             )
@@ -225,7 +221,7 @@ object FeedbackManager {
      */
     fun aggregateFeedbackStatisticsGlobal(formName: String): List<FeedBackStatsOfRequest> {
         val allFeedbackResponses = readFeedbackHistory(formName = formName)
-        return computeStatsPerRequestOfFeedback(allFeedbackResponses.flatMap { it.responses }, formName)
+        return computeStatsPerRequestOfFeedback(allFeedbackResponses.filterNotNull().flatMap { it.responses }, formName)
     }
 
     /**
@@ -276,98 +272,5 @@ object FeedbackManager {
             )
         }
     }
-}
-
-/**
- * A very simple cache/memoization system for the feedback history.
- *
- * This is to "hide" the painly slow reading of the CSV files, and should be removed when a database is used.
- *
- * NOTE : There is no eviction policy, so the cache can grow indefinitely. This is mitigated by only caching the
- * results for empty userIDs, which is the most common use case. Therefore, the cache size should be at maximum the number of different formNames * 2.
- * NOTE : This is NOT thread safe, but it is solely used with the write/read locks of the FeedbackManager
- */
-@Deprecated("We use a database now !")
-class FeedbackHistoryCacher {
-    private val cache = ConcurrentHashMap<String, Pair<Long, MutableList<FeedbackResponseOfChatroom>>>()
-    private val TTLCACHE_ms = 1000L * 60 * 10 // 10 minutes
-
-    /**
-     * Retrieves the cached feedback responses for the specified parameters.
-     *
-     * If the cache entry exists and is still within its TTL, it returns the cached data.
-     * Otherwise, the expired entry is removed and an empty list is returned.
-     *
-     * @param userIDs the set of user IDs used to generate the cache key (default is an empty set).
-     * @param assignment a flag indicating whether the feedback is for an assignment chat room (default is false).
-     * @param formName the name of the feedback form.
-     * @return the list of cached [FeedbackResponseOfChatroom] if valid; otherwise, an empty list.
-     */
-    fun get(
-        userIDs: Set<UserId> = emptySet(),
-        assignment: Boolean = false,
-        formName: String
-    ): MutableList<FeedbackResponseOfChatroom> {
-        val key = "${userIDs.hashCode()}-$assignment-$formName"
-        return cache[key]?.let { (timestamp, data) ->
-            if (System.currentTimeMillis() - timestamp < TTLCACHE_ms) {
-                data
-            } else {
-                cache.remove(key)
-                mutableListOf()
-            }
-        } ?: mutableListOf()
-    }
-
-    /**
-     * Checks if there is a valid (non-expired) cache entry for the specified parameters.
-     *
-     * If the cache entry exists and has not expired, the method returns true.
-     * Otherwise, it returns false and removes the expired entry if present.
-     *
-     * @param userIDs the set of user IDs used to generate the cache key (default is an empty set).
-     * @param assignment a flag indicating whether the feedback is for an assignment chat room (default is false).
-     * @param formName the name of the feedback form.
-     * @return true if a valid cache entry exists; false otherwise.
-     */
-    fun isHit(userIDs: Set<UserId> = emptySet(), assignment: Boolean = false, formName: String): Boolean {
-        val key = "${userIDs.hashCode()}-$assignment-$formName"
-        return cache[key]?.let { (timestamp, _) ->
-            if (System.currentTimeMillis() - timestamp < TTLCACHE_ms) {
-                true
-            } else {
-                cache.remove(key)
-                false
-            }
-        } ?: false
-    }
-
-    /**
-     * Caches the provided list of feedback responses for the specified parameters.
-     *
-     * The current system time is recorded to enforce the TTL.
-     *
-     * @param userIDs the set of user IDs used to generate the cache key (default is an empty set).
-     * @param assignment a flag indicating whether the feedback is for an assignment chat room (default is false).
-     * @param formName the name of the feedback form.
-     * @param feedback the list of [FeedbackResponseOfChatroom] to be cached.
-     */
-    fun cache(
-        userIDs: Set<UserId> = emptySet(),
-        assignment: Boolean = false,
-        formName: String,
-        feedback: MutableList<FeedbackResponseOfChatroom>
-    ) {
-        val key = "${userIDs.hashCode()}-$assignment-$formName"
-        cache[key] = System.currentTimeMillis() to feedback
-    }
-
-    /**
-     * Invalidates the whole cache.
-     */
-    fun invalidate() {
-        cache.clear()
-    }
-
 }
 

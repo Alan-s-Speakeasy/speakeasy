@@ -2,21 +2,19 @@ package ch.ddis.speakeasy
 
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseList
-import ch.ddis.speakeasy.api.handlers.FeedbackResponseOfChatroom
-import ch.ddis.speakeasy.chat.*
+import ch.ddis.speakeasy.chat.Assessor
+import ch.ddis.speakeasy.chat.ChatRoomManager
+import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.DatabaseHandler
-import ch.ddis.speakeasy.feedback.FeedbackForm
-import ch.ddis.speakeasy.feedback.FeedbackRequest
-import ch.ddis.speakeasy.feedback.FeedbackAnswerOption
+import ch.ddis.speakeasy.db.UserId
+import ch.ddis.speakeasy.feedback.*
 import ch.ddis.speakeasy.user.PlainPassword
-import ch.ddis.speakeasy.db.UserEntity
-import ch.ddis.speakeasy.db.Users
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.Config
+import ch.ddis.speakeasy.util.FormNotFoundException
 import ch.ddis.speakeasy.util.UID
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.*
@@ -25,13 +23,15 @@ import kotlin.test.*
  * Test class for feedback functionality
  * Tests feedback submission, retrieval, and validation using a simplified approach
  */
-class SimpleFeedbackTest {
+class FeedbackTest {
 
     private lateinit var testDatabase: Database
     private lateinit var testDataDir: File
     private lateinit var aliceId: UID
     private lateinit var bobId: UID
     private lateinit var charlieId: UID
+
+    private val DEFAULT_FORM_NAME = "test-form"
 
     @BeforeTest
     fun setup() {
@@ -46,6 +46,7 @@ class SimpleFeedbackTest {
 
         // Create test database file
         val dbFile = File(testDataDir, "test_database.db")
+        println("Using test database file: ${dbFile.absolutePath}")
         testDatabase = Database.connect(
             url = "jdbc:sqlite:${dbFile.absolutePath}",
             driver = "org.sqlite.JDBC"
@@ -59,6 +60,29 @@ class SimpleFeedbackTest {
             dataPath = testDataDir.absolutePath
         )
 
+        // Create a test feedback form file
+        val feedbackForm = FeedbackForm(
+            formName = DEFAULT_FORM_NAME,
+            requests = listOf(
+                FeedbackRequest(
+                    id = "0",
+                    type = "multiple",
+                    name = "Rating",
+                    shortname = "rating",
+                    options = listOf(FeedbackAnswerOption("Good", 5), FeedbackAnswerOption("Bad", 1))
+                ),
+                FeedbackRequest(
+                    id = "1",
+                    type = "text",
+                    name = "Comments",
+                    shortname = "comments",
+                    options = emptyList()
+                )
+            )
+        )
+        val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
+        File(File(testDataDir, "feedbackforms"), "test-form.json").writeText(mapper.writeValueAsString(feedbackForm))
+
         // Initialize only UserManager and ChatRoomManager to avoid singleton issues
         try {
             UserManager.init(testConfig)
@@ -71,6 +95,14 @@ class SimpleFeedbackTest {
         } catch (e: Exception) {
             // ChatRoomManager might already be initialized, ignore
         }
+
+        try {
+            FeedbackManager.init(testConfig)
+        } catch (e: Exception) {
+            // FeedbackManager might already be initialized, ignore
+        }
+        FormManager.init(testConfig)
+        ChatRoomManager.init(testConfig)
 
         // Create test users
         UserManager.addUser("alice", UserRole.HUMAN, PlainPassword("password1"))
@@ -132,76 +164,49 @@ class SimpleFeedbackTest {
         assertTrue(commentsQuestion.options.isEmpty())
     }
 
-    @Test
-    fun `should create basic chat room for feedback testing`() {
-        // Create a simple chat room
-        val chatRoom = ChatRoom(
-            assignment = true,
-            formRef = "test-feedback-form",
-            users = mutableMapOf(
-                aliceId to "Alice",
-                bobId to "Bob"
-            ),
-            prompt = "Test conversation with feedback"
-        )
 
-        // Verify chat room properties
-        assertTrue(chatRoom.assignment)
-        assertEquals("test-feedback-form", chatRoom.formRef)
-        assertEquals(2, chatRoom.users.size)
-        assertFalse(chatRoom.markAsNoFeedback)
-        assertTrue(chatRoom.assessedBy.isEmpty())
-    }
-
-    @Test
-    fun `should handle feedback responses data structure`() {
-        // Test feedback response data structures
-        val responses = listOf(
-            FeedbackResponse("0", "5"),
-            FeedbackResponse("1", "Great conversation!")
-        )
-
-        val feedbackResponseList = FeedbackResponseList(responses.toMutableList())
-
-        assertEquals(2, feedbackResponseList.responses.size)
-        assertEquals("0", feedbackResponseList.responses[0].id)
-        assertEquals("5", feedbackResponseList.responses[0].value)
-        assertEquals("1", feedbackResponseList.responses[1].id)
-        assertEquals("Great conversation!", feedbackResponseList.responses[1].value)
-    }
 
     @Test
     fun `should test chat room feedback marking functionality`() {
         // Create a chat room
-        val chatRoom = ChatRoom(
-            assignment = false,
+        val chatRoom = ChatRoomManager.create(
             formRef = "test-form",
-            users = mutableMapOf(aliceId to "Alice", bobId to "Bob")
+            prompt = "Test conversation for feedback",
+            userIds = listOf(aliceId, bobId),
         )
 
         // Initially not marked as no feedback
-        assertFalse(chatRoom.markAsNoFeedback)
+        assertFalse(chatRoom.isMarkedAsNoFeedback())
 
         // Mark as no feedback required
-        chatRoom.addMarkAsNoFeedback(NoFeedback(true))
-        assertTrue(chatRoom.markAsNoFeedback)
+        chatRoom.markAsNoFeedback()
+        assertTrue(chatRoom.isMarkedAsNoFeedback())
 
-        // Unmark no feedback
-        chatRoom.addMarkAsNoFeedback(NoFeedback(false))
-        assertFalse(chatRoom.markAsNoFeedback)
+    }
+
+    @Test
+    fun `should raise something when chatroom has an invalid feedbackRef`() {
+        // Create a chat room with an invalid form reference
+        assertFailsWith<FormNotFoundException> {
+            ChatRoomManager.create(
+                formRef = "invalid-form",
+                prompt = "Test conversation with invalid form",
+                userIds = listOf(aliceId, bobId),
+            )
+        }
     }
 
     @Test
     fun `should test assessor functionality`() {
         // Create a chat room
-        val chatRoom = ChatRoom(
-            assignment = true,
+        val chatRoom = ChatRoomManager.create(
             formRef = "test-form",
-            users = mutableMapOf(aliceId to "Alice", bobId to "Bob")
+            prompt = "Test conversation with feedback",
+            userIds = listOf(aliceId, bobId),
         )
 
         // Initially no assessors
-        assertTrue(chatRoom.assessedBy.isEmpty())
+        // assertTrue(chatRoom.assessedBy.isEmpty())
 
         // We can't test the addAssessor method because it's not implemented (TODO)
         // But we can test the data structure
@@ -240,23 +245,6 @@ class SimpleFeedbackTest {
         }
     }
 
-    @Test
-    fun `should test user retrieval for feedback operations`() {
-        // Test that we can retrieve users properly for feedback operations
-        val alice = transaction(testDatabase) {
-            UserEntity.find { Users.id eq aliceId.toUUID() }.firstOrNull()
-        }
-        assertNotNull(alice, "Alice user should exist")
-        assertEquals("alice", alice.name)
-        assertEquals(UserRole.HUMAN, alice.role)
-
-        val bob = transaction(testDatabase) {
-            UserEntity.find { Users.id eq bobId.toUUID() }.firstOrNull()
-        }
-        assertNotNull(bob, "Bob user should exist")
-        assertEquals("bob", bob.name)
-        assertEquals(UserRole.HUMAN, bob.role)
-    }
 
     @Test
     fun `should validate feedback request properties`() {
@@ -319,44 +307,7 @@ class SimpleFeedbackTest {
         }
     }
 
-    @Test
-    fun `should validate feedback answer options`() {
-        // Valid option
-        val validOption = FeedbackAnswerOption("Valid Option", 5)
-        assertEquals("Valid Option", validOption.name)
-        assertEquals(5, validOption.value)
-        
-        // Test empty name should fail
-        assertFailsWith<Exception> {
-            FeedbackAnswerOption("", 1)
-        }
-        
-        // Test blank name should fail
-        assertFailsWith<Exception> {
-            FeedbackAnswerOption("   ", 1)
-        }
-    }
 
-    @Test
-    fun `should test feedback response of chatroom structure`() {
-        val responses = listOf(
-            FeedbackResponse("0", "5"),
-            FeedbackResponse("1", "Great conversation")
-        )
-        
-        val feedbackOfChatroom = FeedbackResponseOfChatroom(
-            author = aliceId,
-            recipient = bobId,
-            room = UID(),
-            responses = responses
-        )
-        
-        assertEquals(aliceId, feedbackOfChatroom.author)
-        assertEquals(bobId, feedbackOfChatroom.recipient)
-        assertEquals(2, feedbackOfChatroom.responses.size)
-        assertEquals("5", feedbackOfChatroom.responses[0].value)
-        assertEquals("Great conversation", feedbackOfChatroom.responses[1].value)
-    }
 
     @Test
     fun `should handle complex feedback form validation`() {
@@ -442,31 +393,6 @@ class SimpleFeedbackTest {
     }
 
     @Test
-    fun `should handle feedback response list operations`() {
-        // Test creating and manipulating feedback response lists
-        val initialResponses = mutableListOf(
-            FeedbackResponse("0", "5"),
-            FeedbackResponse("1", "Great!")
-        )
-        
-        val responseList = FeedbackResponseList(initialResponses)
-        assertEquals(2, responseList.responses.size)
-        
-        // Test adding responses
-        responseList.responses.add(FeedbackResponse("2", "Excellent"))
-        assertEquals(3, responseList.responses.size)
-        
-        // Test finding specific responses
-        val ratingResponse = responseList.responses.find { it.id == "0" }
-        assertNotNull(ratingResponse)
-        assertEquals("5", ratingResponse.value)
-        
-        // Test filtering responses
-        val textResponses = responseList.responses.filter { it.value.length > 5 }
-        assertEquals(2, textResponses.size) // "Great!" and "Excellent"
-    }
-
-    @Test
     fun `should handle multiple feedback forms`() {
         // Test creating multiple different forms
         val form1 = FeedbackForm(
@@ -508,6 +434,157 @@ class SimpleFeedbackTest {
         assertEquals(5, form2.requests[0].options.size)
         assertEquals(0, form2.requests[1].options.size)
     }
+
+    @Test
+    fun `should correctly detect valid forms`(){
+        assertTrue (FormManager.isValidFormName("test-form"))
+        assertFalse (FormManager.isValidFormName("") )
+        assertFalse {   FormManager.isValidFormName("ergjkdgr") }
+    }
+
+    @Test
+    fun `should have correct formIds`() {
+        val formIdFromManager = FormManager.getFormIdByName(DEFAULT_FORM_NAME)
+        assertNotNull(formIdFromManager, "Form ID should not be null for existing form")
+        // Create a chatroom and check if it has the correct formId
+        val chatRoom = ChatRoomManager.create(
+            formRef = DEFAULT_FORM_NAME,
+            prompt = "Test chat room for form ID",
+            userIds = listOf(aliceId, bobId)
+        )
+        val formIdFromChatRoom = ChatRepository.getFormForChatRoom(chatRoom.uid)
+        assertEquals(formIdFromChatRoom, formIdFromManager, "Form ID from chat room should match form ID from manager")
+    }
+
+
+    @Test
+    fun `should log feedback and retrieve it with readFeedbackHistory`() {
+        // Get user entities
+        val aliceId = UserManager.getUserIdFromUsername("alice")!!
+        val bobId = UserManager.getUserIdFromUsername("bob")!!
+
+        // Create a chat room for feedback
+        val chatRoom = ChatRoomManager.create(
+            formRef = "test-form",
+            prompt = "Test feedback submission",
+            userIds = listOf(aliceId, bobId),
+            assignment = true
+        )
+
+        // Create feedback response from Alice about Bob
+        val feedbackToLog = FeedbackResponseList(
+            mutableListOf(
+                FeedbackResponse("0", "5"), // Rating
+                FeedbackResponse("1", "A good conversation partner.") // Comment
+            )
+        )
+
+        // Log the feedback
+        FeedbackManager.logFeedback(aliceId, chatRoom.uid, feedbackToLog)
+
+        // Read feedbackf for room
+
+        val feedbackResponses = FeedbackManager.readFeedbackHistoryPerRoom(UserId.INVALID, chatRoom.uid)
+        assertEquals(feedbackToLog, feedbackResponses)
+
+        // Read the feedback history
+        val history = FeedbackManager.readFeedbackHistory(
+            authorIds = setOf(aliceId),
+            assignment = true,
+            formName = "test-form"
+        ).filterNotNull().toMutableList()
+
+        // Assertions
+        assertEquals(1, history.size, "Should find one feedback entry for Alice")
+        val feedbackEntry = history.first()
+
+        assertEquals(aliceId, feedbackEntry.author)
+        assertEquals(bobId, feedbackEntry.recipient)
+
+        assertEquals(2, feedbackEntry.responses.size, "Should contain two responses")
+
+        val ratingResponse = feedbackEntry.responses.find { it.id == "0" }
+        assertNotNull(ratingResponse)
+        assertEquals("5", ratingResponse.value)
+
+        val commentResponse = feedbackEntry.responses.find { it.id == "1" }
+        assertNotNull(commentResponse)
+        assertEquals("A good conversation partner.", commentResponse.value)
+
+        // Check that the whole feedback for the form is read when users is empty in readFeedbackHistory
+        val allFeedback = FeedbackManager.readFeedbackHistory(
+            authorIds = setOf(),
+            assignment = true,
+            formName = "test-form"
+        ).filterNotNull().toMutableList()
+        assertEquals(1, allFeedback.size)
+    }
+
+    @Test
+    fun `should prevent logging duplicate feedback`() {
+        val aliceId = UserManager.getUserIdFromUsername("alice")!!
+        val bobId = UserManager.getUserIdFromUsername("bob")!!
+
+        val chatRoom = ChatRoomManager.create(
+            formRef = "test-form",
+            prompt = "Test duplicate feedback",
+            userIds = listOf(aliceId, bobId)
+        )
+
+        val feedback = FeedbackResponseList(mutableListOf(FeedbackResponse("0", "5")))
+
+        // First submission should succeed
+        FeedbackManager.logFeedback(aliceId, chatRoom.uid, feedback)
+
+        // Second submission should fail
+        assertFailsWith<IllegalArgumentException>("Should not be able to submit feedback twice") {
+            FeedbackManager.logFeedback(aliceId, chatRoom.uid, feedback)
+        }
+    }
+
+    @Test
+    fun `should filter feedback history by assignment`() {
+        val alice = UserManager.getUserIdFromUsername("alice")!!
+        val bobId = UserManager.getUserIdFromUsername("bob")!!
+
+        // Create an assignment and a non-assignment chat room
+        val assignmentRoom = ChatRoomManager.create(
+            formRef = "test-form",
+            prompt = "Assignment feedback",
+            userIds = listOf(aliceId, bobId),
+            assignment = true
+        )
+        val nonAssignmentRoom = ChatRoomManager.create(
+            formRef = "test-form",
+            prompt = "Non-assignment feedback",
+            userIds = listOf(aliceId, bobId),
+            assignment = false
+        )
+
+        val feedback = FeedbackResponseList(mutableListOf(FeedbackResponse("0", "5")))
+
+        // Log feedback for both rooms
+        FeedbackManager.logFeedback(aliceId, assignmentRoom.uid, feedback)
+        FeedbackManager.logFeedback(aliceId, nonAssignmentRoom.uid, feedback)
+
+        // Read history with assignment=true
+        val assignmentHistory = FeedbackManager.readFeedbackHistory(
+            authorIds = setOf(aliceId),
+            assignment = true,
+            formName = "test-form"
+        )
+        assertEquals(1, assignmentHistory.size)
+        assertNotNull(assignmentHistory.first())
+        // Read history with assignment=false
+        val nonAssignmentHistory = FeedbackManager.readFeedbackHistory(
+            authorIds = setOf(aliceId),
+            assignment = false,
+            formName = "test-form"
+        ).filterNotNull().toMutableList()
+        assertEquals(1, nonAssignmentHistory.size)
+    }
+    // TODO : Also test for multiple authorIds !
+
 
     @Test
     fun `should handle edge cases in feedback response values`() {

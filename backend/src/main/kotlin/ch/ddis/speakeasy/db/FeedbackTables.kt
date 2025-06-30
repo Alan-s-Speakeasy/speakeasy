@@ -32,19 +32,19 @@ object FeedbackSubmissions : IntIdTable() {
  * Represents individual question responses within a submission
  */
 object FeedbackResponses : CompositeIdTable() {
-    val submission = reference("submission", FeedbackSubmissions).nullable()
+    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val form = reference("form", FeedbackForms)
     val room = reference("room", ChatRooms)
     val author = reference("author", Users)
-    val recipient = reference("recipient", Users)
+    val recipient = reference("recipient", Users) // Not sure if this is needed, but it is in the original schema
     // The question id
     val requestId = integer("request_id").entityId()
     val value = text("request_answer")
-    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     init {
         // The primary key is {room, form, author, requestId}
         addIdColumn(room)
         addIdColumn(form)
         addIdColumn(author)
+        addIdColumn(requestId)
     }
 }

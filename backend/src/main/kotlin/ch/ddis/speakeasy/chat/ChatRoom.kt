@@ -1,12 +1,12 @@
 package ch.ddis.speakeasy.chat
 
 import ch.ddis.speakeasy.db.ChatRepository
+import ch.ddis.speakeasy.db.FeedbackRepository
 import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.SessionAliasGenerator
 import ch.ddis.speakeasy.util.UID
-import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import com.opencsv.ICSVWriter
 import kotlinx.serialization.Serializable
@@ -73,7 +73,7 @@ internal class DatabaseChatRoom(
 
     // Getters with database access
     override val formRef: String
-        get() = "TODO"
+        get() = ChatRepository.getFormForChatRoom(this.uid)?.let { FeedbackRepository.getFormNameById(it) } ?:""
 
     override val startTime: Long
         get() = ChatRepository.getTimeBoundsForChatRoom(this.uid).first
@@ -308,7 +308,7 @@ class ListenedChatRoom(private val decorated: ChatRoom) : ChatRoom by decorated 
      */
     fun addListener(listener: ChatEventListener, alert: Boolean = true) : Unit  {
         this.listeners.add(listener)
-        if (alert) {
+        if (alert && listener.isActive) {
             listener.onNewRoom(this)
         }
     }

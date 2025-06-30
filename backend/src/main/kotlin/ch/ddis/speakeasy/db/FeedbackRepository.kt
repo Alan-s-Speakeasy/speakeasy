@@ -1,19 +1,22 @@
 package ch.ddis.speakeasy.db
 
-import ch.ddis.speakeasy.api.ErrorStatus
 import ch.ddis.speakeasy.api.handlers.FeedbackResponse
+import ch.ddis.speakeasy.api.handlers.FeedbackResponseOfChatroom
 import ch.ddis.speakeasy.chat.ChatRoomId
-import ch.ddis.speakeasy.db.FeedbackForms.formName
 import ch.ddis.speakeasy.feedback.FormId
+import ch.ddis.speakeasy.feedback.FormManager
+import ch.ddis.speakeasy.util.ChatRoomNotFoundException
 import ch.ddis.speakeasy.util.UID
+import ch.ddis.speakeasy.util.UserNotFoundException
 import org.jetbrains.exposed.dao.CompositeEntity
 import org.jetbrains.exposed.dao.CompositeEntityClass
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.mapLazy
 import java.util.*
-import kotlin.math.absoluteValue
 
 /**
  * Entity class for FeedbackForm table
@@ -28,7 +31,7 @@ class FeedbackFormEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 class FeedbackResponseEntity (id : EntityID<CompositeID>) : CompositeEntity(id) {
     companion object : CompositeEntityClass<FeedbackResponseEntity>(FeedbackResponses)
-    // Actually used FeedbackSubmission
+// Actually used FeedbackSubmission
     var author by UserEntity referencedOn FeedbackResponses.author
     var recipient by UserEntity referencedOn FeedbackResponses.recipient
     var form by FeedbackFormEntity referencedOn FeedbackResponses.form
@@ -37,6 +40,7 @@ class FeedbackResponseEntity (id : EntityID<CompositeID>) : CompositeEntity(id) 
     // = Question ID
     var requestId by FeedbackResponses.requestId
 
+    // Convert it back to domain model
     fun toFeedbackResponse(): FeedbackResponse = DatabaseHandler.dbQuery {
         FeedbackResponse(
             id = requestId.toString(),
@@ -51,15 +55,6 @@ class FeedbackResponseEntity (id : EntityID<CompositeID>) : CompositeEntity(id) 
  * Also holds form entities.
  */
 object FeedbackRepository {
-    /**
-     * Finds a feedback form by name
-     *
-     * @param formName The name of the form to find
-     * @return The form entity if found, null otherwise
-     */
-    fun findFormByName(formName: String): FormId? = DatabaseHandler.dbQuery {
-        FeedbackFormEntity.find { FeedbackForms.formName eq formName }.singleOrNull()?.id?.UID()
-    }
 
 
     /**
@@ -86,13 +81,77 @@ object FeedbackRepository {
 
 
     /**
-     * Finds a feedback form by ID
+     * Gets all feedback responses for a chat room
      *
-     * @param id The ID of the form to find
-     * @return The form entity if found, null otherwise
+     * @param roomId The ID of the chat room
+     * @return List of feedback responses for the chat room
+     * @throws IllegalArgumentException if the chat room does not exist
      */
-    fun findFormById(id: UUID): FeedbackFormEntity? = DatabaseHandler.dbQuery {
-        FeedbackFormEntity.findById(id)
+    fun getFeedbackResponseForRoom(roomId: ChatRoomId): List<FeedbackResponse> = DatabaseHandler.dbQuery {
+        val room = ChatRoomEntity.findById(roomId.toUUID())
+            ?: throw ChatRoomNotFoundException(roomId)
+        room.feedbackResponses.map { it.toFeedbackResponse() }
+    }
+
+    /**
+     * Get all the feedback responses the user UserId did with the specific formId.
+     */
+    fun getFeedbackResponsesOfUser(userId: UserId?, formId: FormId, assignment: Boolean): Iterable<FeedbackResponseOfChatroom> =
+        DatabaseHandler.dbQuery {
+            if (userId != null) {
+                val user = UserEntity.findById(userId.toUUID())
+                    ?: throw UserNotFoundException(userId)
+            }
+
+            (FeedbackResponses innerJoin ChatRooms)
+                .select(FeedbackResponses.columns)
+                .where {
+                    val baseCondition =
+                            (FeedbackResponses.form eq formId.toUUID()) and
+                            (ChatRooms.assignment eq assignment)
+                    if (userId != null) {
+                        baseCondition and (FeedbackResponses.author eq userId.toUUID())
+                    } else {
+                        baseCondition
+                    }
+
+                }
+                .groupBy { resultRow ->
+                    Triple(
+                        resultRow[FeedbackResponses.room].UID(),
+                        resultRow[FeedbackResponses.recipient].UID(),
+                        resultRow[FeedbackResponses.author].UID()
+                    )
+                }
+                .map { (key, rows) ->
+                    FeedbackResponseOfChatroom(
+                        author = key.third,
+                        roomId = key.first,
+                        recipient = key.second,
+                        responses = rows.map { row ->
+                            FeedbackResponse(
+                                id = row[FeedbackResponses.requestId].toString(),
+                                value = row[FeedbackResponses.value]
+                            )
+                        }
+                    )
+                }
+        }
+
+    /**
+     * Gets all feedback responses for a specific form.
+     */
+    fun getAllFeedbackResponsesOfForm(formId: FormId, assignment: Boolean): Iterable<FeedbackResponseOfChatroom> = DatabaseHandler.dbQuery {
+        // TODO : ensure formid is valid
+        getFeedbackResponsesOfUser(null, formId, assignment)
+    }
+
+    fun findFormByName(formName: String): FormId? = DatabaseHandler.dbQuery {
+        return@dbQuery FeedbackFormEntity.find { FeedbackForms.formName eq formName }.singleOrNull()?.id?.UID()
+    }
+
+    fun getFormNameById(formId: FormId): String? = DatabaseHandler.dbQuery {
+        FeedbackFormEntity.findById(formId.toUUID())?.formName
     }
 
     /**

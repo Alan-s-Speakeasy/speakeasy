@@ -3,11 +3,10 @@ package ch.ddis.speakeasy.chat
 import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.UserId
+import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.Config
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.io.File
 
 object ChatRoomManager {
 
@@ -59,8 +58,7 @@ object ChatRoomManager {
      * @return A list of chat room IDs that the user is part of.
      */
     fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> {
-        return ChatRepository.getChatRoomsForUser(userId)
-            .map {
+        return ChatRepository.getChatRoomsForUser(userId).map {
                 getFromId(it) ?: throw IllegalStateException("Chat room with id $it not found")
             }
     }
@@ -93,20 +91,17 @@ object ChatRoomManager {
      * to enable event listening. Listeners from `SseRoomHandler` are automatically added to the newly created room.
      *
      * @param userIds List of user IDs to include in the chat room.
-     * @param formRef A reference to the form to be used for feedback (currently unused).
+     * @param formRef The NAME of the form, as a string. Kept that way (and not as a FormId) for ""historical reasons"".
      * @param prompt An optional initial prompt or topic for the chat room.
      * @param endTime An optional end time for the chat room.
      * @param assignment A flag indicating whether the chat room is for an assignment.
      * @return A `ChatRoom` instance, decorated with listener capabilities.
      */
     fun create(
-        userIds: List<UserId>,
-        formRef: String = "",
-        prompt: String?,
-        endTime: Long? = null,
-        assignment: Boolean = false
+        userIds: List<UserId>, formRef: String = "", prompt: String?, endTime: Long? = null, assignment: Boolean = false
     ): ListenedChatRoom {
-        val chatRoom = ChatRepository.createChatRoom(userIds, assignment, prompt = prompt)
+        val formId = formRef.takeIf { it.isNotEmpty() }?.let { FormManager.getFormIdByName(it) }
+        val chatRoom = ChatRepository.createChatRoom(userIds, assignment, prompt = prompt, formId = formId)
         val users = ChatRepository.getParticipantAliases(chatRoom.uid)
 
         for (userId in userIds) {
@@ -129,7 +124,6 @@ object ChatRoomManager {
         listenedChatRoom.addListeners(listeners)
         return listenedChatRoom
     }
-
 
 
     /**
@@ -162,9 +156,7 @@ object ChatRoomManager {
      *         Returns `null` if no usernames are found or the message is empty.
      */
     fun processMessageAndRecipients(
-        receivedMessage: String,
-        room: ChatRoom,
-        userAlias: String
+        receivedMessage: String, room: ChatRoom, userAlias: String
     ): Pair<MutableSet<String>, String>? {
 
         val regex = Regex("@[a-zA-Z0-9_]+")

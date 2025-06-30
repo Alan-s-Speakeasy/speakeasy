@@ -1,6 +1,5 @@
 package ch.ddis.speakeasy.db
 
-import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.chat.ChatMessageReactionType
 import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.chat.DatabaseChatRoom
@@ -95,7 +94,6 @@ object ChatRepository {
      * @param id The ID of the chat room to find
      * @return The chat room entity if found, null otherwise
      */
-    // TODO : This should return a DomainChatRoom object
     fun findChatRoomById(id: ChatRoomId): DomainChatRoom? = DatabaseHandler.dbQuery {
         ChatRoomEntity.findById(id.toUUID())?.toDomainModel()
     }
@@ -162,6 +160,7 @@ object ChatRepository {
      * Returns true if the room already has feedback applied to.
      */
     fun isRoomAlreadyAssessed(id: ChatRoomId, formId: FormId, authorID: UserId): Boolean {
+        // Basically check if there is a feedback response for the given room, form and author.
         return !DatabaseHandler.dbQuery {
             FeedbackResponseEntity.find {
                 (FeedbackResponses.room eq id.toUUID()) and
@@ -184,12 +183,13 @@ object ChatRepository {
         participants: List<UserId>,
         assignment: Boolean,
         markAsNoFeedback: Boolean = false,
-        prompt: String? = null
+        prompt: String? = null,
+        formId: FormId?
     ): DomainChatRoom = DatabaseHandler.dbQuery {
         val chatRoom = DatabaseChatRoom()
         ChatRoomEntity.new(chatRoom.uid.toUUID()) {
             this.assignment = assignment
-            this.formId = EntityID(UUID.randomUUID(), FeedbackForms) // This is a placeholder TODO TODO TODO
+            this.formId = if (formId != null) EntityID(formId.toUUID(), FeedbackForms) else null
             this.startTime = System.currentTimeMillis()
             this.prompt = prompt ?: "New chat room"
             this.testerBotAlias = ""
@@ -407,18 +407,6 @@ object ChatRepository {
         !room.markAsNoFeedback
     }
 
-    /**
-     * Gets all feedback responses for a chat room
-     *
-     * @param roomId The ID of the chat room
-     * @return List of feedback responses for the chat room
-     * @throws IllegalArgumentException if the chat room does not exist
-     */
-    fun getFeedbackResponseForRoom(roomId: ChatRoomId): List<FeedbackResponse> = DatabaseHandler.dbQuery {
-        val room = ChatRoomEntity.findById(roomId.toUUID())
-            ?: throw IllegalArgumentException("Room with ID ${roomId.string} not found")
-        room.feedbackResponses.map { it.toFeedbackResponse() }
-    }
 
     /**
      * Gets all messages for a chat room
@@ -493,4 +481,6 @@ object ChatRepository {
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.prompt = prompt
     }
+
+
 }

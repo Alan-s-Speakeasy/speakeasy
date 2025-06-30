@@ -1,12 +1,11 @@
 package ch.ddis.speakeasy.feedback
 
-import ch.ddis.speakeasy.util.Config
-import ch.ddis.speakeasy.util.UID
-import ch.ddis.speakeasy.util.require
-import java.io.File
+import ch.ddis.speakeasy.db.FeedbackRepository
+import ch.ddis.speakeasy.util.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
@@ -22,7 +21,7 @@ data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest
         // NOTE : This is TEMPORARY.
         // In the near future, we will use uuid as file names
         require<InvalidFormException>(formName.isNotBlank(), "Form name cannot be blank")
-        require<InvalidFormException>(formName.matches(Regex("^[a-zA-Z0-9][a-zA-Z0-9_\\- ]*[a-zA-Z0-9]\$")), 
+        require<InvalidFormException>(formName.matches(Regex("^[a-zA-Z0-9][a-zA-Z0-9_\\- ]*[a-zA-Z0-9]\$")),
             "Form name must start and end with a letter or number, and can only contain letters, numbers, spaces, underscores, and hyphens")
         require<InvalidFormException>(formName.length <= 100, "Form name cannot be longer than 100 characters")
         require<InvalidFormException>(!formName.contains(".."), "Form name cannot contain '..'")
@@ -57,8 +56,6 @@ data class FeedbackAnswerOption(val name: String, val value: Int) {
 }
 
 
-class InvalidFormException(message: String) : Exception(message)
-
 object FormManager {
     private lateinit var formsPath: File
     private val kMapper: ObjectMapper = jacksonObjectMapper()
@@ -66,6 +63,8 @@ object FormManager {
     // CopyOnWrite basically create a copy on each write operation.
     // Useful as there will be much more reads that writes here,
     // So it's easier to implement - no need for general locking - and still guaranteed to be thread safe
+    // NOTE : forms here are kept in memory. they are loaded from json files.
+    // Only forms refs (also called names) and their IDs are stored in the database.
     private val forms = CopyOnWriteArrayList<FeedbackForm>()
     // Fine-grained threading. Multiple thread can read different files at the same time
     private val fileLocks = ConcurrentHashMap<String, ReentrantLock>()
@@ -75,10 +74,6 @@ object FormManager {
     }
 
     fun init(config: Config) {
-        // Throw if already initialized
-        if (this::formsPath.isInitialized) {
-            throw IllegalStateException("FormManager is already initialized")
-        }
         this.formsPath = File(File(config.dataPath), "feedbackforms/")
         if (!this.formsPath.exists()) {
             this.formsPath.mkdirs()
@@ -198,10 +193,23 @@ object FormManager {
      *
      * @param formName The name of the form to retrieve
      * @return The feedback form
-     * @throws IllegalArgumentException if the form doesn't exist
+     * @throws FormNotFoundException if the form doesn't exist
      */
-    fun getForm(formName : String): FeedbackForm {
-        return forms.find { it.formName == formName } 
-            ?: throw IllegalArgumentException("Form '$formName' not found")
+    fun getFormByName(formName : String): FeedbackForm {
+        return forms.find { it.formName == formName }
+            ?: throw FormNotFoundException(formName)
     }
+
+    // Form name = formref
+    fun getFormNameById(formId: FormId): String {
+       return FeedbackRepository.getFormNameById(formId)
+            ?: throw FormNotFoundException("Form with ID $formId not found")
+    }
+
+    fun getFormIdByName(formName: String): FormId {
+        return FeedbackRepository.findFormByName(formName)
+            ?: throw FormNotFoundException(formName)
+    }
+
+
 }

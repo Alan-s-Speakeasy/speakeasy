@@ -1,14 +1,10 @@
 package ch.ddis.speakeasy.db
 
-import ch.ddis.speakeasy.api.handlers.FeedbackResponse
-import ch.ddis.speakeasy.api.handlers.FeedbackResponseOfChatroom
-import ch.ddis.speakeasy.feedback.FormId
 import ch.ddis.speakeasy.util.UID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import java.util.*
-import org.jetbrains.exposed.sql.and
 
 typealias UserId = UID
 
@@ -47,43 +43,6 @@ class UserEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 
 object UserRepository {
-    /**
-     * Get all the feedback responses the user UserId did with the specific formId.
-     */
-    fun getFeedbackResponsesOfUser(userId: UserId, formId: FormId, assignment: Boolean): FeedbackResponseOfChatroom =
-        DatabaseHandler.dbQuery {
-            UserEntity.findById(userId.toUUID())
-                ?: throw IllegalArgumentException("User id ${userId.toUUID()} does not exist.")
-
-            (FeedbackResponses innerJoin ChatRooms)
-                .select(FeedbackResponses.columns)
-                .where {
-                    (FeedbackResponses.author eq userId.toUUID()) and
-                            (FeedbackResponses.form eq formId.toUUID()) and
-                            (ChatRooms.assignment eq assignment)
-                }
-                .groupBy { resultRow ->
-                    Triple(
-                        resultRow[FeedbackResponses.room].UID(),
-                        resultRow[FeedbackResponses.recipient].UID(),
-                        userId
-                    )
-                }
-                .map { (key, rows) ->
-                    FeedbackResponseOfChatroom(
-                        author = key.third,
-                        recipient = key.second,
-                        room = key.first,
-                        responses = rows.map { row ->
-                            FeedbackResponse(
-                                id = row[FeedbackResponses.requestId].toString(),
-                                value = row[FeedbackResponses.value]
-                            )
-                        }
-                    )
-                }
-            // Should be only one result per design of the primary key
-        }.single()
 
     /**
      * Does what you think it does.

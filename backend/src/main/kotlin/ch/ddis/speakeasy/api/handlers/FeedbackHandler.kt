@@ -24,7 +24,7 @@ data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 // One Item corresponds to one room. The author is the one _giving_ the feedback, the recipient the one receiving it, and the responses,
 // well the reponses.
-data class FeedbackResponseOfChatroom(var author: UserId, val recipient: UserId, val room: ChatRoomId, val responses: List<FeedbackResponse>)
+data class FeedbackResponseOfChatroom(var author: UserId, val roomId : ChatRoomId, val recipient: UserId, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseOfChatroom>, val requested: MutableList<FeedbackResponseOfChatroom>)
 // NOTE : a request is a question in the feedback form
 data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float, val count : Int)
@@ -93,7 +93,7 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
             chatRoom.markAsNoFeedback()
             return SuccessStatus("No feedback required for this chat now.")
         }
-        FeedbackManager.logFeedback(session.user, roomId, feedback)
+        FeedbackManager.logFeedback(session.user.id.UID(), roomId, feedback)
         return SuccessStatus("Feedback received")
     }
 
@@ -171,8 +171,8 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
 
-        val assignedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = true, formName = formName)
-        val requestedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = false, formName = formName)
+        val assignedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = true, formName = formName).filterNotNull().toMutableList()
+        val requestedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = false, formName = formName).filterNotNull().toMutableList()
 
         return FeedbackResponseMapList(
             assigned =  assignedFeedbackResponses,
@@ -222,7 +222,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapLi
         })
 
         try {
-            FormManager.getForm(formName)
+            FormManager.getFormByName(formName)
         } catch (e: NullPointerException) {
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
@@ -316,7 +316,7 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
             formName = formName
         )
         // This also filters out textual questions, so we don't include them in the CSV
-        val requestIdToShortName = FormManager.getForm(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
+        val requestIdToShortName = FormManager.getFormByName(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
         ctx.outputStream().use { outputStream ->
             // Structure of the csv file : username, N, request1, request2, ...
             val writer = CSVWriterBuilder(outputStream.writer()).build()

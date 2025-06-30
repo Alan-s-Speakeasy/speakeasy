@@ -66,7 +66,6 @@ class ChatTest {
         val userId = UserManager.getUserIdFromUsername("testuser")!!
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "test-form",
             prompt = "Test reactions"
         )
         // Add a message
@@ -196,7 +195,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
-            formRef = "test-form",
             prompt = "Test message filtering"
         )
 
@@ -256,7 +254,6 @@ class ChatTest {
         val userId = UserManager.getUserIdFromUsername("listenertest")!!
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "test-form",
             prompt = "Test listener room"
         )
 
@@ -430,7 +427,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "cleanup-test",
             prompt = "Test listener cleanup"
         )
 
@@ -500,14 +496,13 @@ class ChatTest {
         // Create chat room using ChatRoomManager
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
-            formRef = "test-form",
             prompt = "Test prompt for chat room"
         )
 
         // Verify chat room was created correctly
         assertNotNull(chatRoom)
         assertTrue(chatRoom.isActive())
-        assertEquals("test-form", chatRoom.formRef)
+        assertEquals("", chatRoom.formRef)
         assertEquals("Test prompt for chat room", chatRoom.prompt)
         assertEquals(2, chatRoom.users.size)
         assertTrue(chatRoom.users.containsKey(user1Id))
@@ -526,7 +521,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "test-form",
             prompt = "Test message room"
         )
 
@@ -564,19 +558,16 @@ class ChatTest {
         // Create chat rooms with different user combinations
         val room1 = ChatRoomManager.create(
             userIds = listOf(aliceId, bobId),
-            formRef = "form1",
             prompt = "Alice and Bob chat"
         )
 
         val room2 = ChatRoomManager.create(
             userIds = listOf(aliceId, charlieId),
-            formRef = "form2",
             prompt = "Alice and Charlie chat"
         )
 
         val room3 = ChatRoomManager.create(
             userIds = listOf(bobId, charlieId),
-            formRef = "form3",
             prompt = "Bob and Charlie chat"
         )
 
@@ -614,7 +605,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
-            formRef = "add-user-test",
             prompt = "Add user test room"
         )
 
@@ -675,7 +665,6 @@ class ChatTest {
         // Create regular chat room
         val regularRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "regular-form",
             prompt = "Regular room",
             assignment = false
         )
@@ -683,7 +672,6 @@ class ChatTest {
         // Create assignment chat room
         val assignmentRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "assignment-form",
             prompt = "Assignment room",
             assignment = true
         )
@@ -702,7 +690,6 @@ class ChatTest {
         // Create chat room
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "nofeedback-form",
             prompt = "No feedback test room"
         )
 
@@ -728,7 +715,6 @@ class ChatTest {
         // Create chat room with users
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(senderId, receiverId),
-            formRef = "recipient-test",
             prompt = "Recipient test room"
         )
 
@@ -761,14 +747,12 @@ class ChatTest {
         // Create active chat room
         val activeRoom = ChatRoomManager.create(
             userIds = listOf(user1Id),
-            formRef = "active-form",
             prompt = "Active room"
         )
 
         // Create another active room
         val anotherActiveRoom = ChatRoomManager.create(
             userIds = listOf(user2Id),
-            formRef = "another-active-form",
             prompt = "Another active room"
         )
 
@@ -795,7 +779,6 @@ class ChatTest {
         // Create chat room with some content
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "export-form",
             prompt = "Export test room"
         )
 
@@ -815,7 +798,7 @@ class ChatTest {
 
         assertEquals(1, exportedRooms.size)
         val exportedRoom = exportedRooms[0]
-        assertEquals("export-form", exportedRoom.formRef)
+        assertEquals("", exportedRoom.formRef)
         assertEquals("Export test room", exportedRoom.prompt)
         assertEquals(1, exportedRoom.messages.size)
         assertEquals("Export test message", exportedRoom.messages[0].message)
@@ -833,7 +816,6 @@ class ChatTest {
 //        )
         val chatroom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "assignment-form",
             prompt = "Assignment test room",
             assignment = true
         )
@@ -842,7 +824,6 @@ class ChatTest {
         // Create chat room with some content
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "export-form",
             prompt = "Export test room",
             assignment = true
         )
@@ -860,7 +841,6 @@ class ChatTest {
         // Create chat room
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "deactivate-test",
             prompt = "Deactivation test room"
         )
 
@@ -886,7 +866,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "special-test",
             prompt = "Special messages test"
         )
 
@@ -941,7 +920,6 @@ class ChatTest {
         // Create chat room with all users
         val chatRoom = ChatRoomManager.create(
             userIds = userIds,
-            formRef = "large-room-test",
             prompt = "Large room test with many users"
         )
 
@@ -985,7 +963,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
-            formRef = "order-test",
             prompt = "Message order test"
         )
 
@@ -1046,7 +1023,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(user1Id, user2Id),
-            formRef = "concurrent-test",
             prompt = "Concurrent access test"
         )
 
@@ -1124,7 +1100,6 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(validUserId),
-            formRef = "invalid-user-test",
             prompt = "Invalid user test"
         )
 
@@ -1146,12 +1121,11 @@ class ChatTest {
 
         val chatRoom = ChatRoomManager.create(
             userIds = listOf(userId),
-            formRef = "original-form",
             prompt = "Original prompt"
         )
 
         // Verify initial values
-        assertEquals("original-form", chatRoom.formRef)
+        assertEquals("", chatRoom.formRef)
         assertEquals("Original prompt", chatRoom.prompt)
         // assertEquals("original-form", ChatRoomManager.getFeedbackFormReference(chatRoom.uid))
 
@@ -1159,7 +1133,7 @@ class ChatTest {
         val retrievedRooms = ChatRoomManager.getByUser(userId)
         val retrievedRoom = retrievedRooms.find { it.uid == chatRoom.uid }
         assertNotNull(retrievedRoom)
-        assertEquals("original-form", retrievedRoom.formRef)
+        assertEquals("", retrievedRoom.formRef)
         assertEquals("Original prompt", retrievedRoom.prompt)
     }
 } 

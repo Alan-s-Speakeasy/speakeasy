@@ -4,7 +4,6 @@ import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseOfChatroom
 import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.feedback.FormId
-import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.util.ChatRoomNotFoundException
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.UserNotFoundException
@@ -15,7 +14,6 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.mapLazy
 import java.util.*
 
 /**
@@ -82,15 +80,19 @@ object FeedbackRepository {
 
     /**
      * Gets all feedback responses for a chat room
+     * If userId is provided, it will filter the responses for that user.
      *
      * @param roomId The ID of the chat room
+     * @param userId The ID of the user (optional, can be null)
      * @return List of feedback responses for the chat room
      * @throws IllegalArgumentException if the chat room does not exist
      */
-    fun getFeedbackResponseForRoom(roomId: ChatRoomId): List<FeedbackResponse> = DatabaseHandler.dbQuery {
+    fun getFeedbackResponseForRoom(roomId: ChatRoomId, userId: UserId?): List<FeedbackResponse> = DatabaseHandler.dbQuery {
         val room = ChatRoomEntity.findById(roomId.toUUID())
             ?: throw ChatRoomNotFoundException(roomId)
-        room.feedbackResponses.map { it.toFeedbackResponse() }
+        // Better to use a proper SQL query here, but this is fine for now (there is a limited number of responses per room)
+        room.feedbackResponses.filter { it.author.id.value == (userId?.toUUID() ?: it.author.id.value) }. map { it.toFeedbackResponse() }
+
     }
 
     /**
@@ -165,6 +167,14 @@ object FeedbackRepository {
         FeedbackFormEntity.new {
             this.formName = formName
             this.fileName = fileName
+        }
+    }
+
+    fun deleteForm(formId: FormId) {
+        DatabaseHandler.dbQuery {
+            val form = FeedbackFormEntity.findById(formId.toUUID())
+                ?: throw IllegalArgumentException("Form with ID $formId not found")
+            form.delete()
         }
     }
 

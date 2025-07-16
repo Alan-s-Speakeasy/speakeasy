@@ -10,7 +10,7 @@ object DatabaseHandler {
 
     fun init(config: Config) {
         mainDB = Database.connect("jdbc:sqlite:${config.dataPath}/database.db", driver = "org.sqlite.JDBC")
-        // Print the database connection URL for debugging
+        println("Connected to database at ${config.dataPath}/database.db")
 
         transaction(mainDB) {
             // Create all tables in the correct order (dependencies first)

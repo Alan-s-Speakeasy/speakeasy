@@ -29,9 +29,6 @@ class LoginHandler : RestHandler, PostRestHandler<UserSessionDetails> {
         ]
     )
     override fun doPost(ctx: Context): UserSessionDetails {
-        // Should prevent to a certain extent brute force attacks
-        // This is an additional, tighter rate limit as the global one in RestApi.kt.
-        NaiveRateLimit.requestPerTimeUnit(ctx, 7, TimeUnit.MINUTES)
 
         val loginRequest = try {
             ctx.bodyAsClass(LoginRequest::class.java)

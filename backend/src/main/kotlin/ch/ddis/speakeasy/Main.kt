@@ -75,6 +75,7 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
 
         println("Starting api")
         RestApi.init(config)
+        RestApi.start()
 
         Cli.loop()
 

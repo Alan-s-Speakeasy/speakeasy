@@ -171,16 +171,14 @@ object ChatRepository {
     }
 
     /**
-     * Creates a new chat room and persists it to the database.
+     * Creates a new chat room and persists it to the database. Does not add any participants.
      *
-     * @param participants The list of user IDs to be added to the chat room.
      * @param assignment A boolean indicating if the chat room is an assignment.
      * @param markAsNoFeedback A boolean indicating if the chat room should be marked as having no feedback.
      * @param prompt An optional prompt for the chat room.
      * @return The newly created [DomainChatRoom].
      */
     fun createChatRoom(
-        participants: List<UserId>,
         assignment: Boolean,
         markAsNoFeedback: Boolean = false,
         prompt: String? = null,
@@ -194,8 +192,6 @@ object ChatRepository {
             this.prompt = prompt ?: "New chat room"
             this.testerBotAlias = ""
             this.markAsNoFeedback = markAsNoFeedback
-            this.participants =
-                UserEntity.find { Users.id inList participants.map { it.toUUID() } }
         }
         return@dbQuery chatRoom
     }
@@ -224,6 +220,7 @@ object ChatRepository {
                     it[timestamp] = message.time
                     it[ordinal] = nextOrdinal
                 }
+                message.ordinal = nextOrdinal
                 // If successful, return the message with the assigned ordinal
                 return@dbQuery message.copy(ordinal = nextOrdinal)
             } catch (e: ExposedSQLException) {

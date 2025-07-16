@@ -125,8 +125,13 @@ object FeedbackManager {
             }
         }
 
+    /**
+     * Reads the feedback history for a specific user in a specific room.
+     *
+     * Only the feedback responses of the said user and of that room will be returned.
+     */
     fun readFeedbackHistoryPerRoom(userId: UserId, roomId: UID): FeedbackResponseList = this.lock.read {
-        return FeedbackResponseList(responses = FeedbackRepository.getFeedbackResponseForRoom(roomId).toMutableList())
+        return FeedbackResponseList(responses = FeedbackRepository.getFeedbackResponseForRoom(roomId, userId).toMutableList())
     }
 
     /**
@@ -240,7 +245,7 @@ object FeedbackManager {
         formName: String
     ): List<FeedBackStatsOfRequest> {
         // Get the "questions" of the form (called requests here)
-        val requests = this.forms.find { it.formName == formName }!!.requests
+        val requests = FormManager.getFormByName(formName).requests
         val averagesPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0f }
         val variancesPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0f }
         val countPerRequest = requests.associateTo(mutableMapOf()) { it.id to 0 }

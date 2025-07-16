@@ -31,13 +31,16 @@ object ChatRoomManager {
      * @throws IllegalArgumentException if the chat room ID is not found.
      * @return The ChatRoom instance associated with the given ID, or null if not found.
      */
-    fun getFromId(id: ChatRoomId): ListenedChatRoom? {
+    fun getFromId(id: ChatRoomId, withListeners: Boolean = false): ChatRoom? {
         val chatRoom = ChatRepository.findChatRoomById(id) ?: return null
 
         // Add back missing listeners. They are not stored in the database, so we need to retrieve them again.
         // NOTE : This is quite a bad design, but would work as of now.
         // A much better and cleaner design would be to have a separate method
         // So, essentially, you would create or retrieve a chat room, and then add corresponding listeners to it.
+        if (!withListeners) {
+            return chatRoom
+        }
         val userIds = chatRoom.users.keys.toList()
         val listeners = SseRoomHandler.getChatListeners(userIds)
         // Wrap the chat room in a listened chat room and add the listeners.
@@ -45,7 +48,6 @@ object ChatRoomManager {
         // Do no alert
         listenedChatRoom.addListeners(listeners, alert = false)
         return listenedChatRoom
-
     }
 
     /**
@@ -101,8 +103,15 @@ object ChatRoomManager {
         userIds: List<UserId>, formRef: String = "", prompt: String?, endTime: Long? = null, assignment: Boolean = false
     ): ListenedChatRoom {
         val formId = formRef.takeIf { it.isNotEmpty() }?.let { FormManager.getFormIdByName(it) }
-        val chatRoom = ChatRepository.createChatRoom(userIds, assignment, prompt = prompt, formId = formId)
+        val chatRoom = ChatRepository.createChatRoom(assignment, prompt = prompt, formId = formId)
+        // Adds the participants to the chat room.
+        for (userId in userIds) {
+            chatRoom.addUser(userId)
+        }
         val users = ChatRepository.getParticipantAliases(chatRoom.uid)
+        if (endTime != null) {
+            chatRoom.setEndTime(endTime)
+        }
 
         for (userId in userIds) {
             val role = UserManager.getUserRoleByUserID(userId)
@@ -208,6 +217,9 @@ object ChatRoomManager {
     fun getBot(userRole: UserRole): String {
 
         val activeBots = UserManager.listOfActiveUsersByRole(userRole)
+        if (activeBots.isEmpty()) {
+            throw IndexOutOfBoundsException("No active bots available for role: $userRole")
+        }
         var botToSend = ""
 
         if (userRole == UserRole.TESTER) {

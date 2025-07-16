@@ -124,6 +124,10 @@ object FormManager {
             this.kMapper.writeValue(formFile, newForm)
             this.forms.add(newForm)
             this.forms.sortBy { it.formName }
+            FeedbackRepository.createForm(
+                formName = newForm.formName,
+                fileName = formFile.name
+            )
         }
         finally {
             lock.unlock()
@@ -147,6 +151,8 @@ object FormManager {
         try {
             formFile.delete()
             forms.removeIf { it.formName == formName }
+            val formId = getFormIdByName(formName)
+            FeedbackRepository.deleteForm(formId)
         }
         finally {
             lock.unlock()

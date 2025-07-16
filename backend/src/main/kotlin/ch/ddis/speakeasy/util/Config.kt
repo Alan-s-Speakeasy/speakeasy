@@ -16,7 +16,9 @@ data class Config(
     // Amount of request allowed per rateLimitUnit.
     val rateLimit: Int = 60 * 7,
     // Time unit for rate limiting.
-    val rateLimitUnit: TimeUnit = TimeUnit.MINUTES
+    val rateLimitUnit: TimeUnit = TimeUnit.MINUTES,
+    // Rate limit for login (should be tighter to prevent bruteforce) (per minute)
+    val rateLimitLogin : Int = 7,
     ){
 
     /**

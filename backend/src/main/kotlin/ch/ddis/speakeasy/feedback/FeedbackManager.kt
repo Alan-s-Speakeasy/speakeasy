@@ -193,8 +193,8 @@ object FeedbackManager {
     ): List<FeedbackResponseStatsItem> {
         val allFeedbackResponses =
             readFeedbackHistory(authorIds = userIds, assignment = assignment, formName = formName)
-        val responsesPerUser: HashMap<UserId, MutableList<FeedbackResponse>> = hashMapOf()
-        val feedbackCountPerUser: HashMap<UserId, Int> = hashMapOf()
+        val responsesPerUser: HashMap<String, MutableList<FeedbackResponse>> = hashMapOf()
+        val feedbackCountPerUser: HashMap<String, Int> = hashMapOf()
 
         allFeedbackResponses.filterNotNull().forEach {
             val key = if (author) it.author else it.recipient
@@ -207,10 +207,10 @@ object FeedbackManager {
             it.responses.forEach { fr -> responsesPerUser[key]?.add(fr) }
         }
         // get the list of _all_ feedback responses and compute the average and variance from that.
-        return responsesPerUser.map { (userId, responses) ->
+        return responsesPerUser.map { (userName, responses) ->
             FeedbackResponseStatsItem(
-                UserRepository.getUsernameFromId(userId) ?: "",
-                feedbackCountPerUser[userId] ?: 0,
+                userName,
+                feedbackCountPerUser[userName] ?: 0,
                 computeStatsPerRequestOfFeedback(responses, formName)
             )
         }

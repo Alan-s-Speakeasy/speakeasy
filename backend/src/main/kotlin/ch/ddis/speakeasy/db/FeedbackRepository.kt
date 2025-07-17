@@ -4,6 +4,7 @@ import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 import ch.ddis.speakeasy.api.handlers.FeedbackResponseOfChatroom
 import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.feedback.FormId
+import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.ChatRoomNotFoundException
 import ch.ddis.speakeasy.util.UID
 import ch.ddis.speakeasy.util.UserNotFoundException
@@ -127,9 +128,9 @@ object FeedbackRepository {
                 }
                 .map { (key, rows) ->
                     FeedbackResponseOfChatroom(
-                        author = key.third,
-                        roomId = key.first,
-                        recipient = key.second,
+                        author = UserManager.getUsernameFromId(key.third)!!,
+                        room = key.first.string,
+                        recipient = UserManager.getUsernameFromId(key.second)!!,
                         responses = rows.map { row ->
                             FeedbackResponse(
                                 id = row[FeedbackResponses.requestId].toString(),

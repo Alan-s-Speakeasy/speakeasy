@@ -1,9 +1,7 @@
 package ch.ddis.speakeasy.api.handlers
 
 import ch.ddis.speakeasy.api.*
-import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.chat.ChatRoomManager
-import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.feedback.FormManager
@@ -23,8 +21,10 @@ data class FeedbackFormList(val forms: MutableList<FeedbackForm>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
 // One Item corresponds to one room. The author is the one _giving_ the feedback, the recipient the one receiving it, and the responses,
-// well the reponses.
-data class FeedbackResponseOfChatroom(var author: UserId, val roomId : ChatRoomId, val recipient: UserId, val responses: List<FeedbackResponse>)
+// well the responses.
+// author and recipient are usernames, not UserIds, and room is a string (containing the roomId). It's very tedious to refactor anything with those helper classes everywhere,
+// so we keep it that way.
+data class FeedbackResponseOfChatroom(var author: String, val room : String, val recipient: String, val responses: List<FeedbackResponse>)
 data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseOfChatroom>, val requested: MutableList<FeedbackResponseOfChatroom>)
 // NOTE : a request is a question in the feedback form
 data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float, val count : Int)

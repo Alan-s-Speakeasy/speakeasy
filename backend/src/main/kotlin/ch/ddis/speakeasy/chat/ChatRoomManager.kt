@@ -81,9 +81,17 @@ object ChatRoomManager {
 //                .sortedBy { it.startTime }
 //        }
 
+    /**
+     * Gets a list of chat rooms that have been assessed or marked as no feedback by the specified user.
+     *
+     * @param userId The ID of the user for whom to retrieve chat rooms.
+     * @throws IllegalArgumentException if the userId is not found
+     */
     fun getAssessedOrMarkedRoomsByUserId(userId: UserId): List<ChatRoom> {
-        TODO()
+        // Not very efficient. Better to use a single query here.
+        return ChatRepository.getChatRoomsForUser(userId) .mapNotNull { getFromId(it) } .filter { it.isAssessedBy(userId) || it.isMarkedAsNoFeedback() }
     }
+
 
 
     /**

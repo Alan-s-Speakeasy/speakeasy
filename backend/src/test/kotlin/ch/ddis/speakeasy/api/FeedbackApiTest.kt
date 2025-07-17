@@ -591,4 +591,58 @@ class FeedbackApiTest : ApiTestBase() {
             assertEquals(0.5, stats1?.get("variance")?.asDouble()!!, 0.01, "Question 1 variance should be 0.5")
         }
     }
+
+    @Test
+    fun `should list assessed chatrooms correctly`() {
+        JavalinTest.test(RestApi.app!!) { _, client ->
+            val adminToken = loginAndGetSessionToken(client, "admin", "admin123")
+            val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
+
+            // 1. Create a form to be used in tests
+            val feedbackForm = createSampleForm("assessed_rooms_form")
+            client.post("/api/feedbackforms?session=$adminToken", objectMapper.writeValueAsString(feedbackForm))
+
+            // 2. Create a room and submit feedback for it
+            val chatRoomRequest1 = mapOf("username" to "bob", "formName" to "assessed_rooms_form")
+            client.post("/api/rooms/request?session=$aliceToken", objectMapper.writeValueAsString(chatRoomRequest1))
+            val roomsResponse1 = client.get("/api/rooms?session=$aliceToken")
+            val room1Id = objectMapper.readTree(roomsResponse1.body?.string()!!).get("rooms").get(0).get("uid").asText()
+
+            // Submit feedback
+            val feedbackData = createSampleFeedbackResponses()
+            client.post("/api/feedback/$room1Id?session=$aliceToken", objectMapper.writeValueAsString(feedbackData))
+
+            // 3. Create a room and mark it as 'no feedback required'
+            val chatRoomRequest2 = mapOf("username" to "charlie", "formName" to "")
+            client.post("/api/rooms/request?session=$aliceToken", objectMapper.writeValueAsString(chatRoomRequest2))
+            val roomsResponse2 = client.get("/api/rooms?session=$aliceToken")
+            val roomsData2 = objectMapper.readTree(roomsResponse2.body?.string()!!).get("rooms")
+            val room2Id = roomsData2.find { it.get("uid").asText() != room1Id }!!.get("uid").asText()
+
+            // Mark as no feedback
+            val emptyFeedback = mapOf("responses" to emptyList<Any>())
+            client.post("/api/feedback/$room2Id?session=$aliceToken", objectMapper.writeValueAsString(emptyFeedback))
+
+            // 4. Create a room that is not assessed
+            val chatRoomRequest3 = mapOf("username" to "dave", "formName" to "assessed_rooms_form")
+            client.post("/api/rooms/request?session=$aliceToken", objectMapper.writeValueAsString(chatRoomRequest3))
+            val roomsResponse3 = client.get("/api/rooms?session=$aliceToken")
+            val roomsData3 = objectMapper.readTree(roomsResponse3.body?.string()!!).get("rooms")
+            val room3Id = roomsData3.find { it.get("uid").asText() !in listOf(room1Id, room2Id) }!!.get("uid").asText()
+
+            // 5. Fetch assessed rooms and verify the list
+            val assessedRoomsResponse = client.get("/api/rooms/assessed?session=$aliceToken")
+            assertEquals(200, assessedRoomsResponse.code, "Should successfully fetch assessed rooms")
+
+            val assessedRoomsData = objectMapper.readTree(assessedRoomsResponse.body?.string()!!)
+            val assessedRooms = assessedRoomsData.get("rooms")
+
+            assertEquals(2, assessedRooms.size(), "Should have exactly two assessed rooms")
+
+            val assessedRoomIds = assessedRooms.map { it.get("uid").asText() }.toSet()
+            assertTrue(assessedRoomIds.contains(room1Id), "Room with submitted feedback should be in the list")
+            assertTrue(assessedRoomIds.contains(room2Id), "Room marked as 'no feedback' should be in the list")
+            assertFalse(assessedRoomIds.contains(room3Id), "Room with pending feedback should not be in the list")
+        }
+    }
 } 

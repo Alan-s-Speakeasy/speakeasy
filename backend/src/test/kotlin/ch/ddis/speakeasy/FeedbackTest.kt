@@ -484,7 +484,7 @@ class FeedbackTest {
 
         // Read feedbackf for room
 
-        val feedbackResponses = FeedbackManager.readFeedbackHistoryPerRoom(UserId.INVALID, chatRoom.uid)
+        val feedbackResponses = FeedbackManager.readFeedbackHistoryPerRoom(aliceId, chatRoom.uid)
         assertEquals(feedbackToLog, feedbackResponses)
 
         // Read the feedback history

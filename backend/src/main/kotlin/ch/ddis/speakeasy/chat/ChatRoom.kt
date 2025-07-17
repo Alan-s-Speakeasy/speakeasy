@@ -248,7 +248,7 @@ internal class DatabaseChatRoom(
      * @return true if the chat room has feedback associated with the given user as author, false otherwise
      */
     override fun isAssessedBy(userId: UserId): Boolean {
-        TODO()
+        return FeedbackRepository.getFeedbackResponseForRoom(this.uid, userId).isNotEmpty()
     }
 
 

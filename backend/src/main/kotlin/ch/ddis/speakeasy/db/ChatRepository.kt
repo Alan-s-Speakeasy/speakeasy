@@ -67,7 +67,7 @@ class ChatMessageEntity(id: EntityID<CompositeID>) : CompositeEntity(id) {
             // NOTE : See https://github.com/JetBrains/Exposed/issues/928
             // It is not possible to nicely get the alias from the many-to-many relationship database.
             authorAlias = ChatroomParticipants.select(ChatroomParticipants.alias).where {
-                ChatroomParticipants.chatRoom eq chatroom.id
+                (ChatroomParticipants.chatRoom eq chatroom.id) and (ChatroomParticipants.user eq sender)
             }.firstOrNull()?.get(ChatroomParticipants.alias) ?: "",
             authorSessionId = SessionId.INVALID
         )

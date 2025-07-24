@@ -276,48 +276,48 @@
         <div class="col-md-4">
           <div class="card h-100">
             <div class="card-header bg-light">
-              <h5 class="mb-0">AutomaticEvaluatorBot</h5>
+              <h5 class="mb-0">Evaluator Bots</h5>
             </div>
-            <div class="card-body">
-              <table class="table">
-                <tbody>
-                <tr *ngFor="let evaluator of evaluator">
-                  <td >
-                    <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator(); botsValidationError = ''" color="primary">
-                      {{ evaluator }}
-                      <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
-                      <i *ngIf="!this.active.includes(evaluator)" style="color: red" class="fa fa-circle"></i>
-                    </mat-checkbox>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
+            <div class="card-body d-flex flex-column">
+              <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator(); botsValidationError = ''" color="primary">
+                <b>Enable Automatic Evaluators</b>
+              </mat-checkbox>
+              <p class="form-text text-muted small mt-2">
+                When enabled, available evaluator bots are automatically assigned to conversations in a round-robin fashion.
+              </p>
+              <ul class="list-group list-group-flush mt-auto">
+                <li *ngFor="let evaluator of evaluator" class="list-group-item d-flex justify-content-between align-items-center px-0">
+                  {{ evaluator }}
+                  <span>
+                    <i *ngIf="this.active.includes(evaluator)" class="fa fa-circle text-success" matTooltip="Online"></i>
+                    <i *ngIf="!this.active.includes(evaluator)" class="fa fa-circle text-danger" matTooltip="Offline"></i>
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="card h-100">
             <div class="card-header bg-light">
-              <h5 class="mb-0">AssistantBot</h5>
+              <h5 class="mb-0">Assistant Bots</h5>
             </div>
-            <div class="card-body">
-              <table class="table">
-                <tbody>
-                <tr *ngFor="let assistant of assistant">
-                  <td>
-                    <mat-checkbox [checked]="assistantSelected"
-                                  (change)="switchAssistant(); botsValidationError = ''"
-                                  color="primary">
-                      {{ assistant }}
-                      <i *ngIf="this.active.includes(assistant)"
-                         class="fa fa-circle text-success ms-2"></i>
-                      <i *ngIf="!this.active.includes(assistant)"
-                         class="fa fa-circle text-danger ms-2"></i>
-                    </mat-checkbox>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
+            <div class="card-body d-flex flex-column">
+              <mat-checkbox [checked]="assistantSelected" (change)="switchAssistant(); botsValidationError = ''" color="primary">
+                <b>Enable Assistant Bot</b>
+              </mat-checkbox>
+              <p class="form-text text-muted small mt-2">
+                When enabled, available assistant bots are automatically assigned to conversations in a round-robin fashion.
+              </p>
+              <ul class="list-group list-group-flush mt-auto">
+                <li *ngFor="let assistant of assistant" class="list-group-item d-flex justify-content-between align-items-center px-0">
+                  {{ assistant }}
+                  <span>
+                    <i *ngIf="this.active.includes(assistant)" class="fa fa-circle text-success" matTooltip="Online"></i>
+                    <i *ngIf="!this.active.includes(assistant)" class="fa fa-circle text-danger" matTooltip="Offline"></i>
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

@@ -162,6 +162,13 @@ object UIChatAssignmentGenerator {
         return Pair(nextRound, true)
     }
 
+    /**
+     * Starts a new evaluation round.
+     *
+     * @param whether the assistant should be selected for the round or not.
+     *
+     * Note that the assistant will be selected after via chatRoomManager.getBot.
+     */
     fun startNewRound(assistantSelected: Boolean): Long {
         endTime = System.currentTimeMillis() + (1000 * 60 * duration)
 

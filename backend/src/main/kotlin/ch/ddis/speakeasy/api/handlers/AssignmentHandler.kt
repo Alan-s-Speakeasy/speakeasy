@@ -89,7 +89,7 @@ class PostGenerateAssignmentHandler : PostRestHandler<List<GeneratedAssignment>>
             throw ErrorStatusException(400, "Invalid parameters. This is a programmers error.", ctx)
         }
 
-        if ( !FormManager.isValidFormName(newAssignment.formName) ) {
+        if ( newAssignment.formName.isNotEmpty() && !FormManager.isValidFormName(newAssignment.formName) ) {
             throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
         }
 

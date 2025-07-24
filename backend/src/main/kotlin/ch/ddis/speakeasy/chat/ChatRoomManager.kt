@@ -60,10 +60,18 @@ object ChatRoomManager {
      * @return A list of chat room IDs that the user is part of.
      */
     fun getByUser(userId: UserId, bot: Boolean = false): List<ChatRoom> {
-        return ChatRepository.getChatRoomsForUser(userId).map {
-                getFromId(it) ?: throw IllegalStateException("Chat room with id $it not found")
-            }
+        val rooms = ChatRepository.getChatRoomsForUser(userId).map {
+            getFromId(it) ?: throw IllegalStateException("Chat room with id $it not found")
+        }
+        return if (bot) {
+            rooms.filter { ((System.currentTimeMillis() - it.startTime) / 60_000) < 60 }
+                .sortedBy { it.startTime }
+        } else {
+            rooms.filter { !it.isMarkedAsNoFeedback() && !it.isAssessedBy(userId) && ((System.currentTimeMillis() - it.startTime) / 60_000) < 60 }
+                .sortedBy { it.startTime }
+        }
     }
+    // Legacy logic
 //        when (bot) {
 //            // TODO: also filter out assessed rooms for bot?
 //            true -> this.chatrooms.values.filter {
@@ -89,9 +97,9 @@ object ChatRoomManager {
      */
     fun getAssessedOrMarkedRoomsByUserId(userId: UserId): List<ChatRoom> {
         // Not very efficient. Better to use a single query here.
-        return ChatRepository.getChatRoomsForUser(userId) .mapNotNull { getFromId(it) } .filter { it.isAssessedBy(userId) || it.isMarkedAsNoFeedback() }
+        return ChatRepository.getChatRoomsForUser(userId).mapNotNull { getFromId(it) }
+            .filter { it.isAssessedBy(userId) || it.isMarkedAsNoFeedback() }
     }
-
 
 
     /**

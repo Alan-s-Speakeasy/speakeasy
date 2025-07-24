@@ -1,7 +1,7 @@
 package ch.ddis.speakeasy.api.sse
 
 import ch.ddis.speakeasy.api.AccessManager
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.db.UserId
 import io.javalin.http.sse.SseClient
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors

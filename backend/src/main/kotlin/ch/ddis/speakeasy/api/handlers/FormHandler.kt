@@ -3,7 +3,7 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.feedback.FeedbackForm
 import ch.ddis.speakeasy.feedback.FormManager
-import ch.ddis.speakeasy.feedback.InvalidFormException
+import ch.ddis.speakeasy.util.InvalidFormException
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -55,7 +55,7 @@ class GetFormHandler : GetRestHandler<FeedbackForm>, AccessManagedRestHandler {
         if (formName.isBlank()) {
             throw ErrorStatusException(400, "Parameter 'formName' is empty!", ctx)
         }
-        return FormManager.getForm(formName)
+        return FormManager.getFormByName(formName)
     }
 }
 

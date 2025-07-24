@@ -55,7 +55,7 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                                 it.uid.string,
                                 usernames.getOrNull(0) ?: " n/a ",
                                 usernames.getOrNull(0) ?: " n/a ",
-                                it.active,
+                                it.isActive(),
                                 formatTimeStamp(it.startTime),
                                 if (it.endTime != null) formatTimeStamp(it.endTime!!) else " n/a "
                             )
@@ -110,17 +110,17 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                 return
             }
 
-            val room = ChatRoomManager[uid]
+            val room = ChatRoomManager.getFromId(uid)
 
             if (room == null) {
                 println("Chatroom with id '$id' not found")
                 return
             }
 
-            room.getAllMessages().forEach { message ->
+            ChatRoomManager.getMessagesFor(room.uid).forEach { message ->
                 val userId = room.aliasToUserId[message.authorAlias]
                 val username = UserManager.getUsernameFromId(userId!!) ?: "unknown"
-                val reaction = room.getAllReactions().find { it.messageOrdinal == message.ordinal }
+                val reaction = room.getReactions().find { it.messageOrdinal == message.ordinal }
                 println("${username}@${formatTimeStamp(message.time)}: ${message.message}")
                 if (reaction != null) {
                     println("*Reaction: ${reaction.type}*")
@@ -143,14 +143,14 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                 return
             }
 
-            val room = ChatRoomManager[uid]
+            val room = ChatRoomManager.getFromId(uid)
 
             if (room == null) {
                 println("Chatroom with id '$id' not found")
                 return
             }
 
-            var listUsers = ChatRoomManager.getUsersIDofARoom(uid)
+            val listUsers = room.users.keys
             println("Users in chatroom $id:")
             listUsers.forEach { user ->
                 println(UserManager.getUsernameFromId(user))
@@ -172,7 +172,7 @@ class ChatCommand : NoOpCliktCommand(name = "chat") {
                 return
             }
 
-            val room = ChatRoomManager[uid]
+            val room = ChatRoomManager.getFromId(uid)
 
             if (room == null) {
                 println("Chatroom with id '$id' not found")

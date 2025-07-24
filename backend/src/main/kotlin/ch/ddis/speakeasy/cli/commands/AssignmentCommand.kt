@@ -1,11 +1,9 @@
 package ch.ddis.speakeasy.cli.commands
 
-import ch.ddis.speakeasy.api.AccessManager
 import ch.ddis.speakeasy.assignment.ListChatAssignmentGenerator
 import ch.ddis.speakeasy.assignment.ShuffledChatAssignmentGenerator
 import ch.ddis.speakeasy.chat.ChatRoomManager
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.UID
@@ -121,10 +119,9 @@ class AssignmentCommand : NoOpCliktCommand(name = "assignment") {
             next.forEach { assignment ->
                 ChatRoomManager.create(
                     userIds = listOf(assignment.human.id.UID(), assignment.bot.id.UID()),
-                    log = true,
+                    formRef = formName,
                     prompt = assignment.prompt,
-                    assignment = true,
-                    formRef = formName
+                    assignment = true
                 ).also { it.setEndTime(endTime) }
             }
 

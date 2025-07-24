@@ -30,8 +30,14 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool
 object RestApi {
 
     private var javalin: Javalin? = null
+    
+    // Public property for testing access
+    val app: Javalin? get() = javalin
 
 
+    /**
+     * Initializes javalin app. Does not start the server.
+     */
     fun init(config: Config) {
 
         val apiRestHandlers = listOf(
@@ -208,15 +214,23 @@ object RestApi {
                     }
                 }
             }
+            path("api/login") {
+                before { ctx ->
+                    // Should prevent to a certain extent brute force attacks
+                    // This is an additional, tighter rate limit as the global one above
+                    NaiveRateLimit.requestPerTimeUnit(ctx, config.rateLimitLogin, config.rateLimitUnit)
+                }
+            }
 
 
         }.error(401) {
             it.json(ErrorStatus("Unauthorized request!"))
         }.exception(Exception::class.java) { e, ctx ->
             ctx.status(500).json(ErrorStatus("Internal server error!"))
-        }.start(config.httpPort)
+        }
 
     }
+
 
 
     private fun setupHttpServer(config: Config): Server {
@@ -282,6 +296,13 @@ object RestApi {
 
             }
         }
+    }
+
+    fun start() {
+        if (javalin == null) {
+            throw IllegalStateException("Javalin has not been initialized. Call init() first.")
+        }
+        javalin!!.start()
     }
 
     fun stop() {

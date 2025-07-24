@@ -1,7 +1,7 @@
 package ch.ddis.speakeasy.chat
 
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.user.SessionId
-import ch.ddis.speakeasy.user.UserId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.UID
 import kotlinx.serialization.Serializable
@@ -12,7 +12,6 @@ import kotlinx.serialization.Serializable
  * @param message The message that is sent.
  * @param authorUserId the UserID of the author.
  * @param authorAlias The alias of the author of the message. As of now, this parameter could be removed and replaced by authorUserId.
- * @param authorSessionId The session id of the author of the message.
  * @param ordinal The ordinal of the message in the chat room.
  * @param recipients The recipients of the message, but only their aliases.
  * @param isRead Whether the message has been read.
@@ -25,7 +24,10 @@ data class ChatMessage(
     val authorUserId: UserId = UserId.INVALID,
     val authorAlias: String,
     val authorSessionId: SessionId,
-    val ordinal: Int,
+    // Usually set later by the database.
+    var ordinal: Int = -1,
+    // Recipients are typically users tagged (e.g. @user) in the message.
+    // This is a set of aliases, not UserIds.
     val recipients: Set<String> = mutableSetOf(),
     val isRead : Boolean = false,
     val time: Long = System.currentTimeMillis(),

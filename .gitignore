@@ -266,3 +266,4 @@ session-store
 data/feedbackresults/*
 data/sessions.csv
 frontend/openapi
+dev.py

@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlinVersion = '1.8.10'
+    ext.kotlinVersion = '2.1.21'
     repositories {
         mavenCentral()
     }
@@ -53,7 +53,7 @@ dependencies {
     def alpnBootVersion = '8.1.12.v20180117'
     def javaLinVersion =  '5.6.2'
     def openApiVersion = '5.6.2'
-    def exposedVersion = '0.41.1'
+    def exposedVersion = '0.58.0'
 
     implementation frontendClasspath(project(path: ":frontend", configuration: 'frontendFiles'))
 
@@ -112,6 +112,17 @@ dependencies {
 
     //// CSV handling
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.5'
+
+    ////// Testing Dependencies
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("io.javalin:javalin-testtools:$javaLinVersion") // For HTTP testing
+
+}
+
+test {
+    useJUnitPlatform()
 }
 
 startScripts {

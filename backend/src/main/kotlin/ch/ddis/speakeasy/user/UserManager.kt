@@ -1,15 +1,15 @@
 package ch.ddis.speakeasy.user
 
 import ch.ddis.speakeasy.api.AccessManager
+import ch.ddis.speakeasy.db.*
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.UID
+import ch.ddis.speakeasy.util.UserId
 import ch.ddis.speakeasy.util.read
 import ch.ddis.speakeasy.util.write
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.io.File
 import java.util.*
 import java.util.concurrent.locks.StampedLock
 
@@ -19,21 +19,11 @@ object UserManager {
     private val lock: StampedLock = StampedLock()
 
     fun init(config: Config) {
-        // Check if the sql exists
-        if (File("${config.dataPath}/users.db").exists().not()) {
-            System.err.println("WARNING : No user database found, a new one will be created.")
-        }
 
-        this.lock.write {
-            Database.connect("jdbc:sqlite:${config.dataPath}/users.db", driver = "org.sqlite.JDBC")
-            transaction {
-                SchemaUtils.createMissingTablesAndColumns(Users, Groups, GroupUsers)
-            }
-            transaction {
-                // Check if DB is empty
-                if (Users.selectAll().empty()) {
-                    System.err.println("WARNING : The user database is empty !")
-                }
+        DatabaseHandler.dbQuery {
+            if (Users.selectAll().empty()) {
+                // Create the tables if they do not exist
+                System.err.println("WARNING : The user database is empty!")
             }
         }
     }
@@ -48,11 +38,11 @@ object UserManager {
 
     fun addUser(username: String, role: UserRole, password: Password) {
         this.lock.write {
-            transaction {
-                if (!User.find { Users.username eq username }.empty()) {
+            DatabaseHandler.dbQuery {
+                if (!UserEntity.find { Users.username eq username }.empty()) {
                     throw UsernameConflictException()
                 }
-                User.new {
+                UserEntity.new {
                     this.name = username
                     this.role = role
                     this.password = password
@@ -62,12 +52,12 @@ object UserManager {
     }
 
     fun removeUser(username: String, force: Boolean): Boolean = this.lock.write {
-        transaction {
-            val queryRes = User.find { Users.username eq username }
-            val userToRemove = queryRes.firstOrNull() ?: return@transaction true
+        DatabaseHandler.dbQuery {
+            val queryRes = UserEntity.find { Users.username eq username }
+            val userToRemove = queryRes.firstOrNull() ?: return@dbQuery true
 
             if (!force && AccessManager.hasUserIdActiveSessions(userToRemove.id.UID())) {
-                return@transaction false
+                return@dbQuery false
             }
             if (force) {
                 AccessManager.forceClearUserId(userToRemove.id.UID())
@@ -75,14 +65,14 @@ object UserManager {
 
             removeUserInGroups(userToRemove)
             userToRemove.delete()
-            return@transaction true
+            return@dbQuery true
         }
     }
 
-    private fun removeUserInGroups(user: User) {
-        transaction {
+    private fun removeUserInGroups(user: UserEntity) {
+        DatabaseHandler.dbQuery {
             GroupUsers.deleteWhere { user_id eq user.id }
-            Group.all().forEach {
+            GroupEntity.all().forEach {
                 if (it.users.empty()) {
                     it.delete()
                 }
@@ -98,53 +88,53 @@ object UserManager {
      * @return True if a user with the given id exists, false otherwise.
      */
     fun checkUserIdExists(userId : UserId): Boolean =
-        transaction {
-            return@transaction User.findById(userId.toUUID()) != null
+        DatabaseHandler.dbQuery {
+            return@dbQuery UserEntity.findById(userId.toUUID()) != null
     }
 
-    fun getMatchingUser(username: String, password: PlainPassword): User? = this.lock.read {
-        transaction {
-            val queryRes =  User.find { Users.username eq username }
-            val userToCheck = queryRes.firstOrNull() ?: return@transaction null
-            return@transaction if ((userToCheck.password as HashedPassword).check(password)) userToCheck else null
+    fun getMatchingUser(username: String, password: PlainPassword): UserEntity? = this.lock.read {
+        DatabaseHandler.dbQuery {
+            val queryRes =  UserEntity.find { Users.username eq username }
+            val userToCheck = queryRes.firstOrNull() ?: return@dbQuery null
+            return@dbQuery if ((userToCheck.password as HashedPassword).check(password)) userToCheck else null
         }
     }
 
     fun getUsernameFromId(userId: UserId): String? = this.lock.read {
-        transaction {
-            val userToGet =  User.findById(userId.toUUID())  // TODO: can it be simplified?
-            return@transaction userToGet?.name
+        DatabaseHandler.dbQuery {
+            val userToGet =  UserEntity.findById(userId.toUUID())  // TODO: can it be simplified?
+            return@dbQuery userToGet?.name
         }
     }
 
     fun getUserIdFromUsername(username: String): UserId? = this.lock.read {
-        transaction {
-            val queryRes =  User.find { Users.username eq username }
-            return@transaction queryRes.firstOrNull()?.id?.UID()
+        DatabaseHandler.dbQuery {
+            val queryRes =  UserEntity.find { Users.username eq username }
+            return@dbQuery queryRes.firstOrNull()?.id?.UID()
         }
     }
 
     fun getPasswordFromId(userId: UserId): Password? = this.lock.read {
-        transaction {
-            val userToGet = User.findById(userId.toUUID())
-            return@transaction userToGet?.password as HashedPassword
+        DatabaseHandler.dbQuery {
+            val userToGet = UserEntity.findById(userId.toUUID())
+            return@dbQuery userToGet?.password as HashedPassword
         }
 
     }
 
     fun updatePassword(userId: EntityID<UUID>, newPassword: Password) {
         this.lock.write {
-            transaction {
-                val userToUpdate = User.findById(userId)
+            DatabaseHandler.dbQuery {
+                val userToUpdate = UserEntity.findById(userId)
                     ?: throw IllegalArgumentException("User with id $userId not found")
                 userToUpdate.password = newPassword as PlainPassword
             }
         }
     }
 
-    fun list(): List<User> = this.lock.read {
-        transaction {
-            User.all().toList()
+    fun list(): List<UserEntity> = this.lock.read {
+        DatabaseHandler.dbQuery {
+            UserEntity.all().toList()
         }
     }
 
@@ -154,9 +144,9 @@ object UserManager {
      * @param role The role to filter by
      * @return List of users with the given role
      */
-    fun listUsersWithRole(role: UserRole): List<User> = this.lock.read {
-        transaction {
-            User.find { Users.role eq role }.toList()
+    fun listUsersWithRole(role: UserRole): List<UserEntity> = this.lock.read {
+        DatabaseHandler.dbQuery {
+            UserEntity.find { Users.role eq role }.toList()
         }
     }
 
@@ -167,15 +157,15 @@ object UserManager {
      * @return Number of users with the given role
      */
     fun countUsersWithRole(role: UserRole): Int = this.lock.read {
-        transaction {
-            User.find { Users.role eq role }.count()
+        DatabaseHandler.dbQuery {
+            UserEntity.find { Users.role eq role }.count()
         }
     }.toInt()
 
 
-    fun listGroups(): List<Group> = this.lock.read {
-        transaction {
-            Group.all().toList() // need eager loading users outside!
+    fun listGroups(): List<GroupEntity> = this.lock.read {
+        DatabaseHandler.dbQuery {
+            GroupEntity.all().toList() // need eager loading users outside!
         }
     }
 
@@ -190,22 +180,22 @@ object UserManager {
     fun createGroup(groupName: String, usernames: List<String>) {
         this.lock.write {
 
-            transaction {
-                if (!Group.find { Groups.name eq groupName }.empty()) {
+            DatabaseHandler.dbQuery {
+                if (!GroupEntity.find { Groups.name eq groupName }.empty()) {
                     throw GroupNameConflictException()
                 }
             }
 
-            transaction {
-                val userListToAdd = mutableListOf<User>()
+            DatabaseHandler.dbQuery {
+                val userListToAdd = mutableListOf<UserEntity>()
 
                 for (username in usernames.distinct()) { // remove duplicates in usernames
-                    val userToAdd = User.find { Users.username eq username }.firstOrNull()
+                    val userToAdd = UserEntity.find { Users.username eq username }.firstOrNull()
                         ?: throw UsernameNotFoundException("$username is not found, abort this group creation")
                     userListToAdd.add(userToAdd)
                 }
                 if (userListToAdd.isNotEmpty()) {
-                    Group.new {
+                    GroupEntity.new {
                         name = groupName
                         users = SizedCollection(userListToAdd)
                     }
@@ -223,8 +213,8 @@ object UserManager {
      */
     fun removeGroup(groupName: String) {
         this.lock.write {
-            transaction {
-                val groupToRemove = Group.find { Groups.name eq groupName }.firstOrNull()
+            DatabaseHandler.dbQuery {
+                val groupToRemove = GroupEntity.find { Groups.name eq groupName }.firstOrNull()
                     ?: throw GroupNameNotFoundException()
                 GroupUsers.deleteWhere { group_id eq groupToRemove.id }
                 groupToRemove.delete()
@@ -241,18 +231,18 @@ object UserManager {
      */
     fun updateGroup(groupId: GroupId, newName : String, newUserIds : List<UserId>) {
         // TODO : Use a lock here ?
-        transaction {
-            val group = Group.findById(groupId.toUUID())
+        DatabaseHandler.dbQuery {
+            val group = GroupEntity.findById(groupId.toUUID())
                 ?: throw GroupNameNotFoundException()
             group.name = newName
-            val newUserEntities = User.find { Users.id inList newUserIds.distinct().map { it.toUUID() } }
+            val newUserEntities = UserEntity.find { Users.id inList newUserIds.distinct().map { it.toUUID() } }
             group.users = newUserEntities
         }
     }
 
     fun removeAllGroups() {
         this.lock.write {
-            transaction {
+            DatabaseHandler.dbQuery {
                 GroupUsers.deleteAll()
                 Groups.deleteAll()
             }
@@ -260,33 +250,37 @@ object UserManager {
     }
 
     fun areInSameGroup(username1: String, username2: String): Boolean = this.lock.read {
-        transaction {
-            val user1 = User.find { Users.username eq username1 }.firstOrNull()
-            val user2 = User.find { Users.username eq username2 }.firstOrNull()
+        DatabaseHandler.dbQuery {
+            val user1 = UserEntity.find { Users.username eq username1 }.firstOrNull()
+            val user2 = UserEntity.find { Users.username eq username2 }.firstOrNull()
             if (user1 == null || user2 == null) throw UsernameNotFoundException()
 
-            val user1Groups = GroupUsers.slice(GroupUsers.group_id).select{GroupUsers.user_id eq user1.id}
+            val user1Groups = GroupUsers.
+                 select(GroupUsers.group_id)
+                .where { GroupUsers.user_id eq user1.id }
                 .map { it[GroupUsers.group_id] }
                 .toSet()
 
-            val user2Groups = GroupUsers.slice(GroupUsers.group_id).select{GroupUsers.user_id eq user2.id}
+            val user2Groups = GroupUsers
+                .select(GroupUsers.group_id)
+                .where { GroupUsers.user_id eq user2.id }
                 .map { it[GroupUsers.group_id] }
                 .toSet()
-            return@transaction user1Groups.intersect(user2Groups).isNotEmpty()
+            return@dbQuery user1Groups.intersect(user2Groups).isNotEmpty()
         }
     }
 
     fun getUserRoleByUserID(userId: UserId): UserRole? = this.lock.read {
-        transaction {
-            val userToGet = User.findById(userId.toUUID())
-            return@transaction userToGet?.role
+        DatabaseHandler.dbQuery {
+            val userToGet = UserEntity.findById(userId.toUUID())
+            return@dbQuery userToGet?.role
         }
     }
 
     fun getUserRoleByUserName(username: String): UserRole? = this.lock.read {
-        transaction {
-            val userToGet = User.find { Users.username eq username }.firstOrNull()
-            return@transaction userToGet?.role
+        DatabaseHandler.dbQuery {
+            val userToGet = UserEntity.find { Users.username eq username }.firstOrNull()
+            return@dbQuery userToGet?.role
         }
     }
 
@@ -298,27 +292,27 @@ object UserManager {
         return false
     }
 
-    fun listOfActiveUsersByRole(role: UserRole): List<User> = this.lock.read {
-        transaction {
-            val listOfActiveUsers = mutableListOf<User>()
+    fun listOfActiveUsersByRole(role: UserRole): List<UserEntity> = this.lock.read {
+        DatabaseHandler.dbQuery {
+            val listOfActiveUsers = mutableListOf<UserEntity>()
             AccessManager.listSessions().forEach { session ->
                 if (session.user.role == role) {
                     listOfActiveUsers.add(session.user)
                 }
             }
-            return@transaction listOfActiveUsers
+            return@dbQuery listOfActiveUsers
         }
     }
 
     fun getUsersIDsFromUserRole(role: UserRole): List<UserId> = this.lock.read {
-        transaction {
+        DatabaseHandler.dbQuery {
             val listOfActiveUsers = mutableListOf<UserId>()
             AccessManager.listSessions().forEach { session ->
                 if (session.user.role == role) {
                     listOfActiveUsers.add(session.user.id.UID())
                 }
             }
-            return@transaction listOfActiveUsers
+            return@dbQuery listOfActiveUsers
         }
     }
 }

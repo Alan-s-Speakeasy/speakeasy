@@ -20,8 +20,12 @@ import io.javalin.openapi.*
 data class FeedbackFormList(val forms: MutableList<FeedbackForm>)
 data class FeedbackResponse(val id: String, val value: String)
 data class FeedbackResponseList(val responses: MutableList<FeedbackResponse>)
-data class FeedbackResponseItem(var author: String, val recipient: String, val room: String, val responses: List<FeedbackResponse>)
-data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseItem>, val requested: MutableList<FeedbackResponseItem>)
+// One Item corresponds to one room. The author is the one _giving_ the feedback, the recipient the one receiving it, and the responses,
+// well the responses.
+// author and recipient are usernames, not UserIds, and room is a string (containing the roomId). It's very tedious to refactor anything with those helper classes everywhere,
+// so we keep it that way.
+data class FeedbackResponseOfChatroom(var author: String, val room : String, val recipient: String, val responses: List<FeedbackResponse>)
+data class FeedbackResponseMapList(val assigned: MutableList<FeedbackResponseOfChatroom>, val requested: MutableList<FeedbackResponseOfChatroom>)
 // NOTE : a request is a question in the feedback form
 data class FeedBackStatsOfRequest(val requestID : String, val average : String, val variance : Float, val count : Int)
 data class FeedbackResponseStatsItem(val username: String, val count: Int, val statsOfResponsePerRequest: List<FeedBackStatsOfRequest>)
@@ -69,41 +73,27 @@ class PostFeedbackHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHan
         val roomId = (ctx.pathParamMap().getOrElse("roomId") {
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
-
+        val chatRoom = ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(400, "Room not found", ctx)
         val feedback = try {
             ctx.bodyAsClass(FeedbackResponseList::class.java)
         } catch (e: BadRequestResponse) {
             throw ErrorStatusException(400, "Invalid feedback.", ctx)
         }
 
-        val isAssessed = try {
-            ChatRoomManager.isAssessedBy(session, roomId)
-        } catch (e : NullPointerException) {
-            throw ErrorStatusException(404, "Chatroom ${roomId.string} not found.", ctx)
-        }
-
-        if (isAssessed) {
-            throw ErrorStatusException(409, "Chatroom already assessed.", ctx)
-        }
-
         // if user wants to mark this chat room as "no feedback"
+        // TODO : Not sure about this. Feels very confusing.
         if (feedback.responses.isEmpty()) {
-            if (ChatRoomManager.isAssignment(roomId)
-                && ChatRoomManager.getFeedbackFormReference(roomId) != null) {
+            if (chatRoom.assignment
+                && chatRoom.getFeedbackForm() != null) {
                 throw ErrorStatusException(403, "You must fill-in the feedback form.", ctx)
             }
             if (session.user.role == UserRole.BOT) {
                 throw ErrorStatusException(403, "Bot is not allowed to send this request.", ctx)
             }
-            ChatRoomManager.markAsNoFeedback(roomId)
+            chatRoom.markAsNoFeedback()
             return SuccessStatus("No feedback required for this chat now.")
         }
-
-        if (ChatRoomManager.getFeedbackFormReference(roomId) == null) {
-            throw ErrorStatusException(403, "No feedback form assigned to this chat.", ctx)
-        }
-        FeedbackManager.logFeedback(session, roomId, feedback)
-        ChatRoomManager.markAsAssessed(session, roomId)
+        FeedbackManager.logFeedback(session.user.id.UID(), roomId, feedback)
         return SuccessStatus("Feedback received")
     }
 
@@ -179,8 +169,8 @@ class GetAdminFeedbackHistoryHandler : GetRestHandler<FeedbackResponseMapList>, 
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
 
-        val assignedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = true, formName = formName)
-        val requestedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = false, formName = formName)
+        val assignedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = true, formName = formName).filterNotNull().toMutableList()
+        val requestedFeedbackResponses = FeedbackManager.readFeedbackHistory(assignment = false, formName = formName).filterNotNull().toMutableList()
 
         return FeedbackResponseMapList(
             assigned =  assignedFeedbackResponses,
@@ -230,7 +220,7 @@ class GetAdminFeedbackAverageHandler : GetRestHandler<FeedbackResponseStatsMapLi
         })
 
         try {
-            FormManager.getForm(formName)
+            FormManager.getFormByName(formName)
         } catch (e: NullPointerException) {
             throw ErrorStatusException(404, "Feedback form '$formName' not found!", ctx)
         }
@@ -324,7 +314,7 @@ class ExportFeedbackHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
             formName = formName
         )
         // This also filters out textual questions, so we don't include them in the CSV
-        val requestIdToShortName = FormManager.getForm(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
+        val requestIdToShortName = FormManager.getFormByName(formName).requests.filter { it.options.isNotEmpty() }.associateBy({ it.id }, { it.shortname })
         ctx.outputStream().use { outputStream ->
             // Structure of the csv file : username, N, request1, request2, ...
             val writer = CSVWriterBuilder(outputStream.writer()).build()

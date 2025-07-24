@@ -144,7 +144,6 @@ export class CommonService {
 
     this.chatMessageEventListener =  (ev) => {
       const sseChatMessage = convertFromJSON<SseChatMessage>((ev as MessageEvent).data)
-      console.log('sseChatMessage', sseChatMessage)
       if (!this._roomsStateMap.has(sseChatMessage.roomId)) {
         // This could happen because there's a delay mechanism in backend for sending rooms.
         this._roomsStateMap.set(sseChatMessage.roomId,

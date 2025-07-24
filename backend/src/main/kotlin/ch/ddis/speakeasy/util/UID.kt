@@ -37,3 +37,4 @@ data class UID(val string: String) {
         }
     }
 }
+typealias UserId = UID

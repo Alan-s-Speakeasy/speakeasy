@@ -1,6 +1,7 @@
 package ch.ddis.speakeasy.chat
 
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.db.UserId
+
 
 data class Assessor(val assessor: UserId) : ChatItemContainer()
 

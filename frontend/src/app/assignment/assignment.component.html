@@ -281,8 +281,8 @@
             <div class="card-body">
               <table class="table">
                 <tbody>
-                <tr *ngFor="let evaluator of evaluator; let firstElement = first">
-                  <td *ngIf="firstElement">
+                <tr *ngFor="let evaluator of evaluator">
+                  <td >
                     <mat-checkbox [checked]="evaluatorSelected" (change)="switchEvaluator(); botsValidationError = ''" color="primary">
                       {{ evaluator }}
                       <i *ngIf="this.active.includes(evaluator)" style="color: limegreen" class="fa fa-circle"></i>
@@ -303,8 +303,8 @@
             <div class="card-body">
               <table class="table">
                 <tbody>
-                <tr *ngFor="let assistant of assistant; let firstElement = first">
-                  <td *ngIf="firstElement">
+                <tr *ngFor="let assistant of assistant">
+                  <td>
                     <mat-checkbox [checked]="assistantSelected"
                                   (change)="switchAssistant(); botsValidationError = ''"
                                   color="primary">

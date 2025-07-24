@@ -34,7 +34,7 @@ object Cli {
             AssignmentCommand(),
             UserCommand(),
             ChatCommand(),
-            EvaluationCommand()
+            // EvaluationCommand()
         )
 
         val terminal = try {

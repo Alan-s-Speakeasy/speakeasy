@@ -4,7 +4,7 @@ import ch.ddis.speakeasy.api.AccessManagedRestHandler
 import ch.ddis.speakeasy.api.RestApiRole
 import ch.ddis.speakeasy.api.RestHandler
 import ch.ddis.speakeasy.chat.ChatEventListener
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.db.UserId
 import io.javalin.http.sse.SseClient
 import io.javalin.security.RouteRole
 import java.util.function.Consumer

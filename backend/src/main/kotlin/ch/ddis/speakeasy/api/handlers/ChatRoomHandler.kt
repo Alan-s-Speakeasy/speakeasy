@@ -3,9 +3,10 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.feedback.FeedbackManager
+import ch.ddis.speakeasy.db.ChatRepository
+import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.feedback.FormManager
-import ch.ddis.speakeasy.user.UserId
+import ch.ddis.speakeasy.user.SessionId
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.UID
@@ -18,6 +19,7 @@ import io.javalin.openapi.*
 import io.javalin.security.RouteRole
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
+import java.lang.IndexOutOfBoundsException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -40,12 +42,12 @@ data class ChatRoomInfo(
         room.formRef,
         room.uid.string,
         room.startTime,
-        room.remainingTime,
+        room.computeRemainingTime(),
         room.users.values.toList(),
         room.users[userId],
         room.prompt,
         room.testerBotAlias,
-        room.markAsNoFeedback
+        room.isMarkedAsNoFeedback()
     )
 }
 
@@ -64,10 +66,10 @@ data class ChatRoomAdminInfo(
         room.formRef,
         room.uid.string,
         room.startTime,
-        room.remainingTime,
+        room.computeRemainingTime(),
         room.users.map { ChatRoomUserAdminInfo(it.value, UserManager.getUsernameFromId(it.key) ?: "n/a") },
         room.prompt,
-        room.markAsNoFeedback
+        room.isMarkedAsNoFeedback()
     )
 }
 
@@ -134,7 +136,8 @@ class ListAssessedChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManaged
         )
 
         return ChatRoomList(
-            ChatRoomManager.getAssessedOrMarkedRoomsByUserId(session.user.id.UID()).map { ChatRoomInfo(it, session.user.id.UID()) }
+            ChatRoomManager.getAssessedOrMarkedRoomsByUserId(session.user.id.UID())
+                .map { ChatRoomInfo(it, session.user.id.UID()) }
         )
     }
 }
@@ -151,9 +154,17 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         tags = ["Admin"],
         queryParams = [
             OpenApiParam("page", Int::class, "page number for pagination. Defaults to 1."),
-            OpenApiParam("limit", Int::class, "number of rooms to return per page. If not specified, there is no limit."),
-            OpenApiParam("timeRange", String::class, "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
-                    "If not specified, all rooms are returned."),
+            OpenApiParam(
+                "limit",
+                Int::class,
+                "number of rooms to return per page. If not specified, there is no limit."
+            ),
+            OpenApiParam(
+                "timeRange",
+                String::class,
+                "Comma-separated list of two timestamps UNIX MILLISECONDS to filter rooms by STARTING time range. " +
+                        "If not specified, all rooms are returned."
+            ),
             OpenApiParam(
                 name = "userTuples",
                 type = Array<String>::class,
@@ -188,10 +199,16 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         val filteredRooms = allRooms.filter { room ->
             // Filter by time range if timeRange is provided
             (timeRange == null || (room.startTime in timeRange[0]..timeRange[1])) &&
-            // Equivalent to usertuple[i] \subseteq room.users. If none of userIds are invalid, this is equivalent to
-            // check subset equality. (an "invalidID" here Is used a wildcard)
-            // This should be a proper SQL/else command instead of doing O(nm) stuff, but whatever.
-            (userTuples.isEmpty() || userTuples.any { tuple -> tuple.all { userId -> UserId.isInvalid(userId) || room.users.containsKey(userId) } })
+                    // Equivalent to usertuple[i] \subseteq room.users. If none of userIds are invalid, this is equivalent to
+                    // check subset equality. (an "invalidID" here Is used a wildcard)
+                    // This should be a proper SQL/else command instead of doing O(nm) stuff, but whatever.
+                    (userTuples.isEmpty() || userTuples.any { tuple ->
+                        tuple.all { userId ->
+                            UserId.isInvalid(userId) || room.users.containsKey(
+                                userId
+                            )
+                        }
+                    })
         }
         if (filteredRooms.isEmpty()) {
             return ChatRoomAdminList(0, emptyList())
@@ -202,7 +219,8 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         val endIndex = startIndex + (limit ?: filteredRooms.size)
         val paginatedRooms = filteredRooms.subList(
             startIndex.coerceAtLeast(0),
-            endIndex.coerceAtMost(filteredRooms.size))
+            endIndex.coerceAtMost(filteredRooms.size)
+        )
 
         return ChatRoomAdminList(
             numOfAllRooms = filteredRooms.size,
@@ -243,7 +261,7 @@ data class ChatRoomState(
     constructor(room: ChatRoom, since: Long, userId: UserId) : this(
         ChatRoomInfo(room, userId),
         ChatMessage.toRestMessages(room.getMessagesSince(since, userId)),
-        room.getAllReactions()
+        room.getReactions()
     )
 }
 
@@ -285,7 +303,8 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
         val since = ctx.queryParam("since")?.toLongOrNull()
             ?: throw ErrorStatusException(400, "Parameter 'since' is missing!/ill formatted", ctx)
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room =
+            ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (session.user.role != UserRole.ADMIN) {
             if (!room.users.containsKey(session.user.id.UID())) {
@@ -298,7 +317,7 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
     }
 }
 
-class ExportChatRoomsHandler: GetRestHandler<Unit>, AccessManagedRestHandler {
+class ExportChatRoomsHandler : GetRestHandler<Unit>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.ADMIN)
     override val route = "rooms/export"
 
@@ -423,11 +442,16 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room = ChatRoomManager.getFromId(roomId, withListeners = true) ?: throw ErrorStatusException(
+            404,
+            "Room ${roomId.string} not found",
+            ctx
+        )
 
+        // Means that the user is not a member of the chatroom
         val userAlias = room.users[session.user.id.UID()] ?: throw ErrorStatusException(401, "Unauthorized", ctx)
 
-        if (!room.active) {
+        if (!room.isActive()) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
@@ -438,18 +462,23 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableSet() ?: mutableSetOf()
 
-        if(recipients.isEmpty() || recipients.first().isBlank()){
+        if (recipients.isEmpty() || recipients.first().isBlank()) {
             recipients.addAll(room.users.values)
         }
 
-        val (recipientsList, finalMessage) = ChatRoomManager.processMessageAndRecipients(message, room, userAlias) ?: return SuccessStatus("Message not received")
+        val (recipientsList, finalMessage) = ChatRoomManager.processMessageAndRecipients(message, room, userAlias)
+            ?: return SuccessStatus("Message not received")
 
-        if(recipientsList.isNotEmpty()){
+        if (recipientsList.isNotEmpty()) {
             recipients = recipientsList
         }
 
-        room.addMessage(ChatMessage(finalMessage,
-            session.user.id.UID(), userAlias, session.sessionId, room.nextMessageOrdinal, recipients, isRead = false))
+        room.addMessage(
+            ChatMessage(
+                finalMessage,
+                session.user.id.UID(), userAlias, SessionId.INVALID, -1, recipients, isRead = false
+            )
+        )
 
         return SuccessStatus("Message received")
 
@@ -490,13 +519,14 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room =
+            ChatRoomManager.getFromId(roomId, withListeners = true) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 
-        if (!room.active) {
+        if (!room.isActive()) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
@@ -561,9 +591,14 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         var username = request.username
         var chatRoomTime = 10 * 60 * 1000
 
-        if (username == developmentBotUsername){
+        if (username == developmentBotUsername) {
             val testerBotRole = UserRole.TESTER
-            val testerBot = ChatRoomManager.getBot(testerBotRole)
+
+            val testerBot = try {
+                ChatRoomManager.getBot(testerBotRole)
+            } catch (e: IndexOutOfBoundsException) {
+                throw ErrorStatusException(500, "No bot with role $testerBotRole found", ctx)
+            }
             username = testerBot
             chatRoomTime = 60 * 60 * 1000
         }
@@ -573,12 +608,12 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             throw ErrorStatusException(404, "The feedback form name is not valid", ctx)
         }
 
-        ChatRoomManager.create(
+        val room = ChatRoomManager.create(
             userIds = listOf(session.user.id.UID(), UserManager.getUserIdFromUsername(username)!!),
             formRef = formRef,
-            log = true,
             prompt = null,
-            endTime = System.currentTimeMillis() + chatRoomTime)
+            endTime = System.currentTimeMillis() + chatRoomTime
+        )
 
         return SuccessStatus("Chatroom created")
 
@@ -620,15 +655,16 @@ class PatchNewUserHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestHa
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room =
+            ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (!room.active) {
+        if (!room.isActive()) {
             throw ErrorStatusException(400, "Chatroom not active", ctx)
         }
 
         val newUser = UserManager.getUserIdFromUsername(ctx.body())!!
 
-        ChatRoomManager.addUser(newUser, roomId)
+        room.addUser(newUser)
 
         return SuccessStatus("User added")
 
@@ -670,7 +706,8 @@ class CloseChatRoomHandler : PatchRestHandler<SuccessStatus>, AccessManagedRestH
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room =
+            ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
@@ -716,7 +753,8 @@ class GetChatRoomUsersStatusHandler : GetRestHandler<Map<String, Boolean>>, Acce
             throw ErrorStatusException(400, "Parameter 'roomId' is missing!'", ctx)
         }).UID()
 
-        val room = ChatRoomManager[roomId] ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
+        val room =
+            ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
         if (!room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)

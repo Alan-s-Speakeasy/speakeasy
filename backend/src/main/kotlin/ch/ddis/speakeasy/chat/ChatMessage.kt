@@ -82,7 +82,15 @@ data class ExportableMessage(
     }
 }
 
-data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, val recipients: Set<String>, val isRead: Boolean)
+data class RestChatMessage(val timeStamp: Long, val authorAlias: String, val ordinal: Int, val message: String, val recipients: Set<String>,
+                            // By default, Springdoc/Jackson strip the "is" prefix from boolean properties,
+                            // so `isRead` becomes `read` in the OpenAPI schema.
+                            // See: https://stackoverflow.com/questions/60668267/springdoc-ignoring-is-prefix-for-attributes-like-isselected :contentReference[oaicite:12]{index=12}
+                            // To preserve the name in JSON and generated clients, force it with @JsonProperty("isRead").
+                           // Otherwise, the server will send `isRead` but the client will expect `read`.
+                           @field:com.fasterxml.jackson.annotation.JsonProperty("read")
+                           @get:com.fasterxml.jackson.annotation.JsonProperty("read")
+                           val isRead: Boolean)
 // TODO: what's the meaning of recipients and isRead? It seems isRead is useless, through
 data class SseChatMessage(val roomId:String, val timeStamp: Long, val authorAlias: String, val ordinal: Int,
                           val message: String, val recipients: Set<String>)

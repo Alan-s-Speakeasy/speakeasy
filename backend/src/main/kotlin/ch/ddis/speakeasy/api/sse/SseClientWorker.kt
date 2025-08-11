@@ -42,9 +42,6 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
         val userSession: UserSession = AccessManager.getUserSessionForSessionToken(client.ctx().sessionToken())
             ?: throw ErrorStatusException( 401,  "Unauthorized", client.ctx() )
 
-        if (userSession.user.role == UserRole.BOT) {
-            throw ErrorStatusException( 401,  "Unauthorized", client.ctx() )
-        } // not accept BOT
 
         sessionToken = client.ctx().sessionToken()!!
         sessionId = userSession.sessionId

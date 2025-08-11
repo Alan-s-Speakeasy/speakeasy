@@ -11,7 +11,7 @@ import java.util.function.Consumer
 
 object SseRoomHandler: Consumer<SseClient> , RestHandler, AccessManagedRestHandler {
     override val route = "rooms"
-    override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.HUMAN)  // not accept bots
+    override val permittedRoles: Set<RouteRole> = setOf(RestApiRole.USER)
 
     override fun accept(client: SseClient) {
         client.keepAlive()

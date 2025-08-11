@@ -1,13 +1,15 @@
 import {Pipe, PipeTransform} from "@angular/core";
+import { environment } from "src/environments/environment";
 
 @Pipe({name: 'chatCommands'})
 export class ChatCommandsPipe implements PipeTransform {
 
-  private basePath = 'https://files.ifi.uzh.ch/ddis/teaching/2021/ATAI/dataset/movienet/';
+  private basePath = environment.basePath;
 
   transform(message: string): string {
     return message
       // Here we don't allow any tag in the messages to work on the front-end rendering, such as <pre> </br> and so on.
+      // Note that the real sanitization is done afterward by Angular when displaying that on the frontend.
       .replace(/<\//g, "&lt;&#47;") // replace all "</"
       .replace(/</g, "&lt;") // replace all "<"
       .replace(/wd:([qQ][0-9]+)/g, "<a target='_blank' href='https://www.wikidata.org/wiki/$1'>$1</a>")

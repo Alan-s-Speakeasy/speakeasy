@@ -1,0 +1,49 @@
+/* Enhance search input styling */
+.input-group .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+/* Smooth transition for disabled clear button */
+.btn:disabled {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.btn:not(:disabled) {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* Filter icon styling for consistency */
+th .fa-filter {
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+th .fa-filter:hover {
+  color: #0d6efd;
+}
+
+/* Popover search input styling */
+.popover-body .input-group {
+  min-width: 250px;
+}
+
+.popover-body .input-group .form-control {
+  font-size: 0.875rem;
+}
+
+/* Search results info styling */
+.search-info {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-style: italic;
+}

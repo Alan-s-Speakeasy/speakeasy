@@ -244,9 +244,17 @@ class ChatTest {
 
         val testListener = object : ChatEventListener {
             override val isActive = true
-            override fun onNewRoom(chatRoom: ChatRoom) { receivedRoom = chatRoom }
-            override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) { receivedMessage = chatMessage }
-            override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) { receivedReaction = chatMessageReaction }
+            override fun onNewRoom(chatRoom: ChatRoom) {
+                receivedRoom = chatRoom
+            }
+
+            override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) {
+                receivedMessage = chatMessage
+            }
+
+            override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) {
+                receivedReaction = chatMessageReaction
+            }
         }
 
         // Create user and chat room
@@ -263,7 +271,14 @@ class ChatTest {
         assertEquals(chatRoom.uid, receivedRoom?.uid, "Listener should receive the correct room")
 
         // Add a message and verify onMessage
-        val message = ChatMessage("Test message for listener", userId, "ListenerTest", SessionId.INVALID, 0, setOf("ListenerTest"))
+        val message = ChatMessage(
+            "Test message for listener",
+            userId,
+            "ListenerTest",
+            SessionId.INVALID,
+            0,
+            setOf("ListenerTest")
+        )
         chatRoom.addMessage(message)
         assertNotNull(receivedMessage, "Listener should receive message notification")
         assertEquals(message.message, receivedMessage?.message, "Listener should receive the correct message")
@@ -1135,5 +1150,168 @@ class ChatTest {
         assertNotNull(retrievedRoom)
         assertEquals("", retrievedRoom.formRef)
         assertEquals("Original prompt", retrievedRoom.prompt)
+    }
+
+    @Test
+    fun `ChatRoomManager should search chat rooms by various criteria`() {
+        // Create test users
+        UserManager.addUser("searchuser1", UserRole.HUMAN, PlainPassword("password1"))
+        UserManager.addUser("searchuser2", UserRole.HUMAN, PlainPassword("password2"))
+        UserManager.addUser("searchuser3", UserRole.HUMAN, PlainPassword("password3"))
+
+        val user1Id = UserManager.getUserIdFromUsername("searchuser1")!!
+        val user2Id = UserManager.getUserIdFromUsername("searchuser2")!!
+        val user3Id = UserManager.getUserIdFromUsername("searchuser3")!!
+
+        val room0 = ChatRoomManager.create(
+            userIds = listOf(user1Id, user2Id, user3Id),
+            prompt = "Initial room",
+            endTime = System.currentTimeMillis() + 10000 // Set end time far in the future
+        )
+        val baseTime = System.currentTimeMillis()
+
+        // Create chat rooms with different properties for testing
+        val room1 = ChatRoomManager.create(
+            userIds = listOf(user1Id),
+            prompt = "Machine learning discussion",
+            endTime = baseTime + 1000 // Set end time to ensure it falls within search range
+        )
+
+        // Wait a bit to ensure different timestamps
+        Thread.sleep(10)
+
+        val room2 = ChatRoomManager.create(
+            userIds = listOf(user2Id),
+            prompt = "Natural language processing",
+            endTime = baseTime + 2000 // Set end time to ensure it falls within search range
+        )
+
+        Thread.sleep(10)
+
+        val room3 = ChatRoomManager.create(
+            userIds = listOf(user1Id, user2Id),
+            prompt = "Deep learning algorithms",
+            endTime = baseTime + 2000
+        )
+
+        Thread.sleep(10)
+
+        val room4 = ChatRoomManager.create(
+            userIds = listOf(user3Id),
+            prompt = "Computer vision tasks",
+            endTime = baseTime + 2000
+        )
+
+        val searchEndTime = baseTime + 3000
+
+        // Test 1: Search by empty criteria (should return all rooms in time range)
+        val allRooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = null,
+            userIds = emptyList(),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertFalse(allRooms.any { it.uid == room0.uid }) // room0 should not - before the bounds
+        assertTrue(allRooms.any { it.uid == room1.uid })
+        assertTrue(allRooms.any { it.uid == room2.uid })
+        assertTrue(allRooms.any { it.uid == room3.uid })
+        // assertEquals(3, allRooms.size, "Should find at least the 3 created rooms")
+
+        // Test 2: Search by user ID (user1 should be in room1 and room3)
+        val user1Rooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = null,
+            userIds = listOf(user1Id),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertTrue(user1Rooms.any { it.uid == room1.uid })
+        assertTrue(user1Rooms.any { it.uid == room3.uid })
+        assertFalse(user1Rooms.any { it.uid == room2.uid })
+        assertFalse(user1Rooms.any { it.uid == room4.uid })
+
+        // Test 3: Search by multiple user IDs (should find rooms containing any of these users)
+        val multiUserRooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = null,
+            userIds = listOf(user1Id, user3Id),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertTrue(multiUserRooms.any { it.uid == room1.uid }) // has user1
+        assertTrue(multiUserRooms.any { it.uid == room3.uid }) // has user1
+        assertTrue(multiUserRooms.any { it.uid == room4.uid }) // has user3
+        // room2 should not be included as it only has user2
+
+        // Test 4: Search by prompt substring
+        val learningRooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = "learning",
+            userIds = emptyList(),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertTrue(learningRooms.any { it.uid == room1.uid }) // "Machine learning discussion"
+        assertTrue(learningRooms.any { it.uid == room3.uid }) // "Deep learning algorithms"
+        assertFalse(learningRooms.any { it.uid == room2.uid }) // "Natural language processing"
+        assertFalse(learningRooms.any { it.uid == room4.uid }) // "Computer vision tasks"
+
+        // Test 5: Search by room ID substring
+        val roomIdSubstring = room1.uid.string
+        val idMatchRooms = ChatRoomManager.search(
+            queryId = roomIdSubstring,
+            queryPrompt = null,
+            userIds = emptyList(),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertTrue(idMatchRooms.any { it.uid == room1.uid })
+
+        // Test 6: Search with combined criteria (user + prompt)
+        val combinedSearch = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = "learning",
+            userIds = listOf(user1Id),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertTrue(combinedSearch.any { it.uid == room1.uid }) // user1 + "learning"
+        assertTrue(combinedSearch.any { it.uid == room3.uid }) // user1 + "learning"
+        assertFalse(combinedSearch.any { it.uid == room2.uid }) // doesn't have user1
+        assertFalse(combinedSearch.any { it.uid == room4.uid }) // doesn't have user1
+
+        // Test 7: Search with restrictive time range
+        val restrictiveStartTime = room2.startTime + 5 // After room2 was created
+        val restrictiveRooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = null,
+            userIds = emptyList(),
+            startTime = restrictiveStartTime,
+            endTime = searchEndTime
+        )
+        assertFalse(restrictiveRooms.any { it.uid == room1.uid }) // Created before restrictive start
+        // room2, room3, room4 should potentially be included depending on exact timing
+
+        // Test 8: Search with no matches
+        val noMatchRooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = "nonexistent topic",
+            userIds = emptyList(),
+            startTime = baseTime,
+            endTime = searchEndTime
+        )
+        assertTrue(noMatchRooms.isEmpty())
+
+        // Test 9: Search with future time range (should find nothing)
+        val futureTime = System.currentTimeMillis() + 10000
+        val futureRooms = ChatRoomManager.search(
+            queryId = null,
+            queryPrompt = null,
+            userIds = emptyList(),
+            startTime = futureTime,
+            endTime = futureTime + 1000
+        )
+        assertTrue(futureRooms.isEmpty())
     }
 } 

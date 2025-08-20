@@ -3,7 +3,6 @@ package ch.ddis.speakeasy.api.handlers
 import ch.ddis.speakeasy.api.*
 import ch.ddis.speakeasy.chat.*
 import ch.ddis.speakeasy.cli.Cli
-import ch.ddis.speakeasy.db.ChatRepository
 import ch.ddis.speakeasy.db.UserId
 import ch.ddis.speakeasy.feedback.FormManager
 import ch.ddis.speakeasy.user.SessionId
@@ -19,7 +18,6 @@ import io.javalin.openapi.*
 import io.javalin.security.RouteRole
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
-import java.lang.IndexOutOfBoundsException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -84,7 +82,7 @@ class ListChatRoomsHandler : GetRestHandler<ChatRoomList>, AccessManagedRestHand
         summary = "Lists all Chatrooms for current user",
         operationId = OpenApiOperation.AUTO_GENERATE,
         methods = [HttpMethod.GET],
-        path = "/api/rooms",
+        path = "/api/rooms", // Should be /api/rooms/user
         tags = ["Chat"],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomList::class)]),
@@ -173,7 +171,9 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
                         "If not specified, all rooms are returned." +
                         "If one userId is blank, it is considered as a wildcard",
                 required = false
-            )
+            ),
+            OpenApiParam("id", String::class, "Id of the Chatroom", required = false),
+            OpenApiParam("prompt", String::class, "Prompt of the Chatroom", required = false)
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(ChatRoomAdminList::class)]),
@@ -190,8 +190,32 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
         }
         // If one id string is empty, UserId will be of type Invalid. This is used as a wildcard (all chatrooms with the other user, regardless of the other user)
         val userTuples = ctx.queryParams("userTuples").map { it.split(",").map { UserId(it.trim()) } }
+        val queryId = ctx.queryParam("id")
+        val queryPrompt = ctx.queryParam("prompt")
 
-        // Fetch and sort all rooms
+
+        val filteredRooms = ChatRoomManager.search(
+            queryId,
+            queryPrompt,
+            // See discussion below why filtering with users flattened and not the tuples.
+            userIds = userTuples.flatten().filterNot { UserId.isInvalid(it) },
+            startTime = timeRange?.get(0) ?: 0L,
+            endTime = timeRange?.get(1) ?: Long.MAX_VALUE,
+        ).filter{ room ->
+            // Equivalent to usertuple[i] \subseteq room.users. If none of userIds are invalid, this is equivalent to
+            // check subset equality. (an "invalidID" here Is used a wildcard)
+            // Quite tedious to do in pure SQL, even more in Exposed (skill issue) so we do it here.
+            // Should be fine, as results are already filtered by users.
+            (userTuples.isEmpty() || userTuples.any { tuple ->
+                        tuple.all { userId ->
+                            UserId.isInvalid(userId) || room.users.containsKey(
+                                userId
+                            )
+                        }
+                    })
+        }
+
+/*        // Fetch and sort all rooms
         val allRooms: List<ChatRoom> = ChatRoomManager.listAll().sortedByDescending { it.startTime }
 
         // Filter rooms based on provided parameters.
@@ -209,12 +233,13 @@ class ListAllChatRoomsHandler : GetRestHandler<ChatRoomAdminList>, AccessManaged
                             )
                         }
                     })
-        }
+        }*/
+
         if (filteredRooms.isEmpty()) {
             return ChatRoomAdminList(0, emptyList())
         }
 
-        // Apply pagination to allRooms based on page and limit
+        // The pagination is done after - not in the SQL - to get the full size of the filtered rooms.
         val startIndex = (page - 1) * (limit ?: filteredRooms.size)
         val endIndex = startIndex + (limit ?: filteredRooms.size)
         val paginatedRooms = filteredRooms.subList(
@@ -577,13 +602,10 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         val request = ctx.bodyAsClass(ChatRequest::class.java)
 
-        // Check if the requested user is connected. This should actually be removed, as we want to allow users
-        // to request chatrooms with offline users.
-        val requestedSessions = AccessManager.listSessions().filter { it.user.name == request.username }
-        if (false && requestedSessions.isEmpty()) {
+        if (!UserManager.checkUsernameExists(request.username)) {
             throw ErrorStatusException(
-                403,
-                "No session found for user ${request.username}",
+                404,
+                "User ${request.username} does not exist",
                 ctx
             )
         }

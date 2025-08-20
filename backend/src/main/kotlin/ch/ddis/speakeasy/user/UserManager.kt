@@ -92,6 +92,18 @@ object UserManager {
             return@dbQuery UserEntity.findById(userId.toUUID()) != null
     }
 
+    /**
+     * Checks if a user with the given username already exists.
+     *
+     * @param username The username of the user to check.
+     *
+     * @return True if a user with the given username exists, false otherwise.
+     */
+    fun checkUsernameExists(username: String): Boolean = DatabaseHandler.dbQuery {
+        val queryRes = UserEntity.find { Users.username eq username }
+        return@dbQuery !queryRes.empty()
+    }
+
     fun getMatchingUser(username: String, password: PlainPassword): UserEntity? = this.lock.read {
         DatabaseHandler.dbQuery {
             val queryRes =  UserEntity.find { Users.username eq username }

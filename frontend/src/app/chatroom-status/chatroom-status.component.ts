@@ -49,6 +49,13 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
   selectedChatRoomsIdsForExport: Set<string> = new Set<string>();
   allChatRoomsAreSelectedForExport: boolean = false;
 
+  // Search functionality
+  searchTermActive: string = '';
+  searchTermAll: string = '';
+  searchPromptActive: string = '';
+  searchPromptAll: string = '';
+  filteredActiveChatroomDetails: FrontendChatroomDetail[] = [];
+
   ngOnInit(): void {
     this.titleService.setTitle("Chatroom Details")
 
@@ -66,8 +73,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         activechatrooms.rooms.forEach(room => {
           this.pushChatRoomDetails(this.activateChatroomDetails, room)
         })
+        this.applyActiveSearch();
         // update page info
-        const maxPage = Math.ceil(this.activateChatroomDetails.length / this.ITEM_PER_PAGE);
+        const maxPage = Math.ceil(this.filteredActiveChatroomDetails.length / this.ITEM_PER_PAGE);
         if (this.currentPageOfActivateRooms > maxPage) { this.currentPageOfActivateRooms = maxPage }
         if (activechatrooms.rooms.length > 0 && this.currentPageOfActivateRooms == 0) {
           this.currentPageOfActivateRooms = 1
@@ -82,6 +90,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     this.adminService.getApiUserList().subscribe((users) => {
       this.allUsers = users
     })
+
+    // Initialize filtered arrays for active chatrooms
+    this.filteredActiveChatroomDetails = [...this.activateChatroomDetails];
   }
 
   paginate<T>(list: T[], currentPage: number):  T[] {
@@ -97,6 +108,8 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     this.dateRangeSelected = {from: null, to: null};
     this.selectedUserConditions = [];
     this.selectedChatRoomsIdsForExport = new Set<string>();
+    this.searchTermAll = '';
+    this.searchPromptAll = '';
     // Clear selected chatrooms from localStorage
     this.frontendDataService.removeItem('selectedChatrooms');
     this.setCurrentPage(1, false);
@@ -127,7 +140,9 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
         this.currentPageOfAllRooms,
         this.ITEM_PER_PAGE,
         timeRange_str,
-        selectedUsersTuples_str
+        selectedUsersTuples_str,
+        this.searchTermAll.trim(),
+        this.searchPromptAll.trim(),
         )
         .pipe(take(1))
         .subscribe((paginatedRooms) => {
@@ -179,7 +194,7 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
     else {
       this.selectedChatRoomsIdsForExport.add(roomID);
     }
-    
+
     // Save selected chatrooms to localStorage
     this.frontendDataService.setItem('selectedChatrooms', JSON.stringify(Array.from(this.selectedChatRoomsIdsForExport)));
   }
@@ -219,6 +234,108 @@ export class ChatroomStatusComponent implements OnInit, OnDestroy {
       partnerAlias: user2.username,
       backUrl: "chatroomStatus"
     } } ).then()
+  }
+
+  /**
+   * Apply search filter to active chatrooms based on room ID and prompt (client-side)
+   */
+  applyActiveSearch(): void {
+    let filtered = [...this.activateChatroomDetails];
+
+    // Filter by room ID if search term is provided
+    if (this.searchTermActive.trim()) {
+      const searchTerm = this.searchTermActive.toLowerCase().trim();
+      filtered = filtered.filter(room =>
+        room.roomID.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Filter by prompt if search term is provided
+    if (this.searchPromptActive.trim()) {
+      const searchPrompt = this.searchPromptActive.toLowerCase().trim();
+      filtered = filtered.filter(room =>
+        room.prompt.toLowerCase().includes(searchPrompt)
+      );
+    }
+
+    this.filteredActiveChatroomDetails = filtered;
+    this.updateActivePagination();
+  }
+
+  /**
+   * Update pagination info for active rooms after filtering
+   */
+  private updateActivePagination(): void {
+    const maxPage = Math.ceil(this.filteredActiveChatroomDetails.length / this.ITEM_PER_PAGE);
+    if (this.currentPageOfActivateRooms > maxPage && maxPage > 0) {
+      this.currentPageOfActivateRooms = maxPage;
+    }
+    if (this.filteredActiveChatroomDetails.length > 0 && this.currentPageOfActivateRooms == 0) {
+      this.currentPageOfActivateRooms = 1;
+    }
+    this.pageArrayOfActivateRooms = Array.from({ length: maxPage }, (_, i) => i + 1);
+  }
+
+  /**
+   * Handle search input changes for active chatrooms
+   */
+  onActiveSearchChange(): void {
+    this.currentPageOfActivateRooms = 1;
+    this.applyActiveSearch();
+  }
+
+  /**
+   * Handle search input changes for all chatrooms (server-side filtering)
+   */
+  onAllSearchChange(): void {
+    this.setCurrentPage(1, false);
+  }
+
+  /**
+   * Handle prompt search input changes for active chatrooms
+   */
+  onActivePromptSearchChange(): void {
+    this.currentPageOfActivateRooms = 1;
+    this.applyActiveSearch();
+  }
+
+  /**
+   * Handle prompt search input changes for all chatrooms (server-side filtering)
+   */
+  onAllPromptSearchChange(): void {
+    this.setCurrentPage(1, false);
+  }
+
+  /**
+   * Clear active search and reset to show all active chatrooms
+   */
+  clearActiveSearch(): void {
+    this.searchTermActive = '';
+    this.applyActiveSearch();
+  }
+
+  /**
+   * Clear all search and reset to show all chatrooms (server-side)
+   */
+  clearAllSearch(): void {
+    this.searchTermAll = '';
+    this.setCurrentPage(1, false);
+  }
+
+  /**
+   * Clear active prompt search and reset to show all active chatrooms
+   */
+  clearActivePromptSearch(): void {
+    this.searchPromptActive = '';
+    this.applyActiveSearch();
+  }
+
+  /**
+   * Clear all prompt search and reset to show all chatrooms (server-side)
+   */
+  clearAllPromptSearch(): void {
+    this.searchPromptAll = '';
+    this.setCurrentPage(1, false);
   }
 
   ngOnDestroy() {

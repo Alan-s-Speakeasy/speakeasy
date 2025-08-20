@@ -104,15 +104,20 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // request chatroom with a specified user
   uname = new UntypedFormControl("")
+
   requestChatRoom() {
     this.chatService.postApiRoomsRequest({username: this.uname.value} as ChatRequest).subscribe(
       (response) => {
-        this.alertService.success("Your request is successful. A new chatroom has been created with "+this.uname.value,this.options)
+        this.alertService.success("Your request is successful. A new chatroom has been created with " + this.uname.value, this.options)
       },
       (error) => {
-        this.alertService.error("Your request to create a new chatroom is unsuccessful. Try again later.",this.options)
-        },
-      ()=>{
+        if (error.status == 404) {
+          this.alertService.error("User " + this.uname.value + " does not exist.", this.options)
+        } else {
+          this.alertService.error("Your request to create a new chatroom is unsuccessful. Try again later.", this.options)
+        }
+      },
+      () => {
         this.uname.reset()
       });
   }

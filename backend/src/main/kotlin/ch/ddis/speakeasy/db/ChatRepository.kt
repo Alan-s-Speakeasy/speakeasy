@@ -105,6 +105,10 @@ object ChatRepository {
         ChatRoomEntity.all().map { it.toDomainModel() }.toList()
     }
 
+    fun countChatRooms(): Int = DatabaseHandler.dbQuery {
+        ChatRoomEntity.all().count().toInt()
+    }
+
     /**
      * Returns a list of all active chat rooms.
      * An active chat room is defined as one that has started before now and either has no end time or an end time in the future.
@@ -224,7 +228,7 @@ object ChatRepository {
                 // If successful, return the message with the assigned ordinal
                 return@dbQuery message.copy(ordinal = nextOrdinal)
             } catch (e: ExposedSQLException) {
-                // If there's a constraint violation, retry with a new ordinal
+                // If there's a constraint violation on the ordinal, retry with a new ordinal.
                 if (it == MAX_RETRIES - 1) throw e // If it's the last attempt, rethrow the exception
             }
         }
@@ -477,6 +481,47 @@ object ChatRepository {
         val chatRoom = ChatRoomEntity.findById(chatRoomId.toUUID())
             ?: throw IllegalArgumentException("Chat room with ID ${chatRoomId.string} not found")
         chatRoom.prompt = prompt
+    }
+
+    /**
+     * Search the chat rooms based on various criteria.
+     *
+     * @param queryId Optional query ID to filter chat rooms by ID substring WARNING : ONLY PERFECT MATCH IS SUPPORTED
+     * @param queryPrompt Optional query prompt to filter chat rooms by prompt substring
+     * @param userIds List of user IDs to filter chat rooms. Returns all chat rooms if the list is empty.
+     * @param startTime Start time of the range (inclusive)
+     * @param endTime End time of the range (exclusive)
+     * @return List of chat room IDs that match the criteria
+     */
+    // Should defintly be a builder this is real ugly
+    fun search(
+        queryId: String,
+        queryPrompt: String,
+        userIds: List<UserId>,
+        startTime: Long,
+        endTime: Long,
+    ): List<ChatRoomId> = DatabaseHandler.dbQuery {
+
+        // Get chat rooms that have participants in the specified user IDs and within the time range
+        (ChatRooms innerJoin ChatroomParticipants).select(ChatRooms.id)
+            .where {
+                    var baseCondition = ((ChatRooms.startTime greaterEq startTime) and
+                            (ChatRooms.endTime lessEq endTime))
+                if (userIds.isNotEmpty()) {
+                    baseCondition = baseCondition and (ChatroomParticipants.user inList userIds.map { it.toUUID() })
+                }
+                if (queryId.isNotEmpty()) {
+                    // Only perfect match is supported for now !!!
+                    baseCondition = baseCondition and (ChatRooms.id eq UID(queryId).toUUID()) // Assuming queryId is a valid UUID string
+                }
+                if (queryPrompt.isNotEmpty()) {
+                    baseCondition = baseCondition and (ChatRooms.prompt like "%$queryPrompt%")}
+                baseCondition
+            }
+            .orderBy(ChatRooms.startTime to SortOrder.DESC)
+            .map { it[ChatRooms.id].UID() }
+            .distinct()
+            .toList()
     }
 
 

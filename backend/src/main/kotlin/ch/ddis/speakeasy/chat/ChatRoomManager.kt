@@ -71,6 +71,7 @@ object ChatRoomManager {
                 .sortedBy { it.startTime }
         }
     }
+
     // Legacy logic
 //        when (bot) {
 //            // TODO: also filter out assessed rooms for bot?
@@ -88,6 +89,26 @@ object ChatRoomManager {
 //            }
 //                .sortedBy { it.startTime }
 //        }
+
+    /**
+     * Retrieves a list of chat rooms that match the specified user IDs and time range.
+     *
+     * @param queryId String of a partial id, which can be null to ignore ID filtering. Used with containance check.
+     * @param queryPrompt String of a partial prompt, which can be null to ignore prompt filtering.
+     * @param userIds List of user IDs to filter chat rooms by. If empty, retrieves all chat rooms in the time range.
+     * @param startTime The start time of the range (inclusive).
+     * @param endTime The end time of the range (exclusive).
+     * @return A list of `ChatRoom` instances that match the criteria.
+     */
+    fun search(
+        queryId: String?, queryPrompt: String?, userIds: List<UserId>, startTime: Long, endTime: Long,
+    ): List<ChatRoom> {
+        // Empty userIds means we want all chat rooms in the time range.
+        val results =
+            ChatRepository.search(queryId ?: "", queryPrompt ?: "", userIds, startTime, endTime)
+                .mapNotNull { getFromId(it, withListeners = false) }
+        return results
+    }
 
     /**
      * Gets a list of chat rooms that have been assessed or marked as no feedback by the specified user.

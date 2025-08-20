@@ -12,12 +12,84 @@
   </div>
 
   <div class="row p-2">
-    <h4 class="text-center">Active Chatrooms ({{ activateChatroomDetails.length }})</h4>
+    <h4 class="text-center">Active Chatrooms ({{ filteredActiveChatroomDetails.length }})</h4>
     <table class="table table-striped table-bordered">
       <thead>
       <tr class="table-success">
-        <th scope="col">Chatroom prompt</th>
-        <th scope="col">Chatroom ID</th>
+        <th scope="col">
+          <div class="d-flex flex-direction-column">
+            Chatroom prompt
+            <ng-template #popoverContentActivePromptSearch>
+              <div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fa fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search by Prompt..."
+                    [(ngModel)]="searchPromptActive"
+                    (input)="onActivePromptSearchChange()"
+                    autocomplete="off">
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="clearActivePromptSearch()"
+                    [disabled]="!searchPromptActive"
+                    title="Clear search">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+            <span
+              type="button"
+              [ngbPopover]="popoverContentActivePromptSearch"
+              [autoClose]="'outside'"
+              popoverTitle=""
+              placement="bottom">
+              <i class="fa fa-filter"></i>
+            </span>
+          </div>
+        </th>
+        <th scope="col">
+          <div class="d-flex flex-direction-column">
+            Chatroom ID
+            <ng-template #popoverContentActiveSearch>
+              <div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fa fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search by Room ID..."
+                    [(ngModel)]="searchTermActive"
+                    (input)="onActiveSearchChange()"
+                    autocomplete="off">
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="clearActiveSearch()"
+                    [disabled]="!searchTermActive"
+                    title="Clear search">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+            <span
+              type="button"
+              [ngbPopover]="popoverContentActiveSearch"
+              [autoClose]="'outside'"
+              popoverTitle=""
+              placement="bottom">
+              <i class="fa fa-filter"></i>
+            </span>
+          </div>
+        </th>
         <th scope="col">StartTime</th>
         <th scope="col">RemainingTime</th>
         <th scope="col">Members</th>
@@ -26,7 +98,7 @@
       </thead>
       <tbody>
       <tr class="align-middle"
-          *ngFor="let chatroomDetail of paginate(activateChatroomDetails, currentPageOfActivateRooms)">
+          *ngFor="let chatroomDetail of paginate(filteredActiveChatroomDetails, currentPageOfActivateRooms)">
         <td class="text-break">{{ chatroomDetail.prompt }}</td>
         <td>{{ chatroomDetail.roomID }}</td>
         <td>{{ chatroomDetail.startTime | date:'HH:mm:ss dd-MM-yyyy' }}</td>
@@ -42,7 +114,8 @@
     </table>
 
     <ngb-pagination
-      [collectionSize]="pageArrayOfActivateRooms.length"
+      [collectionSize]="filteredActiveChatroomDetails.length"
+      [pageSize]="ITEM_PER_PAGE"
       [maxSize]="5"
       [boundaryLinks]="true"
       (pageChange)="setCurrentPage($event, true)">
@@ -121,8 +194,80 @@
             </span>
           </div>
         </th>
-        <th scope="col" class="col-4">RoomPrompt</th>
-        <th scope="col" class="col-2">RoomID</th>
+        <th scope="col" class="col-4">
+          <div class="d-flex flex-direction-column">
+            RoomPrompt
+            <ng-template #popoverContentAllPromptSearch>
+              <div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fa fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search by Prompt..."
+                    [(ngModel)]="searchPromptAll"
+                    (input)="onAllPromptSearchChange()"
+                    autocomplete="off">
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="clearAllPromptSearch()"
+                    [disabled]="!searchPromptAll"
+                    title="Clear search">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+            <span
+              type="button"
+              [ngbPopover]="popoverContentAllPromptSearch"
+              [autoClose]="'outside'"
+              popoverTitle=""
+              placement="bottom">
+              <i class="fa fa-filter"></i>
+            </span>
+          </div>
+        </th>
+        <th scope="col" class="col-2">
+          <div class="d-flex flex-direction-column">
+            RoomID
+            <ng-template #popoverContentAllSearch>
+              <div>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fa fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search by Room ID..."
+                    [(ngModel)]="searchTermAll"
+                    (input)="onAllSearchChange()"
+                    autocomplete="off">
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="clearAllSearch()"
+                    [disabled]="!searchTermAll"
+                    title="Clear search">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+            <span
+              type="button"
+              [ngbPopover]="popoverContentAllSearch"
+              [autoClose]="'outside'"
+              popoverTitle=""
+              placement="bottom">
+              <i class="fa fa-filter"></i>
+            </span>
+          </div>
+        </th>
         <th scope="col">Status</th>
         <th scope="col">Watch</th>
       </tr>

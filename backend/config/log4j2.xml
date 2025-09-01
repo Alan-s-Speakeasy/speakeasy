@@ -3,6 +3,8 @@
 
     <Properties>
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %p %c - %msg%n</Property>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="ARCHIVE_DIR">${LOG_DIR}/archive</Property>
     </Properties>
 
     <Appenders>
@@ -11,18 +13,93 @@
             <MarkerFilter marker="REST" onMatch="DENY" onMismatch="ACCEPT"/>
         </Console>
 
-        <File name="RestRequests" fileName="logs/rest.log">
+        <!-- REST requests: roll daily or at 100MB, keep ~14 days -->
+        <RollingFile name="RestRequests"
+                     fileName="${LOG_DIR}/rest.log"
+                     filePattern="${ARCHIVE_DIR}/rest-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="${LOG_PATTERN}"/>
             <MarkerFilter marker="REST" onMatch="ACCEPT" onMismatch="DENY"/>
-        </File>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${ARCHIVE_DIR}" maxDepth="2">
+                    <IfFileName glob="rest-*.log.gz"/>
+                    <IfLastModified age="14d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
 
-        <File name="Libraries" fileName="logs/libraries.log">
+        <!-- Access events: roll daily or at 100MB, keep ~14 days -->
+        <RollingFile name="AccessLog"
+                     fileName="${LOG_DIR}/access.log"
+                     filePattern="${ARCHIVE_DIR}/access-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="${LOG_PATTERN}"/>
-        </File>
+            <MarkerFilter marker="ACCESS" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${ARCHIVE_DIR}" maxDepth="2">
+                    <IfFileName glob="access-*.log.gz"/>
+                    <IfLastModified age="14d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
 
-        <File name="Everything" fileName="logs/all.log">
+        <!-- Errors: roll daily or at 50MB, keep ~30 days -->
+        <RollingFile name="ErrorLog"
+                     fileName="${LOG_DIR}/errors.log"
+                     filePattern="${ARCHIVE_DIR}/errors-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="${LOG_PATTERN}"/>
-        </File>
+            <MarkerFilter marker="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="200">
+                <Delete basePath="${ARCHIVE_DIR}" maxDepth="2">
+                    <IfFileName glob="errors-*.log.gz"/>
+                    <IfLastModified age="30d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Third-party libraries: roll daily or at 100MB, keep ~14 days -->
+        <RollingFile name="Libraries"
+                     fileName="${LOG_DIR}/libraries.log"
+                     filePattern="${ARCHIVE_DIR}/libraries-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${ARCHIVE_DIR}" maxDepth="2">
+                    <IfFileName glob="libraries-*.log.gz"/>
+                    <IfLastModified age="14d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Catch-all: roll daily or at 100MB, keep ~14 days -->
+        <RollingFile name="Everything"
+                     fileName="${LOG_DIR}/all.log"
+                     filePattern="${ARCHIVE_DIR}/all-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="200">
+                <Delete basePath="${ARCHIVE_DIR}" maxDepth="2">
+                    <IfFileName glob="all-*.log.gz"/>
+                    <IfLastModified age="14d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
@@ -35,8 +112,29 @@
             <AppenderRef ref="Libraries"/>
         </Logger>
 
-        <Logger name="ch.ddis.speakeasy" level="INFO">
+        <!-- Main application logger -->
+        <Logger name="ch.ddis.speakeasy" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="Everything"/>
+        </Logger>
+
+        <!-- Request logging - captures REST API requests -->
+        <Logger name="ch.ddis.speakeasy.requests" level="INFO" additivity="false">
             <AppenderRef ref="RestRequests"/>
+            <AppenderRef ref="Everything"/>
+        </Logger>
+
+        <!-- Access logging - captures authentication and authorization events -->
+        <Logger name="ch.ddis.speakeasy.access" level="INFO" additivity="false">
+            <AppenderRef ref="AccessLog"/>
+            <AppenderRef ref="Everything"/>
+        </Logger>
+
+        <!-- Error logging - captures all errors -->
+        <Logger name="ch.ddis.speakeasy.api.RestApi" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ErrorLog"/>
+            <AppenderRef ref="Everything"/>
         </Logger>
 
         <Root level="INFO">

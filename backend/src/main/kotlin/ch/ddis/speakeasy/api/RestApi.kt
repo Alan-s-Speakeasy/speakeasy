@@ -3,6 +3,8 @@ package ch.ddis.speakeasy.api
 import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.api.sse.SseRoomHandler
 import ch.ddis.speakeasy.util.Config
+import ch.ddis.speakeasy.util.clearLoggingContext
+import ch.ddis.speakeasy.util.setupLoggingContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.kotlinModule
@@ -26,6 +28,8 @@ import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.eclipse.jetty.util.thread.QueuedThreadPool
+import org.slf4j.LoggerFactory
+import org.slf4j.MarkerFactory
 
 object RestApi {
 
@@ -33,6 +37,16 @@ object RestApi {
     
     // Public property for testing access
     val app: Javalin? get() = javalin
+    
+    // Loggers for different aspects of the application
+    private val logger = LoggerFactory.getLogger(RestApi::class.java)
+    private val requestLogger = LoggerFactory.getLogger("ch.ddis.speakeasy.requests")
+    private val accessLogger = LoggerFactory.getLogger("ch.ddis.speakeasy.access")
+    
+    // Markers for log filtering
+    private val REST_MARKER = MarkerFactory.getMarker("REST")
+    private val ACCESS_MARKER = MarkerFactory.getMarker("ACCESS")
+    private val ERROR_MARKER = MarkerFactory.getMarker("ERROR")
 
 
     /**
@@ -151,7 +165,45 @@ object RestApi {
             }
             it.staticFiles.add("html", Location.CLASSPATH)
             it.spaRoot.addFile("/", "html/index.html")
+        }.events { event ->
+            event.serverStarted {
+                logger.info("Javalin server started successfully on port ${config.httpPort}")
+                if (config.enableSsl) {
+                    logger.info("SSL enabled on port ${config.httpsPort}")
+                }
+            }
+            event.serverStopped {
+                logger.info("Javalin server stopped")
+            }
         }.before { ctx ->
+            // Set up request tracking
+            val startTime = System.currentTimeMillis()
+            ctx.attribute("startTime", startTime)
+            
+            val requestId = java.util.UUID.randomUUID().toString().take(8)
+            ctx.attribute("requestId", requestId)
+            
+            // Set up logging context for this request thread
+            ctx.setupLoggingContext()
+            
+            // Log request details with REST marker for filtering
+            requestLogger.info(REST_MARKER, 
+                "[{}] {} {} from {} - User-Agent: {}", 
+                requestId,
+                ctx.method(),
+                ctx.path(),
+                ctx.ip(),
+                ctx.userAgent() ?: "Unknown"
+            )
+
+            // Log query parameters if present
+            if (ctx.queryParamMap().isNotEmpty()) {
+                requestLogger.debug(REST_MARKER, 
+                    "[{}] Query params: {}", 
+                    requestId, 
+                    ctx.queryParamMap()
+                )
+            }
 
             //check for session cookie
             val cookieId = ctx.cookie(AccessManager.SESSION_COOKIE_NAME)
@@ -161,6 +213,7 @@ object RestApi {
                 ctx.cookie(AccessManager.SESSION_COOKIE_NAME, cookieId, AccessManager.SESSION_COOKIE_LIFETIME)
                 //store id in attribute for later use
                 ctx.attribute("session", cookieId)
+
             }
 
             //check for query parameter
@@ -171,6 +224,33 @@ object RestApi {
                 ctx.attribute("session", paramId)
             }
 
+        }.after { ctx ->
+            // Log response details
+            val startTime = ctx.attribute<Long>("startTime") ?: System.currentTimeMillis()
+            val requestId = ctx.attribute<String>("requestId") ?: "unknown"
+            val duration = System.currentTimeMillis() - startTime
+            
+            requestLogger.info(REST_MARKER,
+                "[{}] Response {} - Duration: {}ms - Size: {}",
+                requestId,
+                ctx.status(),
+                duration,
+                ctx.result()?.length ?: 0
+            )
+            
+            // Log slow requests as warnings
+            if (duration > 1000) {
+                requestLogger.warn(REST_MARKER,
+                    "[{}] SLOW REQUEST: {} {} took {}ms",
+                    requestId,
+                    ctx.method(),
+                    ctx.path(),
+                    duration
+                )
+            }
+            
+            // Clear logging context when request is complete
+            clearLoggingContext()
         }.routes {
             path("sse") {
                 path(SseRoomHandler.route) { // "room"
@@ -223,9 +303,43 @@ object RestApi {
             }
 
 
-        }.error(401) {
-            it.json(ErrorStatus("Unauthorized request!"))
+        }.error(401) { ctx ->
+            val requestId = ctx.attribute<String>("requestId") ?: "unknown"
+            accessLogger.warn(ACCESS_MARKER, 
+                "[{}] Unauthorized access attempt to {} from {}", 
+                requestId, 
+                ctx.path(), 
+                ctx.ip()
+            )
+            ctx.json(ErrorStatus("Unauthorized request!"))
+        }.error(404) { ctx ->
+            val requestId = ctx.attribute<String>("requestId") ?: "unknown"
+            requestLogger.info(REST_MARKER, 
+                "[{}] Resource not found: {}", 
+                requestId, 
+                ctx.path()
+            )
+            ctx.json(ErrorStatus("Resource not found!"))
+        }.error(429) { ctx ->
+            val requestId = ctx.attribute<String>("requestId") ?: "unknown"
+            accessLogger.warn(ACCESS_MARKER, 
+                "[{}] Rate limit exceeded for {} from {}", 
+                requestId, 
+                ctx.path(), 
+                ctx.ip()
+            )
+            ctx.json(ErrorStatus("Too many requests!"))
         }.exception(Exception::class.java) { e, ctx ->
+            val requestId = ctx.attribute<String>("requestId") ?: "unknown"
+            logger.error(ERROR_MARKER,
+                "[{}] Unhandled exception for {} {} from {}: {}", 
+                requestId,
+                ctx.method(),
+                ctx.path(), 
+                ctx.ip(),
+                e.message,
+                e
+            )
             ctx.status(500).json(ErrorStatus("Internal server error!"))
         }
 

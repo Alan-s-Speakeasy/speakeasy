@@ -533,12 +533,22 @@ export class UserStatusComponent implements OnInit, OnDestroy {
   }
 
 
-  readableTime(remainingTime: number): string {
-    const s = Math.floor(remainingTime / 1000);
-    const minutes = Math.floor(s / 60);
-    const seconds = s % 60;
+readableTime(remainingTime: number): string {
+  if (remainingTime < 0) {
+    return '00:00';
+  }
+
+  const s = Math.floor(remainingTime / 1000);
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = s % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  } else {
     return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   }
+}
 
   ngOnDestroy() {
     this.userListSubscription.unsubscribe();

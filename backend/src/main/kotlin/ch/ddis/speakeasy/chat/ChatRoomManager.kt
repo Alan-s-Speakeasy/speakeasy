@@ -13,6 +13,7 @@ object ChatRoomManager {
     private var indexTesterBot = -1
     private var indexAssistantBot = -1
     private var indexEvaluatorBot = -1
+    // Constants for identifying special users in messages, as in @tester, @assistant, @bot
     private val constantTester = "tester"
     private val constantAssistant = "assistant"
     private val constantUserBot = "bot"
@@ -216,6 +217,7 @@ object ChatRoomManager {
                 // This seems to manually add users ?
                 if (user == this.constantTester || user == this.constantAssistant) {
                     val botRole = if (user == this.constantTester) UserRole.TESTER else UserRole.ASSISTANT
+                    // The following lines add bots of the specified role to the recipients set if they are present in the room.
                     val testerBots = UserManager.getUsersIDsFromUserRole(botRole)
                     for (testerBot in testerBots) {
                         if (testerBot in room.users.keys) {

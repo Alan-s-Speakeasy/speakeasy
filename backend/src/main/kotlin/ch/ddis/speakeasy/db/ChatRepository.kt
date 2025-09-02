@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import ch.ddis.speakeasy.chat.ChatMessage as DomainChatMessage
 import ch.ddis.speakeasy.chat.ChatRoom as DomainChatRoom
@@ -59,11 +60,24 @@ class ChatMessageEntity(id: EntityID<CompositeID>) : CompositeEntity(id) {
 
 
     fun toDomainModel(): DomainChatMessage = DatabaseHandler.dbQuery {
+        val participantAliases = ChatRepository.getParticipantAliases(chatroom.id.UID())
+        val userIdToAlias = participantAliases.entries.associate { (k, v) -> k to v }
+
+        val recipientUserIds = ChatMessageRecipients
+            .select(ChatMessageRecipients.recipientUser)
+            .where {
+                (ChatMessageRecipients.chatRoom eq chatroom.id) and (ChatMessageRecipients.messageOrdinal eq ordinal.value)
+            }
+            .map { it[ChatMessageRecipients.recipientUser].UID() }
+
+        val recipientAliases = recipientUserIds.mapNotNull { userId -> userIdToAlias[userId] }.toSet()
+
         DomainChatMessage(
             authorUserId = sender.UID(),
             message = content,
             time = timestamp,
             ordinal = ordinal.value,
+            recipients = recipientAliases,
             // NOTE : See https://github.com/JetBrains/Exposed/issues/928
             // It is not possible to nicely get the alias from the many-to-many relationship database.
             authorAlias = ChatroomParticipants.select(ChatroomParticipants.alias).where {
@@ -217,13 +231,29 @@ object ChatRepository {
             val nextOrdinal = nextMessageOrdinalFor(chatRoomId)
             try {
                 // Try to insert the message with the next ordinal
-                ChatMessages.insert {
-                    it[chatRoom] = chatRoom_.id
-                    it[sender] = EntityID(message.authorUserId.toUUID(), Users)
-                    it[content] = message.message
-                    it[timestamp] = message.time
-                    it[ordinal] = nextOrdinal
+                transaction {
+                    ChatMessages.insert {
+                        it[chatRoom] = chatRoom_.id
+                        it[sender] = EntityID(message.authorUserId.toUUID(), Users)
+                        it[content] = message.message
+                        it[timestamp] = message.time
+                        it[ordinal] = nextOrdinal
+                    }
+
+                    // Store recipients
+                    if (message.recipients.isNotEmpty()) {
+                        val participantAliases = getParticipantAliases(chatRoomId)
+                        val aliasToUserId = participantAliases.entries.associateBy({ it.value }) { it.key }
+                        val recipientUserIds = message.recipients.mapNotNull { alias -> aliasToUserId[alias] }
+
+                        ChatMessageRecipients.batchInsert(recipientUserIds) { userId ->
+                            this[ChatMessageRecipients.chatRoom] = chatRoom_.id
+                            this[ChatMessageRecipients.messageOrdinal] = nextOrdinal
+                            this[ChatMessageRecipients.recipientUser] = EntityID(userId.toUUID(), Users)
+                        }
+                    }
                 }
+
                 message.ordinal = nextOrdinal
                 // If successful, return the message with the assigned ordinal
                 return@dbQuery message.copy(ordinal = nextOrdinal)
@@ -274,8 +304,7 @@ object ChatRepository {
     fun addReactionToMessage(
         chatRoomId: ChatRoomId,
         messageOrdinal: Int,
-        reaction: ChatMessageReactionType,
-        sender: UserId = UserId.INVALID
+        reaction: ChatMessageReactionType
     ): Unit = DatabaseHandler.dbQuery {
         findChatRoomById(
             chatRoomId

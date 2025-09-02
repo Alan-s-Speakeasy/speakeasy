@@ -24,6 +24,7 @@ typealias ChatRoomId = UID
 interface ChatRoom {
     val uid: ChatRoomId
     var testerBotAlias: String
+    // A map of user IDs to their aliases in this chat room.
     val users: Map<UserId, String>
     val aliasToUserId: Map<String, UserId>
     val assignment: Boolean
@@ -33,7 +34,12 @@ interface ChatRoom {
     var prompt: String
     fun getMessages(): List<ChatMessage>
     fun computeRemainingTime(): Long
-    fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage>
+    /**
+     * @return all [ChatMessage]s since a specified timestamp, while returning only the messages that the user is a recipient of.
+     *
+     * @userId The recipient that needs to be in the message's recipients. If null, all messages are returned.
+     */
+    fun getMessagesSince(since: Long, userId: UserId?): List<ChatMessage>
     fun addMessage(message: ChatMessage)
     fun addReaction(reaction: ChatMessageReaction)
     fun getReactionsForMessage(messageOrdinal: Int): List<ChatMessageReactionType>
@@ -141,12 +147,20 @@ internal class DatabaseChatRoom(
     }
 
     /**
-     * @return all [ChatMessage]s since a specified timestamp
+     * @return all [ChatMessage]s since a specified timestamp, while returning only the messages that the user is a recipient of.
      *
-     * @userId The recipients. Seems to be useless now.
+     * @userId The recipients.
      */
-    override fun getMessagesSince(since: Long, userId: UserId): List<ChatMessage> {
-        return ChatRepository.getMessagesFor(this.uid, since)
+    override fun getMessagesSince(since: Long, userId: UserId?): List<ChatMessage> {
+        val allMessages = ChatRepository.getMessagesFor(this.uid, since)
+        if (userId == null) {
+            return allMessages
+        }
+        val userAlias = this.users[userId] ?: return emptyList()
+
+        return allMessages.filter {
+            it.recipients.isEmpty() || it.recipients.contains(userAlias)
+        }
     }
 
     /**

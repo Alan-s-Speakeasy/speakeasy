@@ -24,6 +24,7 @@ object DatabaseHandler {
                 ChatroomParticipants,
                 ChatMessages,
                 ChatReactions,
+                ChatMessageRecipients,
             )
 
         }
@@ -45,6 +46,7 @@ object DatabaseHandler {
                 ChatroomParticipants,
                 ChatMessages,
                 ChatReactions,
+                ChatMessageRecipients,
             )
         }
     }

@@ -1314,4 +1314,146 @@ class ChatTest {
         )
         assertTrue(futureRooms.isEmpty())
     }
+
+    @Test
+    fun `should store and retrieve message with recipients`() {
+        // Create test users
+        UserManager.addUser("sender", UserRole.HUMAN, PlainPassword("password"))
+        UserManager.addUser("recipient1", UserRole.HUMAN, PlainPassword("password"))
+        UserManager.addUser("recipient2", UserRole.HUMAN, PlainPassword("password"))
+
+        val senderId = UserManager.getUserIdFromUsername("sender")!!
+        val recipient1Id = UserManager.getUserIdFromUsername("recipient1")!!
+        val recipient2Id = UserManager.getUserIdFromUsername("recipient2")!!
+
+        // Create chat room with all three users
+        val chatRoom = ChatRoomManager.create(
+            userIds = listOf(senderId, recipient1Id, recipient2Id),
+            prompt = "Recipient storage test"
+        )
+
+        val senderAlias = chatRoom.users[senderId]!!
+        val recipient1Alias = chatRoom.users[recipient1Id]!!
+        val recipient2Alias = chatRoom.users[recipient2Id]!!
+
+        // Create a message with specific recipients
+        val message = ChatMessage(
+            message = "This is a targeted message.",
+            authorUserId = senderId,
+            authorAlias = senderAlias,
+            authorSessionId = SessionId.INVALID,
+            recipients = setOf(recipient1Alias, recipient2Alias)
+        )
+
+        // Add the message to the chat room
+        chatRoom.addMessage(message)
+
+        // Retrieve messages from the repository to check persistence
+        val messagesFromDb = ChatRepository.getMessagesFor(chatRoom.uid)
+
+        // Verify the message and its recipients
+        assertEquals(1, messagesFromDb.size)
+        val retrievedMessage = messagesFromDb[0]
+
+        assertEquals("This is a targeted message.", retrievedMessage.message)
+        assertEquals(senderAlias, retrievedMessage.authorAlias)
+        assertEquals(2, retrievedMessage.recipients.size)
+        assertTrue(retrievedMessage.recipients.contains(recipient1Alias))
+        assertTrue(retrievedMessage.recipients.contains(recipient2Alias))
+    }
+
+    @Test
+    fun `should not store recipients who are not in the chat room`() {
+        // Create test users
+        UserManager.addUser("sender", UserRole.HUMAN, PlainPassword("password"))
+        UserManager.addUser("member_recipient", UserRole.HUMAN, PlainPassword("password"))
+        UserManager.addUser("non_member_user", UserRole.HUMAN, PlainPassword("password"))
+
+        val senderId = UserManager.getUserIdFromUsername("sender")!!
+        val memberRecipientId = UserManager.getUserIdFromUsername("member_recipient")!!
+        val nonMemberUserId = UserManager.getUserIdFromUsername("non_member_user")!!
+
+        // Create chat room with sender and one recipient
+        val chatRoom = ChatRoomManager.create(
+            userIds = listOf(senderId, memberRecipientId),
+            prompt = "Non-member recipient test"
+        )
+
+        val senderAlias = chatRoom.users[senderId]!!
+        val memberRecipientAlias = chatRoom.users[memberRecipientId]!!
+        val nonMemberAlias = "non_member_alias" // This alias does not exist in the chatroom
+
+        // Create a message with a mix of member and non-member recipients
+        val message = ChatMessage(
+            message = "This message is for members only.",
+            authorUserId = senderId,
+            authorAlias = senderAlias,
+            authorSessionId = SessionId.INVALID,
+            recipients = setOf(memberRecipientAlias, nonMemberAlias)
+        )
+
+        chatRoom.addMessage(message)
+
+        val messagesFromDb = ChatRepository.getMessagesFor(chatRoom.uid)
+        assertEquals(1, messagesFromDb.size)
+        val retrievedMessage = messagesFromDb[0]
+
+        // Verify that only the member recipient was stored
+        assertEquals(1, retrievedMessage.recipients.size)
+        assertTrue(retrievedMessage.recipients.contains(memberRecipientAlias))
+        assertFalse(retrievedMessage.recipients.contains(nonMemberAlias))
+    }
+
+    @Test
+    fun `should filter messages for user in getMessagesSince`() {
+        // Create test users
+        UserManager.addUser("alice", UserRole.HUMAN, PlainPassword("password"))
+        UserManager.addUser("bob", UserRole.HUMAN, PlainPassword("password"))
+        UserManager.addUser("charlie", UserRole.HUMAN, PlainPassword("password"))
+
+        val aliceId = UserManager.getUserIdFromUsername("alice")!!
+        val bobId = UserManager.getUserIdFromUsername("bob")!!
+        val charlieId = UserManager.getUserIdFromUsername("charlie")!!
+
+        // Create chat room with all three users
+        val chatRoom = ChatRoomManager.create(
+            userIds = listOf(aliceId, bobId, charlieId),
+            prompt = "Message filtering test"
+        )
+
+        val aliceAlias = chatRoom.users[aliceId]!!
+        val bobAlias = chatRoom.users[bobId]!!
+        val charlieAlias = chatRoom.users[charlieId]!!
+
+        // Message 1: From Alice to Bob
+        chatRoom.addMessage(ChatMessage("For Bob", aliceId, aliceAlias, SessionId.INVALID, recipients = setOf(bobAlias)))
+        // Message 2: Broadcast from Alice
+        chatRoom.addMessage(ChatMessage("For Everyone", aliceId, aliceAlias, SessionId.INVALID, recipients = setOf()))
+        // Message 3: From Alice to Charlie
+        chatRoom.addMessage(ChatMessage("For Charlie", aliceId, aliceAlias, SessionId.INVALID, recipients = setOf(charlieAlias)))
+        // Message 4: From Alice to herself and Bob
+        chatRoom.addMessage(ChatMessage("For Alice and Bob", aliceId, aliceAlias, SessionId.INVALID, recipients = setOf(aliceAlias, bobAlias)))
+
+        // Test for Bob
+        val bobMessages = chatRoom.getMessagesSince(0, bobId)
+        assertEquals(3, bobMessages.size, "Bob should see 3 messages")
+        val bobMessageContents = bobMessages.map { it.message }.toSet()
+        assertTrue(bobMessageContents.contains("For Bob"))
+        assertTrue(bobMessageContents.contains("For Everyone"))
+        assertTrue(bobMessageContents.contains("For Alice and Bob"))
+
+        // Test for Charlie
+        val charlieMessages = chatRoom.getMessagesSince(0, charlieId)
+        assertEquals(2, charlieMessages.size, "Charlie should see 2 messages")
+        val charlieMessageContents = charlieMessages.map { it.message }.toSet()
+        assertTrue(charlieMessageContents.contains("For Everyone"))
+        assertTrue(charlieMessageContents.contains("For Charlie"))
+
+        // Test for Alice
+        val aliceMessages = chatRoom.getMessagesSince(0, aliceId)
+        assertEquals(2, aliceMessages.size, "Alice should see 2 messages")
+        val aliceMessageContents = aliceMessages.map { it.message }.toSet()
+        assertTrue(aliceMessageContents.contains("For Everyone"))
+        assertTrue(aliceMessageContents.contains("For Alice and Bob"))
+    }
 } 

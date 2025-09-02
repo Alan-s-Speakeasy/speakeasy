@@ -23,6 +23,7 @@ data class ChatMessage(
     // By default,
     val authorUserId: UserId = UserId.INVALID,
     val authorAlias: String,
+    // Unused
     val authorSessionId: SessionId,
     // Usually set later by the database.
     var ordinal: Int = -1,

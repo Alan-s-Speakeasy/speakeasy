@@ -3,6 +3,7 @@ package ch.ddis.speakeasy.db
 import ch.ddis.speakeasy.chat.ChatMessageReactionType
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.Table
 
 object ChatRooms : UUIDTable() {
     val assignment = bool("assignment").default(false)
@@ -48,5 +49,13 @@ object ChatReactions : CompositeIdTable() {
         addIdColumn(chatRoom)
         addIdColumn(ordinal)
     }
+}
+
+object ChatMessageRecipients : Table() {
+    val chatRoom = reference("chat_room_id", ChatRooms)
+    val messageOrdinal = reference("message_ordinal", ChatMessages.ordinal)
+    val recipientUser = reference("recipient_user_id", Users)
+
+    override val primaryKey = PrimaryKey(chatRoom, messageOrdinal, recipientUser)
 }
 

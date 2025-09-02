@@ -97,11 +97,14 @@ class SseClientWorker(private val client: SseClient): ChatEventListener {
 
     override fun onMessage(chatMessage: ChatMessage, chatRoom: ChatRoom) {
         if (!chatRoom.users.keys.contains(userId)) { return }
-        val sseChatMessage = ChatMessage.toSseChatMessage(chatRoom, chatMessage)
-        this.send(
-            eventType = ChatEventType.MESSAGE,
-            data = sseChatMessage  // a single massage
-        )
+        val userAliasInRoom = chatRoom.users[this.userId]
+        if (chatMessage.recipients.isEmpty() || chatMessage.recipients.contains(userAliasInRoom)) {
+            val sseChatMessage = ChatMessage.toSseChatMessage(chatRoom, chatMessage)
+            this.send(
+                eventType = ChatEventType.MESSAGE,
+                data = sseChatMessage  // a single massage
+            )
+        }
     }
 
     override fun onReaction(chatMessageReaction: ChatMessageReaction, chatRoom: ChatRoom) {

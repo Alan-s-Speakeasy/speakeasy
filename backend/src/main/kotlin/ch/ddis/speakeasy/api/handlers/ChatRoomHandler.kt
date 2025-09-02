@@ -282,13 +282,7 @@ data class ChatRoomState(
     val info: ChatRoomInfo,
     val messages: List<RestChatMessage>,
     val reactions: List<ChatMessageReaction>
-) {
-    constructor(room: ChatRoom, since: Long, userId: UserId) : this(
-        ChatRoomInfo(room, userId),
-        ChatMessage.toRestMessages(room.getMessagesSince(since, userId)),
-        room.getReactions()
-    )
-}
+)
 
 class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandler {
     override val permittedRoles = setOf(RestApiRole.USER, RestApiRole.ADMIN, RestApiRole.EVALUATOR)
@@ -336,8 +330,11 @@ class GetChatRoomHandler : GetRestHandler<ChatRoomState>, AccessManagedRestHandl
                 throw ErrorStatusException(401, "Unauthorized", ctx)
             }
         }
-
-        return ChatRoomState(room, since, session.user.id.UID())
+        val roomInfo = ChatRoomInfo(room, session.user.id.UID())
+        // If admin, returns all the messages, otherwise only those where the user is a recipient or the author (author is always included in the recipients)
+        val messages = ChatMessage.toRestMessages(room.getMessagesSince(since, if (session.user.role == UserRole.ADMIN) null else session.user.id.UID()))
+        val reactions = room.getReactions()
+        return ChatRoomState(roomInfo, messages, reactions)
 
     }
 }
@@ -448,7 +445,7 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         ],
         queryParams = [
             OpenApiParam("session", String::class, "Session Token"),
-            OpenApiParam("recipients", String::class, "Recipients of Message"),
+            OpenApiParam("recipients", String::class, "Recipients of Message. Will be overriden by any manual mention in the message content (@username) "),
         ],
         responses = [
             OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -487,10 +484,12 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
 
         var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableSet() ?: mutableSetOf()
 
+        // if recipients is empty, default to everybody in the room
         if (recipients.isEmpty() || recipients.first().isBlank()) {
             recipients.addAll(room.users.values)
         }
 
+        // But if the message contains @username, it overrides the recipients
         val (recipientsList, finalMessage) = ChatRoomManager.processMessageAndRecipients(message, room, userAlias)
             ?: return SuccessStatus("Message not received")
 
@@ -778,7 +777,7 @@ class GetChatRoomUsersStatusHandler : GetRestHandler<Map<String, Boolean>>, Acce
         val room =
             ChatRoomManager.getFromId(roomId) ?: throw ErrorStatusException(404, "Room ${roomId.string} not found", ctx)
 
-        if (!room.users.containsKey(session.user.id.UID())) {
+        if (session.user.role != UserRole.ADMIN && !room.users.containsKey(session.user.id.UID())) {
             throw ErrorStatusException(401, "Unauthorized", ctx)
         }
 

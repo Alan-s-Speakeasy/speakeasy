@@ -33,9 +33,16 @@ class ChatRoomApiTest : ApiTestBase() {
         return rooms.get(0).get("uid").asText()
     }
 
+    private fun getAliasForUser(client: io.javalin.testtools.HttpClient, roomId: String, userToken: String): String {
+        val roomResponse = client.get("/api/room/$roomId?since=0&session=$userToken")
+        assertEquals(200, roomResponse.code)
+        val roomData = objectMapper.readTree(roomResponse.body?.string()!!)
+        return roomData.get("info").get("alias").asText()
+    }
+
     @Test
     fun `should create chatroom and list it for user`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
 
             // Create chatroom
@@ -79,10 +86,63 @@ class ChatRoomApiTest : ApiTestBase() {
     }
 
     @Test
+    fun `should only show messages intended for the user via API`() {
+        JavalinTest.test(RestApi.app!!) { _, client ->
+            val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
+            val bobToken = loginAndGetSessionToken(client, "bob", "password456")
+            val charlieToken = loginAndGetSessionToken(client, "charlie", "password789")
+
+            // Alice creates a room with Bob, then adds Charlie
+            val roomId = createChatroom(client, aliceToken, "bob")
+            client.patch("/api/request/$roomId?session=$aliceToken", "charlie")
+
+            // Get aliases for all users
+            val aliceAlias = getAliasForUser(client, roomId, aliceToken)
+            val bobAlias = getAliasForUser(client, roomId, bobToken)
+            val charlieAlias = getAliasForUser(client, roomId, charlieToken)
+
+            // Alice sends a message specifically to Bob
+            client.post("/api/room/$roomId?session=$aliceToken&recipients=$bobAlias", "For Bob's eyes only")
+            // Alice sends a broadcast message
+            client.post("/api/room/$roomId?session=$aliceToken", "Hello everyone")
+            // Alice sends a message specifically to Charlie
+            client.post("/api/room/$roomId?session=$aliceToken&recipients=$charlieAlias", "A secret for Charlie")
+
+            // Bob fetches messages
+            val bobRoomStateResponse = client.get("/api/room/$roomId?since=0&session=$bobToken")
+            val bobMessages = objectMapper.readTree(bobRoomStateResponse.body?.string()!!).get("messages")
+            assertEquals(2, bobMessages.size(), "Bob should see two messages")
+            val bobMessageContents = bobMessages.map { it.get("message").asText() }
+            assertTrue(bobMessageContents.contains("For Bob's eyes only"))
+            assertTrue(bobMessageContents.contains("Hello everyone"))
+
+            // Charlie fetches messages
+            val charlieRoomStateResponse = client.get("/api/room/$roomId?since=0&session=$charlieToken")
+            val charlieMessages = objectMapper.readTree(charlieRoomStateResponse.body?.string()!!).get("messages")
+            assertEquals(2, charlieMessages.size(), "Charlie should see two messages")
+            val charlieMessageContents = charlieMessages.map { it.get("message").asText() }
+            assertTrue(charlieMessageContents.contains("A secret for Charlie"))
+            assertTrue(charlieMessageContents.contains("Hello everyone"))
+            assertFalse { charlieMessageContents.contains("For Bob's eyes only") }
+
+            // Alice fetches messages (she only sees the broadcast message as she wasn't a recipient of the others)
+            val aliceRoomStateResponse = client.get("/api/room/$roomId?since=0&session=$aliceToken")
+            val aliceMessages = objectMapper.readTree(aliceRoomStateResponse.body?.string()!!).get("messages")
+            assertEquals(1, aliceMessages.size(), "Alice should see one message")
+            assertEquals("Hello everyone", aliceMessages.get(0).get("message").asText())
+            
+            // Admin fetches messages and should see all of them
+            val adminToken = loginAndGetSessionToken(client, "admin", "admin123")
+            val adminRoomStateResponse = client.get("/api/room/$roomId?since=0&session=$adminToken")
+            val adminMessages = objectMapper.readTree(adminRoomStateResponse.body?.string()!!).get("messages")
+            assertEquals(3, adminMessages.size(), "Admin should see all three messages")
+        }
+    }
+
+    @Test
     fun `should handle chatroom creation with TesterBot`() {
         JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
-            val testerBotToken = loginAndGetSessionToken(client, "tester_bot", "tester123")
 
             // Create chatroom with TesterBot (special case)
             val chatRoomRequest = mapOf("username" to "TesterBot", "formName" to "")
@@ -100,7 +160,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should post messages to chatroom`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -122,7 +182,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle message with recipients using mentions`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -142,7 +202,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should add reactions to messages`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -167,7 +227,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should close chatroom when user deactivates it`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -183,9 +243,8 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should get user status for chatroom participants`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
-            val bobToken = loginAndGetSessionToken(client, "bob", "password456")
             val roomId = createChatroom(client, aliceToken, "bob")
 
             // Get user statutatu
@@ -200,7 +259,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle admin listing all chatrooms`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val adminToken = loginAndGetSessionToken(client, "admin", "admin123")
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             
@@ -219,7 +278,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle admin listing active chatrooms`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val adminToken = loginAndGetSessionToken(client, "admin", "admin123")
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             
@@ -237,7 +296,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle chatroom export for admin`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val adminToken = loginAndGetSessionToken(client, "admin", "admin123")
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             
@@ -257,7 +316,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should reject unauthorized access to admin endpoints`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
 
             // Regular user should not access admin endpoints
@@ -274,7 +333,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should reject access to rooms user is not part of`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val charlieToken = loginAndGetSessionToken(client, "charlie", "password789")
             
@@ -293,7 +352,7 @@ class ChatRoomApiTest : ApiTestBase() {
     @Test
     @Ignore("Default return is 500, but that should instead be 404. To fix when time allows (never)")
     fun `should handle invalid room IDs gracefully`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val invalidRoomId = "invalid-room-id"
 
@@ -314,7 +373,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should reject empty messages`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -329,7 +388,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle invalid reaction data`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -349,7 +408,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle chatroom creation with non-existent user`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
 
             // Try to create room with non-existent user
@@ -363,7 +422,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle requests without authentication`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             // Try various endpoints without session token
             val roomsResponse = client.get("/api/rooms")
             assertEquals(401, roomsResponse.code, "Unauthenticated request should return 401")
@@ -378,7 +437,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should filter messages since timestamp correctly`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val roomId = createChatroom(client, aliceToken, "bob")
 
@@ -410,7 +469,7 @@ class ChatRoomApiTest : ApiTestBase() {
 
     @Test
     fun `should handle admin pagination for room listing`() {
-        JavalinTest.test(RestApi.app!!) { server, client ->
+        JavalinTest.test(RestApi.app!!) { _, client ->
             val adminToken = loginAndGetSessionToken(client, "admin", "admin123")
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             
@@ -437,7 +496,6 @@ class ChatRoomApiTest : ApiTestBase() {
         JavalinTest.test(RestApi.app!!) { _, client ->
             val aliceToken = loginAndGetSessionToken(client, "alice", "password123")
             val bobToken = loginAndGetSessionToken(client, "bob", "password456")
-            val charlieToken = loginAndGetSessionToken(client, "charlie", "password789")
             
             // Create a chatroom with Alice and Bob
             val roomId = createChatroom(client, aliceToken, "bob")

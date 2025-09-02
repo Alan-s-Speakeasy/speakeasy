@@ -4,6 +4,13 @@ import ch.ddis.speakeasy.util.errorResponse
 import ch.ddis.speakeasy.util.sessionToken
 import io.javalin.security.RouteRole
 import io.javalin.http.Context
+import org.slf4j.LoggerFactory
+import org.slf4j.MarkerFactory
+
+private fun logRestError(ctx: Context, e: Exception) {
+    LoggerFactory.getLogger("ch.ddis.speakeasy.api.RestApi")
+        .error(MarkerFactory.getMarker("ERROR"), "Exception processing ${ctx.method()} ${ctx.path()}", e)
+}
 
 
 interface RestHandler {
@@ -21,7 +28,7 @@ interface GetRestHandler<T: Any> : RestHandler {
     /**
     * Specifies if the handler already returns json.
     * Prevents it from being wrapped in a json object.
-     * Straightforware solution, would be better to use a more OO method.
+     * Straightforward solution, would be better to use a more OO method.
      */
     val parseAsJson: Boolean
         get() = true
@@ -35,10 +42,13 @@ interface GetRestHandler<T: Any> : RestHandler {
             if (parseAsJson) {
                 ctx.json(result)
             }
-        } catch (e: ErrorStatusException) {
-            ctx.errorResponse(e)
         } catch (e: Exception) {
-            ctx.errorResponse(500, e.message ?: "")
+            logRestError(ctx, e)
+            if (e is ErrorStatusException) {
+                ctx.errorResponse(e)
+            } else {
+                ctx.errorResponse(500, e.message ?: "Internal Server Error")
+            }
         }
     }
 
@@ -52,10 +62,13 @@ interface PostRestHandler<T: Any> : RestHandler {
         AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doPost(ctx))
-        } catch (e: ErrorStatusException) {
-            ctx.errorResponse(e)
         } catch (e: Exception) {
-            ctx.errorResponse(500,e.message ?: "")
+            logRestError(ctx, e)
+            if (e is ErrorStatusException) {
+                ctx.errorResponse(e)
+            } else {
+                ctx.errorResponse(500, e.message ?: "Internal Server Error")
+            }
         }
     }
 
@@ -69,10 +82,13 @@ interface PatchRestHandler<T: Any> : RestHandler {
         AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doPatch(ctx))
-        } catch (e: ErrorStatusException) {
-            ctx.errorResponse(e)
         } catch (e: Exception) {
-            ctx.errorResponse(500, e.message ?: "")
+            logRestError(ctx, e)
+            if (e is ErrorStatusException) {
+                ctx.errorResponse(e)
+            } else {
+                ctx.errorResponse(500, e.message ?: "Internal Server Error")
+            }
         }
     }
 
@@ -86,10 +102,13 @@ interface DeleteRestHandler<T: Any> : RestHandler {
         AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doDelete(ctx))
-        } catch (e: ErrorStatusException) {
-            ctx.errorResponse(e)
         } catch (e: Exception) {
-            ctx.errorResponse(500, e.message ?: "")
+            logRestError(ctx, e)
+            if (e is ErrorStatusException) {
+                ctx.errorResponse(e)
+            } else {
+                ctx.errorResponse(500, e.message ?: "Internal Server Error")
+            }
         }
     }
 
@@ -103,10 +122,13 @@ interface PutRestHandler<T: Any> : RestHandler {
         AccessManager.updateLastAccess(ctx.sessionToken())
         try {
             ctx.json(doPut(ctx))
-        } catch (e: ErrorStatusException) {
-            ctx.errorResponse(e)
         } catch (e: Exception) {
-            ctx.errorResponse(500, e.message ?: "")
+            logRestError(ctx, e)
+            if (e is ErrorStatusException) {
+                ctx.errorResponse(e)
+            } else {
+                ctx.errorResponse(500, e.message ?: "Internal Server Error")
+            }
         }
     }
 

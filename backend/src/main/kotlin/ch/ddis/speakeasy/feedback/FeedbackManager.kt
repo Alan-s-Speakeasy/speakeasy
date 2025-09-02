@@ -4,6 +4,8 @@ import ch.ddis.speakeasy.api.handlers.*
 import ch.ddis.speakeasy.chat.ChatRoomId
 import ch.ddis.speakeasy.db.*
 import ch.ddis.speakeasy.db.UserId
+import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -113,7 +115,10 @@ object FeedbackManager {
     fun logFeedback(authorId: UserId, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
         // The recipient of the feedback
         writerLock.write {
-            val recipientId = ChatRepository.getParticipants(roomId).single { it != authorId }
+            // NOTE : As of now, we assume that the only case where there is more than 2 participants in a chatroom with
+            // a special bot.
+            val recipientId = ChatRepository.getParticipants(roomId).singleOrNull { it != authorId && UserManager.getUserRoleByUserID(it) == UserRole.BOT }
+                ?: throw IllegalArgumentException("Giving feedback to a room with more than 2 bots is not supported !")
             val formId = ChatRepository.getFormForChatRoom(roomId)
                 ?: throw IllegalArgumentException("Chatroom does not have any form attached !")
             if (ChatRepository.isRoomAlreadyAssessed(roomId, formId, authorId)) {

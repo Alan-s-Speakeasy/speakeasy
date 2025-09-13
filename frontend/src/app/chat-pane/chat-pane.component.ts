@@ -334,7 +334,9 @@ export class ChatPaneComponent implements OnInit {
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault(); // Prevents adding a new line
-      this.poseQuery();       // Calls the function to send the message
+      if (this.query.value && this.query.value.trim() && this.query.value.length <= 2000) {
+        this.poseQuery();       // Calls the function to send the message
+      }
     }
   }
 }

@@ -481,6 +481,9 @@ class PostChatMessageHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
         if (message.isBlank()) {
             throw ErrorStatusException(400, "Message cannot be empty", ctx)
         }
+        if (message.length > 2000) {
+            throw ErrorStatusException(400, "Message is too long", ctx)
+        }
 
         var recipients = ctx.queryParam("recipients")?.split(",")?.toMutableSet() ?: mutableSetOf()
 

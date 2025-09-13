@@ -140,7 +140,7 @@ internal class DatabaseChatRoom(
     override fun computeRemainingTime(): Long {
         val (_, endTime) = ChatRepository.getTimeBoundsForChatRoom(this.uid)
         return if (endTime != null) {
-            endTime - System.currentTimeMillis()
+            (endTime - System.currentTimeMillis()).coerceAtLeast(0)
         } else {
             Long.MAX_VALUE
         }

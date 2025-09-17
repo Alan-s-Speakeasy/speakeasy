@@ -116,9 +116,17 @@ object FeedbackManager {
         // The recipient of the feedback
         writerLock.write {
             // NOTE : As of now, we assume that the only case where there is more than 2 participants in a chatroom with
-            // a special bot.
-            val recipientId = ChatRepository.getParticipants(roomId).singleOrNull { it != authorId && UserManager.getUserRoleByUserID(it) == UserRole.BOT }
-                ?: throw IllegalArgumentException("Giving feedback to a room with more than 2 bots is not supported !")
+            // a special bot. WRONG WHEN ADMIN AS BOT !!!
+            // ISSUE : when admin as bot, recipientId always is null.
+            val participants = ChatRepository.getParticipants(roomId)
+            // NOTE : There is an issue here, as sometimes the chatroom can have more than 2 participants, (using eg special bots like
+            // tester bots, etc). In that case, we assume that there should be only one real bot, one human, and one special bot.
+            val recipientId = if (participants.size == 2) {
+                participants.single { it != authorId }
+            } else {
+                participants.singleOrNull { it != authorId && UserManager.getUserRoleByUserID(it) == UserRole.BOT }
+                    ?: throw IllegalArgumentException("Giving feedback to a room with more than 2 participants is not supported!")
+            }
             val formId = ChatRepository.getFormForChatRoom(roomId)
                 ?: throw IllegalArgumentException("Chatroom does not have any form attached !")
             if (ChatRepository.isRoomAlreadyAssessed(roomId, formId, authorId)) {

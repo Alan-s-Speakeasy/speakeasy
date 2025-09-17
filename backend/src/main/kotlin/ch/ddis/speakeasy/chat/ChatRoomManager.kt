@@ -52,7 +52,7 @@ object ChatRoomManager {
     }
 
     /**
-     * Retrives a list of chatRooms instances that the user is part of.
+     * Retrives a list of chatRooms instances that the user is part of. Sort the list by start time.
      *
      * @param userId The ID of the user for whom to retrieve chat rooms.
      * @param bot If true, retrieves chat rooms that are only for bots.
@@ -120,7 +120,7 @@ object ChatRoomManager {
     fun getAssessedOrMarkedRoomsByUserId(userId: UserId): List<ChatRoom> {
         // Not very efficient. Better to use a single query here.
         return ChatRepository.getChatRoomsForUser(userId).mapNotNull { getFromId(it) }
-            .filter { it.isAssessedBy(userId) || it.isMarkedAsNoFeedback() }
+            .filter { it.isAssessedBy(userId) || it.isMarkedAsNoFeedback() }.sortedBy { it.startTime }
     }
 
 

@@ -11,9 +11,11 @@ export class UserTableComponent {
   @Input() isSelected: Map<string, boolean> = new Map();
   @Input() pageSizes: number[] = [5, 10, 15, 20];
   @Input() pageSize: number = 10;
+  @Input() onlineOnly: boolean = false;
 
   @Output() userSwitched = new EventEmitter<string>();
   @Output() allSwitched = new EventEmitter<any>();
+  @Output() onlineOnlySwitched = new EventEmitter<boolean>();
 
   searchTerm: string = '';
   sortColumn: string = '';
@@ -21,7 +23,12 @@ export class UserTableComponent {
   page: number = 1;
 
   get filteredUsers(): string[] {
-    let filtered = this.users.filter(user => user.toLowerCase().includes(this.searchTerm.toLowerCase()));
+    let filtered = this.onlineOnly ? this.users.filter(user => this.active.includes(user)) : [...this.users];
+
+    if (this.searchTerm) {
+      filtered = filtered.filter(user => user.toLowerCase().includes(this.searchTerm.toLowerCase()));
+    }
+
     if (this.sortColumn) {
       filtered.sort((a, b) => {
         let comparison = 0;
@@ -29,8 +36,6 @@ export class UserTableComponent {
           comparison = a.localeCompare(b);
         } else if (this.sortColumn === 'selected') {
           comparison = (this.isSelected.get(a) === this.isSelected.get(b)) ? 0 : this.isSelected.get(a) ? -1 : 1;
-        } else if (this.sortColumn === 'online') {
-          comparison = (this.active.includes(a) === this.active.includes(b)) ? 0 : this.active.includes(a) ? -1 : 1;
         }
         return this.sortDirection === 'asc' ? comparison : -comparison;
       });
@@ -39,7 +44,9 @@ export class UserTableComponent {
   }
 
   areAllSelected(): boolean {
-    return !Array.from(this.isSelected.values()).includes(false);
+    const filtered = this.filteredUsers;
+    if (filtered.length === 0) return false;
+    return filtered.every(user => this.isSelected.get(user));
   }
 
   switchUser(user: string): void {
@@ -47,7 +54,11 @@ export class UserTableComponent {
   }
 
   switchAll(event: any): void {
-    this.allSwitched.emit(event);
+    this.allSwitched.emit({checked: event.checked, users: this.filteredUsers});
+  }
+
+  switchOnlineOnly(event: any): void {
+    this.onlineOnlySwitched.emit(event.checked);
   }
 
   sortTable(column: string): void {

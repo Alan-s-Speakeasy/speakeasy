@@ -10,16 +10,6 @@
         <i *ngIf="sortColumn !== 'selected'" class="fas fa-sort"></i>
       </button>
     </th>
-    <th scope="col" style="" class="col-1 align-middle">
-      <div class="align-middle">
-        Online
-        <button (click)="sortTable('online')" class="btn btn-link p-0">
-          <i *ngIf="sortColumn === 'online' && sortDirection === 'asc'" class="fas fa-sort-up"></i>
-          <i *ngIf="sortColumn === 'online' && sortDirection === 'desc'" class="fas fa-sort-down"></i>
-          <i *ngIf="sortColumn !== 'online'" class="fas fa-sort"></i>
-        </button>
-      </div>
-    </th>
     <th scope="col" class="d-flex align-items-center h-100 d-inline-block ">
       <div class="align-middle">
         Name
@@ -39,6 +29,11 @@
               placeholder="Search username"
               [(ngModel)]="searchTerm"
             />
+          </div>
+          <div class="mt-2">
+            <mat-checkbox [checked]="onlineOnly" (change)="switchOnlineOnly($event)" color="primary">
+              Show online users only
+            </mat-checkbox>
           </div>
         </ng-template>
         <span
@@ -61,15 +56,15 @@
       </mat-checkbox>
     </td>
     <td class="align-middle">
-      <i *ngIf="active.includes(user)" style="color: limegreen" class="fa fa-circle"></i>
-      <i *ngIf="!active.includes(user)" style="color: red" class="fa fa-circle"></i>
+      <i *ngIf="active.includes(user)" style="color: limegreen" class="fa fa-circle me-2"></i>
+      <i *ngIf="!active.includes(user)" style="color: red" class="fa fa-circle me-2"></i>
+      {{ user }}
     </td>
-    <td class="align-middle">{{ user }}</td>
   </tr>
   </tbody>
 </table>
 <div class="d-flex justify-content-between p-2">
-  <ngb-pagination [(page)]="page" [pageSize]="pageSize" [collectionSize]="users.length"
+  <ngb-pagination [(page)]="page" [pageSize]="pageSize" [collectionSize]="filteredUsers.length"
                   [maxSize]="5" [rotate]="true"
   ></ngb-pagination>
   <div>

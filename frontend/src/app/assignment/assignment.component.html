@@ -205,8 +205,10 @@
               [isSelected]="isHumanSelected"
               [pageSizes]="pageSizes"
               [pageSize]="pageSizeHumanSelection"
+              [onlineOnly]="humansOnlineOnly"
               (userSwitched)="switchHuman($event); humansValidationError = ''"
-              (allSwitched)="switchAll('human', $event); humansValidationError = ''">
+              (allSwitched)="switchAll('human', $event); humansValidationError = ''"
+              (onlineOnlySwitched)="humansOnlineOnly = $event">
             </app-user-table>
           </div>
         </div>
@@ -224,8 +226,10 @@
               [isSelected]="isBotSelected"
               [pageSizes]="pageSizes"
               [pageSize]="pageSizeHumanSelection"
+              [onlineOnly]="botsOnlineOnly"
               (userSwitched)="switchBot($event); botsValidationError = ''"
-              (allSwitched)="switchAll('bot', $event); botsValidationError = ''">
+              (allSwitched)="switchAll('bot', $event); botsValidationError = ''"
+              (onlineOnlySwitched)="botsOnlineOnly = $event">
             </app-user-table>
           </div>
         </div>

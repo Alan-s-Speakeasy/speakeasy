@@ -42,6 +42,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   isActive = false
   evaluatorSelected = false
   assistantSelected = false
+  humansOnlineOnly = false;
+  botsOnlineOnly = false;
 
   isHumanSelected: Map<string, boolean> = new Map()
   isBotSelected: Map<string, boolean> = new Map()
@@ -231,7 +233,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   switchAll(type: string, event: any): void {
     if (type == "human") {
-      this.isHumanSelected.forEach((v, k) => {
+      const usersToModify = event.users ? event.users : Array.from(this.isHumanSelected.keys());
+      usersToModify.forEach((k: string) => {
         let current = this.isHumanSelected.get(k)
         this.isHumanSelected.set(k, event.checked)
 
@@ -241,7 +244,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
         }
       })
     } else if (type == "bot") {
-      this.isBotSelected.forEach((v, k) => {
+      const usersToModify = event.users ? event.users : Array.from(this.isBotSelected.keys());
+      usersToModify.forEach((k: string) => {
         this.isBotSelected.set(k, event.checked)
       })
     } else if (type == "admin") {

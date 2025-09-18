@@ -17,6 +17,7 @@ import java.io.PrintWriter
 import java.util.concurrent.locks.StampedLock
 
 object FeedbackManager {
+    @Deprecated("Unused")
     private var sessionWriters: HashMap<String, PrintWriter> = hashMapOf() // formName -> feedback PrintWriter
 
     private lateinit var formsPath: File
@@ -81,6 +82,7 @@ object FeedbackManager {
         this.feedbackResultsPath = baseFolder
 
         // INIT Writing Feedback Responses
+        // NOTE : Useless now, the forms are stored in database
         this.forms.forEach {
             val file = File(baseFolder, "${it.formName}.csv")
             this.feedbackFiles[it.formName] = file

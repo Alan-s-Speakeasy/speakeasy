@@ -311,7 +311,6 @@ object RestApi {
                 ctx.path(), 
                 ctx.ip()
             )
-            ctx.json(ErrorStatus("Unauthorized request!"))
         }.error(404) { ctx ->
             val requestId = ctx.attribute<String>("requestId") ?: "unknown"
             requestLogger.info(REST_MARKER, 
@@ -319,7 +318,6 @@ object RestApi {
                 requestId, 
                 ctx.path()
             )
-            ctx.json(ErrorStatus("Resource not found!"))
         }.error(429) { ctx ->
             val requestId = ctx.attribute<String>("requestId") ?: "unknown"
             accessLogger.warn(ACCESS_MARKER, 
@@ -328,7 +326,6 @@ object RestApi {
                 ctx.path(), 
                 ctx.ip()
             )
-            ctx.json(ErrorStatus("Too many requests!"))
         }.exception(Exception::class.java) { e, ctx ->
             val requestId = ctx.attribute<String>("requestId") ?: "unknown"
             logger.error(ERROR_MARKER,
@@ -340,7 +337,6 @@ object RestApi {
                 e.message,
                 e
             )
-            ctx.status(500).json(ErrorStatus("Internal server error!"))
         }
 
     }

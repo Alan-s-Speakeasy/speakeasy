@@ -13,6 +13,7 @@ import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.util.Config
 import ch.ddis.speakeasy.util.FormNotFoundException
+import ch.ddis.speakeasy.util.InvalidFeedbackException
 import ch.ddis.speakeasy.util.UID
 import org.jetbrains.exposed.sql.Database
 import java.io.File
@@ -610,6 +611,50 @@ class FeedbackTest {
         assertTrue(responseList.responses[4].value.contains("!@#"))
         assertTrue(responseList.responses[5].value.contains("\n"))
         assertTrue(responseList.responses[6].value.contains("🌟"))
+    }
+
+    @Test
+    fun `should fail when submitting invalid feedback`() {
+        val aliceId = UserManager.getUserIdFromUsername("alice")!!
+        val bobId = UserManager.getUserIdFromUsername("bob")!!
+
+        val chatRoom = ChatRoomManager.create(
+            formRef = "test-form",
+            prompt = "Test invalid feedback",
+            userIds = listOf(aliceId, bobId)
+        )
+
+        // Scenario 1: Invalid question ID
+        val invalidQuestionIdFeedback = FeedbackResponseList(
+            mutableListOf(FeedbackResponse("99", "5"))
+        )
+        assertFailsWith<InvalidFeedbackException>("Should fail for invalid question ID") {
+            FeedbackManager.logFeedback(aliceId, chatRoom.uid, invalidQuestionIdFeedback)
+        }
+
+        // Scenario 2: Non-integer value for multiple choice question
+        val nonIntegerFeedback = FeedbackResponseList(
+            mutableListOf(FeedbackResponse("0", "not-an-integer"))
+        )
+        assertFailsWith<InvalidFeedbackException>("Should fail for non-integer value on multiple choice") {
+            FeedbackManager.logFeedback(aliceId, chatRoom.uid, nonIntegerFeedback)
+        }
+
+        // Scenario 3: Integer value not in options for multiple choice question
+        val invalidOptionFeedback = FeedbackResponseList(
+            mutableListOf(FeedbackResponse("0", "3")) // Valid options are 1 and 5
+        )
+        assertFailsWith<InvalidFeedbackException>("Should fail for invalid option on multiple choice") {
+            FeedbackManager.logFeedback(aliceId, chatRoom.uid, invalidOptionFeedback)
+        }
+
+        // Scenario 4: Text response too long
+        val longTextFeedback = FeedbackResponseList(
+            mutableListOf(FeedbackResponse("1", "a".repeat(501)))
+        )
+        assertFailsWith<InvalidFeedbackException>("Should fail for overly long text response") {
+            FeedbackManager.logFeedback(aliceId, chatRoom.uid, longTextFeedback)
+        }
     }
 }
 

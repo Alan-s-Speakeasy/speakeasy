@@ -14,6 +14,11 @@ class FormNotFoundException(formName: String) : Exception("Form with name $formN
  */
 class InvalidFormException(message: String) : Exception(message)
 
+/**
+ * Indicates that the feedback is of an invalid format or contains validation errors.
+ */
+class InvalidFeedbackException(message: String) : Exception(message)
+
 class UserNotFoundException(userId: UserId) : Exception("User with ID $userId not found")
 
 class ChatRoomNotFoundException(roomId: ChatRoomId) : IllegalArgumentException("Chat room with ID $roomId not found")

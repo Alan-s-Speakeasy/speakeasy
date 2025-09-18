@@ -113,6 +113,7 @@ object FeedbackManager {
      *
      * @throws IllegalArgumentException if the chatroom is already assessed
      * @throws IllegalArgumentException if the chatroom does not have any form attached.
+     * @throws InvalidFeedbackException if the feedback responses are invalid.
      */
     fun logFeedback(authorId: UserId, roomId: ChatRoomId, feedbackResponseList: FeedbackResponseList) =
         // The recipient of the feedback
@@ -134,6 +135,12 @@ object FeedbackManager {
             if (ChatRepository.isRoomAlreadyAssessed(roomId, formId, authorId)) {
                 throw IllegalArgumentException("Room already assessed!")
             }
+
+            val formName = FormManager.getFormNameById(formId)
+            val form = FormManager.getFormByName(formName)
+            // Will throw InvalidFeedbackException if invalid
+            form.validateResponses(feedbackResponseList)
+
             for (response in feedbackResponseList.responses) {
                 // Should use batch write instead
                 FeedbackRepository.saveFeedbackResponse(authorId, recipientId, roomId, formId, response)

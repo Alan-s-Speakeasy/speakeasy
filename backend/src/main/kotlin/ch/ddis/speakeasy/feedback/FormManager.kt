@@ -9,6 +9,8 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
+import ch.ddis.speakeasy.api.handlers.FeedbackResponseList
+import ch.ddis.speakeasy.api.handlers.FeedbackResponse
 
 typealias FormId = UID
 
@@ -36,6 +38,21 @@ data class FeedbackForm(val formName: String, val requests: List<FeedbackRequest
         require<InvalidFormException>(ids.sorted() == ids, "Question IDs must be increasing")
         require<InvalidFormException>(ids.first() == 0, "Question IDs must start from 0")
     }
+
+    /**
+     * Validate the responses of a feedback form. Mostly check if the type of the response is correct, etc.
+     *
+     * @param responses The responses to validate.
+     * @throws InvalidFeedbackException If the responses are invalid.
+     */
+    fun validateResponses(responses: FeedbackResponseList) {
+        for (response in responses.responses) {
+            val question = this.requests.find { it.id == response.id }
+                ?: throw InvalidFeedbackException("Invalid question id: ${response.id}")
+
+            question.validateResponse(response)
+        }
+    }
 }
 // TODO : id should be int. Kept that way for backwards compatibility
 data class FeedbackRequest(val id: String, val type: String, val name: String, val shortname: String, val options: List<FeedbackAnswerOption>) {
@@ -46,6 +63,25 @@ data class FeedbackRequest(val id: String, val type: String, val name: String, v
         require<InvalidFormException>(shortname.isNotBlank(), "Shortname cannot be blank")
         if (type == "multiple") {
             require<InvalidFormException>(options.isNotEmpty(), "Multiple choice questions must have at least one option")
+        }
+    }
+
+    fun validateResponse(response: FeedbackResponse) {
+        when (this.type) {
+            "multiple" -> {
+                val responseValue = response.value.toIntOrNull()
+                    ?: throw InvalidFeedbackException("Response value for question '${this.name}' must be an integer.")
+
+                val validOptionValues = this.options.map { it.value }
+                if (responseValue !in validOptionValues) {
+                    throw InvalidFeedbackException("Response value for question '${this.name}' is not a valid option.")
+                }
+            }
+            "text" -> { // Example for text validation
+                if (response.value.length > 500) { // arbitrary limit
+                    throw InvalidFeedbackException("Response for question '${this.name}' is too long.")
+                }
+            }
         }
     }
 }

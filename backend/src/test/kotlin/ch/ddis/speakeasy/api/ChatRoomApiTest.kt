@@ -1,8 +1,8 @@
 package ch.ddis.speakeasy.api
 
 import ch.ddis.speakeasy.user.PlainPassword
-import ch.ddis.speakeasy.user.UserRole
 import ch.ddis.speakeasy.user.UserManager
+import ch.ddis.speakeasy.user.UserRole
 import io.javalin.testtools.JavalinTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

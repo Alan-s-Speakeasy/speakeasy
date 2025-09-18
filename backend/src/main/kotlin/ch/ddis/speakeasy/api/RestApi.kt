@@ -13,7 +13,7 @@ import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.ApiBuilder.before
 import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.http.staticfiles.Location
-import io.javalin.http.util.NaiveRateLimit
+import ch.ddis.speakeasy.util.SessionTokenBasedNaiveRateLimit
 import io.javalin.json.JavalinJackson
 import io.javalin.openapi.CookieAuth
 import io.javalin.openapi.OpenApiContact
@@ -259,7 +259,7 @@ object RestApi {
             }
             path("api") {
                 before { ctx ->
-                    NaiveRateLimit.requestPerTimeUnit(ctx, config.rateLimit, config.rateLimitUnit)
+                    SessionTokenBasedNaiveRateLimit.requestPerTimeUnit(ctx, config.rateLimit, config.rateLimitUnit)
                 }
                 apiRestHandlers.forEach { handler ->
                     path(handler.route) {
@@ -298,7 +298,7 @@ object RestApi {
                 before { ctx ->
                     // Should prevent to a certain extent brute force attacks
                     // This is an additional, tighter rate limit as the global one above
-                    NaiveRateLimit.requestPerTimeUnit(ctx, config.rateLimitLogin, config.rateLimitUnit)
+                    SessionTokenBasedNaiveRateLimit.requestPerTimeUnit(ctx, config.rateLimitLogin, config.rateLimitUnit)
                 }
             }
 

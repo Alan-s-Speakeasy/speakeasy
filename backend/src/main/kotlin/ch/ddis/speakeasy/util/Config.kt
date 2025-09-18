@@ -18,7 +18,9 @@ data class Config(
     // Time unit for rate limiting.
     val rateLimitUnit: TimeUnit = TimeUnit.MINUTES,
     // Rate limit for login (should be tighter to prevent bruteforce) (per minute)
-    val rateLimitLogin : Int = 7,
+    // NOTE : With token based rate limiting, the incoming requests don't have a token so the IP is used.
+    // As for our usecase we don't have ip limiting, we up an arbitrary high value.
+    val rateLimitLogin : Int = 60 * 7 * 100,
     ){
 
     /**

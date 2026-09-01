@@ -13,7 +13,11 @@
       </div>
 
       <div class="ms-auto d-flex align-items-center">
-        <div class="me-3 fw-medium" [ngClass]="{'text-danger': remainingTime < 120000, 'text-secondary': remainingTime >= 120000}">
+        <div class="me-3 fw-medium text-secondary" *ngIf="hideComposer && !paneLog.active">
+          Closed
+        </div>
+        <div class="me-3 fw-medium" *ngIf="!(hideComposer && !paneLog.active)"
+             [ngClass]="{'text-danger': remainingTime < 120000, 'text-secondary': remainingTime >= 120000}">
           <i class="pi pi-clock me-1"></i>{{remainingTime | date: 'mm:ss'}}
         </div>
 
@@ -113,6 +117,11 @@
                class="message other-message bg-light p-3 rounded-3 shadow-sm"
                style="max-width: 85%; white-space: pre-line">
             <span [innerHTML]="paneLog.messageLog[ordinal].message | chatCommands"></span>
+            <span *ngIf="isEvaluationCorrect(paneLog.messageLog[ordinal].ordinal)"
+                  class="eval-correct-mark ms-1"
+                  title="Correct">
+              <i class="fa fa-check-circle text-success"></i>
+            </span>
 
             <div *ngIf="!paneLog.spectate" class="mt-2 d-flex align-items-center">
               <div class="d-flex align-items-center">
@@ -185,7 +194,7 @@
     </div>
 
     <!-- Input area -->
-    <div *ngIf="!paneLog.spectate && !paneLog.history" class="chat-message p-3 bg-light border-top">
+    <div *ngIf="!hideComposer && !paneLog.spectate && !paneLog.history" class="chat-message p-3 bg-light border-top">
       <div class="input-group">
         <input cdkTextareaAutosize="true"
                cdkAutosizeMinRows="1"

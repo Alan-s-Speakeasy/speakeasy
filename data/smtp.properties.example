@@ -1,0 +1,18 @@
+# Copy this file to smtp.properties in the same folder and fill in the values.
+# smtp.properties is gitignored. Never commit a real password.
+#
+# Gmail trial:
+#   1. Enable 2-Step Verification on the sender Google account
+#   2. Create an App Password (Google Account → Security → App passwords)
+#   3. Use that 16-character password below, not your normal Gmail password
+#
+# Alternatively set environment variables and skip this file:
+#   SPEAKEASY_SMTP_HOST, SPEAKEASY_SMTP_PORT, SPEAKEASY_SMTP_USER,
+#   SPEAKEASY_SMTP_PASSWORD, SPEAKEASY_SMTP_FROM
+
+host=smtp.gmail.com
+port=587
+username=you@gmail.com
+password=xxxx xxxx xxxx xxxx
+from=you@gmail.com
+starttls=true

@@ -13,6 +13,7 @@ import {
   UserService
 } from "../../../openapi";
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -45,6 +46,8 @@ export class ChatPaneComponent implements OnInit {
 
   @Input() paneLog!: PaneLog
   @Input() numQueries!: number
+  @Input() correctMessageOrdinals: number[] | null = null
+  @Input() hideComposer = false
 
   @Output("removeRoom") removeRoom: EventEmitter<any> = new EventEmitter()
 
@@ -55,13 +58,14 @@ export class ChatPaneComponent implements OnInit {
 
   remainingTime!: number
   lastUpdateRemainingTime!: number
-  chatTimer: any
+  chatTimer: ReturnType<typeof setInterval> | null = null
 
   constructor(
     @Inject(ChatService) private chatService: ChatService,
     @Inject(FeedbackService) private feedbackService: FeedbackService,
     @Inject(CommonService) private commonService: CommonService,
-    public alertService: AlertService
+    public alertService: AlertService,
+    private changeDetector: ChangeDetectorRef
     ) { }
 
   ngOnInit(): void {
@@ -199,6 +203,10 @@ export class ChatPaneComponent implements OnInit {
   }
 
   private countdown(): void {
+    if (!this.paneLog.active) {
+      this.stopChatTimer();
+      return;
+    }
     if (this.remainingTime >= 1000) {
       // When the page or screen loses focus, the browser suspends or slows down some operations, including the
       // execution of timers. We need to subtract the actual elapsed time instead of using a fixed interval of 1000 ms.
@@ -212,11 +220,24 @@ export class ChatPaneComponent implements OnInit {
         this.paneLog.ratingOpen = true
       }
       this.paneLog.active = false
-      clearInterval(this.chatTimer)
+      this.stopChatTimer()
     }
   }
 
-// when the user wants to start rating
+  private stopChatTimer(): void {
+    this.remainingTime = 0;
+    this.lastUpdateRemainingTime = Date.now();
+    if (this.chatTimer) {
+      clearInterval(this.chatTimer);
+      this.chatTimer = null;
+    }
+  }
+
+  isEvaluationCorrect(ordinal: number): boolean {
+    return !!this.correctMessageOrdinals && this.correctMessageOrdinals.indexOf(ordinal) !== -1;
+  }
+
+  // when the user wants to start rating
   rating(): void {
     let questionsAsked = 0
     for (let i = 0; i < this.paneLog.ordinals; i++) {
@@ -233,6 +254,10 @@ export class ChatPaneComponent implements OnInit {
   }
 
   close(): void {
+    if (this.hideComposer) {
+      this.closeEvalChat();
+      return;
+    }
     const responses: FeedbackResponseList = {responses: []};
     this.feedbackService.postApiFeedbackByRoomId(this.paneLog.roomID, undefined, responses).subscribe(
       (response) => {
@@ -251,6 +276,18 @@ export class ChatPaneComponent implements OnInit {
       }
     )
     this.closeRoom()
+  }
+
+  private closeEvalChat(): void {
+    this.chatService.patchApiRoomByRoomId(this.paneLog.roomID, undefined).subscribe({
+      next: () => this.finishEvalClose(),
+      error: () => this.finishEvalClose()
+    });
+  }
+
+  private finishEvalClose(): void {
+    this.markClosed();
+    this.removeRoom.emit();
   }
 
   @ViewChild('scroll') scroll!: ElementRef;
@@ -324,6 +361,16 @@ export class ChatPaneComponent implements OnInit {
     if (this.chatTimer) {
       clearInterval(this.chatTimer);
     }
+  }
+
+  markClosed(): void {
+    this.paneLog.active = false;
+    this.stopChatTimer();
+    this.stopUserStatusPolling();
+    if (this.chatMessagesSubscription) {
+      this.chatMessagesSubscription.unsubscribe();
+    }
+    this.changeDetector.detectChanges();
   }
 
   /**

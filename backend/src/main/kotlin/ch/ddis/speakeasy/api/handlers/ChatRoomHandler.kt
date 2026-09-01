@@ -570,7 +570,7 @@ class PostChatMessageReactionHandler : PostRestHandler<SuccessStatus>, AccessMan
 
 }
 
-data class ChatRequest(val username: String, val formName: String = "")
+data class ChatRequest(val username: String, val formName: String = "", val automatedEvaluation: Boolean = false)
 
 class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRestHandler {
 
@@ -625,6 +625,8 @@ class RequestChatRoomHandler : PostRestHandler<SuccessStatus>, AccessManagedRest
             }
             username = testerBot
             chatRoomTime = 60 * 60 * 1000
+        } else if (request.automatedEvaluation) {
+            chatRoomTime = 20 * 60 * 1000
         }
 
         val formRef = request.formName

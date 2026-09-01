@@ -51,6 +51,7 @@ export class SideNavbarComponent implements OnInit{
     {name: 'Home', url: '/panel', icon: 'pi pi-home'},
     {name: 'Chat', url: '/chat', icon: 'pi pi-comments'},
     {name: 'Evaluation', url: '/assignment', icon: 'pi pi-check-square'},
+    {name: 'Automated Evaluation', url: '/automated-evaluation', icon: 'pi pi-bolt'},
     {name: 'Feedback', url: '/feedback', icon: 'pi pi-comment'},
     {name: 'Chatrooms', url: '/chatroomStatus', icon: 'pi pi-list'},
     {name: 'Users', url: '/userStatus', icon: 'pi pi-users'},

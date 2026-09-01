@@ -113,3 +113,8 @@
 .chat .chat-message {
   padding: 20px;
 }
+
+.eval-correct-mark {
+  font-size: 0.9rem;
+  vertical-align: middle;
+}

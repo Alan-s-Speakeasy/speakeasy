@@ -265,5 +265,6 @@ gradle-app.setting
 session-store
 data/feedbackresults/*
 data/sessions.csv
+data/smtp.properties
 frontend/openapi
 dev.py

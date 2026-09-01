@@ -1,0 +1,590 @@
+<div class="eval-page d-flex flex-column">
+  <div class="bg-white border-bottom py-3">
+    <div class="container-fluid d-flex justify-content-between align-items-start gap-3">
+      <div>
+        <h4 class="mb-1">Automated Evaluation</h4>
+        <p class="text-muted small mb-0">
+          Start chats with bots, send questions automatically then download a scored report.
+        </p>
+      </div>
+      <button class="btn btn-outline-danger" type="button" (click)="resetEvaluation()">
+        <i class="fa fa-undo me-1"></i>
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="container-fluid p-3 d-flex flex-column flex-grow-1">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <label class="form-label small fw-medium mb-1">Chat credentials</label>
+        <div class="input-group mb-2">
+          <input
+            type="text"
+            class="form-control credentials-input"
+            placeholder="bot1 pass1, bot2 pass2"
+            [formControl]="credentialsInput"
+            [disabled]="startingChats || askingQuestions">
+          <input
+            #credentialsFile
+            type="file"
+            accept=".txt,text/plain"
+            hidden
+            (change)="importCredentialsFile($event)">
+          <button
+            class="btn btn-outline-secondary"
+            type="button"
+            [disabled]="startingChats || askingQuestions"
+            (click)="credentialsFile.click()">
+            <i class="fa fa-upload me-1"></i>
+            Import
+          </button>
+        </div>
+        <div class="text-muted small mb-3">
+          Type <code>bot1 pass1, bot2 pass2</code>, or Import a text file in the same format
+          (one pair per line or comma-separated). Bots must already be logged in to answer.
+        </div>
+        <ng-template #credentialDetails>
+          <div class="eval-credential-popover">
+            <div *ngFor="let group of credentialIssueGroups" class="mb-2 last-mb-0">
+              <div class="fw-medium mb-1">{{ group.title }}</div>
+              <ul class="mb-0 ps-3">
+                <li *ngFor="let username of group.usernames">{{ username }}</li>
+              </ul>
+            </div>
+          </div>
+        </ng-template>
+        <button
+          type="button"
+          class="eval-credential-summary text-warning-emphasis small mb-3"
+          *ngIf="credentialSummary"
+          [ngbPopover]="credentialDetails"
+          [autoClose]="'outside'"
+          triggers="click"
+          placement="bottom-start"
+          container="body"
+          popoverClass="eval-credential-popover-window"
+          popoverTitle="Skipped credentials">
+          {{ credentialSummary }}
+          <i class="fa fa-caret-down ms-1"></i>
+        </button>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <input
+            #questionsFile
+            type="file"
+            accept=".txt,.json,text/plain,application/json"
+            hidden
+            (change)="importQuestionsFile($event)">
+          <ng-template #questionsFormatHelp>
+            <div class="eval-questions-help small">
+              <div class="mb-2">Plain <code>.txt</code> file. Separate each item with a line that is only <code>---</code>.</div>
+              <pre class="eval-questions-help-sample mb-2">Q: Who directed Titanic?
+A: James Cameron
+
+---
+Q:
+SELECT ?movie WHERE &#123;
+  ?movie dbo:director dbr:James_Cameron .
+&#125;
+A: Titanic
+A: Avatar</pre>
+              <div class="mb-0">
+                <code>Q:</code> can be one line or a multi-line SPARQL query.
+                Extra <code>A:</code> lines are accepted answers.
+                A JSON array of question/answers objects also works.
+              </div>
+            </div>
+          </ng-template>
+          <div class="eval-questions-btn">
+            <button
+              *ngIf="!questionsFileName"
+              class="btn btn-outline-secondary"
+              type="button"
+              [disabled]="startingChats || askingQuestions"
+              [ngbPopover]="questionsFormatHelp"
+              triggers="mouseenter:mouseleave"
+              placement="bottom"
+              container="body"
+              popoverTitle="Questions file format"
+              popoverClass="eval-questions-help-window"
+              (click)="questionsFile.click()">
+              <i class="fa fa-plus me-1"></i>
+              Add Questions
+            </button>
+            <button
+              *ngIf="questionsFileName"
+              class="btn btn-outline-secondary"
+              type="button"
+              [disabled]="startingChats || askingQuestions"
+              [title]="questionsFileName"
+              (click)="seeQuestions()">
+              <i class="fa fa-eye me-1"></i>
+              See Questions
+            </button>
+            <button
+              *ngIf="questionsFileName"
+              type="button"
+              class="eval-questions-clear"
+              aria-label="Remove questions file"
+              [disabled]="startingChats || askingQuestions"
+              (click)="clearQuestions(); $event.stopPropagation()">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+          <button class="btn btn-outline-secondary" type="button" (click)="openSettings()">
+            <i class="fa fa-sliders me-1"></i>
+            Grades
+          </button>
+          <button class="btn btn-primary" type="button" [disabled]="!canStartChats" (click)="startChats()">
+            <i class="fa fa-comments me-1"></i>
+            <span *ngIf="!startingChats">Start Chats</span>
+            <span *ngIf="startingChats">Starting...</span>
+          </button>
+          <button class="btn btn-outline-primary" type="button" [disabled]="!canAskQuestions" (click)="askQuestions()">
+            <i class="fa fa-question-circle me-1"></i>
+            <span *ngIf="!askingQuestions">Ask Questions</span>
+            <span *ngIf="askingQuestions">Asking...</span>
+          </button>
+          <button class="btn btn-success" type="button" [disabled]="!canFinish" (click)="finishEvaluation()">
+            <i class="fa fa-flag-checkered me-1"></i>
+            Results
+          </button>
+        </div>
+        <div class="d-flex flex-wrap gap-3 align-items-center mt-2" *ngIf="chats.length > 0 || currentQuestionLabel">
+          <div class="small" *ngIf="chats.length > 0">
+            <span class="badge bg-success me-1">{{ finishedChatCount }} finished</span>
+            <span class="badge bg-secondary">{{ remainingChatCount }} remaining</span>
+            <span class="text-muted ms-1">of {{ chats.length }}</span>
+          </div>
+          <div class="small text-muted" *ngIf="currentQuestionLabel">
+            <i class="fa fa-spinner fa-spin me-1"></i>{{ currentQuestionLabel }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3" *ngIf="rankedChats.length > 0 && totalAsked > 0">
+      <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">Live ranking</h6>
+          <span class="text-muted small">Avg reply {{ formatResponseTime(overallAvgResponseTimeMs) }}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0 align-middle">
+            <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Chat</th>
+              <th>Correct</th>
+              <th>Partial</th>
+              <th>Incorrect</th>
+              <th>Timeouts</th>
+              <th>Grade</th>
+              <th>Avg time</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let row of rankedChats" [class.table-warning]="row.rank === 1 && row.total > 0">
+              <td>
+                <span class="badge" [ngClass]="row.rank === 1 ? 'bg-warning text-dark' : 'bg-secondary'">#{{ row.rank }}</span>
+              </td>
+              <td>{{ row.username }}</td>
+              <td class="text-success">{{ row.correct }}</td>
+              <td class="text-info">{{ row.partial }}</td>
+              <td class="text-danger">{{ row.incorrect }}</td>
+              <td class="text-warning">{{ row.timeouts }}</td>
+              <td>{{ formatGrade(row.grade) }}</td>
+              <td>{{ formatResponseTime(row.avgResponseTimeMs) }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto d-flex my-0 flex-grow-1 eval-chats">
+      <div *ngIf="chats.length === 0" class="d-flex justify-content-center align-items-center w-100">
+        <div class="text-center text-secondary">
+          <h5>No evaluation chats yet</h5>
+          <p class="mb-0">Enter bot credentials above and press Start Chats.</p>
+        </div>
+      </div>
+
+      <div *ngFor="let chat of chats" id="evalchat{{chat.paneLog.roomID}}" class="eval-chat-col">
+        <div class="px-2 pt-2 d-flex align-items-center justify-content-between">
+          <span class="d-flex align-items-center gap-1">
+            <span class="badge bg-warning text-dark" *ngIf="rankFor(chat) === 1">#1</span>
+            <span class="badge bg-secondary" *ngIf="rankFor(chat) && rankFor(chat) !== 1">#{{ rankFor(chat) }}</span>
+            <span class="badge bg-dark">{{ chat.username }}</span>
+            <span class="badge bg-success" *ngIf="isChatFinished(chat)">Finish</span>
+            <span class="badge bg-primary" *ngIf="gradeFor(chat) > 0">{{ formatGrade(gradeFor(chat)) }} pts</span>
+          </span>
+          <span class="d-flex align-items-center gap-1">
+            <span class="badge bg-light text-dark" *ngIf="chat.lastResponseMs != null">{{ formatResponseTime(chat.lastResponseMs) }}</span>
+            <span *ngIf="scoreRatioFor(chat) as ratio"
+                  class="badge"
+                  [ngClass]="{
+                    'bg-success': chat.lastVerdict === 'correct',
+                    'bg-info': chat.lastVerdict === 'partial',
+                    'bg-danger': chat.lastVerdict === 'incorrect',
+                    'bg-warning text-dark': chat.lastVerdict === 'timeout'
+                  }">{{ ratio }}</span>
+          </span>
+        </div>
+        <app-chat-pane
+          [numQueries]="0"
+          [paneLog]="chat.paneLog"
+          [correctMessageOrdinals]="chat.correctOrdinals"
+          [hideComposer]="true"
+          (removeRoom)="onPaneClosed(chat)"
+          id="evalchatpane{{chat.paneLog.roomID}}">
+        </app-chat-pane>
+      </div>
+    </div>
+
+    <div class="d-flex overflow-auto mt-2" style="gap: 10px;" *ngIf="chats.length > 0">
+      <button *ngFor="let chat of chats"
+              (click)="scrollTo(chat.paneLog.roomID); selectedRoomID = chat.paneLog.roomID"
+              [ngClass]="{'bg-secondary text-white': selectedRoomID === chat.paneLog.roomID}"
+              class="btn btn-light btn-sm"
+              [ngStyle]="{'text-decoration': chat.paneLog.active ? 'none' : 'line-through'}">
+        {{ chat.username }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<ng-template #questionsModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Questions and expected answers</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle mb-0">
+        <thead>
+        <tr>
+          <th style="width: 4rem;">#</th>
+          <th>Question</th>
+          <th>Accepted answers</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let item of questions">
+          <td>{{ item.index + 1 }}</td>
+          <td><pre class="eval-question-pre mb-0">{{ item.question }}</pre></td>
+          <td>
+            <div *ngFor="let answer of item.expectedAnswers">{{ answer }}</div>
+          </td>
+        </tr>
+        <tr *ngIf="questions.length === 0">
+          <td colspan="3" class="text-muted">No questions loaded.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">Close</button>
+  </div>
+</ng-template>
+
+<ng-template #resultModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Evaluation results</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Summary</h6>
+      <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="!canDownloadSummary" (click)="downloadSummary()">
+        <i class="fa fa-download me-1"></i>
+        <span *ngIf="!downloadingSummary">Download Summary</span>
+        <span *ngIf="downloadingSummary">Downloading...</span>
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle">
+        <thead>
+        <tr>
+          <th>Chat</th>
+          <th *ngFor="let item of questions">Q{{ item.index + 1 }}</th>
+          <th>Average</th>
+          <th>Fastest</th>
+          <th>Longest</th>
+          <th>Grade</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let row of chatScoreRows">
+          <td class="fw-medium">{{ row.username }}</td>
+          <td *ngFor="let answer of row.answers">
+            <div>
+              <span *ngIf="answer.verdict === 'correct'" class="badge bg-success">correct</span>
+              <span *ngIf="answer.verdict === 'partial'" class="badge bg-info">partial</span>
+              <span *ngIf="answer.verdict === 'incorrect'" class="badge bg-danger">incorrect</span>
+              <span *ngIf="answer.verdict === 'timeout'" class="badge bg-warning text-dark">timeout</span>
+              <span *ngIf="answer.verdict === null" class="text-muted">—</span>
+            </div>
+            <div class="small text-muted" *ngIf="answer.verdict !== 'timeout' && answer.timeMs != null">{{ formatResponseTime(answer.timeMs) }}</div>
+            <div class="small text-success" *ngIf="answer.fastBonusPoints > 0">{{ formatBonus(answer.fastBonusPoints) }}</div>
+          </td>
+          <td>{{ formatResponseTime(row.avgMs) }}</td>
+          <td>{{ formatTimedQuestion(row.fastestMs, row.fastestQuestion) }}</td>
+          <td>{{ formatTimedQuestion(row.longestMs, row.longestQuestion) }}</td>
+          <td class="fw-bold">{{ formatGrade(row.grade) }}</td>
+        </tr>
+        <tr *ngIf="chatScoreRows.length === 0">
+          <td [attr.colspan]="questions.length + 5" class="text-muted">No chat results yet.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h6 class="mt-3">Logs</h6>
+    <div class="eval-log-tabs btn-group mb-2" role="group" *ngIf="chats.length > 0">
+      <button *ngFor="let chat of chats"
+              type="button"
+              class="btn btn-sm"
+              [ngClass]="activeLogRoomId === chat.paneLog.roomID ? 'btn-dark' : 'btn-outline-dark'"
+              (click)="selectLogChat(chat.paneLog.roomID)">
+        {{ chat.username }}
+      </button>
+    </div>
+    <div class="eval-log border rounded p-2">
+      <div *ngFor="let entry of filteredLogs" class="mb-1">
+        <span class="text-muted">{{ entry.time | date:'HH:mm:ss' }}</span>
+        <span class="ms-2" [ngClass]="{
+          'text-success': entry.level === 'success',
+          'text-warning': entry.level === 'warning',
+          'text-danger': entry.level === 'danger'
+        }">{{ entry.message }}</span>
+      </div>
+      <div *ngIf="filteredLogs.length === 0" class="text-muted">No logs for this chat yet.</div>
+    </div>
+    <div class="small text-warning mt-3" *ngIf="emailConfigured === false">
+      SMTP is not configured. Copy <code>data/smtp.properties.example</code> to <code>data/smtp.properties</code>.
+    </div>
+  </div>
+  <div class="modal-footer flex-wrap gap-2 justify-content-between">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <input
+        #recipientsFile
+        type="file"
+        accept=".txt,text/plain"
+        hidden
+        (change)="importRecipientsFile($event)">
+      <ng-template #recipientsFormatHelp>
+        <div class="eval-questions-help small">
+          <div class="mb-2">Plain <code>.txt</code> file. One evaluation username, then that chat's email addresses.</div>
+          <pre class="eval-questions-help-sample mb-2">bot1: student1&#64;uzh.ch, student1-copy&#64;uzh.ch
+bot2: student2&#64;uzh.ch</pre>
+          <div class="mb-0">The username must match the chat name. Extra addresses on the same line are all sent the same log.</div>
+        </div>
+      </ng-template>
+      <ng-template #recipientsLoadedHelp>
+        <div class="eval-credential-popover">
+          <div *ngFor="let row of recipientRows" class="mb-2 last-mb-0">
+            <div class="fw-medium mb-1">{{ row.username }}</div>
+            <ul class="mb-0 ps-3">
+              <li *ngFor="let email of row.emails">{{ email }}</li>
+            </ul>
+          </div>
+        </div>
+      </ng-template>
+      <div class="eval-questions-btn">
+        <button
+          *ngIf="!recipientsFileName"
+          #recipientsFormatPopover="ngbPopover"
+          class="btn btn-outline-secondary"
+          type="button"
+          [disabled]="sendingMail"
+          [ngbPopover]="recipientsFormatHelp"
+          triggers="manual"
+          [autoClose]="false"
+          placement="end"
+          container="body"
+          popoverTitle="Recipients file format"
+          popoverClass="eval-questions-help-window eval-recipients-help-window eval-hover-stay"
+          (mouseenter)="openRecipientsHelp(recipientsFormatPopover)"
+          (mouseleave)="scheduleCloseRecipientsHelp()"
+          (shown)="bindRecipientsHelpWindow()"
+          (hidden)="unbindRecipientsHelpWindow()"
+          (click)="recipientsFile.click()">
+          <i class="fa fa-envelope me-1"></i>
+          Add Recipients
+        </button>
+        <button
+          *ngIf="recipientsFileName"
+          #recipientsLoadedPopover="ngbPopover"
+          class="btn btn-outline-secondary"
+          type="button"
+          [disabled]="sendingMail"
+          [title]="recipientsFileName"
+          [ngbPopover]="recipientsLoadedHelp"
+          triggers="manual"
+          [autoClose]="false"
+          placement="end"
+          container="body"
+          popoverTitle="Loaded recipients"
+          popoverClass="eval-credential-popover-window eval-hover-stay"
+          (mouseenter)="openRecipientsHelp(recipientsLoadedPopover)"
+          (mouseleave)="scheduleCloseRecipientsHelp()"
+          (shown)="bindRecipientsHelpWindow()"
+          (hidden)="unbindRecipientsHelpWindow()"
+          (click)="recipientsFile.click()">
+          <i class="fa fa-envelope me-1"></i>
+          Recipients ({{ recipientCount }})
+        </button>
+        <button
+          *ngIf="recipientsFileName"
+          type="button"
+          class="eval-questions-clear"
+          aria-label="Remove recipients file"
+          [disabled]="sendingMail"
+          (click)="clearRecipients(); $event.stopPropagation()">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="logsSentConfirm ? 'btn-success' : 'btn-outline-secondary'"
+        [disabled]="!canSendLogs"
+        (click)="sendLogs()">
+        <ng-container *ngIf="logsSentConfirm">
+          <i class="fa fa-check me-1"></i>
+          Logs sent
+        </ng-container>
+        <ng-container *ngIf="!logsSentConfirm">
+          <i class="fa fa-paper-plane me-1"></i>
+          <span *ngIf="!sendingMail">Send Logs</span>
+          <span *ngIf="sendingMail">Sending...</span>
+        </ng-container>
+      </button>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-primary" [disabled]="!canDownloadChats" (click)="downloadChats()">
+        <i class="fa fa-download me-1"></i>
+        <span *ngIf="!downloadingChats">Download Chats</span>
+        <span *ngIf="downloadingChats">Downloading...</span>
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">Close</button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #settingsModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Grading settings</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="text-muted small mb-3">
+      These values are used for the next question round and the summary table.
+    </p>
+
+    <h6 class="mb-2">Answer points</h6>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4 eval-grade-field">
+        <label class="form-label small" for="correctPoints">Correct</label>
+        <input id="correctPoints" name="correctPoints" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.correctPoints" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-md-4 eval-grade-field">
+        <label class="form-label small" for="partialPoints">Partial</label>
+        <input id="partialPoints" name="partialPoints" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.partialPoints" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-md-4 eval-grade-field">
+        <label class="form-label small" for="timeoutSeconds">Timeout (s)</label>
+        <input id="timeoutSeconds" name="timeoutSeconds" type="number" min="1" step="1" class="form-control"
+               [(ngModel)]="gradingDraft.timeoutSeconds" [disabled]="!canEditSettings">
+      </div>
+    </div>
+
+    <h6 class="mb-2">Speed bonus</h6>
+    <div class="btn-group mb-3" role="group">
+      <input type="radio" class="btn-check" name="speedBonusMode" id="speedBonusManual"
+             [value]="'manual'" [(ngModel)]="gradingDraft.speedBonusMode" [disabled]="!canEditSettings">
+      <label class="btn btn-outline-secondary btn-sm" for="speedBonusManual">Manual</label>
+      <input type="radio" class="btn-check" name="speedBonusMode" id="speedBonusDynamic"
+             [value]="'dynamic'" [(ngModel)]="gradingDraft.speedBonusMode" [disabled]="!canEditSettings">
+      <label class="btn btn-outline-secondary btn-sm" for="speedBonusDynamic">Dynamic</label>
+    </div>
+
+    <div class="row g-3" *ngIf="gradingDraft.speedBonusMode === 'manual'">
+      <div class="col-md-6 eval-grade-field">
+        <label class="form-label small" for="fastBonusPoints">Bonus points</label>
+        <input id="fastBonusPoints" name="fastBonusPoints" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.fastBonusPoints" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-md-6 eval-grade-field">
+        <label class="form-label small" for="fastBonusSeconds">Within (s)</label>
+        <input id="fastBonusSeconds" name="fastBonusSeconds" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.fastBonusSeconds" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-12">
+        <div class="form-text">Fixed bonus. Example: +0.2 if the answer arrives in 3 seconds or less.</div>
+      </div>
+    </div>
+
+    <div class="row g-3" *ngIf="gradingDraft.speedBonusMode === 'dynamic'">
+      <div class="col-md-4 eval-grade-field">
+        <label class="form-label small" for="dynBonusPoints">Points</label>
+        <input id="dynBonusPoints" name="dynBonusPoints" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.fastBonusPoints" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-md-4 eval-grade-field">
+        <label class="form-label small" for="dynBonusUntil">Until (s)</label>
+        <input id="dynBonusUntil" name="dynBonusUntil" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.fastBonusSeconds" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-md-4 eval-grade-field">
+        <label class="form-label small" for="dynBonusZero">Zero at (s)</label>
+        <input id="dynBonusZero" name="dynBonusZero" type="number" min="0" step="0.1" class="form-control"
+               [(ngModel)]="gradingDraft.fastBonusZeroSeconds" [disabled]="!canEditSettings">
+      </div>
+      <div class="col-12">
+        <div class="form-text">
+          Linear fade. Example: 30s → full, 35s → small penalty, 60s → none.
+        </div>
+      </div>
+    </div>
+
+    <div class="form-check mt-3">
+      <input class="form-check-input" type="checkbox" id="speedBonusCorrectOnly"
+             name="speedBonusCorrectOnly" [(ngModel)]="gradingDraft.speedBonusCorrectOnly"
+             [disabled]="!canEditSettings">
+      <label class="form-check-label" for="speedBonusCorrectOnly">
+        Speed bonus only for correct answers
+      </label>
+      <div class="form-text">
+        If unchecked, a fast answer still gets the bonus even when it is incorrect or partial.
+      </div>
+    </div>
+
+    <div class="form-check mt-4">
+      <input class="form-check-input" type="checkbox" id="showGradesInLogs"
+             name="showGradesInLogs" [(ngModel)]="gradingDraft.showGradesInLogs" [disabled]="!canEditSettings">
+      <label class="form-check-label" for="showGradesInLogs">
+        Show grades in the user logs
+      </label>
+      <div class="form-text">
+        If unchecked, downloaded chat history only includes correct / incorrect / timeout, not points or the final grade.
+      </div>
+    </div>
+    <p class="small text-muted mt-3 mb-0" *ngIf="!canEditSettings">
+      Settings cannot be changed while questions are being asked.
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="!canEditSettings" (click)="resetSettingsDraft()">
+      Reset defaults
+    </button>
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" [disabled]="!canEditSettings" (click)="saveSettings(modal)">
+      Save
+    </button>
+  </div>
+</ng-template>

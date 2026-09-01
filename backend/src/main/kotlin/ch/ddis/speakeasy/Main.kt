@@ -7,6 +7,7 @@ import ch.ddis.speakeasy.cli.Cli
 import ch.ddis.speakeasy.db.DatabaseHandler
 import ch.ddis.speakeasy.feedback.FeedbackManager
 import ch.ddis.speakeasy.feedback.FormManager
+import ch.ddis.speakeasy.mail.EvaluationMailer
 import ch.ddis.speakeasy.user.UserManager
 import ch.ddis.speakeasy.util.Config
 import com.github.ajalt.clikt.core.CliktCommand
@@ -72,6 +73,7 @@ object Speakeasy : CliktCommand(help = "Runs the Speakeasy application") {
         FeedbackManager.init(config)
         ChatRoomManager.init(config)
         FormManager.init(config)
+        EvaluationMailer.init(config)
 
         println("Starting api")
         RestApi.init(config)

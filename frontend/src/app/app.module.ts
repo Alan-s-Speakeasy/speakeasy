@@ -38,6 +38,7 @@ import {MatInputModule} from "@angular/material/input";
 import {NgbdDatepickerRangePopup} from "./chatroom-status/date-range-selector/date-range-selector.component";
 import {NgOptionComponent, NgSelectComponent} from "@ng-select/ng-select";
 import {UserTableComponent} from "./assignment/user-table/user-table.component";
+import {AutomatedEvaluationComponent} from "./automated-evaluation/automated-evaluation.component";
 import {AvatarModule} from "primeng/avatar";
 import {Button} from "primeng/button";
 import {PanelModule} from "primeng/panel";
@@ -77,6 +78,7 @@ export function initializeApiConfig() {
     UserFeedbackComponent,
     AssignmentComponent,
     UserTableComponent,
+    AutomatedEvaluationComponent,
   ],
   bootstrap: [AppComponent],
   imports: [BrowserModule,

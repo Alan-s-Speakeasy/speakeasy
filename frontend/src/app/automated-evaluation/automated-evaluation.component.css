@@ -1,0 +1,123 @@
+.eval-page {
+  min-height: calc(100vh - 16px);
+}
+
+.eval-chats {
+  flex-wrap: nowrap;
+  gap: 10px;
+  min-height: 560px;
+}
+
+.eval-chat-col {
+  min-width: 380px;
+  max-width: 380px;
+}
+
+.eval-log {
+  max-height: 260px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  background: #f8f9fa;
+}
+
+.eval-stat-card {
+  min-width: 120px;
+}
+
+.credentials-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.input-group .credentials-input {
+  min-width: 0;
+}
+
+.eval-credential-summary {
+  display: inline-block;
+  line-height: 1.35;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.eval-credential-popover {
+  max-height: min(22rem, 50vh);
+  overflow-y: auto;
+  min-width: 180px;
+}
+
+.eval-credential-popover .last-mb-0:last-child {
+  margin-bottom: 0 !important;
+}
+
+.eval-chat-col .badge {
+  font-weight: 600;
+}
+
+.eval-log-tabs .btn {
+  min-width: 5.5rem;
+  font-weight: 600;
+}
+
+.eval-question-pre,
+.eval-questions-help-sample {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.eval-questions-help-sample {
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 0.6rem 0.7rem;
+}
+
+.eval-questions-btn {
+  position: relative;
+  display: inline-block;
+}
+
+.eval-questions-clear {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 1px solid #dc3545;
+  border-radius: 50%;
+  background: #fff;
+  color: #dc3545;
+  font-size: 0.65rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.eval-questions-clear:hover:not(:disabled) {
+  background: #dc3545;
+  color: #fff;
+}
+
+.eval-questions-clear:disabled {
+  opacity: 0.4;
+}
+
+.eval-grade-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.eval-grade-field .form-label {
+  min-height: 1.25rem;
+  margin-bottom: 0.35rem;
+}
+

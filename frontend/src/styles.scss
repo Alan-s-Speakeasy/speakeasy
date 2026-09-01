@@ -14,3 +14,45 @@
 .increase-popover-width {
   max-width: 1000px;
 }
+
+.eval-result-modal .modal-dialog {
+  max-width: min(1400px, 96vw);
+}
+
+.eval-credential-popover-window {
+  max-width: 280px;
+}
+
+.eval-questions-help-window {
+  max-width: 420px;
+}
+
+.eval-recipients-help-window {
+  max-width: min(420px, calc(100vw - 2rem));
+}
+
+ngb-popover-window.eval-hover-stay .popover-body {
+  max-height: min(22rem, 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+ngb-popover-window.eval-hover-stay.bs-popover-end::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  width: 14px;
+}
+
+.eval-questions-help-window .eval-questions-help-sample {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 0.6rem 0.7rem;
+  margin-bottom: 0.5rem;
+}

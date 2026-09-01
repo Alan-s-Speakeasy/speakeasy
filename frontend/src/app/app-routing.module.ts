@@ -11,6 +11,7 @@ import {ChatSpectateComponent} from "./chat-spectate/chat-spectate.component";
 import {UserFeedbackComponent} from "./user-feedback/user-feedback.component";
 import {AssignmentComponent} from "./assignment/assignment.component";
 import {FormDefinitionsComponent} from "./form-definitions/form-definitions.component";
+import {AutomatedEvaluationComponent} from "./automated-evaluation/automated-evaluation.component";
 import {MainLayoutComponent, MinimalLayoutComponent} from "./layouts";
 
 const routes: Routes = [
@@ -39,6 +40,7 @@ const routes: Routes = [
       { path: 'feedback', component: UserFeedbackComponent },
       { path: 'assignment', component: AssignmentComponent },
       { path: 'forms', component: FormDefinitionsComponent },
+      { path: 'automated-evaluation', component: AutomatedEvaluationComponent },
     ],
   },
 ];

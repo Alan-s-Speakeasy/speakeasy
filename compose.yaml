@@ -26,13 +26,18 @@ services:
     tty: true
 
     ports:
-      # Bound to loopback on the assumption that the sysadmin's reverse proxy
-      # terminates TLS on the host. Change to "8080:8080" to expose directly.
+      # Defaults to loopback, assuming a reverse proxy terminates TLS on the
+      # host. Set SPEAKEASY_BIND_ADDR=0.0.0.0 in .env to publish directly on the
+      # network instead — which is what the pre-Docker deployment did, so a dev
+      # server reached at http://host:8080 needs exactly that.
       #
-      # The proxy must disable response buffering and allow long read timeouts
-      # for /sse/rooms — those are Server-Sent Events connections that stay open
-      # for the lifetime of a chat session. nginx: proxy_buffering off;
-      - "127.0.0.1:8080:8080"
+      # NOTE: published ports bypass ufw/firewalld. 0.0.0.0 means reachable,
+      # whatever the firewall rules say.
+      #
+      # Behind a proxy: disable response buffering and allow long read timeouts
+      # for /sse/rooms — Server-Sent Events connections stay open for the
+      # lifetime of a chat session. nginx: proxy_buffering off;
+      - "${SPEAKEASY_BIND_ADDR:-127.0.0.1}:${SPEAKEASY_PORT:-8080}:8080"
 
     volumes:
       # database.db, feedbackforms/, feedbackresults/, sessions.csv,
@@ -48,10 +53,10 @@ services:
       - ./config:/config:ro
 
     environment:
-      TZ: "Europe/Zurich"
-      # Overrides the -Xms4G -Xmx16G baked into backend/build.gradle. Raise the
-      # -Xmx and mem_limit together, never one alone.
-      JAVA_OPTS: "-Xms512m -Xmx2g"
+      TZ: "${TZ:-Europe/Zurich}"
+      # Overrides the -Xms4G -Xmx16G baked into backend/build.gradle. Raise this
+      # and SPEAKEASY_MEMORY_LIMIT together, never one alone.
+      JAVA_OPTS: "${JAVA_OPTS:--Xms512m -Xmx2g}"
       # Forwarded verbatim to the backend binary — the equivalent of the
       # `-- <args>` passthrough in the old scripts/deploy.sh.
       SPEAKEASY_EXTRA_ARGS: "${SPEAKEASY_EXTRA_ARGS:-}"
@@ -62,7 +67,7 @@ services:
       replicas: 1
       resources:
         limits:
-          memory: 3g
+          memory: "${SPEAKEASY_MEMORY_LIMIT:-3g}"
 
     # Main.kt registers no shutdown hook, so SIGTERM ends the JVM abruptly.
     # SQLite's journal makes that safe, but the grace period gives in-flight

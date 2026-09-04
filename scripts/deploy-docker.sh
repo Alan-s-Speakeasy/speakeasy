@@ -21,11 +21,14 @@
 # Example crontab entry (every 5 minutes):
 #   */5 * * * * $HOME/speakeasy/scripts/deploy-docker.sh
 
-# Configuration
-REPO_DIR="$HOME/speakeasy"
-LOG_FILE="$HOME/logs/deploy.log"
-BRANCH="main"
-COMPOSE_PROJECT="speakeasy"
+# Configuration. All overridable from the environment so the same script serves
+# dev and production without being edited on the server — put them in the crontab
+# line, e.g.
+#   */5 * * * * SPEAKEASY_BRANCH=dockerize $HOME/speakeasy/scripts/deploy-docker.sh
+REPO_DIR="${SPEAKEASY_REPO_DIR:-$HOME/speakeasy}"
+LOG_FILE="${SPEAKEASY_DEPLOY_LOG:-$HOME/logs/deploy.log}"
+BRANCH="${SPEAKEASY_BRANCH:-main}"
+COMPOSE_PROJECT="${SPEAKEASY_COMPOSE_PROJECT:-speakeasy}"
 
 # Cache mounts in the Dockerfile need BuildKit. It is the default on modern
 # Docker, but cron environments are minimal, so be explicit.
@@ -92,8 +95,10 @@ fi
 mkdir -p "$REPO_DIR/data" "$REPO_DIR/logs" "$REPO_DIR/config"
 
 # The image builds a user with these ids so it can write to the mounts above.
-APP_UID="$(id -u)"
-APP_GID="$(id -g)"
+# Auto-detected from the account cron runs as, which is the account that owns
+# those directories. An explicitly exported value wins, if you need to override.
+APP_UID="${APP_UID:-$(id -u)}"
+APP_GID="${APP_GID:-$(id -g)}"
 export APP_UID APP_GID
 export SPEAKEASY_EXTRA_ARGS="${other_args[*]}"
 

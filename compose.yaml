@@ -1,0 +1,78 @@
+services:
+  speakeasy:
+    build:
+      context: .
+      args:
+        # Must match the owner of ./data and ./logs on the host, or the
+        # container cannot write database.db. Check with `id -u` / `id -g`.
+        APP_UID: "${APP_UID:-1000}"
+        APP_GID: "${APP_GID:-1000}"
+    image: speakeasy:local
+    container_name: speakeasy
+    restart: unless-stopped
+
+    # This pair replaces tmux. It allocates a pseudo-TTY and keeps stdin open so
+    # JLine can run the interactive admin CLI, reached with:
+    #
+    #     docker attach speakeasy
+    #
+    # DETACH WITH Ctrl-P Ctrl-Q. Ctrl-C sends SIGINT to PID 1 and stops the app,
+    # exactly as it would inside tmux.
+    #
+    # Without these two, Cli.kt falls back to "Interactive terminal disabled"
+    # and the app runs headless — HTTP keeps working, but `user add`,
+    # `user import` and the `assignment` commands become unreachable.
+    stdin_open: true
+    tty: true
+
+    ports:
+      # Bound to loopback on the assumption that the sysadmin's reverse proxy
+      # terminates TLS on the host. Change to "8080:8080" to expose directly.
+      #
+      # The proxy must disable response buffering and allow long read timeouts
+      # for /sse/rooms — those are Server-Sent Events connections that stay open
+      # for the lifetime of a chat session. nginx: proxy_buffering off;
+      - "127.0.0.1:8080:8080"
+
+    volumes:
+      # database.db, feedbackforms/, feedbackresults/, sessions.csv,
+      # smtp.properties. Must be LOCAL DISK — SQLite locking breaks over
+      # NFS/CIFS, and this app has a history of SQLITE_BUSY under load.
+      - ./data:/data
+
+      # log4j2.xml writes to a path relative to the working directory, which is
+      # /app in the image. Without this mount, logs vanish on every redeploy.
+      - ./logs:/app/logs
+
+      # Optional. Absent config.json means built-in defaults (port 8080, SSL off).
+      - ./config:/config:ro
+
+    environment:
+      TZ: "Europe/Zurich"
+      # Overrides the -Xms4G -Xmx16G baked into backend/build.gradle. Raise the
+      # -Xmx and mem_limit together, never one alone.
+      JAVA_OPTS: "-Xms512m -Xmx2g"
+      # Forwarded verbatim to the backend binary — the equivalent of the
+      # `-- <args>` passthrough in the old scripts/deploy.sh.
+      SPEAKEASY_EXTRA_ARGS: "${SPEAKEASY_EXTRA_ARGS:-}"
+
+    # SQLite is the reason for a single container: concurrent writers to one
+    # database file do not work. Never scale this service beyond 1 replica.
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 3g
+
+    # Main.kt registers no shutdown hook, so SIGTERM ends the JVM abruptly.
+    # SQLite's journal makes that safe, but the grace period gives in-flight
+    # requests a chance to finish first.
+    stop_grace_period: 30s
+
+    # Container stdout only. The application's own rolling file logs are
+    # configured in backend/config/log4j2.xml and land in ./logs.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"

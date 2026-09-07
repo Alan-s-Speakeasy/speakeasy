@@ -266,5 +266,15 @@ session-store
 data/feedbackresults/*
 data/sessions.csv
 data/smtp.properties
+
+# Runtime state — must never be committed. Besides containing real user data
+# (accounts, bcrypt hashes, chat logs), a tracked database.db makes `git pull`
+# abort on any server that has its own untracked copy, which breaks deployment.
+data/database.db
+data/database.db-journal
+data/database.db-wal
+data/database.db-shm
+data/*.bak-*
+data/users.csv
 frontend/openapi
 dev.py

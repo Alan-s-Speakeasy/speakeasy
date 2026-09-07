@@ -29,6 +29,13 @@ REPO_DIR="${SPEAKEASY_REPO_DIR:-$HOME/speakeasy}"
 LOG_FILE="${SPEAKEASY_DEPLOY_LOG:-$HOME/logs/deploy.log}"
 BRANCH="${SPEAKEASY_BRANCH:-main}"
 COMPOSE_PROJECT="${SPEAKEASY_COMPOSE_PROJECT:-speakeasy}"
+CONTAINER_NAME="${SPEAKEASY_CONTAINER_NAME:-speakeasy}"
+
+# The tmux session is no longer where the application runs — Docker owns that
+# now. It hosts a persistent `docker attach` instead, so `tmux attach -t
+# speakeasy` still lands you on the Speakeasy prompt exactly as before.
+# Set SPEAKEASY_TMUX_CONSOLE=false to skip it.
+TMUX_SESSION="${SPEAKEASY_TMUX_SESSION:-speakeasy}"
 
 # Cache mounts in the Dockerfile need BuildKit. It is the default on modern
 # Docker, but cron environments are minimal, so be explicit.
@@ -126,9 +133,28 @@ if [ $EXIT_CODE -ne 0 ]; then
     exit $EXIT_CODE
 fi
 
+# Step 4: Re-create the tmux console.
+#
+# `docker compose up -d` replaces the container, which drops any existing
+# `docker attach`, so the session is rebuilt on every deploy. The retry loop
+# reconnects on its own if the container is restarted later — by the restart
+# policy, a healthcheck failure, or the next deployment.
+#
+# Note this preserves the old footgun as well as the old convenience: Ctrl-C in
+# this session still reaches PID 1 and stops the application, exactly as it did
+# when the JVM ran here directly. Detach with the usual tmux prefix + d.
+if [ "${SPEAKEASY_TMUX_CONSOLE:-true}" = "true" ] && command -v tmux > /dev/null 2>&1; then
+    log "Re-creating tmux console session: $TMUX_SESSION"
+    tmux kill-session -t "$TMUX_SESSION" 2>/dev/null
+    tmux new-session -d -s "$TMUX_SESSION" \
+        "while true; do docker attach '$CONTAINER_NAME' || true; sleep 2; done"
+elif [ "${SPEAKEASY_TMUX_CONSOLE:-true}" = "true" ]; then
+    log "tmux not installed, skipping console session. Use 'docker attach $CONTAINER_NAME' instead."
+fi
+
 # Rebuilding on every deploy leaves untagged layers behind, which fills the disk
 # within a few weeks. Only dangling images are removed; nothing tagged or in use.
 log "Pruning dangling images..."
 docker image prune -f < /dev/null
 
-log "Application restarted successfully. Attach to the CLI with: docker attach speakeasy"
+log "Application restarted successfully. Reach the CLI with: tmux attach -t $TMUX_SESSION"

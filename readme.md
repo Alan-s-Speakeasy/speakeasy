@@ -49,8 +49,9 @@ web server or frontend container.
 mkdir -p data logs config
 cp data/smtp.properties.example data/smtp.properties   # optional, for evaluation mails
 cp config/config.json.example config/config.json       # optional, defaults are fine
+cp .env.example .env                                    # per-server settings, edit as needed
 
-APP_UID=$(id -u) APP_GID=$(id -g) docker compose up -d --build
+APP_UID=$(id -u) APP_GID=$(id -g) docker compose --profile proxy up -d --build  # proxy profile to use the added Caddy service
 ```
 
 The app is then on `http://127.0.0.1:8080`.
@@ -99,9 +100,12 @@ JVM that shares the filesystem but not the memory of the running server, so
   wins. Raise `JAVA_OPTS` and `deploy.resources.limits.memory` together.
   (`-XX:MaxRAMPercentage` does *not* work here — an explicit `-Xmx` always beats
   it, whatever the order.)
-- **Reverse proxy.** The port is published on loopback only, assuming TLS
-  terminates on the host. `/sse/rooms` uses Server-Sent Events, so the proxy must
-  set `proxy_buffering off` and a long read timeout or chat updates stall.
+- **Reverse proxy / TLS.** Production runs the bundled `caddy` service
+  (`docker compose --profile proxy up -d`), which terminates TLS with a
+  Let's Encrypt cert it obtains and renews automatically. Set the hostname per
+  server via `SPEAKEASY_SITE_ADDRESS` in `.env`. Caddy reaches the
+  app as `speakeasy:8080` over the compose network, so the app's own published
+  port stays on loopback (or can be dropped entirely).
 - **Secrets.** `smtp.properties` and any keystore stay on the volume, never in
   the image. The `SPEAKEASY_SMTP_*` environment variables work too.
 - **Shutdown.** No shutdown hook is registered, so SIGTERM ends the JVM abruptly.

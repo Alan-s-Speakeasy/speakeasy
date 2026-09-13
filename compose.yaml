@@ -81,3 +81,43 @@ services:
       options:
         max-size: "20m"
         max-file: "5"
+
+  # Reverse proxy that terminates TLS for production, with a Let's Encrypt
+  # certificate it obtains and renews automatically
+  caddy:
+    image: caddy:2-alpine
+    container_name: speakeasy-caddy
+    restart: unless-stopped
+    profiles: ["proxy"]
+    depends_on:
+      - speakeasy
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3; harmless if UDP/443 is firewalled (falls back to TCP)
+
+    environment:
+      # Site address Caddy serves and requests a cert for.
+      SPEAKEASY_SITE_ADDRESS: "${SPEAKEASY_SITE_ADDRESS}"
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+
+      # Certificates and the ACME account key. MUST persist across restarts, or
+      # Caddy re-requests certificates every time and can trip Let's Encrypt
+      # rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+
+    stop_grace_period: 30s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  caddy_data:
+  caddy_config:

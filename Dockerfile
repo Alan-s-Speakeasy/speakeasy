@@ -1,12 +1,15 @@
-# syntax=docker/dockerfile:1.7
-#
 # Speakeasy — single-image build.
 #
 # The Angular frontend is packaged into frontend.jar (see frontend/build.gradle)
 # and served by Javalin from the classpath (RestApi.kt), so backend and frontend
 # ship as one artifact. There is no separate web server.
 #
-# Build:  DOCKER_BUILDKIT=1 docker build -t speakeasy .
+# Deliberately buildable by BOTH the legacy builder and BuildKit: it uses no
+# BuildKit-only syntax, so it does not require the `docker buildx` plugin, which
+# is not installed on every server. Ordinary layer caching does the work that
+# `RUN --mount=type=cache` would otherwise do — see the note above step 1.
+#
+# Build:  docker build -t speakeasy .
 # Run:    see compose.yaml
 
 ##############################################################################
@@ -35,28 +38,26 @@ RUN chmod +x gradlew
 # checkout CANNOT build the frontend until this has run. It must be a separate
 # gradlew invocation: buildFrontend declares no dependency on openApiGenerate,
 # so listing both tasks in one command does not guarantee the ordering.
+#
+# Downloads (the Gradle distribution, dependency jars, Node 20.11, the npm tree)
+# land in this stage's own layers rather than in a cache mount. They are
+# therefore still reused by the later steps and by subsequent builds, for as
+# long as the layers above stay valid. It costs some builder-image size, and a
+# change to an early COPY forces a re-download — the trade for not depending on
+# buildx. None of it reaches the runtime image, which is a separate stage.
 COPY docs ./docs
-RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew openApiGenerate
+RUN ./gradlew openApiGenerate
 
 # --- Step 2: build the Angular frontend ------------------------------------
 # By far the slowest step (npm install + ng build), so it gets its own layer:
 # backend-only changes reuse it entirely.
-# The cache mounts keep server-side rebuilds fast — without them every deploy
-# re-downloads Node 20.11, the npm tree and the Gradle distribution.
 COPY frontend ./frontend
-RUN --mount=type=cache,target=/root/.gradle \
-    --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/src/frontend/.gradle \
-    ./gradlew :frontend:packageFrontend
+RUN ./gradlew :frontend:packageFrontend
 
 # --- Step 3: build the backend and lay out the distribution ----------------
 # installDist (not distTar) — no tarball to unpack afterwards.
 COPY backend ./backend
-RUN --mount=type=cache,target=/root/.gradle \
-    --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/src/frontend/.gradle \
-    ./gradlew :backend:installDist
+RUN ./gradlew :backend:installDist
 
 ##############################################################################
 # Stage 2 — runtime

@@ -83,7 +83,7 @@ RUN if getent passwd ubuntu >/dev/null; then userdel --remove ubuntu; fi \
 
 COPY --from=builder --chown=root:root /src/backend/build/install/backend /opt/speakeasy
 COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /opt/speakeasy/bin/backend
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /opt/speakeasy/bin/backend
 
 # /opt/speakeasy  the distribution, read-only at runtime
 # /app            working directory — log4j2.xml writes to a RELATIVE "logs" dir,

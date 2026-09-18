@@ -48,9 +48,28 @@ RUN chmod +x gradlew
 COPY docs ./docs
 RUN ./gradlew openApiGenerate
 
-# --- Step 2: build the Angular frontend ------------------------------------
-# By far the slowest step (npm install + ng build), so it gets its own layer:
-# backend-only changes reuse it entirely.
+# --- Step 2a: install the npm dependencies ---------------------------------
+# Keyed only on package.json, package-lock.json and build.gradle (copied above),
+# so a source edit does not re-download the whole tree.
+#
+# The loop keeps npm's cache warm between attempts: npm cannot retry a tarball
+# that dies mid-stream (ECONNRESET), and a failed RUN discards everything it
+# fetched. maxsockets lowers npm's 15 parallel connections, which is what tends
+# to trip firewalls and rate limits. Gradle's npm child process inherits these.
+ENV npm_config_fetch_retries=5 \
+    npm_config_fetch_retry_mintimeout=20000 \
+    npm_config_fetch_retry_maxtimeout=120000 \
+    npm_config_maxsockets=4
+RUN for attempt in 1 2 3 4 5 6; do \
+        ./gradlew :frontend:npmInstall && exit 0; \
+        echo "npm install failed (attempt ${attempt}/6), retrying"; \
+        sleep 5; \
+    done; \
+    exit 1
+
+# --- Step 2b: build the Angular frontend -----------------------------------
+# The slowest compile step, so it gets its own layer: backend-only changes
+# reuse it entirely.
 COPY frontend ./frontend
 RUN ./gradlew :frontend:packageFrontend
 

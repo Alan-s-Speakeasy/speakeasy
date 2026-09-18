@@ -27,19 +27,16 @@ services:
     stdin_open: true
     tty: true
 
-    ports:
-      # Defaults to loopback, assuming a reverse proxy terminates TLS on the
-      # host. Set SPEAKEASY_BIND_ADDR=0.0.0.0 in .env to publish directly on the
-      # network instead — which is what the pre-Docker deployment did, so a dev
-      # server reached at http://host:8080 needs exactly that.
-      #
-      # NOTE: published ports bypass ufw/firewalld. 0.0.0.0 means reachable,
-      # whatever the firewall rules say.
-      #
-      # Behind a proxy: disable response buffering and allow long read timeouts
-      # for /sse/rooms — Server-Sent Events connections stay open for the
-      # lifetime of a chat session. nginx: proxy_buffering off;
-      - "${SPEAKEASY_BIND_ADDR:-127.0.0.1}:${SPEAKEASY_PORT:-8080}:8080"
+    # No published port. Caddy reaches this service as speakeasy:8080 over the
+    # default compose network, which needs no `ports:` entry at all — so
+    # nothing here is exposed to the host, loopback-only or otherwise.
+    #
+    # Only add a `ports:` mapping back temporarily if you deliberately want to
+    # bypass Caddy for direct testing (e.g. a dev server with no TLS at all):
+    #   ports:
+    #     - "${SPEAKEASY_BIND_ADDR:-127.0.0.1}:${SPEAKEASY_PORT:-8080}:8080"
+    # NOTE if you do: published ports bypass ufw/firewalld, and 0.0.0.0 means
+    # reachable from the network regardless of firewall rules.
 
     volumes:
       # database.db, feedbackforms/, feedbackresults/, sessions.csv,

@@ -53,7 +53,8 @@ cp .env.example .env                                    # per-server settings, e
 APP_UID=$(id -u) APP_GID=$(id -g) docker compose --profile proxy up -d --build  # proxy profile to use the added Caddy service
 ```
 
-The app is then on `http://127.0.0.1:8080`.
+The app has no published port of its own — Caddy is the only thing reachable
+from outside the container, at the hostname set in `SPEAKEASY_SITE_ADDRESS`.
 
 `app_data` (`/data`: `database.db`, feedback forms/results, `sessions.csv`,
 `smtp.properties`) and `app_logs` (`/app/logs`) are named Docker volumes, not

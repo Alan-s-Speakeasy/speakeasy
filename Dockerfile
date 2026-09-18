@@ -64,9 +64,11 @@ RUN ./gradlew :backend:installDist
 ##############################################################################
 FROM eclipse-temurin:17-jre AS runtime
 
-# Must match the owner of the mounted ./data and ./logs directories on the host,
-# or the app cannot write its database. Override with --build-arg if the server
-# account is not uid 1000.
+# The uid/gid the app runs as. /data and /app/logs below get chowned to this,
+# and compose.yaml mounts named volumes there (populated from these paths on
+# first use, ownership included) rather than host bind mounts, so there is no
+# host directory to keep in sync with this anymore. Override with --build-arg
+# if the server account is not uid 1000.
 ARG APP_UID=1000
 ARG APP_GID=1000
 

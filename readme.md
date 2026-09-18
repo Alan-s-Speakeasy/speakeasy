@@ -46,8 +46,7 @@ web server or frontend container.
 ### Quick start
 
 ```bash
-mkdir -p data logs config
-cp data/smtp.properties.example data/smtp.properties   # optional, for evaluation mails
+mkdir -p config
 cp config/config.json.example config/config.json       # optional, defaults are fine
 cp .env.example .env                                    # per-server settings, edit as needed
 
@@ -55,6 +54,16 @@ APP_UID=$(id -u) APP_GID=$(id -g) docker compose --profile proxy up -d --build  
 ```
 
 The app is then on `http://127.0.0.1:8080`.
+
+`app_data` (`/data`: `database.db`, feedback forms/results, `sessions.csv`,
+`smtp.properties`) and `app_logs` (`/app/logs`) are named Docker volumes, not
+host directories — see [Layout](#layout). To place `smtp.properties` (optional,
+for evaluation mails), do it after the container exists rather than before:
+
+```bash
+cp data/smtp.properties.example /tmp/smtp.properties   # fill in real values
+docker cp /tmp/smtp.properties speakeasy:/data/smtp.properties
+```
 
 ### Reaching the admin CLI
 
@@ -81,19 +90,28 @@ JVM that shares the filesystem but not the memory of the running server, so
 
 | Path in container | Mounted from | Contents |
 | --- | --- | --- |
-| `/data` | `./data` | `database.db`, `feedbackforms/`, `feedbackresults/`, `sessions.csv`, `smtp.properties` |
-| `/app/logs` | `./logs` | log4j2 rolling logs — the path is **relative to the working directory**, hence `/app/logs` rather than something under `/data` |
-| `/config` | `./config` (read-only) | optional `config.json`; absent means built-in defaults |
+| `/data` | `app_data` (named volume) | `database.db`, `feedbackforms/`, `feedbackresults/`, `sessions.csv`, `smtp.properties` |
+| `/app/logs` | `app_logs` (named volume) | log4j2 rolling logs — the path is **relative to the working directory**, hence `/app/logs` rather than something under `/data` |
+| `/config` | `./config` (bind mount, read-only) | optional `config.json`; absent means built-in defaults |
 | `/opt/speakeasy` | — | the application itself, read-only at runtime |
+
+`/data` and `/app/logs` are named volumes rather than bind mounts (dedicated,
+quota-backed storage; ownership is handled by Docker instead of a host
+directory). `/config` stays a bind mount deliberately, since `config.json` is
+meant to be opened and hand-edited.
 
 ### Things to know before deploying
 
 - **File ownership.** The image creates its user from the `APP_UID`/`APP_GID`
-  build args (default `1000`). If they do not match the owner of `./data`, the
-  app cannot create `database.db`. Rebuild with the right ids, don't `chmod 777`.
-- **SQLite constrains the topology.** Exactly one container, and the `./data`
-  volume must be on **local disk** — locking is unreliable over NFS/CIFS. Do not
-  scale this service, and do not run two containers against one data directory.
+  build args (default `1000`). `app_data`/`app_logs` are named volumes, so
+  Docker populates their ownership from the image on first use — there's no
+  host directory to keep in sync. `./config` is still a bind mount, but it's
+  read-only and doesn't need write access to match.
+- **SQLite constrains the topology.** Exactly one container, and the `app_data`
+  volume must stay on **local disk** — locking is unreliable over NFS/CIFS.
+  True by default (the `local` driver), but would break the same way a bind
+  mount would if someone points the volume driver at network storage. Do not
+  scale this service, and do not run two containers against one data volume.
 - **Memory.** `backend/build.gradle` hardcodes `-Xms4G -Xmx16G`, which will fight
   a container limit. The image overrides this with `JAVA_OPTS=-Xms512m -Xmx2g`;
   the start script applies `JAVA_OPTS` after the defaults, so the last `-Xmx`
@@ -114,15 +132,38 @@ JVM that shares the filesystem but not the memory of the running server, so
 
 ### Migrating an existing instance
 
-Copy the live `data/` directory across *before* the first start, then fix
-ownership to match the build args:
+`app_data` is a named volume, not a host directory, so getting existing data
+into it takes one extra step compared to a plain `rsync`.
+
+**From a pre-Docker (tmux) deployment:** rsync onto the host first, then load
+that into the volume via a throwaway container:
 
 ```bash
-rsync -a olduser@oldserver:~/speakeasy/data/ ./data/
-chown -R "$(id -u):$(id -g)" ./data
+mkdir -p /tmp/speakeasy-data
+rsync -a olduser@oldserver:~/speakeasy/data/ /tmp/speakeasy-data/
+docker volume create app_data
+docker run --rm -v /tmp/speakeasy-data:/from -v app_data:/to alpine \
+    sh -c "cp -a /from/. /to/"
 ```
 
-`data/users.db` is a legacy leftover — nothing in the current sources reads it.
+**Upgrading an existing `./data` bind-mount deployment of this repo** to the
+named volume: stop the container, then copy the bind-mounted directory across
+the same way:
+
+```bash
+docker compose stop speakeasy
+docker volume create app_data
+docker run --rm -v "$(pwd)/data":/from -v app_data:/to alpine \
+    sh -c "cp -a /from/. /to/"
+docker compose up -d
+```
+
+Either way, back up the source directory first — this is a straight copy, not
+a merge, so running it twice against a volume that already has data adds on
+top rather than replacing it.
+
+`data/users.db` (if present in the old directory) is a legacy leftover —
+nothing in the current sources reads it.
 
 ### Automated deployment
 

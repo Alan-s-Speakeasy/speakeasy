@@ -3,8 +3,10 @@ services:
     build:
       context: .
       args:
-        # Must match the owner of ./data and ./logs on the host, or the
-        # container cannot write database.db. Check with `id -u` / `id -g`.
+        # Sets the uid/gid the app runs as inside the container. app_data and
+        # app_logs are named volumes, populated from /data and /app/logs as
+        # baked into the image (chowned to this uid/gid in the Dockerfile), so
+        # unlike a bind mount there is no host directory to match this against.
         APP_UID: "${APP_UID:-1000}"
         APP_GID: "${APP_GID:-1000}"
     image: speakeasy:local
@@ -41,15 +43,19 @@ services:
 
     volumes:
       # database.db, feedbackforms/, feedbackresults/, sessions.csv,
-      # smtp.properties. Must be LOCAL DISK — SQLite locking breaks over
-      # NFS/CIFS, and this app has a history of SQLITE_BUSY under load.
-      - ./data:/data
+      # smtp.properties. Named volume rather than a bind mount (dedicated,
+      # quota-backed storage). Still local disk under the hood (the default
+      # `local` driver), which SQLite locking still requires -- that
+      # constraint doesn't go away just because it's not a host path anymore.
+      - app_data:/data
 
       # log4j2.xml writes to a path relative to the working directory, which is
-      # /app in the image. Without this mount, logs vanish on every redeploy.
-      - ./logs:/app/logs
+      # /app in the image. Without this volume, logs vanish on every redeploy.
+      - app_logs:/app/logs
 
-      # Optional. Absent config.json means built-in defaults (port 8080, SSL off).
+      # Optional, hand-edited -- a bind mount here is deliberate, unlike the
+      # two above, so config.json stays a plain file you can open and edit.
+      # Absent config.json means built-in defaults (port 8080, SSL off).
       - ./config:/config:ro
 
     environment:
@@ -119,5 +125,7 @@ services:
         max-file: "5"
 
 volumes:
+  app_data:
+  app_logs:
   caddy_data:
   caddy_config:

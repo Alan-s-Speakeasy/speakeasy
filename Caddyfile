@@ -1,0 +1,20 @@
+# Reverse proxy + automatic HTTPS. Caddy obtains the TLS certificate on first
+# start and renews it in the background before expiry -- no certbot, no cron.
+
+{
+	# Let's Encrypt emails this address when a renewal fails or a cert nears
+	# expiry -- the warning that was missed when the old cert lapsed. Unused
+	# when the site address resolves to localhost (no ACME).
+	email mustafabatuhan.iliev@uzh.ch
+}
+
+{$SPEAKEASY_SITE_ADDRESS} {
+	reverse_proxy speakeasy:8080 {
+		# /sse/rooms holds a Server-Sent Events stream open for the lifetime of
+		# a chat session. Caddy streams responses (no buffering) and sets no
+		# upstream response timeout by default, so SSE already works; -1 makes
+		# the immediate-flush behaviour explicit so a later config or default
+		# change cannot silently reintroduce buffering.
+		flush_interval -1
+	}
+}

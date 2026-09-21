@@ -1,0 +1,10 @@
+{
+  "httpPort": 8080,
+  "httpsPort": 8443,
+  "enableSsl": false,
+  "keystorePath": "keystore.jks",
+  "keystorePassword": "password",
+  "rateLimit": 420,
+  "rateLimitUnit": "MINUTES",
+  "rateLimitLogin": 42000
+}

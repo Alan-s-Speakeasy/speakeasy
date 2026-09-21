@@ -1,0 +1,128 @@
+services:
+  speakeasy:
+    build:
+      context: .
+      args:
+        # Sets the uid/gid the app runs as inside the container. app_data and
+        # app_logs are named volumes, populated from /data and /app/logs as
+        # baked into the image (chowned to this uid/gid in the Dockerfile), so
+        # unlike a bind mount there is no host directory to match this against.
+        APP_UID: "${APP_UID:-1000}"
+        APP_GID: "${APP_GID:-1000}"
+    image: speakeasy:local
+    container_name: speakeasy
+    restart: unless-stopped
+
+    # This pair replaces tmux. It allocates a pseudo-TTY and keeps stdin open so
+    # JLine can run the interactive admin CLI, reached with:
+    #
+    #     docker attach speakeasy
+    #
+    # DETACH WITH Ctrl-P Ctrl-Q. Ctrl-C sends SIGINT to PID 1 and stops the app,
+    # exactly as it would inside tmux.
+    #
+    # Without these two, Cli.kt falls back to "Interactive terminal disabled"
+    # and the app runs headless — HTTP keeps working, but `user add`,
+    # `user import` and the `assignment` commands become unreachable.
+    stdin_open: true
+    tty: true
+
+    # No published port. Caddy reaches this service as speakeasy:8080 over the
+    # default compose network, which needs no `ports:` entry at all — so
+    # nothing here is exposed to the host, loopback-only or otherwise.
+    #
+    # Only add a `ports:` mapping back temporarily if you deliberately want to
+    # bypass Caddy for direct testing (e.g. a dev server with no TLS at all):
+    #   ports:
+    #     - "${SPEAKEASY_BIND_ADDR:-127.0.0.1}:${SPEAKEASY_PORT:-8080}:8080"
+    # NOTE if you do: published ports bypass ufw/firewalld, and 0.0.0.0 means
+    # reachable from the network regardless of firewall rules.
+
+    volumes:
+      # database.db, feedbackforms/, feedbackresults/, sessions.csv,
+      # smtp.properties. Named volume rather than a bind mount (dedicated,
+      # quota-backed storage). Still local disk under the hood (the default
+      # `local` driver), which SQLite locking still requires -- that
+      # constraint doesn't go away just because it's not a host path anymore.
+      - app_data:/data
+
+      # log4j2.xml writes to a path relative to the working directory, which is
+      # /app in the image. Without this volume, logs vanish on every redeploy.
+      - app_logs:/app/logs
+
+      # Optional, hand-edited -- a bind mount here is deliberate, unlike the
+      # two above, so config.json stays a plain file you can open and edit.
+      # Absent config.json means built-in defaults (port 8080, SSL off).
+      - ./config:/config:ro
+
+    environment:
+      TZ: "${TZ:-Europe/Zurich}"
+      # Overrides the -Xms4G -Xmx16G baked into backend/build.gradle. Raise this
+      # and SPEAKEASY_MEMORY_LIMIT together, never one alone.
+      JAVA_OPTS: "${JAVA_OPTS:--Xms512m -Xmx2g}"
+      # Forwarded verbatim to the backend binary — the equivalent of the
+      # `-- <args>` passthrough in the old scripts/deploy.sh.
+      SPEAKEASY_EXTRA_ARGS: "${SPEAKEASY_EXTRA_ARGS:-}"
+
+    # SQLite is the reason for a single container: concurrent writers to one
+    # database file do not work. Never scale this service beyond 1 replica.
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: "${SPEAKEASY_MEMORY_LIMIT:-3g}"
+
+    # Main.kt registers no shutdown hook, so SIGTERM ends the JVM abruptly.
+    # SQLite's journal makes that safe, but the grace period gives in-flight
+    # requests a chance to finish first.
+    stop_grace_period: 30s
+
+    # Container stdout only. The application's own rolling file logs are
+    # configured in backend/config/log4j2.xml and land in ./logs.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # Reverse proxy that terminates TLS for production, with a Let's Encrypt
+  # certificate it obtains and renews automatically
+  caddy:
+    image: caddy:2-alpine
+    container_name: speakeasy-caddy
+    restart: unless-stopped
+    profiles: ["proxy"]
+    depends_on:
+      - speakeasy
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3; harmless if UDP/443 is firewalled (falls back to TCP)
+
+    environment:
+      # Site address Caddy serves and requests a cert for.
+      SPEAKEASY_SITE_ADDRESS: "${SPEAKEASY_SITE_ADDRESS}"
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+
+      # Certificates and the ACME account key. MUST persist across restarts, or
+      # Caddy re-requests certificates every time and can trip Let's Encrypt
+      # rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+
+    stop_grace_period: 30s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  app_data:
+  app_logs:
+  caddy_data:
+  caddy_config:

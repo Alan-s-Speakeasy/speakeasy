@@ -1,0 +1,1107 @@
+hErrorWrapping(BeanDeserializer.java:570) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeUsingPropertyBased(BeanDeserializer.java:439) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1409) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:352) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:185) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:323) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4825) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3772) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at io.javalin.json.JavalinJackson.fromJsonString(JavalinJackson.kt:60) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.Context.bodyAsClass(Context.kt:131) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.Context.bodyAsClass(Context.kt:134) ~[javalin-5.6.2.jar:5.6.2]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:43) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-05-13T22:00:59.545813Z Log4j2-TF-1-RollingFileManager-488 INFO File logs/archive/all-2026-05-13-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-05-13-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+
+Message from syslogd@spencer at Jun  1 00:04:45 ...
+ kernel:[60713163.109005] watchdog: BUG: soft lockup - CPU#4 stuck for 28s! [ksoftirqd/4:32]
+
+Message from syslogd@spencer at Jun  1 00:12:07 ...
+ kernel:[60713606.099217] watchdog: BUG: soft lockup - CPU#0 stuck for 46s! [kworker/0:0:19449]
+
+Message from syslogd@spencer at Jun  1 00:12:36 ...
+ kernel:[60713634.795744] watchdog: BUG: soft lockup - CPU#0 stuck for 26s! [kworker/0:0:19449]
+
+Message from syslogd@spencer at Jun  1 00:13:00 ...
+ kernel:[60713658.517383] watchdog: BUG: soft lockup - CPU#3 stuck for 22s! [nxlog:972]
+
+Message from syslogd@spencer at Jun  1 00:13:08 ...
+ kernel:[60713666.820864] watchdog: BUG: soft lockup - CPU#4 stuck for 30s! [swapper/4:0]
+2026-06-09T22:01:02.406007Z Log4j2-TF-1-RollingFileManager-565 INFO File logs/archive/all-2026-06-09-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-06-09-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-06-18T22:00:18.576152Z Log4j2-TF-1-RollingFileManager-590 INFO File logs/archive/all-2026-06-18-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-06-18-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-06-26T22:01:00.585624Z Log4j2-TF-1-RollingFileManager-611 INFO File logs/archive/all-2026-06-26-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-06-26-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-06-28T22:00:27.108746Z Log4j2-TF-1-RollingFileManager-617 INFO File logs/archive/all-2026-06-28-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-06-28-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-06-30 21:41:32.390 [qtp18338606-22036] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+ at [Source: (String)"{"email":["admin@admin.com"],"password":{"test":1}}"; line: 1, column: 41] (through reference chain: ch.ddis.speakeasy.api.handlers.LoginHandler$LoginRequest["password"])
+        at com.fasterxml.jackson.databind.exc.MismatchedInputException.from(MismatchedInputException.java:59) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.reportInputMismatch(DeserializationContext.java:1752) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1526) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1431) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.extractScalarFromObject(DeserializationContext.java:943) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.std.StdDeserializer._parseString(StdDeserializer.java:1424) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.std.StringDeserializer.deserialize(StringDeserializer.java:48) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.std.StringDeserializer.deserialize(StringDeserializer.java:11) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.SettableBeanProperty.deserialize(SettableBeanProperty.java:545) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeWithErrorWrapping(BeanDeserializer.java:570) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeUsingPropertyBased(BeanDeserializer.java:439) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1409) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:352) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:185) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:323) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4825) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3772) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at io.javalin.json.JavalinJackson.fromJsonString(JavalinJackson.kt:60) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.Context.bodyAsClass(Context.kt:131) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.Context.bodyAsClass(Context.kt:134) ~[javalin-5.6.2.jar:5.6.2]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:43) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-06-30 21:42:11.890 [qtp18338606-22047] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+ at [Source: (String)"{"email":["admin@admin.com"],"password":{"test":1}}"; line: 1, column: 41] (through reference chain: ch.ddis.speakeasy.api.handlers.LoginHandler$LoginRequest["password"])
+        at com.fasterxml.jackson.databind.exc.MismatchedInputException.from(MismatchedInputException.java:59) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.reportInputMismatch(DeserializationContext.java:1752) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1526) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1431) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.DeserializationContext.extractScalarFromObject(DeserializationContext.java:943) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.std.StdDeserializer._parseString(StdDeserializer.java:1424) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.std.StringDeserializer.deserialize(StringDeserializer.java:48) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.std.StringDeserializer.deserialize(StringDeserializer.java:11) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.SettableBeanProperty.deserialize(SettableBeanProperty.java:545) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeWithErrorWrapping(BeanDeserializer.java:570) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeUsingPropertyBased(BeanDeserializer.java:439) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1409) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:352) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:185) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:323) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4825) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3772) ~[jackson-databind-2.15.2.jar:2.15.2]
+        at io.javalin.json.JavalinJackson.fromJsonString(JavalinJackson.kt:60) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.Context.bodyAsClass(Context.kt:131) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.Context.bodyAsClass(Context.kt:134) ~[javalin-5.6.2.jar:5.6.2]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:43) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+
+Message from syslogd@spencer at Jul  1 00:05:08 ...
+ kernel:[63305177.238007] watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [nxlog:973]
+2026-07-06T22:00:45.032007Z Log4j2-TF-1-RollingFileManager-637 INFO File logs/archive/all-2026-07-06-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-07-06-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-08T22:00:44.602109Z Log4j2-TF-1-RollingFileManager-643 INFO File logs/archive/all-2026-07-08-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-07-08-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-10T22:00:27.024021Z Log4j2-TF-5-RollingFileManager-648 INFO File logs/archive/rest-2026-06-25-1.log.gz could not be accessed, it has likely already been deleted java.nio.file.NoSuchFil
+eException: logs/archive/rest-2026-06-25-1.log.gz
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-11T22:00:29.346900Z Log4j2-TF-1-RollingFileManager-650 INFO File logs/archive/all-2026-07-11-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-07-11-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-13T22:01:00.818077Z Log4j2-TF-5-RollingFileManager-657 INFO File logs/archive/rest-2026-06-29-1.log.gz could not be accessed, it has likely already been deleted java.nio.file.NoSuchFil
+eException: logs/archive/rest-2026-06-29-1.log.gz
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-15 05:06:58.481 [qtp18338606-22316] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-15 05:06:58.481 [qtp18338606-22316] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-17 07:35:58.070 [qtp18338606-22394] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-17 07:35:58.070 [qtp18338606-22394] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-17 07:36:38.171 [qtp18338606-22403] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-17 07:36:38.171 [qtp18338606-22403] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-17 07:36:52.820 [qtp18338606-22400] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-17 07:36:52.820 [qtp18338606-22400] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-17 22:16:25.142 [qtp18338606-22403] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-17 22:16:25.142 [qtp18338606-22403] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-22T22:00:45.713962Z Log4j2-TF-1-RollingFileManager-680 INFO File logs/archive/all-2026-07-22-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-07-22-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-27 14:09:10.143 [qtp18338606-22454] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-27 14:09:10.144 [qtp18338606-22454] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-27 14:09:13.499 [qtp18338606-22433] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-27 14:09:13.499 [qtp18338606-22433] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-27 14:09:21.875 [qtp18338606-22423] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-27 14:09:21.875 [qtp18338606-22423] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-28T22:00:27.536299Z Log4j2-TF-1-RollingFileManager-697 INFO File logs/archive/all-2026-07-28-1.log could not be accessed, it has likely already been deleted java.nio.file.NoSuchFileExc
+eption: logs/archive/all-2026-07-28-1.log
+        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)
+        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)
+        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)
+        at java.base/java.nio.file.Files.readAttributes(Files.java:1764)
+        at java.base/java.nio.file.FileTreeWalker.getAttributes(FileTreeWalker.java:219)
+        at java.base/java.nio.file.FileTreeWalker.visit(FileTreeWalker.java:276)
+        at java.base/java.nio.file.FileTreeWalker.next(FileTreeWalker.java:373)
+        at java.base/java.nio.file.Files.walkFileTree(Files.java:2761)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:80)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.getSortedPaths(DeleteAction.java:166)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:136)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction.execute(AbstractPathAction.java:73)
+        at org.apache.logging.log4j.core.appender.rolling.action.DeleteAction.execute(DeleteAction.java:86)
+        at org.apache.logging.log4j.core.appender.rolling.action.CompositeAction.execute(CompositeAction.java:72)
+        at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$AsyncAction.execute(RollingFileManager.java:678)
+        at org.apache.logging.log4j.core.appender.rolling.action.AbstractAction.run(AbstractAction.java:63)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+2026-07-31 13:24:02.742 [qtp18338606-22512] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-31 13:24:02.743 [qtp18338606-22512] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-31 13:24:05.725 [qtp18338606-22502] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-31 13:24:05.725 [qtp18338606-22502] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-31 13:25:59.808 [qtp18338606-22512] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-31 13:25:59.809 [qtp18338606-22512] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+2026-07-31 13:26:04.058 [qtp18338606-22501] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-07-31 13:26:04.058 [qtp18338606-22501] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+
+Message from syslogd@spencer at Aug  1 00:02:24 ...
+ kernel:[65983403.121688] watchdog: BUG: soft lockup - CPU#6 stuck for 25s! [kworker/u16:9:24857]
+
+Message from syslogd@spencer at Aug  1 00:02:30 ...
+ kernel:[65983408.038748] watchdog: BUG: soft lockup - CPU#5 stuck for 30s! [kworker/5:0:24209]
+2026-08-06 14:53:36.833 [qtp18338606-22560] ERROR ch.ddis.speakeasy.api.RestApi - ErrorStatusException with code 401 and message 'Invalid credentials. Please try again!' thrown by ch.ddis.spea
+keasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) for request null from 127.0.0.1
+2026-08-06 14:53:36.833 [qtp18338606-22560] ERROR ch.ddis.speakeasy.api.RestApi - Exception processing POST /api/login
+ch.ddis.speakeasy.api.ErrorStatusException: Invalid credentials. Please try again!
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:72) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.doPost(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.PostRestHandler$DefaultImpls.post(RestHandler.kt:64) ~[backend-0.1.jar:?]
+        at ch.ddis.speakeasy.api.handlers.LoginHandler.post(LoginHandler.kt:16) ~[backend-0.1.jar:?]
+        at io.javalin.routing.HandlerEntry.handle(HandlerEntry.kt:19) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.DefaultTasks.HTTP$lambda$8$lambda$6$lambda$5$lambda$4$lambda$3(DefaultTasks.kt:32) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleTask(JavalinServlet.kt:88) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.handleSync(JavalinServlet.kt:53) ~[javalin-5.6.2.jar:5.6.2]
+        at io.javalin.http.servlet.JavalinServlet.service(JavalinServlet.kt:41) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at io.javalin.jetty.JavalinJettyServlet.service(JavalinJettyServlet.kt:58) ~[javalin-5.6.2.jar:5.6.2]
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:587) ~[jetty-jakarta-servlet-api-5.0.2.jar:?]
+        at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:764) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:529) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1570) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:221) ~[jetty-server-11.0.15.jar:11.0.15]
+        at io.javalin.jetty.JettyServer$start$wsAndHttpHandler$1.doHandle(JettyServer.kt:61) ~[javalin-5.6.2.jar:5.6.2]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:176) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:484) ~[jetty-servlet-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1543) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:174) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1303) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:129) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:122) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.Server.handle(Server.java:563) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.lambda$handle$0(HttpChannel.java:505) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:762) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:497) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:282) ~[jetty-server-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:314) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53) ~[jetty-io-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:416) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:385) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:272) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.lambda$new$0(AdaptiveExecutionStrategy.java:140) ~[jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194) [jetty-util-11.0.15.jar:11.0.15]
+        at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149) [jetty-util-11.0.15.jar:11.0.15]
+        at java.base/java.lang.Thread.run(Thread.java:829) [?:?]
+
+speakeasy>

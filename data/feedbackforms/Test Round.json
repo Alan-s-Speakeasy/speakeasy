@@ -1,0 +1,1 @@
+{"formName":"Test Round","requests":[{"id":"0","type":"options","name":"This is a test question!","shortname":"test","options":[{"name":"Strongly Disagree","value":-2},{"name":"Slightly Disagree","value":-1},{"name":"Not Applicable / I don't know","value":0},{"name":"Slightly Agree","value":1},{"name":"Strongly Agree","value":2}]}]}

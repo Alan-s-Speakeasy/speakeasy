@@ -1389,6 +1389,9 @@ export class AutomatedEvaluationComponent implements OnInit, OnDestroy {
       }
       const speaker = message.myMessage ? 'admin' : chat.username;
       lines.push(`[${this.formatClock(message.time)}] ${speaker}: ${message.message}`);
+      if (!message.myMessage) {
+        lines.push('', '');
+      }
     }
 
     if (chat.paneLog.ordinals === 0) {

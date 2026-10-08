@@ -80,9 +80,6 @@ function scoreAlternative(expected: string, actual: string): AnswerVerdict {
   const hits = parts.map(part => matchPart(actual, part))
   const full = hits.filter(hit => hit === 'full').length
   const partial = hits.filter(hit => hit === 'partial').length
-  if (parts.length === 1) {
-    return full === 1 ? 'correct' : 'incorrect'
-  }
   if (full === parts.length) {
     return 'correct'
   }
@@ -102,11 +99,13 @@ function matchPart(actual: string, expectedPart: string): 'full' | 'partial' | '
     return 'full'
   }
   const qid = expectedNorm.match(/\bq\d+\b/)
-  if (qid && occursIn(actualNorm, qid[0])) {
+  const name = nameWithoutId(expectedNorm)
+  const hasQid = Boolean(qid && occursIn(actualNorm, qid[0]))
+  const hasName = Boolean(name && name !== expectedNorm && occursIn(actualNorm, name))
+  if (hasName && hasQid) {
     return 'full'
   }
-  const name = nameWithoutId(expectedNorm)
-  if (name && name !== expectedNorm && occursIn(actualNorm, name)) {
+  if (hasName || hasQid) {
     return 'partial'
   }
   return 'miss'

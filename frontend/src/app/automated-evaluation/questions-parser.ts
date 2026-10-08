@@ -51,42 +51,80 @@ export function answersMatch(expected: string | string[], actual: string): boole
   return scoreAnswer(expected, actual) === 'correct'
 }
 
+
 export function scoreAnswer(expected: string | string[], actual: string): AnswerVerdict {
-  const candidates = Array.isArray(expected) ? expected : [expected]
-  if (candidates.some(candidate => answersMatchOne(candidate, actual))) {
+  const candidates = (Array.isArray(expected) ? expected : [expected])
+    .map(candidate => candidate.trim())
+    .filter(candidate => candidate.length > 0)
+  if (candidates.length === 0) {
+    return 'incorrect'
+  }
+  const verdicts = candidates.map(candidate => scoreAlternative(candidate, actual))
+  if (verdicts.includes('correct')) {
     return 'correct'
   }
-  if (candidates.some(candidate => answersPartialOne(candidate, actual))) {
+  if (verdicts.includes('partial')) {
     return 'partial'
   }
   return 'incorrect'
 }
 
-function answersMatchOne(expected: string, actual: string): boolean {
-  const expectedNorm = normalizeAnswer(expected)
+function scoreAlternative(expected: string, actual: string): AnswerVerdict {
+  const parts = expected
+    .split(',')
+    .map(part => part.trim())
+    .filter(part => part.length > 0)
+  if (parts.length === 0) {
+    return 'incorrect'
+  }
+  const hits = parts.map(part => matchPart(actual, part))
+  const full = hits.filter(hit => hit === 'full').length
+  const partial = hits.filter(hit => hit === 'partial').length
+  if (parts.length === 1) {
+    return full === 1 ? 'correct' : 'incorrect'
+  }
+  if (full === parts.length) {
+    return 'correct'
+  }
+  if (full + partial > 0) {
+    return 'partial'
+  }
+  return 'incorrect'
+}
+
+function matchPart(actual: string, expectedPart: string): 'full' | 'partial' | 'miss' {
+  const expectedNorm = normalizeAnswer(expectedPart)
   const actualNorm = normalizeAnswer(actual)
   if (!expectedNorm || !actualNorm) {
-    return false
+    return 'miss'
   }
-  return actualNorm.includes(expectedNorm) || expectedNorm.includes(actualNorm)
+  if (occursIn(actualNorm, expectedNorm)) {
+    return 'full'
+  }
+  const qid = expectedNorm.match(/\bq\d+\b/)
+  if (qid && occursIn(actualNorm, qid[0])) {
+    return 'full'
+  }
+  const name = nameWithoutId(expectedNorm)
+  if (name && name !== expectedNorm && occursIn(actualNorm, name)) {
+    return 'partial'
+  }
+  return 'miss'
 }
 
-function answersPartialOne(expected: string, actual: string): boolean {
-  const expectedTokens = tokenizeAnswer(expected)
-  const actualTokens = new Set(tokenizeAnswer(actual))
-  if (expectedTokens.length === 0 || actualTokens.size === 0) {
-    return false
-  }
-  const overlap = expectedTokens.filter(token => actualTokens.has(token)).length
-  const needed = expectedTokens.length === 1 ? 1 : Math.ceil(expectedTokens.length / 2)
-  return overlap >= needed && overlap < expectedTokens.length
+function nameWithoutId(value: string): string {
+  return value
+    .replace(/\(\s*q\d+\s*\)/g, ' ')
+    .replace(/\bq\d+\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
-function tokenizeAnswer(value: string): string[] {
-  return normalizeAnswer(value)
-    .split(' ')
-    .map(token => token.trim())
-    .filter(token => token.length > 0)
+function occursIn(haystack: string, needle: string): boolean {
+  if (/^[a-z0-9]+$/.test(needle)) {
+    return new RegExp(`(^|[^a-z0-9])${needle}([^a-z0-9]|$)`).test(haystack)
+  }
+  return haystack.includes(needle)
 }
 
 function normalizeAnswer(value: string): string {
@@ -94,7 +132,7 @@ function normalizeAnswer(value: string): string {
     .toLowerCase()
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
 }
 

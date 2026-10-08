@@ -7,6 +7,7 @@ import {NgbModal, NgbPopover} from '@ng-bootstrap/ng-bootstrap';
 import {filter, map, take, timeout} from 'rxjs/operators';
 import {AdminService, ChatRequest, ChatRoomInfo, ChatService} from '../../../openapi';
 import {AlertService} from '../alert';
+import {AppConfig} from '../app.config';
 import {AuthService} from '../authentication.service';
 import {CommonService} from '../common.service';
 import {PaneLog} from '../new_data';
@@ -168,6 +169,7 @@ export class AutomatedEvaluationComponent implements OnInit, OnDestroy {
   private recipientsHelpEnter: (() => void) | null = null;
   private recipientsHelpLeave: (() => void) | null = null;
   private logsSentTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly appConfig = new AppConfig();
 
   get answerTimeoutMs(): number {
     return Math.max(1, this.grading.timeoutSeconds) * 1000;
@@ -666,7 +668,7 @@ export class AutomatedEvaluationComponent implements OnInit, OnDestroy {
 
     this.sendingMail = true;
     this.http.post<EmailSendResponse>(
-      '/api/automated-evaluation/emails',
+      this.apiUrl('/api/automated-evaluation/emails'),
       {transcripts},
       {withCredentials: true}
     ).subscribe({
@@ -728,7 +730,7 @@ export class AutomatedEvaluationComponent implements OnInit, OnDestroy {
   }
 
   private refreshEmailStatus(): void {
-    this.http.get<EmailStatus>('/api/automated-evaluation/email/status', {withCredentials: true}).subscribe({
+    this.http.get<EmailStatus>(this.apiUrl('/api/automated-evaluation/email/status'), {withCredentials: true}).subscribe({
       next: status => {
         this.emailConfigured = !!status?.configured;
         this.changeDetector.detectChanges();
@@ -992,9 +994,13 @@ export class AutomatedEvaluationComponent implements OnInit, OnDestroy {
       .filter(cred => cred.username.length > 0 && cred.password.length > 0);
   }
 
+  private apiUrl(path: string): string {
+    return `${this.appConfig.basePath}${path}`;
+  }
+
   private checkCredentials(credentials: BotCredential[]): Promise<CredentialCheckResult[]> {
     return this.http.post<CredentialCheckResult[]>(
-      '/api/automated-evaluation/credentials/check',
+      this.apiUrl('/api/automated-evaluation/credentials/check'),
       {credentials},
       {withCredentials: true}
     ).toPromise()
